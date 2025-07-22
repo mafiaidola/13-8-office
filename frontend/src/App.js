@@ -754,6 +754,286 @@ const WarehouseManagement = () => {
     </div>
   );
 };
+
+// Reports Component
+const ReportsSection = () => {
+  const [inventoryReport, setInventoryReport] = useState([]);
+  const [usersReport, setUsersReport] = useState(null);
+  const [activeReport, setActiveReport] = useState('inventory');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (activeReport === 'inventory') {
+      fetchInventoryReport();
+    } else if (activeReport === 'users') {
+      fetchUsersReport();
+    }
+  }, [activeReport]);
+
+  const fetchInventoryReport = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/reports/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInventoryReport(response.data);
+    } catch (error) {
+      setError('خطأ في جلب تقرير المخزون');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUsersReport = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/reports/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsersReport(response.data);
+    } catch (error) {
+      setError('خطأ في جلب تقرير المستخدمين');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTotalInventoryValue = () => {
+    return inventoryReport.reduce((total, item) => total + item.total_value, 0).toFixed(2);
+  };
+
+  const getLowStockCount = () => {
+    return inventoryReport.filter(item => item.low_stock).length;
+  };
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Report Tabs */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex space-x-4 mb-6">
+          <button
+            onClick={() => setActiveReport('inventory')}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              activeReport === 'inventory'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            تقرير المخزون
+          </button>
+          <button
+            onClick={() => setActiveReport('users')}
+            className={`px-4 py-2 rounded-lg font-medium ${
+              activeReport === 'users'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            تقرير المستخدمين
+          </button>
+        </div>
+
+        {isLoading && (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">جاري تحميل التقرير...</p>
+          </div>
+        )}
+
+        {/* Inventory Report */}
+        {activeReport === 'inventory' && !isLoading && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">تقرير المخزون الشامل</h2>
+            
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-800">إجمالي قيمة المخزون</h3>
+                <p className="text-2xl font-bold text-blue-600">{getTotalInventoryValue()} ريال</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-800">منتجات نقص مخزون</h3>
+                <p className="text-2xl font-bold text-red-600">{getLowStockCount()}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-green-800">إجمالي المنتجات</h3>
+                <p className="text-2xl font-bold text-green-600">{inventoryReport.length}</p>
+              </div>
+            </div>
+
+            {/* Inventory Table */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      المخزن
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      المنتج
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الكمية
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الحد الأدنى
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      القيمة الإجمالية
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الحالة
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {inventoryReport.map((item, index) => (
+                    <tr key={index} className={item.low_stock ? 'bg-red-50' : ''}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.warehouse_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.product_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.quantity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.minimum_stock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.total_value.toFixed(2)} ريال
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.low_stock
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {item.low_stock ? 'نقص مخزون' : 'متوفر'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Users Report */}
+        {activeReport === 'users' && !isLoading && usersReport && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">تقرير المستخدمين</h2>
+            
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-800">إجمالي المستخدمين</h3>
+                <p className="text-2xl font-bold text-blue-600">{usersReport.total_users}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibvalid text-green-800">مستخدمين نشطين</h3>
+                <p className="text-2xl font-bold text-green-600">{usersReport.active_distribution.active}</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-800">مستخدمين معطلين</h3>
+                <p className="text-2xl font-bold text-red-600">{usersReport.active_distribution.inactive}</p>
+              </div>
+            </div>
+
+            {/* Role Distribution */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">توزيع الأدوار</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(usersReport.role_distribution).map(([role, count]) => {
+                  const roleNames = {
+                    admin: 'أدمن',
+                    warehouse_manager: 'مدير مخزن',
+                    manager: 'مدير',
+                    sales_rep: 'مندوب'
+                  };
+                  return (
+                    <div key={role} className="bg-gray-50 p-3 rounded-lg text-center">
+                      <p className="text-sm text-gray-600">{roleNames[role] || role}</p>
+                      <p className="text-xl font-bold text-gray-800">{count}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Users Table */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الاسم
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الدور
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      البريد الإلكتروني
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      تاريخ الإنشاء
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الحالة
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {usersReport.users.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {user.full_name}
+                        <div className="text-xs text-gray-500">@{user.username}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.role === 'admin' && 'أدمن'}
+                        {user.role === 'warehouse_manager' && 'مدير مخزن'}
+                        {user.role === 'manager' && 'مدير'}
+                        {user.role === 'sales_rep' && 'مندوب'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(user.created_at).toLocaleDateString('ar-EG')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.is_active
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.is_active ? 'نشط' : 'معطل'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const VisitRegistration = () => {
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
