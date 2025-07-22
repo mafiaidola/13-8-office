@@ -942,7 +942,7 @@ const ReportsSection = () => {
                 <p className="text-2xl font-bold text-blue-600">{usersReport.total_users}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibvalid text-green-800">مستخدمين نشطين</h3>
+                <h3 className="text-lg font-semibold text-green-800">مستخدمين نشطين</h3>
                 <p className="text-2xl font-bold text-green-600">{usersReport.active_distribution.active}</p>
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
