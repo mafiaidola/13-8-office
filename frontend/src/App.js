@@ -163,7 +163,597 @@ const LoginPage = () => {
   );
 };
 
-// Visit Registration Component
+// User Management Component
+const UserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'sales_rep',
+    full_name: '',
+    phone: '',
+    managed_by: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data);
+    } catch (error) {
+      setError('خطأ في جلب المستخدمين');
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/auth/register`, newUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم إنشاء المستخدم بنجاح');
+      setShowCreateUser(false);
+      setNewUser({
+        username: '',
+        email: '',
+        password: '',
+        role: 'sales_rep',
+        full_name: '',
+        phone: '',
+        managed_by: ''
+      });
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في إنشاء المستخدم');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleUserStatus = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${userId}/status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم تحديث حالة المستخدم');
+      fetchUsers();
+    } catch (error) {
+      setError('خطأ في تحديث حالة المستخدم');
+    }
+  };
+
+  const getRoleText = (role) => {
+    const roles = {
+      admin: 'أدمن',
+      warehouse_manager: 'مدير مخزن',
+      manager: 'مدير',
+      sales_rep: 'مندوب'
+    };
+    return roles[role] || role;
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">إدارة المستخدمين</h2>
+        <button
+          onClick={() => setShowCreateUser(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+        >
+          إضافة مستخدم جديد
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+          {success}
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">إضافة مستخدم جديد</h3>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">اسم المستخدم</label>
+                <input
+                  type="text"
+                  value={newUser.username}
+                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">الاسم الكامل</label>
+                <input
+                  type="text"
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">الدور</label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="sales_rep">مندوب</option>
+                  <option value="manager">مدير</option>
+                  <option value="warehouse_manager">مدير مخزن</option>
+                  <option value="admin">أدمن</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+                <input
+                  type="tel"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateUser(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isLoading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Users Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                الاسم
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                الدور
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                البريد الإلكتروني
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                الحالة
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                الإجراءات
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {user.full_name}
+                  <div className="text-xs text-gray-500">@{user.username}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {getRoleText(user.role)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {user.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    user.is_active
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user.is_active ? 'نشط' : 'معطل'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={() => toggleUserStatus(user.id)}
+                    className={`px-3 py-1 rounded text-xs ${
+                      user.is_active
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    }`}
+                  >
+                    {user.is_active ? 'تعطيل' : 'تفعيل'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Warehouse Management Component
+const WarehouseManagement = () => {
+  const [warehouses, setWarehouses] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState('');
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    unit: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    fetchWarehouses();
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedWarehouse) {
+      fetchInventory(selectedWarehouse);
+    }
+  }, [selectedWarehouse]);
+
+  const fetchWarehouses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/warehouses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouses(response.data);
+      if (response.data.length > 0 && !selectedWarehouse) {
+        setSelectedWarehouse(response.data[0].id);
+      }
+    } catch (error) {
+      setError('خطأ في جلب المخازن');
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      setError('خطأ في جلب المنتجات');
+    }
+  };
+
+  const fetchInventory = async (warehouseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/inventory/${warehouseId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInventory(response.data);
+    } catch (error) {
+      setError('خطأ في جلب المخزون');
+    }
+  };
+
+  const handleCreateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/products`, {
+        ...newProduct,
+        price: parseFloat(newProduct.price)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم إنشاء المنتج بنجاح');
+      setShowCreateProduct(false);
+      setNewProduct({ name: '', description: '', price: '', category: '', unit: '' });
+      fetchProducts();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في إنشاء المنتج');
+    }
+  };
+
+  const updateInventory = async (productId, quantity) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/inventory/${selectedWarehouse}/${productId}`, {
+        quantity: parseInt(quantity)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم تحديث المخزون بنجاح');
+      fetchInventory(selectedWarehouse);
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في تحديث المخزون');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          {success}
+        </div>
+      )}
+
+      {/* Products Section */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
+          <button
+            onClick={() => setShowCreateProduct(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            إضافة منتج جديد
+          </button>
+        </div>
+
+        {/* Create Product Modal */}
+        {showCreateProduct && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">إضافة منتج جديد</h3>
+              <form onSubmit={handleCreateProduct} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">اسم المنتج</label>
+                  <input
+                    type="text"
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                  <textarea
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">السعر</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">الوحدة</label>
+                    <select
+                      value={newProduct.unit}
+                      onChange={(e) => setNewProduct({...newProduct, unit: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">اختر الوحدة</option>
+                      <option value="قطعة">قطعة</option>
+                      <option value="علبة">علبة</option>
+                      <option value="زجاجة">زجاجة</option>
+                      <option value="كيس">كيس</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
+                  <input
+                    type="text"
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="مثال: أدوية، مكملات، أجهزة"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateProduct(false)}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    إنشاء المنتج
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.map((product) => (
+            <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-800">{product.name}</h3>
+              <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold text-blue-600">{product.price} ريال</span>
+                <span className="text-sm text-gray-500">{product.unit}</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">
+                الفئة: {product.category}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Inventory Section */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">إدارة المخزون</h2>
+
+        {/* Warehouse Selector */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">اختر المخزن</label>
+          <select
+            value={selectedWarehouse}
+            onChange={(e) => setSelectedWarehouse(e.target.value)}
+            className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            {warehouses.map((warehouse) => (
+              <option key={warehouse.id} value={warehouse.id}>
+                {warehouse.name} - {warehouse.location}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Inventory Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  المنتج
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الكمية الحالية
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الحد الأدنى
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  الحالة
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  إجراءات
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {inventory.map((item) => (
+                <tr key={`${item.warehouse_id}-${item.product_id}`}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {item.product_name}
+                    <div className="text-xs text-gray-500">{item.product_category}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {item.quantity} {item.product_unit}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {item.minimum_stock} {item.product_unit}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.low_stock
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {item.low_stock ? 'نقص مخزون' : 'متوفر'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => {
+                        const newQuantity = prompt('أدخل الكمية الجديدة:', item.quantity);
+                        if (newQuantity !== null && !isNaN(newQuantity)) {
+                          updateInventory(item.product_id, newQuantity);
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      تحديث الكمية
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
 const VisitRegistration = () => {
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
