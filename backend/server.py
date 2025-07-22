@@ -167,6 +167,7 @@ class UserCreate(BaseModel):
     role: str
     full_name: str
     phone: Optional[str] = None
+    managed_by: Optional[str] = None
 
 class UserLogin(BaseModel):
     username: str
