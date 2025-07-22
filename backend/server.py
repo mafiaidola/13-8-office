@@ -67,7 +67,98 @@ class User(BaseModel):
     phone: Optional[str] = None
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None  # who created this user
+    managed_by: Optional[str] = None  # direct manager
     permissions: List[str] = []
+
+class Product(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    unit: str  # piece, box, bottle, etc.
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class ProductCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    unit: str
+
+class Warehouse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    location: str
+    address: str
+    manager_id: str  # warehouse manager
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class WarehouseCreate(BaseModel):
+    name: str
+    location: str
+    address: str
+    manager_id: str
+
+class Inventory(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    warehouse_id: str
+    product_id: str
+    quantity: int
+    minimum_stock: int = 10
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: str
+
+class InventoryUpdate(BaseModel):
+    quantity: int
+    minimum_stock: Optional[int] = None
+
+class StockMovement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    warehouse_id: str
+    product_id: str
+    movement_type: str  # IN, OUT, ADJUSTMENT
+    quantity: int
+    reason: str
+    reference_id: Optional[str] = None  # order_id or visit_id
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Order(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    visit_id: str
+    sales_rep_id: str
+    doctor_id: str
+    clinic_id: str
+    warehouse_id: str
+    status: str  # PENDING, APPROVED, REJECTED, FULFILLED
+    order_type: str  # DEMO, SALE
+    total_amount: float = 0.0
+    approved_by: Optional[str] = None
+    fulfilled_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    notes: Optional[str] = None
+
+class OrderItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    order_id: str
+    product_id: str
+    quantity: int
+    unit_price: float
+    total_price: float
+
+class OrderCreate(BaseModel):
+    visit_id: str
+    doctor_id: str
+    clinic_id: str
+    warehouse_id: str
+    order_type: str
+    items: List[Dict[str, Any]]  # [{product_id, quantity}]
+    notes: Optional[str] = None
 
 class UserCreate(BaseModel):
     username: str
