@@ -983,12 +983,22 @@ const Dashboard = () => {
   const getRoleText = (role) => {
     const roles = {
       admin: 'أدمن',
+      warehouse_manager: 'مدير مخزن',
       manager: 'مدير',
-      sales_rep: 'مندوب',
-      warehouse: 'مخزن',
-      accounting: 'حسابات'
+      sales_rep: 'مندوب'
     };
     return roles[role] || role;
+  };
+
+  const canAccessTab = (tabName) => {
+    const permissions = {
+      users: ['admin', 'warehouse_manager', 'manager'],
+      warehouse: ['admin', 'warehouse_manager'],
+      visit: ['sales_rep'],
+      reports: ['admin', 'warehouse_manager', 'manager']
+    };
+    
+    return permissions[tabName]?.includes(user.role) || false;
   };
 
   return (
@@ -1014,10 +1024,10 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <nav className="flex space-x-8" aria-label="Tabs">
+          <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm ${
+              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -1025,10 +1035,37 @@ const Dashboard = () => {
             >
               لوحة التحكم
             </button>
-            {user.role === 'sales_rep' && (
+            
+            {canAccessTab('users') && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'users'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                إدارة المستخدمين
+              </button>
+            )}
+            
+            {canAccessTab('warehouse') && (
+              <button
+                onClick={() => setActiveTab('warehouse')}
+                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'warehouse'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                إدارة المخازن
+              </button>
+            )}
+            
+            {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('visit')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm ${
+                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === 'visit'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -1037,9 +1074,10 @@ const Dashboard = () => {
                 تسجيل زيارة
               </button>
             )}
+            
             <button
               onClick={() => setActiveTab('visits')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm ${
+              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === 'visits'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -1047,6 +1085,19 @@ const Dashboard = () => {
             >
               سجل الزيارات
             </button>
+
+            {canAccessTab('reports') && (
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === 'reports'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                التقارير
+              </button>
+            )}
           </nav>
         </div>
 
@@ -1060,8 +1111,35 @@ const Dashboard = () => {
                 total_clinics: 'إجمالي العيادات',
                 total_doctors: 'إجمالي الأطباء',
                 total_visits: 'إجمالي الزيارات',
+                total_products: 'إجمالي المنتجات',
+                total_warehouses: 'إجمالي المخازن',
+                low_stock_items: 'منتجات نقص مخزون',
                 today_visits: 'زيارات اليوم',
-                pending_reviews: 'مراجعات معلقة'
+                pending_reviews: 'مراجعات معلقة',
+                pending_clinics: 'عيادات في انتظار الموافقة',
+                pending_doctors: 'أطباء في انتظار الموافقة',
+                team_members: 'أعضاء الفريق',
+                today_team_visits: 'زيارات الفريق اليوم',
+                my_warehouses: 'مخازني',
+                inventory_items: 'عناصر المخزون'
+              };
+              
+              const colors = {
+                total_users: 'text-blue-600',
+                total_clinics: 'text-green-600',
+                total_doctors: 'text-purple-600',
+                total_visits: 'text-indigo-600',
+                total_products: 'text-yellow-600',
+                total_warehouses: 'text-pink-600',
+                low_stock_items: 'text-red-600',
+                today_visits: 'text-green-600',
+                pending_reviews: 'text-orange-600',
+                pending_clinics: 'text-orange-600',
+                pending_doctors: 'text-orange-600',
+                team_members: 'text-blue-600',
+                today_team_visits: 'text-green-600',
+                my_warehouses: 'text-purple-600',
+                inventory_items: 'text-indigo-600'
               };
               
               return (
@@ -1069,11 +1147,19 @@ const Dashboard = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     {titles[key] || key}
                   </h3>
-                  <p className="text-3xl font-bold text-blue-600">{value}</p>
+                  <p className={`text-3xl font-bold ${colors[key] || 'text-blue-600'}`}>{value}</p>
                 </div>
               );
             })}
           </div>
+        )}
+
+        {activeTab === 'users' && canAccessTab('users') && (
+          <UserManagement />
+        )}
+
+        {activeTab === 'warehouse' && canAccessTab('warehouse') && (
+          <WarehouseManagement />
         )}
 
         {activeTab === 'visit' && user.role === 'sales_rep' && (
@@ -1142,6 +1228,10 @@ const Dashboard = () => {
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab === 'reports' && canAccessTab('reports') && (
+          <ReportsSection />
         )}
       </div>
     </div>
