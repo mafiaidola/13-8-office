@@ -34,13 +34,27 @@ api_router = APIRouter(prefix="/api")
 # Security
 security = HTTPBearer()
 
-# User Roles
+# User Roles with Hierarchy
 class UserRole:
-    ADMIN = "admin"
-    MANAGER = "manager"
-    SALES_REP = "sales_rep"
-    WAREHOUSE = "warehouse"
-    ACCOUNTING = "accounting"
+    ADMIN = "admin"  # Level 4 - Full control
+    WAREHOUSE_MANAGER = "warehouse_manager"  # Level 3 - Manage warehouses
+    MANAGER = "manager"  # Level 2 - Manage sales reps
+    SALES_REP = "sales_rep"  # Level 1 - Basic operations
+    
+    # Role hierarchy for permissions
+    ROLE_HIERARCHY = {
+        "admin": 4,
+        "warehouse_manager": 3,
+        "manager": 2,
+        "sales_rep": 1
+    }
+    
+    @classmethod
+    def can_manage(cls, manager_role: str, target_role: str) -> bool:
+        """Check if manager_role can manage target_role"""
+        manager_level = cls.ROLE_HIERARCHY.get(manager_role, 0)
+        target_level = cls.ROLE_HIERARCHY.get(target_role, 0)
+        return manager_level > target_level
 
 # Models
 class User(BaseModel):
