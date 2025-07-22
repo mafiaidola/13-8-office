@@ -413,7 +413,8 @@ class BackendTester:
             visit_id = visits[0]["id"]
             
             # Use PATCH with query parameter for is_effective
-            status_code, response = self.make_request("PATCH", f"/visits/{visit_id}/review?is_effective=true", {}, self.manager_token)
+            url = f"/visits/{visit_id}/review?is_effective=true"
+            status_code, response = self.make_request("PATCH", url, {}, self.manager_token)
             
             if status_code == 200:
                 self.log_test("Visit Review by Manager", True, "Visit reviewed successfully")
