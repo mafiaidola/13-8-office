@@ -155,9 +155,11 @@ class BackendTester:
             self.log_test("Create Manager User", False, "No admin token available")
             return False
         
+        import time
+        timestamp = str(int(time.time()))
         manager_data = {
-            "username": "manager_test",
-            "email": "manager@test.com",
+            "username": f"manager_{timestamp}",
+            "email": f"manager_{timestamp}@test.com",
             "password": "manager123",
             "role": "manager",
             "full_name": "مدير التجريبي",
@@ -170,7 +172,7 @@ class BackendTester:
             self.log_test("Create Manager User", True, f"Manager created with ID: {response.get('user_id')}")
             
             # Login as manager
-            login_data = {"username": "manager_test", "password": "manager123"}
+            login_data = {"username": f"manager_{timestamp}", "password": "manager123"}
             status_code, login_response = self.make_request("POST", "/auth/login", login_data)
             if status_code == 200:
                 self.manager_token = login_response["token"]
