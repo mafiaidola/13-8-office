@@ -283,8 +283,9 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 # Authentication Routes
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only admin can create users")
+    # Check permissions based on role hierarchy
+    if not UserRole.can_manage(current_user.role, user_data.role):
+        raise HTTPException(status_code=403, detail="You don't have permission to create this role")
     
     # Check if username exists
     existing_user = await db.users.find_one({"username": user_data.username})
@@ -299,11 +300,332 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
         password_hash=hashed_password,
         role=user_data.role,
         full_name=user_data.full_name,
-        phone=user_data.phone
+        phone=user_data.phone,
+        created_by=current_user.id,
+        managed_by=user_data.managed_by or current_user.id
     )
     
     await db.users.insert_one(user.dict())
     return {"message": "User created successfully", "user_id": user.id}
+
+# User Management Routes
+@api_router.get("/users", response_model=List[Dict[str, Any]])
+async def get_users(current_user: User = Depends(get_current_user)):
+    query = {}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.MANAGER:
+        # Managers can only see their subordinates
+        query = {"$or": [
+            {"managed_by": current_user.id},
+            {"created_by": current_user.id},
+            {"role": UserRole.SALES_REP}
+        ]}
+    elif current_user.role == UserRole.WAREHOUSE_MANAGER:
+        # Warehouse managers can see sales reps and managers
+        query = {"role": {"$in": [UserRole.SALES_REP, UserRole.MANAGER]}}
+    elif current_user.role == UserRole.SALES_REP:
+        # Sales reps can only see themselves
+        query = {"id": current_user.id}
+    
+    users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
+    
+    # Add creator and manager names
+    for user in users:
+        if user.get("created_by"):
+            creator = await db.users.find_one({"id": user["created_by"]}, {"_id": 0})
+            user["created_by_name"] = creator["full_name"] if creator else "Unknown"
+        
+        if user.get("managed_by"):
+            manager = await db.users.find_one({"id": user["managed_by"]}, {"_id": 0})
+            user["manager_name"] = manager["full_name"] if manager else "Unknown"
+    
+    return users
+
+@api_router.patch("/users/{user_id}/status")
+async def toggle_user_status(user_id: str, current_user: User = Depends(get_current_user)):
+    # Find the target user
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check permissions
+    if not UserRole.can_manage(current_user.role, target_user["role"]):
+        raise HTTPException(status_code=403, detail="You don't have permission to modify this user")
+    
+    new_status = not target_user["is_active"]
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_active": new_status}}
+    )
+    
+    action = "activated" if new_status else "deactivated"
+    return {"message": f"User {action} successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can delete users")
+    
+    # Don't allow deleting admin users
+    target_user = await db.users.find_one({"id": user_id})
+    if target_user and target_user["role"] == UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot delete admin users")
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User deleted successfully"}
+
+# Product Management Routes
+@api_router.post("/products")
+async def create_product(product_data: ProductCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can create products")
+    
+    product = Product(
+        name=product_data.name,
+        description=product_data.description,
+        price=product_data.price,
+        category=product_data.category,
+        unit=product_data.unit,
+        created_by=current_user.id
+    )
+    
+    await db.products.insert_one(product.dict())
+    return {"message": "Product created successfully", "product_id": product.id}
+
+@api_router.get("/products", response_model=List[Dict[str, Any]])
+async def get_products(current_user: User = Depends(get_current_user)):
+    products = await db.products.find({"is_active": True}, {"_id": 0}).to_list(1000)
+    
+    # Add creator information
+    for product in products:
+        creator = await db.users.find_one({"id": product["created_by"]}, {"_id": 0})
+        product["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return products
+
+@api_router.patch("/products/{product_id}")
+async def update_product(product_id: str, product_data: ProductCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can update products")
+    
+    result = await db.products.update_one(
+        {"id": product_id},
+        {"$set": product_data.dict()}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    return {"message": "Product updated successfully"}
+
+# Warehouse Management Routes
+@api_router.post("/warehouses")
+async def create_warehouse(warehouse_data: WarehouseCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can create warehouses")
+    
+    # Verify manager exists and has correct role
+    manager = await db.users.find_one({"id": warehouse_data.manager_id})
+    if not manager or manager["role"] not in [UserRole.WAREHOUSE_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=400, detail="Invalid warehouse manager")
+    
+    warehouse = Warehouse(
+        name=warehouse_data.name,
+        location=warehouse_data.location,
+        address=warehouse_data.address,
+        manager_id=warehouse_data.manager_id
+    )
+    
+    await db.warehouses.insert_one(warehouse.dict())
+    return {"message": "Warehouse created successfully", "warehouse_id": warehouse.id}
+
+@api_router.get("/warehouses", response_model=List[Dict[str, Any]])
+async def get_warehouses(current_user: User = Depends(get_current_user)):
+    query = {}
+    if current_user.role == UserRole.WAREHOUSE_MANAGER:
+        query = {"manager_id": current_user.id}
+    
+    warehouses = await db.warehouses.find(query, {"_id": 0}).to_list(1000)
+    
+    # Add manager information
+    for warehouse in warehouses:
+        manager = await db.users.find_one({"id": warehouse["manager_id"]}, {"_id": 0})
+        warehouse["manager_name"] = manager["full_name"] if manager else "Unknown"
+    
+    return warehouses
+
+# Inventory Management Routes
+@api_router.post("/inventory/{warehouse_id}/{product_id}")
+async def update_inventory(warehouse_id: str, product_id: str, inventory_data: InventoryUpdate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can update inventory")
+    
+    # Check if user has access to this warehouse
+    if current_user.role == UserRole.WAREHOUSE_MANAGER:
+        warehouse = await db.warehouses.find_one({"id": warehouse_id, "manager_id": current_user.id})
+        if not warehouse:
+            raise HTTPException(status_code=403, detail="You don't have access to this warehouse")
+    
+    # Get current inventory
+    current_inventory = await db.inventory.find_one({"warehouse_id": warehouse_id, "product_id": product_id})
+    old_quantity = current_inventory["quantity"] if current_inventory else 0
+    
+    # Update or create inventory record
+    inventory = {
+        "warehouse_id": warehouse_id,
+        "product_id": product_id,
+        "quantity": inventory_data.quantity,
+        "minimum_stock": inventory_data.minimum_stock or (current_inventory["minimum_stock"] if current_inventory else 10),
+        "last_updated": datetime.utcnow(),
+        "updated_by": current_user.id
+    }
+    
+    await db.inventory.update_one(
+        {"warehouse_id": warehouse_id, "product_id": product_id},
+        {"$set": inventory},
+        upsert=True
+    )
+    
+    # Record stock movement
+    movement_type = "ADJUSTMENT"
+    quantity_change = inventory_data.quantity - old_quantity
+    
+    if quantity_change != 0:
+        movement = StockMovement(
+            warehouse_id=warehouse_id,
+            product_id=product_id,
+            movement_type=movement_type,
+            quantity=abs(quantity_change),
+            reason=f"Manual adjustment: {quantity_change:+d}",
+            created_by=current_user.id
+        )
+        await db.stock_movements.insert_one(movement.dict())
+    
+    return {"message": "Inventory updated successfully"}
+
+@api_router.get("/inventory/{warehouse_id}", response_model=List[Dict[str, Any]])
+async def get_warehouse_inventory(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    # Check permissions
+    if current_user.role == UserRole.WAREHOUSE_MANAGER:
+        warehouse = await db.warehouses.find_one({"id": warehouse_id, "manager_id": current_user.id})
+        if not warehouse:
+            raise HTTPException(status_code=403, detail="You don't have access to this warehouse")
+    elif current_user.role == UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Sales reps cannot view inventory")
+    
+    inventory_items = await db.inventory.find({"warehouse_id": warehouse_id}, {"_id": 0}).to_list(1000)
+    
+    # Enrich with product information
+    for item in inventory_items:
+        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        if product:
+            item["product_name"] = product["name"]
+            item["product_price"] = product["price"]
+            item["product_unit"] = product["unit"]
+            item["product_category"] = product["category"]
+        
+        # Add low stock warning
+        item["low_stock"] = item["quantity"] <= item["minimum_stock"]
+    
+    return inventory_items
+
+# Reports Routes
+@api_router.get("/reports/inventory")
+async def get_inventory_report(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get all inventory with low stock items
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "products",
+                "localField": "product_id",
+                "foreignField": "id",
+                "as": "product"
+            }
+        },
+        {
+            "$lookup": {
+                "from": "warehouses", 
+                "localField": "warehouse_id",
+                "foreignField": "id",
+                "as": "warehouse"
+            }
+        },
+        {
+            "$unwind": "$product"
+        },
+        {
+            "$unwind": "$warehouse"
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "warehouse_name": "$warehouse.name",
+                "product_name": "$product.name",
+                "quantity": 1,
+                "minimum_stock": 1,
+                "low_stock": {"$lte": ["$quantity", "$minimum_stock"]},
+                "total_value": {"$multiply": ["$quantity", "$product.price"]}
+            }
+        }
+    ]
+    
+    try:
+        # Note: MongoDB aggregation might not work with motor, so we'll do it manually
+        inventory_items = await db.inventory.find({}, {"_id": 0}).to_list(1000)
+        report_data = []
+        
+        for item in inventory_items:
+            product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+            warehouse = await db.warehouses.find_one({"id": item["warehouse_id"]}, {"_id": 0})
+            
+            if product and warehouse:
+                report_item = {
+                    "warehouse_name": warehouse["name"],
+                    "product_name": product["name"],
+                    "quantity": item["quantity"],
+                    "minimum_stock": item["minimum_stock"],
+                    "low_stock": item["quantity"] <= item["minimum_stock"],
+                    "total_value": item["quantity"] * product["price"]
+                }
+                report_data.append(report_item)
+        
+        return report_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
+
+@api_router.get("/reports/users")
+async def get_users_report(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    
+    # Count by role
+    role_counts = {}
+    active_counts = {"active": 0, "inactive": 0}
+    
+    for user in users:
+        role = user["role"]
+        role_counts[role] = role_counts.get(role, 0) + 1
+        
+        if user["is_active"]:
+            active_counts["active"] += 1
+        else:
+            active_counts["inactive"] += 1
+    
+    return {
+        "total_users": len(users),
+        "role_distribution": role_counts,
+        "active_distribution": active_counts,
+        "users": users
+    }
 
 @api_router.post("/auth/login")
 async def login_user(login_data: UserLogin):
