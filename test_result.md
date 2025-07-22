@@ -137,15 +137,18 @@ backend:
 
   - task: "Clinic management with location coordinates"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented clinic CRUD operations with GPS coordinates and approval workflow"
+      - working: true
+        agent: "testing"
+        comment: "✅ CLINIC MANAGEMENT FULLY FUNCTIONAL: Clinic creation with GPS coordinates working, clinic listing working (fixed MongoDB ObjectId serialization issue), admin approval workflow working correctly."
 
   - task: "Doctor management with clinic association"
     implemented: true
