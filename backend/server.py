@@ -383,13 +383,13 @@ async def get_visits(current_user: User = Depends(get_current_user)):
         # Managers can see all visits for review
         pass
     
-    visits = await db.visits.find(query).to_list(1000)
+    visits = await db.visits.find(query, {"_id": 0}).to_list(1000)
     
     # Enrich with doctor and clinic information
     for visit in visits:
-        doctor = await db.doctors.find_one({"id": visit["doctor_id"]})
-        clinic = await db.clinics.find_one({"id": visit["clinic_id"]})
-        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]})
+        doctor = await db.doctors.find_one({"id": visit["doctor_id"]}, {"_id": 0})
+        clinic = await db.clinics.find_one({"id": visit["clinic_id"]}, {"_id": 0})
+        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
         
         visit["doctor_name"] = doctor["name"] if doctor else "Unknown"
         visit["clinic_name"] = clinic["name"] if clinic else "Unknown"
