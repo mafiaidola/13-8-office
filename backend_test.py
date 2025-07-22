@@ -123,9 +123,11 @@ class BackendTester:
             self.log_test("Create Sales Rep User", False, "No admin token available")
             return False
         
+        import time
+        timestamp = str(int(time.time()))
         sales_rep_data = {
-            "username": "sales_rep_test",
-            "email": "salesrep@test.com",
+            "username": f"sales_rep_{timestamp}",
+            "email": f"salesrep_{timestamp}@test.com",
             "password": "salesrep123",
             "role": "sales_rep",
             "full_name": "مندوب المبيعات التجريبي",
@@ -138,7 +140,7 @@ class BackendTester:
             self.log_test("Create Sales Rep User", True, f"User created with ID: {response.get('user_id')}")
             
             # Login as sales rep
-            login_data = {"username": "sales_rep_test", "password": "salesrep123"}
+            login_data = {"username": f"sales_rep_{timestamp}", "password": "salesrep123"}
             status_code, login_response = self.make_request("POST", "/auth/login", login_data)
             if status_code == 200:
                 self.sales_rep_token = login_response["token"]
