@@ -255,7 +255,7 @@ async def get_clinics(current_user: User = Depends(get_current_user)):
     if current_user.role == UserRole.SALES_REP:
         query = {"$or": [{"approved_by": {"$ne": None}}, {"added_by": current_user.id}]}
     
-    clinics = await db.clinics.find(query).to_list(1000)
+    clinics = await db.clinics.find(query, {"_id": 0}).to_list(1000)
     return clinics
 
 @api_router.patch("/clinics/{clinic_id}/approve")
