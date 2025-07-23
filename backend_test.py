@@ -1766,6 +1766,539 @@ class BackendTester:
         else:
             self.log_test("Base64 Audio Storage", False, "No visits available for testing")
         return False
+
+    # PHASE 2 BACKEND FEATURES TESTING - Focus on review request requirements
+    
+    def test_enhanced_user_management_get_user_details(self):
+        """Test Phase 2: GET /api/users/{user_id} endpoint for detailed user info"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Enhanced User Management - GET User Details", False, "Missing admin token or sales rep ID")
+            return False
+        
+        status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["id", "username", "email", "full_name", "role", "is_active", "created_at"]
+            if all(field in response for field in required_fields):
+                self.log_test("Enhanced User Management - GET User Details", True, f"Retrieved detailed user info: {response.get('username')}")
+                return True
+            else:
+                self.log_test("Enhanced User Management - GET User Details", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Enhanced User Management - GET User Details", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_user_management_update_user(self):
+        """Test Phase 2: PATCH /api/users/{user_id} endpoint for updating users"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Enhanced User Management - UPDATE User", False, "Missing admin token or sales rep ID")
+            return False
+        
+        update_data = {
+            "full_name": "مندوب المبيعات المحدث",
+            "phone": "+966501111999",
+            "email": "updated_salesrep@test.com"
+        }
+        
+        status_code, response = self.make_request("PATCH", f"/users/{self.sales_rep_id}", update_data, self.admin_token)
+        
+        if status_code == 200:
+            # Verify update by getting user details
+            status_code, user_details = self.make_request("GET", f"/users/{self.sales_rep_id}", token=self.admin_token)
+            if status_code == 200 and user_details.get("full_name") == update_data["full_name"]:
+                self.log_test("Enhanced User Management - UPDATE User", True, "User updated successfully")
+                return True
+            else:
+                self.log_test("Enhanced User Management - UPDATE User", False, "Update not reflected in user details")
+        else:
+            self.log_test("Enhanced User Management - UPDATE User", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_user_management_delete_user(self):
+        """Test Phase 2: DELETE /api/users/{user_id} endpoint for deleting users"""
+        if not self.admin_token:
+            self.log_test("Enhanced User Management - DELETE User", False, "No admin token available")
+            return False
+        
+        # Create a temporary user to delete
+        import time
+        timestamp = str(int(time.time()))
+        temp_user_data = {
+            "username": f"temp_user_{timestamp}",
+            "email": f"temp_{timestamp}@test.com",
+            "password": "temp123",
+            "role": "sales_rep",
+            "full_name": "مستخدم مؤقت للحذف",
+            "phone": "+966508888888"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", temp_user_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Enhanced User Management - DELETE User", False, "Failed to create temporary user")
+            return False
+        
+        temp_user_id = response.get('user_id')
+        
+        # Delete the user
+        status_code, response = self.make_request("DELETE", f"/users/{temp_user_id}", token=self.admin_token)
+        
+        if status_code == 200:
+            # Verify user is deleted by trying to get details
+            status_code, user_details = self.make_request("GET", f"/users/{temp_user_id}", token=self.admin_token)
+            if status_code == 404:
+                self.log_test("Enhanced User Management - DELETE User", True, "User deleted successfully")
+                return True
+            else:
+                self.log_test("Enhanced User Management - DELETE User", False, "User still exists after deletion")
+        else:
+            self.log_test("Enhanced User Management - DELETE User", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_user_management_toggle_status(self):
+        """Test Phase 2: PATCH /api/users/{user_id}/toggle-status endpoint"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Enhanced User Management - Toggle Status", False, "Missing admin token or sales rep ID")
+            return False
+        
+        # Get current status
+        status_code, user_details = self.make_request("GET", f"/users/{self.sales_rep_id}", token=self.admin_token)
+        if status_code != 200:
+            self.log_test("Enhanced User Management - Toggle Status", False, "Failed to get current user status")
+            return False
+        
+        current_status = user_details.get("is_active", True)
+        
+        # Toggle status
+        status_code, response = self.make_request("PATCH", f"/users/{self.sales_rep_id}/toggle-status", {}, self.admin_token)
+        
+        if status_code == 200:
+            # Verify status was toggled
+            status_code, updated_details = self.make_request("GET", f"/users/{self.sales_rep_id}", token=self.admin_token)
+            if status_code == 200:
+                new_status = updated_details.get("is_active")
+                if new_status != current_status:
+                    self.log_test("Enhanced User Management - Toggle Status", True, f"Status toggled from {current_status} to {new_status}")
+                    return True
+                else:
+                    self.log_test("Enhanced User Management - Toggle Status", False, "Status not changed after toggle")
+            else:
+                self.log_test("Enhanced User Management - Toggle Status", False, "Failed to verify status change")
+        else:
+            self.log_test("Enhanced User Management - Toggle Status", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_user_management_role_based_access(self):
+        """Test Phase 2: Verify role-based access control for user management"""
+        if not self.sales_rep_token or not self.manager_id:
+            self.log_test("Enhanced User Management - Role Access", False, "Missing sales rep token or manager ID")
+            return False
+        
+        # Sales rep should not be able to update manager
+        update_data = {"full_name": "محاولة تحديث غير مسموحة"}
+        status_code, response = self.make_request("PATCH", f"/users/{self.manager_id}", update_data, self.sales_rep_token)
+        
+        if status_code == 403:
+            self.log_test("Enhanced User Management - Role Access", True, "Sales rep correctly denied manager update access")
+            return True
+        else:
+            self.log_test("Enhanced User Management - Role Access", False, f"Expected 403, got {status_code}", response)
+        return False
+
+    def test_gamification_system_get_achievements(self):
+        """Test Phase 2: GET /api/achievements endpoint for listing achievements"""
+        if not self.admin_token:
+            self.log_test("Gamification System - GET Achievements", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/achievements", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Gamification System - GET Achievements", True, f"Retrieved {len(response)} achievements")
+            return True
+        elif status_code == 404:
+            self.log_test("Gamification System - GET Achievements", False, "Achievements API not implemented yet")
+            return False
+        else:
+            self.log_test("Gamification System - GET Achievements", False, f"Status: {status_code}", response)
+        return False
+
+    def test_gamification_system_get_user_points(self):
+        """Test Phase 2: GET /api/users/{user_id}/points endpoint for user points and achievements"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Gamification System - GET User Points", False, "Missing admin token or sales rep ID")
+            return False
+        
+        status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}/points", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["total_points", "level", "achievements_unlocked"]
+            if all(field in response for field in required_fields):
+                self.log_test("Gamification System - GET User Points", True, f"Retrieved user points: {response}")
+                return True
+            else:
+                self.log_test("Gamification System - GET User Points", False, f"Missing required fields: {response}")
+        elif status_code == 404:
+            self.log_test("Gamification System - GET User Points", False, "User points API not implemented yet")
+            return False
+        else:
+            self.log_test("Gamification System - GET User Points", False, f"Status: {status_code}", response)
+        return False
+
+    def test_gamification_system_award_points(self):
+        """Test Phase 2: POST /api/users/{user_id}/points endpoint for awarding points manually"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Gamification System - Award Points", False, "Missing admin token or sales rep ID")
+            return False
+        
+        points_data = {
+            "points": 50,
+            "reason": "اختبار منح النقاط",
+            "activity_type": "MANUAL"
+        }
+        
+        status_code, response = self.make_request("POST", f"/users/{self.sales_rep_id}/points", points_data, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Gamification System - Award Points", True, "Points awarded successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Gamification System - Award Points", False, "Award points API not implemented yet")
+            return False
+        else:
+            self.log_test("Gamification System - Award Points", False, f"Status: {status_code}", response)
+        return False
+
+    def test_doctor_rating_system_rate_doctor(self):
+        """Test Phase 2: POST /api/doctors/{doctor_id}/rating endpoint for rating doctors"""
+        if not self.sales_rep_token or not self.test_doctor_id:
+            self.log_test("Doctor Rating System - Rate Doctor", False, "Missing sales rep token or doctor ID")
+            return False
+        
+        # First need a visit to rate the doctor
+        status_code, visits = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code != 200 or len(visits) == 0:
+            self.log_test("Doctor Rating System - Rate Doctor", False, "No visits available for rating")
+            return False
+        
+        visit_id = visits[0]["id"]
+        
+        rating_data = {
+            "visit_id": visit_id,
+            "rating": 5,
+            "feedback": "طبيب ممتاز ومتعاون",
+            "categories": {
+                "cooperation": 5,
+                "interest": 4,
+                "professionalism": 5
+            }
+        }
+        
+        status_code, response = self.make_request("POST", f"/doctors/{self.test_doctor_id}/rating", rating_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Doctor Rating System - Rate Doctor", True, "Doctor rated successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Doctor Rating System - Rate Doctor", False, "Doctor rating API not implemented yet")
+            return False
+        else:
+            self.log_test("Doctor Rating System - Rate Doctor", False, f"Status: {status_code}", response)
+        return False
+
+    def test_doctor_rating_system_get_ratings(self):
+        """Test Phase 2: GET /api/doctors/{doctor_id}/ratings endpoint for getting doctor ratings"""
+        if not self.admin_token or not self.test_doctor_id:
+            self.log_test("Doctor Rating System - GET Ratings", False, "Missing admin token or doctor ID")
+            return False
+        
+        status_code, response = self.make_request("GET", f"/doctors/{self.test_doctor_id}/ratings", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Doctor Rating System - GET Ratings", True, f"Retrieved {len(response)} doctor ratings")
+            return True
+        elif status_code == 404:
+            self.log_test("Doctor Rating System - GET Ratings", False, "Doctor ratings API not implemented yet")
+            return False
+        else:
+            self.log_test("Doctor Rating System - GET Ratings", False, f"Status: {status_code}", response)
+        return False
+
+    def test_clinic_rating_system_rate_clinic(self):
+        """Test Phase 2: POST /api/clinics/{clinic_id}/rating endpoint for rating clinics"""
+        if not self.sales_rep_token or not self.test_clinic_id:
+            self.log_test("Clinic Rating System - Rate Clinic", False, "Missing sales rep token or clinic ID")
+            return False
+        
+        # First need a visit to rate the clinic
+        status_code, visits = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code != 200 or len(visits) == 0:
+            self.log_test("Clinic Rating System - Rate Clinic", False, "No visits available for rating")
+            return False
+        
+        visit_id = visits[0]["id"]
+        
+        rating_data = {
+            "visit_id": visit_id,
+            "rating": 4,
+            "feedback": "عيادة نظيفة ومنظمة",
+            "categories": {
+                "accessibility": 5,
+                "staff": 4,
+                "environment": 4
+            }
+        }
+        
+        status_code, response = self.make_request("POST", f"/clinics/{self.test_clinic_id}/rating", rating_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Clinic Rating System - Rate Clinic", True, "Clinic rated successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Clinic Rating System - Rate Clinic", False, "Clinic rating API not implemented yet")
+            return False
+        else:
+            self.log_test("Clinic Rating System - Rate Clinic", False, f"Status: {status_code}", response)
+        return False
+
+    def test_doctor_preferences_get(self):
+        """Test Phase 2: GET /api/doctors/{doctor_id}/preferences endpoint"""
+        if not self.admin_token or not self.test_doctor_id:
+            self.log_test("Doctor Preferences - GET", False, "Missing admin token or doctor ID")
+            return False
+        
+        status_code, response = self.make_request("GET", f"/doctors/{self.test_doctor_id}/preferences", token=self.admin_token)
+        
+        if status_code == 200:
+            expected_fields = ["preferred_products", "preferred_visit_times", "communication_preference"]
+            if any(field in response for field in expected_fields):
+                self.log_test("Doctor Preferences - GET", True, f"Retrieved doctor preferences: {response}")
+                return True
+            else:
+                self.log_test("Doctor Preferences - GET", False, f"Missing preference fields: {response}")
+        elif status_code == 404:
+            self.log_test("Doctor Preferences - GET", False, "Doctor preferences API not implemented yet")
+            return False
+        else:
+            self.log_test("Doctor Preferences - GET", False, f"Status: {status_code}", response)
+        return False
+
+    def test_doctor_preferences_update(self):
+        """Test Phase 2: POST /api/doctors/{doctor_id}/preferences endpoint for updating preferences"""
+        if not self.admin_token or not self.test_doctor_id:
+            self.log_test("Doctor Preferences - UPDATE", False, "Missing admin token or doctor ID")
+            return False
+        
+        # Get products for preference setting
+        status_code, products = self.make_request("GET", "/products", token=self.admin_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("Doctor Preferences - UPDATE", False, "No products available for preferences")
+            return False
+        
+        product_id = products[0]["id"]
+        
+        preferences_data = {
+            "preferred_products": [product_id],
+            "preferred_visit_times": "morning",
+            "communication_preference": "phone",
+            "language_preference": "ar",
+            "notes": "يفضل الزيارات الصباحية"
+        }
+        
+        status_code, response = self.make_request("POST", f"/doctors/{self.test_doctor_id}/preferences", preferences_data, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Doctor Preferences - UPDATE", True, "Doctor preferences updated successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Doctor Preferences - UPDATE", False, "Doctor preferences update API not implemented yet")
+            return False
+        else:
+            self.log_test("Doctor Preferences - UPDATE", False, f"Status: {status_code}", response)
+        return False
+
+    def test_appointment_management_create(self):
+        """Test Phase 2: POST /api/appointments endpoint for creating appointments"""
+        if not self.sales_rep_token or not self.test_doctor_id or not self.test_clinic_id:
+            self.log_test("Appointment Management - CREATE", False, "Missing required tokens or IDs")
+            return False
+        
+        from datetime import datetime, timedelta
+        future_date = datetime.utcnow() + timedelta(days=1)
+        
+        appointment_data = {
+            "doctor_id": self.test_doctor_id,
+            "clinic_id": self.test_clinic_id,
+            "scheduled_date": future_date.isoformat(),
+            "duration_minutes": 30,
+            "purpose": "زيارة تسويقية للمنتجات الجديدة",
+            "notes": "موعد مهم مع الطبيب"
+        }
+        
+        status_code, response = self.make_request("POST", "/appointments", appointment_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Appointment Management - CREATE", True, f"Appointment created successfully: {response.get('appointment_id')}")
+            return True
+        elif status_code == 404:
+            self.log_test("Appointment Management - CREATE", False, "Appointments API not implemented yet")
+            return False
+        else:
+            self.log_test("Appointment Management - CREATE", False, f"Status: {status_code}", response)
+        return False
+
+    def test_appointment_management_get(self):
+        """Test Phase 2: GET /api/appointments endpoint for listing appointments"""
+        if not self.sales_rep_token:
+            self.log_test("Appointment Management - GET", False, "No sales rep token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/appointments", token=self.sales_rep_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Appointment Management - GET", True, f"Retrieved {len(response)} appointments")
+            return True
+        elif status_code == 404:
+            self.log_test("Appointment Management - GET", False, "Appointments GET API not implemented yet")
+            return False
+        else:
+            self.log_test("Appointment Management - GET", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_system_settings_new_fields(self):
+        """Test Phase 2: Enhanced SystemSettings model with new fields"""
+        if not self.admin_token:
+            self.log_test("Enhanced System Settings - New Fields", False, "No admin token available")
+            return False
+        
+        # Test updating with new enhanced fields
+        enhanced_settings = {
+            "company_name": "نظام إدارة المناديب المحسن",
+            "primary_color": "#3b82f6",
+            "secondary_color": "#ef4444",
+            "available_themes": ["dark", "light", "blue"],
+            "default_theme": "dark",
+            "role_permissions": {
+                "admin": ["all"],
+                "manager": ["users.view", "visits.view"],
+                "sales_rep": ["visits.create"]
+            },
+            "display_mode": "grid",
+            "language": "ar",
+            "notifications_enabled": True,
+            "chat_enabled": True,
+            "voice_notes_enabled": True
+        }
+        
+        status_code, response = self.make_request("POST", "/settings", enhanced_settings, self.admin_token)
+        
+        if status_code == 200:
+            # Verify enhanced settings were saved
+            status_code, get_response = self.make_request("GET", "/settings")
+            if status_code == 200:
+                enhanced_fields = ["available_themes", "role_permissions", "display_mode", "notifications_enabled"]
+                if any(field in get_response for field in enhanced_fields):
+                    self.log_test("Enhanced System Settings - New Fields", True, "Enhanced settings fields working")
+                    return True
+                else:
+                    self.log_test("Enhanced System Settings - New Fields", False, "Enhanced fields not saved")
+            else:
+                self.log_test("Enhanced System Settings - New Fields", False, "Failed to retrieve enhanced settings")
+        else:
+            self.log_test("Enhanced System Settings - New Fields", False, f"Status: {status_code}", response)
+        return False
+
+    def run_phase2_tests(self):
+        """Run Phase 2 backend tests focusing on review request requirements"""
+        print("🚀 Starting Phase 2 Backend Testing...")
+        print("=" * 60)
+        
+        # Core authentication setup
+        if not self.test_admin_login():
+            print("❌ Critical: Admin login failed. Stopping tests.")
+            return
+        
+        # Setup required users and data
+        self.test_create_manager_user()
+        self.test_create_sales_rep_user()
+        self.setup_test_products_and_warehouses()
+        self.test_create_clinic()
+        self.test_approve_clinic()
+        self.test_create_doctor()
+        self.test_approve_doctor()
+        self.test_visit_within_geofence()  # Create a visit for rating tests
+        
+        print("\n🔍 Testing Phase 2 Enhanced Features...")
+        print("-" * 40)
+        
+        # 1. Enhanced User Management APIs
+        print("\n1️⃣ Enhanced User Management APIs:")
+        self.test_enhanced_user_management_get_user_details()
+        self.test_enhanced_user_management_update_user()
+        self.test_enhanced_user_management_delete_user()
+        self.test_enhanced_user_management_toggle_status()
+        self.test_enhanced_user_management_role_based_access()
+        
+        # 2. Gamification System APIs
+        print("\n2️⃣ Gamification System APIs:")
+        self.test_gamification_system_get_achievements()
+        self.test_gamification_system_get_user_points()
+        self.test_gamification_system_award_points()
+        
+        # 3. Doctor and Clinic Rating APIs
+        print("\n3️⃣ Doctor and Clinic Rating APIs:")
+        self.test_doctor_rating_system_rate_doctor()
+        self.test_doctor_rating_system_get_ratings()
+        self.test_clinic_rating_system_rate_clinic()
+        
+        # 4. Doctor Preferences APIs
+        print("\n4️⃣ Doctor Preferences APIs:")
+        self.test_doctor_preferences_get()
+        self.test_doctor_preferences_update()
+        
+        # 5. Appointment Management APIs
+        print("\n5️⃣ Appointment Management APIs:")
+        self.test_appointment_management_create()
+        self.test_appointment_management_get()
+        
+        # 6. Enhanced System Settings
+        print("\n6️⃣ Enhanced System Settings:")
+        self.test_enhanced_system_settings_new_fields()
+        
+        # Print summary
+        self.print_test_summary()
+
+    def print_test_summary(self):
+        """Print test results summary"""
+        print("\n" + "=" * 60)
+        print("📊 TEST RESULTS SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result["success"])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"📈 Success Rate: {success_rate:.1f}%")
+        
+        if failed_tests > 0:
+            print("\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   • {result['test']}: {result['details']}")
+        
+        print("\n🎉 Testing completed!")
+        
+        # Return summary for external use
+        return {
+            "total": total_tests,
+            "passed": passed_tests,
+            "failed": failed_tests,
+            "success_rate": success_rate,
+            "results": self.test_results
+        }
     
     def run_all_tests(self):
         """Run all backend tests"""
