@@ -2644,7 +2644,7 @@ async def get_advanced_reports(
 async def approve_order(
     order_id: str,
     approval_data: dict,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Approve order with workflow"""
     try:
@@ -2652,7 +2652,7 @@ async def approve_order(
         if not order:
             raise HTTPException(status_code=404, detail="Order not found")
         
-        user_role = current_user["role"]
+        user_role = current_user.role
         current_status = order.get("status", OrderWorkflow.PENDING)
         
         # Approval workflow logic
@@ -2671,7 +2671,7 @@ async def approve_order(
             {
                 "$set": {
                     "status": new_status,
-                    f"approved_by_{user_role}": current_user["id"],
+                    f"approved_by_{user_role}": current_user.id,
                     f"approved_at_{user_role}": datetime.utcnow(),
                     "notes": approval_data.get("notes", "")
                 }
