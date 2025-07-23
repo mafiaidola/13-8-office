@@ -80,6 +80,8 @@ class BackendTester:
                 response = self.session.post(url, json=data, headers=headers)
             elif method.upper() == "PATCH":
                 response = self.session.patch(url, json=data, headers=headers)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url, headers=headers)
             else:
                 raise ValueError(f"Unsupported method: {method}")
             
