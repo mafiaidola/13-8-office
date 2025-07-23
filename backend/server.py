@@ -425,13 +425,21 @@ async def create_product(product_data: ProductCreate, current_user: User = Depen
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admin can create products")
     
+    # Calculate discounted price
+    discounted_price = product_data.price_before_discount * (1 - product_data.discount_percentage / 100)
+    
     product = Product(
         name=product_data.name,
         description=product_data.description,
-        price=product_data.price,
+        price=discounted_price,
+        price_before_discount=product_data.price_before_discount,
+        discount_percentage=product_data.discount_percentage,
         category=product_data.category,
         unit=product_data.unit,
-        created_by=current_user.id
+        image=product_data.image,
+        currency="EGP",
+        created_by=current_user.id,
+        approved_by=current_user.id  # Auto-approved when admin creates
     )
     
     await db.products.insert_one(product.dict())
