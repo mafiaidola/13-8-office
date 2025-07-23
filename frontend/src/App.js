@@ -1034,6 +1034,660 @@ const ReportsSection = () => {
   );
 };
 
+// Enhanced Sales Rep Dashboard
+const SalesRepDashboard = () => {
+  const [detailedStats, setDetailedStats] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDetailedStats();
+  }, []);
+
+  const fetchDetailedStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/dashboard/sales-rep-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDetailedStats(response.data);
+    } catch (error) {
+      console.error('Error fetching detailed stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-2 text-gray-600">جاري تحميل الإحصائيات...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Visit Statistics Section */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">قسم الزيارات</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-green-50 p-4 rounded-lg text-center">
+            <h3 className="text-lg font-semibold text-green-800">زيارات اليوم</h3>
+            <p className="text-3xl font-bold text-green-600">{detailedStats.visits?.today || 0}</p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-lg text-center">
+            <h3 className="text-lg font-semibold text-blue-800">زيارات الأسبوع</h3>
+            <p className="text-3xl font-bold text-blue-600">{detailedStats.visits?.week || 0}</p>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg text-center">
+            <h3 className="text-lg font-semibold text-purple-800">زيارات الشهر</h3>
+            <p className="text-3xl font-bold text-purple-600">{detailedStats.visits?.month || 0}</p>
+          </div>
+          <div className="bg-indigo-50 p-4 rounded-lg text-center">
+            <h3 className="text-lg font-semibold text-indigo-800">إجمالي الزيارات</h3>
+            <p className="text-3xl font-bold text-indigo-600">{detailedStats.visits?.total || 0}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* General Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">إجمالي العيادات المضافة</h3>
+          <p className="text-3xl font-bold text-blue-600">{detailedStats.total_clinics_added || 0}</p>
+          <p className="text-sm text-gray-500 mt-1">عن طريقك</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">إجمالي الأطباء المسجلين</h3>
+          <p className="text-3xl font-bold text-green-600">{detailedStats.total_doctors_added || 0}</p>
+          <p className="text-sm text-gray-500 mt-1">عن طريقك</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">في انتظار الموافقة</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">زيارات:</span>
+              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.visits || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">عيادات:</span>
+              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.clinic_requests || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">أوردرات:</span>
+              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.orders || 0}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Clinic Registration Component
+const ClinicRegistration = () => {
+  const [formData, setFormData] = useState({
+    clinic_name: '',
+    clinic_phone: '',
+    doctor_name: '',
+    doctor_specialty: '',
+    doctor_address: '',
+    clinic_manager_name: '',
+    address: '',
+    notes: '',
+    clinic_image: ''
+  });
+  const [location, setLocation] = useState(null);
+  const [locationAddress, setLocationAddress] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          setLocation(newLocation);
+          
+          // Reverse geocoding to get address (basic implementation)
+          setLocationAddress(`${newLocation.latitude.toFixed(6)}, ${newLocation.longitude.toFixed(6)}`);
+        },
+        (error) => {
+          setError('لا يمكن الحصول على موقعك الحالي. تأكد من تفعيل GPS');
+        }
+      );
+    } else {
+      setError('المتصفح لا يدعم تحديد الموقع');
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({...formData, clinic_image: event.target.result});
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!location) {
+      setError('لا يمكن تسجيل العيادة بدون تحديد الموقع');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const requestData = {
+        ...formData,
+        latitude: location.latitude,
+        longitude: location.longitude
+      };
+
+      await axios.post(`${API}/clinic-requests`, requestData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('تم إرسال طلب تسجيل العيادة بنجاح. في انتظار موافقة المدير');
+      setFormData({
+        clinic_name: '',
+        clinic_phone: '',
+        doctor_name: '',
+        doctor_specialty: '',
+        doctor_address: '',
+        clinic_manager_name: '',
+        address: '',
+        notes: '',
+        clinic_image: ''
+      });
+    } catch (error) {
+      setError(error.response?.data?.detail || 'حدث خطأ في إرسال الطلب');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">تسجيل عيادة جديدة</h2>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+          {success}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Location Section */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-blue-800 mb-3">الموقع الجغرافي الحالي</h3>
+          <div className="space-y-2">
+            {location ? (
+              <>
+                <div className="flex items-center text-sm text-blue-700">
+                  <span className="font-medium ml-2">📍 الإحداثيات:</span>
+                  <span>{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
+                </div>
+                <div className="flex items-center text-sm text-blue-700">
+                  <span className="font-medium ml-2">📍 العنوان:</span>
+                  <span>{locationAddress}</span>
+                </div>
+              </>
+            ) : (
+              <p className="text-blue-600">جاري تحديد الموقع...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Clinic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">اسم العيادة</label>
+            <input
+              type="text"
+              value={formData.clinic_name}
+              onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">رقم العيادة</label>
+            <input
+              type="tel"
+              value={formData.clinic_phone}
+              onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Doctor Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">اسم الطبيب</label>
+            <input
+              type="text"
+              value={formData.doctor_name}
+              onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">تخصص الطبيب</label>
+            <select
+              value={formData.doctor_specialty}
+              onChange={(e) => setFormData({...formData, doctor_specialty: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">اختر التخصص</option>
+              <option value="طب عام">طب عام</option>
+              <option value="طب أطفال">طب أطفال</option>
+              <option value="طب نساء وولادة">طب نساء وولادة</option>
+              <option value="طب عيون">طب عيون</option>
+              <option value="طب أسنان">طب أسنان</option>
+              <option value="طب جلدية">طب جلدية</option>
+              <option value="طب باطنة">طب باطنة</option>
+              <option value="طب عظام">طب عظام</option>
+              <option value="طب أنف وأذن وحنجرة">طب أنف وأذن وحنجرة</option>
+              <option value="طب نفسي">طب نفسي</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">عنوان الطبيب</label>
+          <input
+            type="text"
+            value={formData.doctor_address}
+            onChange={(e) => setFormData({...formData, doctor_address: e.target.value})}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">اسم المسؤول عن إدارة العيادة</label>
+            <input
+              type="text"
+              value={formData.clinic_manager_name}
+              onChange={(e) => setFormData({...formData, clinic_manager_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">عنوان العيادة</label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">صورة العيادة من الخارج (اختياري)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+          {formData.clinic_image && (
+            <div className="mt-2">
+              <img
+                src={formData.clinic_image}
+                alt="صورة العيادة"
+                className="h-32 w-32 object-cover rounded-lg"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات العيادة</label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => setFormData({...formData, notes: e.target.value})}
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="أضف أي ملاحظات مهمة عن العيادة..."
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading || !location}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'جاري الإرسال...' : 'إرسال طلب تسجيل العيادة'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+// Order Creation Component
+const OrderCreation = () => {
+  const [doctors, setDoctors] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [orderData, setOrderData] = useState({
+    doctor_id: '',
+    order_type: 'DEMO',
+    warehouse_id: '',
+    notes: '',
+    items: []
+  });
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    fetchDoctors();
+    fetchProducts();
+    fetchWarehouses();
+  }, []);
+
+  const fetchDoctors = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/doctors`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Only show approved doctors
+      setDoctors(response.data.filter(doctor => doctor.approved_by));
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchWarehouses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/warehouses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouses(response.data);
+    } catch (error) {
+      console.error('Error fetching warehouses:', error);
+    }
+  };
+
+  const addProductToOrder = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (product && !selectedProducts.find(p => p.id === productId)) {
+      setSelectedProducts([...selectedProducts, {...product, quantity: 1}]);
+    }
+  };
+
+  const updateProductQuantity = (productId, quantity) => {
+    setSelectedProducts(selectedProducts.map(p => 
+      p.id === productId ? {...p, quantity: parseInt(quantity)} : p
+    ));
+  };
+
+  const removeProduct = (productId) => {
+    setSelectedProducts(selectedProducts.filter(p => p.id !== productId));
+  };
+
+  const getTotalAmount = () => {
+    return selectedProducts.reduce((total, product) => {
+      return total + (product.price * product.quantity);
+    }, 0);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedProducts.length === 0) {
+      setError('يجب إضافة منتج واحد على الأقل');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const doctor = doctors.find(d => d.id === orderData.doctor_id);
+      
+      const requestData = {
+        ...orderData,
+        clinic_id: doctor.clinic_id,
+        items: selectedProducts.map(p => ({
+          product_id: p.id,
+          quantity: p.quantity
+        }))
+      };
+
+      await axios.post(`${API}/orders`, requestData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('تم إرسال الطلبية بنجاح. في انتظار موافقة المدير');
+      setOrderData({
+        doctor_id: '',
+        order_type: 'DEMO',
+        warehouse_id: '',
+        notes: '',
+        items: []
+      });
+      setSelectedProducts([]);
+    } catch (error) {
+      setError(error.response?.data?.detail || 'حدث خطأ في إرسال الطلبية');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">عمل طلبية</h2>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+          {success}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Doctor Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">اختيار الطبيب</label>
+          <select
+            value={orderData.doctor_id}
+            onChange={(e) => setOrderData({...orderData, doctor_id: e.target.value})}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">-- اختر الطبيب --</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.id}>
+                د. {doctor.name} - {doctor.specialty}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Order Type */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">نوع الطلبية</label>
+            <select
+              value={orderData.order_type}
+              onChange={(e) => setOrderData({...orderData, order_type: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="DEMO">ديمو (مجاني)</option>
+              <option value="SALE">أوردر مدفوع</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">اختيار المخزن</label>
+            <select
+              value={orderData.warehouse_id}
+              onChange={(e) => setOrderData({...orderData, warehouse_id: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">-- اختر المخزن --</option>
+              {warehouses.map((warehouse) => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name} - {warehouse.location}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Product Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">إضافة منتجات</label>
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                addProductToOrder(e.target.value);
+                e.target.value = '';
+              }
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">-- اختر منتج لإضافته --</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name} - {product.price} ريال ({product.unit})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selected Products */}
+        {selectedProducts.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">المنتجات المختارة</h3>
+            <div className="space-y-3">
+              {selectedProducts.map((product) => (
+                <div key={product.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-800">{product.name}</h4>
+                    <p className="text-sm text-gray-600">{product.price} ريال / {product.unit}</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="number"
+                      min="1"
+                      value={product.quantity}
+                      onChange={(e) => updateProductQuantity(product.id, e.target.value)}
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+                    />
+                    <span className="text-sm font-medium text-gray-600">
+                      {(product.price * product.quantity).toFixed(2)} ريال
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeProduct(product.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-blue-800">إجمالي الطلبية:</span>
+                  <span className="text-xl font-bold text-blue-600">{getTotalAmount().toFixed(2)} ريال</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات الأوردر</label>
+          <textarea
+            value={orderData.notes}
+            onChange={(e) => setOrderData({...orderData, notes: e.target.value})}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="أضف أي ملاحظات خاصة بالطلبية..."
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading || selectedProducts.length === 0}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'جاري الإرسال...' : 'إرسال الطلبية'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 const VisitRegistration = () => {
   const [doctors, setDoctors] = useState([]);
   const [clinics, setClinics] = useState([]);
