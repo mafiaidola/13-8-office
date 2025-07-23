@@ -28,6 +28,9 @@ JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 # Create the main app
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
