@@ -50,6 +50,7 @@ class UserRole:
         "admin": 4,
         "warehouse_manager": 3,
         "manager": 2,
+        "accounting": 2,  # Added accounting role
         "sales_rep": 1
     }
     
