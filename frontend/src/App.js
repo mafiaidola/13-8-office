@@ -2429,7 +2429,7 @@ const AppContent = () => {
           <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>جاري التحميل...</p>
         </div>
       </div>
-    </>);
+    );
   }
 
   return user ? <Dashboard /> : <LoginPage />;
