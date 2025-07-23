@@ -3204,7 +3204,7 @@ const Dashboard = () => {
               className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
               <span className="ml-2">📊</span>
-              لوحة التحكم
+              {user.role === 'admin' ? 'الإحصائيات' : 'لوحة التحكم'}
             </button>
             
             {canAccessTab('users') && (
