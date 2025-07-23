@@ -799,7 +799,197 @@ async def review_clinic_request(request_id: str, approved: bool, current_user: U
     
     return {"message": f"Request {status.lower()} successfully"}
 
-# Enhanced Dashboard Routes
+# Order Management Routes
+@api_router.post("/orders")
+async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can create orders")
+    
+    # Check if doctor and clinic exist
+    doctor = await db.doctors.find_one({"id": order_data.doctor_id})
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    
+    clinic = await db.clinics.find_one({"id": order_data.clinic_id})
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    
+    # Check if warehouse exists
+    warehouse = await db.warehouses.find_one({"id": order_data.warehouse_id})
+    if not warehouse:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    
+    # Calculate total amount
+    total_amount = 0.0
+    order_items = []
+    
+    for item_data in order_data.items:
+        product = await db.products.find_one({"id": item_data["product_id"]})
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product {item_data['product_id']} not found")
+        
+        item_total = product["price"] * item_data["quantity"]
+        total_amount += item_total if order_data.order_type == "SALE" else 0.0
+        
+        order_item = OrderItem(
+            order_id="",  # Will be set after order creation
+            product_id=item_data["product_id"],
+            quantity=item_data["quantity"],
+            unit_price=product["price"],
+            total_price=item_total
+        )
+        order_items.append(order_item)
+    
+    # Create order
+    order = Order(
+        visit_id=order_data.visit_id,
+        sales_rep_id=current_user.id,
+        doctor_id=order_data.doctor_id,
+        clinic_id=order_data.clinic_id,
+        warehouse_id=order_data.warehouse_id,
+        status="PENDING",
+        order_type=order_data.order_type,
+        total_amount=total_amount,
+        notes=order_data.notes
+    )
+    
+    # Insert order
+    await db.orders.insert_one(order.dict())
+    
+    # Insert order items
+    for item in order_items:
+        item.order_id = order.id
+        await db.order_items.insert_one(item.dict())
+    
+    return {"message": "Order created successfully", "order_id": order.id}
+
+@api_router.get("/orders", response_model=List[Dict[str, Any]])
+async def get_orders(current_user: User = Depends(get_current_user)):
+    query = {}
+    
+    if current_user.role == UserRole.SALES_REP:
+        query = {"sales_rep_id": current_user.id}
+    elif current_user.role == UserRole.MANAGER:
+        # Managers can see orders from their subordinates
+        subordinates = await db.users.find({"managed_by": current_user.id}).to_list(100)
+        subordinate_ids = [sub["id"] for sub in subordinates]
+        if subordinate_ids:
+            query = {"sales_rep_id": {"$in": subordinate_ids}}
+    elif current_user.role == UserRole.WAREHOUSE_MANAGER:
+        # Warehouse managers see orders for their warehouses
+        my_warehouses = await db.warehouses.find({"manager_id": current_user.id}).to_list(100)
+        warehouse_ids = [w["id"] for w in my_warehouses]
+        if warehouse_ids:
+            query = {"warehouse_id": {"$in": warehouse_ids}}
+    # Admin sees all orders
+    
+    orders = await db.orders.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich with related information
+    for order in orders:
+        # Get sales rep info
+        sales_rep = await db.users.find_one({"id": order["sales_rep_id"]}, {"_id": 0})
+        order["sales_rep_name"] = sales_rep["full_name"] if sales_rep else "Unknown"
+        
+        # Get doctor info
+        doctor = await db.doctors.find_one({"id": order["doctor_id"]}, {"_id": 0})
+        order["doctor_name"] = doctor["name"] if doctor else "Unknown"
+        
+        # Get clinic info
+        clinic = await db.clinics.find_one({"id": order["clinic_id"]}, {"_id": 0})
+        order["clinic_name"] = clinic["name"] if clinic else "Unknown"
+        
+        # Get warehouse info
+        warehouse = await db.warehouses.find_one({"id": order["warehouse_id"]}, {"_id": 0})
+        order["warehouse_name"] = warehouse["name"] if warehouse else "Unknown"
+        
+        # Get order items
+        items = await db.order_items.find({"order_id": order["id"]}, {"_id": 0}).to_list(100)
+        for item in items:
+            product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+            item["product_name"] = product["name"] if product else "Unknown"
+        order["items"] = items
+        
+        # Get reviewer info if reviewed
+        if order.get("approved_by"):
+            reviewer = await db.users.find_one({"id": order["approved_by"]}, {"_id": 0})
+            order["approved_by_name"] = reviewer["full_name"] if reviewer else "Unknown"
+    
+    return orders
+
+@api_router.patch("/orders/{order_id}/review")
+async def review_order(order_id: str, approved: bool, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.MANAGER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only managers can review orders")
+    
+    order = await db.orders.find_one({"id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Check if manager can review this order (from their subordinate)
+    if current_user.role == UserRole.MANAGER:
+        sales_rep = await db.users.find_one({"id": order["sales_rep_id"]})
+        if sales_rep and sales_rep.get("managed_by") != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only review orders from your subordinates")
+    
+    # Check if warehouse manager can review orders for their warehouses
+    if current_user.role == UserRole.WAREHOUSE_MANAGER:
+        warehouse = await db.warehouses.find_one({"id": order["warehouse_id"], "manager_id": current_user.id})
+        if not warehouse:
+            raise HTTPException(status_code=403, detail="You can only review orders for your warehouses")
+    
+    new_status = "APPROVED" if approved else "REJECTED"
+    
+    await db.orders.update_one(
+        {"id": order_id},
+        {"$set": {"status": new_status, "approved_by": current_user.id}}
+    )
+    
+    # If approved, update inventory (reduce stock)
+    if approved:
+        try:
+            order_items = await db.order_items.find({"order_id": order_id}).to_list(100)
+            for item in order_items:
+                # Update inventory
+                inventory = await db.inventory.find_one({
+                    "warehouse_id": order["warehouse_id"],
+                    "product_id": item["product_id"]
+                })
+                
+                if inventory and inventory["quantity"] >= item["quantity"]:
+                    new_quantity = inventory["quantity"] - item["quantity"]
+                    await db.inventory.update_one(
+                        {"warehouse_id": order["warehouse_id"], "product_id": item["product_id"]},
+                        {"$set": {"quantity": new_quantity, "last_updated": datetime.utcnow(), "updated_by": current_user.id}}
+                    )
+                    
+                    # Record stock movement
+                    movement = StockMovement(
+                        warehouse_id=order["warehouse_id"],
+                        product_id=item["product_id"],
+                        movement_type="OUT",
+                        quantity=item["quantity"],
+                        reason=f"Order {order_id} - {order['order_type']}",
+                        reference_id=order_id,
+                        created_by=current_user.id
+                    )
+                    await db.stock_movements.insert_one(movement.dict())
+                else:
+                    # Insufficient stock - reject the order
+                    await db.orders.update_one(
+                        {"id": order_id},
+                        {"$set": {"status": "REJECTED", "approved_by": current_user.id}}
+                    )
+                    raise HTTPException(status_code=400, detail=f"Insufficient stock for product {item['product_id']}")
+        except Exception as e:
+            # Rollback order status if inventory update fails
+            await db.orders.update_one(
+                {"id": order_id},
+                {"$set": {"status": "PENDING", "approved_by": None}}
+            )
+            raise HTTPException(status_code=500, detail=f"Error updating inventory: {str(e)}")
+    
+    return {"message": f"Order {new_status.lower()} successfully"}
 @api_router.get("/dashboard/sales-rep-stats")
 async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SALES_REP:
