@@ -2787,7 +2787,7 @@ async def sync_offline_data(
 @api_router.post("/qr/generate")
 async def generate_qr_code(
     qr_data: dict,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Generate QR code for clinics or products"""
     try:
@@ -2798,7 +2798,7 @@ async def generate_qr_code(
         # Validate QR data
         if qr_data.get("type") == "clinic":
             clinic_id = qr_data.get("clinic_id")
-            clinic = await db.clinics.find_one({"id": clinic_id})
+            clinic = await db.clinics.find_one({"id": clinic_id}, {"_id": 0})
             if not clinic:
                 raise HTTPException(status_code=404, detail="Clinic not found")
             
@@ -2807,11 +2807,11 @@ async def generate_qr_code(
                 "id": clinic_id,
                 "name": clinic["name"],
                 "address": clinic["address"],
-                "coordinates": clinic.get("coordinates", {})
+                "coordinates": {"latitude": clinic.get("latitude"), "longitude": clinic.get("longitude")}
             }
         elif qr_data.get("type") == "product":
             product_id = qr_data.get("product_id")
-            product = await db.products.find_one({"id": product_id})
+            product = await db.products.find_one({"id": product_id}, {"_id": 0})
             if not product:
                 raise HTTPException(status_code=404, detail="Product not found")
             
