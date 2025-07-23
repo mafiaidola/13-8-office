@@ -1253,7 +1253,7 @@ const ClinicRegistration = () => {
     clinic_name: '',
     clinic_phone: '',
     doctor_name: '',
-    doctor_specialty: '',
+    clinic_class: '',
     doctor_address: '',
     clinic_manager_name: '',
     address: '',
@@ -1273,18 +1273,27 @@ const ClinicRegistration = () => {
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const newLocation = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           };
           setLocation(newLocation);
           
-          // Reverse geocoding to get address (basic implementation)
-          setLocationAddress(`${newLocation.latitude.toFixed(6)}, ${newLocation.longitude.toFixed(6)}`);
+          // Convert coordinates to address (placeholder - will be enhanced with Google Maps)
+          try {
+            setLocationAddress(`الموقع: ${newLocation.latitude.toFixed(6)}, ${newLocation.longitude.toFixed(6)}`);
+          } catch (error) {
+            setLocationAddress(`${newLocation.latitude.toFixed(6)}, ${newLocation.longitude.toFixed(6)}`);
+          }
         },
         (error) => {
           setError('لا يمكن الحصول على موقعك الحالي. تأكد من تفعيل GPS');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
     } else {
@@ -1322,6 +1331,7 @@ const ClinicRegistration = () => {
       const token = localStorage.getItem('token');
       const requestData = {
         ...formData,
+        doctor_specialty: formData.clinic_class, // Map clinic_class to doctor_specialty for backend
         latitude: location.latitude,
         longitude: location.longitude
       };
@@ -1335,7 +1345,7 @@ const ClinicRegistration = () => {
         clinic_name: '',
         clinic_phone: '',
         doctor_name: '',
-        doctor_specialty: '',
+        clinic_class: '',
         doctor_address: '',
         clinic_manager_name: '',
         address: '',
@@ -1350,180 +1360,249 @@ const ClinicRegistration = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">تسجيل عيادة جديدة</h2>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
+    <>
+      <ThemeToggle />
+      <div className="card-modern p-8 page-transition">
+        <div className="flex items-center mb-8">
+          <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
+            <span className="text-3xl">🏥</span>
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-gradient">تسجيل عيادة جديدة</h2>
+            <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>أضف عيادة طبية جديدة إلى النظام</p>
+          </div>
         </div>
-      )}
 
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
-          {success}
-        </div>
-      )}
+        {error && (
+          <div className="alert-modern alert-error mb-6 scale-in">
+            <span className="ml-2">⚠️</span>
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Location Section */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-blue-800 mb-3">الموقع الجغرافي الحالي</h3>
-          <div className="space-y-2">
-            {location ? (
-              <>
-                <div className="flex items-center text-sm text-blue-700">
-                  <span className="font-medium ml-2">📍 الإحداثيات:</span>
-                  <span>{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
+        {success && (
+          <div className="alert-modern alert-success mb-6 scale-in">
+            <span className="ml-2">✅</span>
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-8 form-modern">
+          {/* Location Banner */}
+          <div className="card-gradient-success p-6 rounded-2xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
+              <span className="text-2xl">🗺️</span>
+              <span>الموقع الجغرافي الحالي</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {location ? (
+                <>
+                  <div className="glass-effect p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">📍</span>
+                      <span className="font-bold">الإحداثيات:</span>
+                    </div>
+                    <p className="text-sm font-mono">{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
+                  </div>
+                  <div className="glass-effect p-4 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">🏠</span>
+                      <span className="font-bold">العنوان:</span>
+                    </div>
+                    <p className="text-sm">{locationAddress}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-2 text-center">
+                  <div className="gps-indicator">
+                    <span>جاري تحديد الموقع...</span>
+                  </div>
                 </div>
-                <div className="flex items-center text-sm text-blue-700">
-                  <span className="font-medium ml-2">📍 العنوان:</span>
-                  <span>{locationAddress}</span>
-                </div>
-              </>
-            ) : (
-              <p className="text-blue-600">جاري تحديد الموقع...</p>
-            )}
-          </div>
-        </div>
-
-        {/* Clinic Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">اسم العيادة</label>
-            <input
-              type="text"
-              value={formData.clinic_name}
-              onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
+              )}
+            </div>
+            
+            {/* Placeholder for Google Maps */}
+            <div className="mt-6 h-48 glass-effect rounded-xl flex items-center justify-center">
+              <div className="text-center">
+                <span className="text-4xl mb-2 block">🗺️</span>
+                <p className="font-bold">خريطة Google Maps</p>
+                <p className="text-sm opacity-75">سيتم عرض الموقع هنا بعد إضافة مفتاح الخرائط</p>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">رقم العيادة</label>
-            <input
-              type="tel"
-              value={formData.clinic_phone}
-              onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Doctor Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">اسم الطبيب</label>
-            <input
-              type="text"
-              value={formData.doctor_name}
-              onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">تخصص الطبيب</label>
-            <select
-              value={formData.doctor_specialty}
-              onChange={(e) => setFormData({...formData, doctor_specialty: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">اختر التخصص</option>
-              <option value="طب عام">طب عام</option>
-              <option value="طب أطفال">طب أطفال</option>
-              <option value="طب نساء وولادة">طب نساء وولادة</option>
-              <option value="طب عيون">طب عيون</option>
-              <option value="طب أسنان">طب أسنان</option>
-              <option value="طب جلدية">طب جلدية</option>
-              <option value="طب باطنة">طب باطنة</option>
-              <option value="طب عظام">طب عظام</option>
-              <option value="طب أنف وأذن وحنجرة">طب أنف وأذن وحنجرة</option>
-              <option value="طب نفسي">طب نفسي</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">عنوان الطبيب</label>
-          <input
-            type="text"
-            value={formData.doctor_address}
-            onChange={(e) => setFormData({...formData, doctor_address: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">اسم المسؤول عن إدارة العيادة</label>
-            <input
-              type="text"
-              value={formData.clinic_manager_name}
-              onChange={(e) => setFormData({...formData, clinic_manager_name: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">عنوان العيادة</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Image Upload */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">صورة العيادة من الخارج (اختياري)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          {formData.clinic_image && (
-            <div className="mt-2">
-              <img
-                src={formData.clinic_image}
-                alt="صورة العيادة"
-                className="h-32 w-32 object-cover rounded-lg"
+          {/* Clinic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label>
+                <span className="text-shadow-glow">🏥 اسم العيادة</span>
+              </label>
+              <input
+                type="text"
+                value={formData.clinic_name}
+                onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+                className="w-full"
+                placeholder="مثال: عيادة النور الطبية"
+                required
               />
             </div>
-          )}
-        </div>
 
-        {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات العيادة</label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="أضف أي ملاحظات مهمة عن العيادة..."
-            required
-          />
-        </div>
+            <div>
+              <label>
+                <span className="text-shadow-glow">📞 رقم العيادة</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.clinic_phone}
+                onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
+                className="w-full"
+                placeholder="0501234567"
+              />
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !location}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'جاري الإرسال...' : 'إرسال طلب تسجيل العيادة'}
-        </button>
-      </form>
-    </div>
+          {/* Doctor Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label>
+                <span className="text-shadow-glow">👨‍⚕️ اسم الطبيب</span>
+              </label>
+              <input
+                type="text"
+                value={formData.doctor_name}
+                onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
+                className="w-full"
+                placeholder="د. أحمد محمد"
+                required
+              />
+            </div>
+
+            <div>
+              <label>
+                <span className="text-shadow-glow">🏆 تصنيف العيادة</span>
+              </label>
+              <select
+                value={formData.clinic_class}
+                onChange={(e) => setFormData({...formData, clinic_class: e.target.value})}
+                className="w-full"
+                required
+              >
+                <option value="">اختر تصنيف العيادة</option>
+                <option value="A Class">A Class - عيادة درجة أولى</option>
+                <option value="B Class">B Class - عيادة درجة ثانية</option>
+                <option value="C Class">C Class - عيادة درجة ثالثة</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label>
+              <span className="text-shadow-glow">🏠 عنوان الطبيب</span>
+            </label>
+            <input
+              type="text"
+              value={formData.doctor_address}
+              onChange={(e) => setFormData({...formData, doctor_address: e.target.value})}
+              className="w-full"
+              placeholder="حي الملز، شارع الملك فهد"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label>
+                <span className="text-shadow-glow">👔 المسؤول عن إدارة العيادة</span>
+              </label>
+              <input
+                type="text"
+                value={formData.clinic_manager_name}
+                onChange={(e) => setFormData({...formData, clinic_manager_name: e.target.value})}
+                className="w-full"
+                placeholder="اسم مدير العيادة"
+                required
+              />
+            </div>
+
+            <div>
+              <label>
+                <span className="text-shadow-glow">📍 عنوان العيادة</span>
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="w-full"
+                placeholder="العنوان الكامل للعيادة"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label>
+              <span className="text-shadow-glow">📸 صورة العيادة من الخارج (اختياري)</span>
+            </label>
+            <div className="mt-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full p-4 border-2 border-dashed border-orange-300 rounded-xl hover:border-orange-500 transition-colors"
+                style={{ 
+                  background: 'var(--glass-bg)',
+                  borderColor: 'var(--brand-orange)',
+                  borderOpacity: 0.3
+                }}
+              />
+              {formData.clinic_image && (
+                <div className="mt-4">
+                  <img
+                    src={formData.clinic_image}
+                    alt="صورة العيادة"
+                    className="h-48 w-full object-cover rounded-xl shadow-lg"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label>
+              <span className="text-shadow-glow">📝 ملاحظات العيادة</span>
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              rows={5}
+              className="w-full"
+              placeholder="أضف أي ملاحظات مهمة عن العيادة، ساعات العمل، أو معلومات خاصة..."
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading || !location}
+            className="w-full btn-primary text-xl py-4 neon-glow"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-3">
+                <div className="loading-shimmer w-6 h-6 rounded-full"></div>
+                <span>جاري الإرسال...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <span>🚀</span>
+                <span>إرسال طلب تسجيل العيادة</span>
+              </div>
+            )}
+          </button>
+        </form>
+      </div>
+    </>
   );
 };
 
