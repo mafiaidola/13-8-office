@@ -922,7 +922,7 @@ class BackendTester:
             "location": "القاهرة",
             "address": "شارع التحرير، القاهرة",
             "manager_id": warehouse_manager_id,
-            "warehouse_number": 3
+            "warehouse_number": 2  # Use different number to avoid conflicts
         }
         
         status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
