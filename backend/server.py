@@ -689,7 +689,186 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "phone": current_user.phone
     }
 
-# Clinic Routes
+# Clinic Request Routes
+@api_router.post("/clinic-requests")
+async def create_clinic_request(request_data: ClinicRequestCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can submit clinic requests")
+    
+    clinic_request = ClinicRequest(
+        clinic_name=request_data.clinic_name,
+        clinic_phone=request_data.clinic_phone,
+        doctor_name=request_data.doctor_name,
+        doctor_specialty=request_data.doctor_specialty,
+        doctor_address=request_data.doctor_address,
+        clinic_manager_name=request_data.clinic_manager_name,
+        latitude=request_data.latitude,
+        longitude=request_data.longitude,
+        address=request_data.address,
+        clinic_image=request_data.clinic_image,
+        notes=request_data.notes,
+        sales_rep_id=current_user.id
+    )
+    
+    await db.clinic_requests.insert_one(clinic_request.dict())
+    return {"message": "Clinic request submitted successfully", "request_id": clinic_request.id}
+
+@api_router.get("/clinic-requests", response_model=List[Dict[str, Any]])
+async def get_clinic_requests(current_user: User = Depends(get_current_user)):
+    query = {}
+    
+    if current_user.role == UserRole.SALES_REP:
+        query = {"sales_rep_id": current_user.id}
+    elif current_user.role in [UserRole.MANAGER, UserRole.WAREHOUSE_MANAGER]:
+        # Managers can see requests from their subordinates
+        subordinates = await db.users.find({"managed_by": current_user.id}).to_list(100)
+        subordinate_ids = [sub["id"] for sub in subordinates]
+        subordinate_ids.append(current_user.id)  # Include their own if they're also a sales rep
+        query = {"sales_rep_id": {"$in": subordinate_ids}}
+    # Admin sees all
+    
+    requests = await db.clinic_requests.find(query, {"_id": 0}).to_list(1000)
+    
+    # Add sales rep name
+    for request in requests:
+        sales_rep = await db.users.find_one({"id": request["sales_rep_id"]}, {"_id": 0})
+        request["sales_rep_name"] = sales_rep["full_name"] if sales_rep else "Unknown"
+        
+        if request.get("reviewed_by"):
+            reviewer = await db.users.find_one({"id": request["reviewed_by"]}, {"_id": 0})
+            request["reviewed_by_name"] = reviewer["full_name"] if reviewer else "Unknown"
+    
+    return requests
+
+@api_router.patch("/clinic-requests/{request_id}/review")
+async def review_clinic_request(request_id: str, approved: bool, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.MANAGER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only managers and admin can review requests")
+    
+    request_doc = await db.clinic_requests.find_one({"id": request_id})
+    if not request_doc:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    # Check if manager can review this request (from their subordinate)
+    if current_user.role == UserRole.MANAGER:
+        sales_rep = await db.users.find_one({"id": request_doc["sales_rep_id"]})
+        if sales_rep and sales_rep.get("managed_by") != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only review requests from your subordinates")
+    
+    status = "APPROVED" if approved else "REJECTED"
+    
+    # Update request status
+    await db.clinic_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": status, "reviewed_by": current_user.id}}
+    )
+    
+    # If approved, create clinic and doctor
+    if approved:
+        try:
+            # Create clinic
+            clinic = Clinic(
+                name=request_doc["clinic_name"],
+                address=request_doc["address"],
+                latitude=request_doc["latitude"],
+                longitude=request_doc["longitude"],
+                phone=request_doc.get("clinic_phone"),
+                added_by=request_doc["sales_rep_id"],
+                approved_by=current_user.id
+            )
+            await db.clinics.insert_one(clinic.dict())
+            
+            # Create doctor
+            doctor = Doctor(
+                name=request_doc["doctor_name"],
+                specialty=request_doc["doctor_specialty"],
+                clinic_id=clinic.id,
+                phone=request_doc.get("clinic_phone"),  # Use clinic phone if doctor phone not provided
+                added_by=request_doc["sales_rep_id"],
+                approved_by=current_user.id
+            )
+            await db.doctors.insert_one(doctor.dict())
+            
+        except Exception as e:
+            # Rollback request status if creation fails
+            await db.clinic_requests.update_one(
+                {"id": request_id},
+                {"$set": {"status": "PENDING", "reviewed_by": None}}
+            )
+            raise HTTPException(status_code=500, detail=f"Error creating clinic/doctor: {str(e)}")
+    
+    return {"message": f"Request {status.lower()} successfully"}
+
+# Enhanced Dashboard Routes
+@api_router.get("/dashboard/sales-rep-stats")
+async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can access this endpoint")
+    
+    # Date ranges
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+    
+    week_start = today_start - timedelta(days=now.weekday())
+    week_end = week_start + timedelta(days=7)
+    
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
+    
+    # Visit statistics
+    today_visits = await db.visits.count_documents({
+        "sales_rep_id": current_user.id,
+        "visit_date": {"$gte": today_start, "$lt": today_end}
+    })
+    
+    week_visits = await db.visits.count_documents({
+        "sales_rep_id": current_user.id,
+        "visit_date": {"$gte": week_start, "$lt": week_end}
+    })
+    
+    month_visits = await db.visits.count_documents({
+        "sales_rep_id": current_user.id,
+        "visit_date": {"$gte": month_start, "$lt": month_end}
+    })
+    
+    total_visits = await db.visits.count_documents({"sales_rep_id": current_user.id})
+    
+    # Other statistics
+    total_clinics_added = await db.clinics.count_documents({"added_by": current_user.id})
+    total_doctors_added = await db.doctors.count_documents({"added_by": current_user.id})
+    
+    # Pending approvals
+    pending_visits = await db.visits.count_documents({
+        "sales_rep_id": current_user.id,
+        "is_effective": None
+    })
+    
+    pending_clinic_requests = await db.clinic_requests.count_documents({
+        "sales_rep_id": current_user.id,
+        "status": "PENDING"
+    })
+    
+    pending_orders = await db.orders.count_documents({
+        "sales_rep_id": current_user.id,
+        "status": "PENDING"
+    })
+    
+    return {
+        "visits": {
+            "today": today_visits,
+            "week": week_visits,
+            "month": month_visits,
+            "total": total_visits
+        },
+        "total_clinics_added": total_clinics_added,
+        "total_doctors_added": total_doctors_added,
+        "pending": {
+            "visits": pending_visits,
+            "clinic_requests": pending_clinic_requests,
+            "orders": pending_orders
+        }
+    }
 @api_router.post("/clinics")
 async def create_clinic(clinic_data: ClinicCreate, current_user: User = Depends(get_current_user)):
     if current_user.role not in [UserRole.SALES_REP, UserRole.ADMIN]:
