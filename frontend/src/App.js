@@ -2998,6 +2998,66 @@ const VisitRegistration = () => {
           />
         </div>
 
+        {/* Voice Notes Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            ملاحظات صوتية (اختيارية)
+          </label>
+          <div className="border border-gray-300 rounded-lg p-4">
+            <div className="flex items-center gap-4 mb-4">
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  isRecording 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+              >
+                {isRecording ? (
+                  <>
+                    <span className="ml-2">🛑</span>
+                    إيقاف التسجيل
+                  </>
+                ) : (
+                  <>
+                    <span className="ml-2">🎤</span>
+                    بدء تسجيل صوتي
+                  </>
+                )}
+              </button>
+              
+              {isRecording && (
+                <div className="flex items-center gap-2 text-red-600">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">جاري التسجيل...</span>
+                </div>
+              )}
+            </div>
+
+            {voiceNotes.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">الملاحظات الصوتية المسجلة:</h4>
+                {voiceNotes.map((note, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm">🎵</span>
+                    <audio controls className="flex-1 h-8">
+                      <source src={note.audio} type="audio/wav" />
+                    </audio>
+                    <span className="text-xs text-gray-500">
+                      {Math.round(note.duration)}ث
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500 mt-2">
+              💡 يمكنك تسجيل عدة ملاحظات صوتية لحفظ تفاصيل مهمة أثناء الزيارة
+            </p>
+          </div>
+        </div>
+
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex items-center">
             <div className="text-blue-600 ml-2">📍</div>
