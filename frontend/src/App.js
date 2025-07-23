@@ -6052,6 +6052,31 @@ const App = () => {
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+  const [showQRScanner, setShowQRScanner] = useState(false);
+
+  const handleQRScan = async (qrData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/qr/scan`, {
+        content: qrData
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.action === 'prefill_visit_form') {
+        // Navigate to visit registration and prefill
+        alert(`تم مسح عيادة: ${response.data.data.name}`);
+      } else if (response.data.action === 'add_to_order') {
+        // Navigate to order creation and add product
+        alert(`تم مسح منتج: ${response.data.data.name}`);
+      }
+      
+      setShowQRScanner(false);
+    } catch (error) {
+      console.error('QR scan error:', error);
+      alert('خطأ في معالجة QR Code');
+    }
+  };
 
   if (loading) {
     return (
@@ -6067,6 +6092,28 @@ const AppContent = () => {
   return (
     <div className="App" style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       {user ? <Dashboard /> : <LoginPage />}
+      
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRCodeScanner 
+          onScan={handleQRScan}
+          onClose={() => setShowQRScanner(false)}
+        />
+      )}
+      
+      {/* Offline Status */}
+      <OfflineStatus />
+      
+      {/* Floating QR Scanner Button */}
+      {user && (
+        <button
+          onClick={() => setShowQRScanner(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40 flex items-center justify-center"
+          title="مسح QR Code"
+        >
+          <span className="text-xl">📱</span>
+        </button>
+      )}
     </div>
   );
 };
