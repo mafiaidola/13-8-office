@@ -458,8 +458,9 @@ async def update_product(product_id: str, product_data: ProductCreate, current_u
 # Warehouse Management Routes
 @api_router.post("/warehouses")
 async def create_warehouse(warehouse_data: WarehouseCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
-        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can create warehouses")
+    # Only Admin can create warehouses - Warehouse managers need admin approval
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can create warehouses")
     
     # Verify manager exists and has correct role
     manager = await db.users.find_one({"id": warehouse_data.manager_id})
