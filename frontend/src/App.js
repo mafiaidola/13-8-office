@@ -154,80 +154,96 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
-      <div className="card-modern w-full max-w-md p-8 fade-in-up">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-3xl">🏥</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gradient mb-2">نظام إدارة المناديب</h1>
-          <p className="text-gray-600">قم بتسجيل الدخول للمتابعة</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6 form-modern">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              🧑‍💼 اسم المستخدم
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full"
-              placeholder="أدخل اسم المستخدم"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              🔒 كلمة المرور
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full"
-              placeholder="أدخل كلمة المرور"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="alert-modern alert-error">
-              ⚠️ {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full btn-primary"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="loading-shimmer w-5 h-5 rounded-full ml-2"></div>
-                جاري التحقق...
+    <>
+      <ThemeToggle />
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="floating">
+          <div className="card-modern w-full max-w-md p-8 fade-in-up glass-effect">
+            <div className="text-center mb-8">
+              <div className="w-24 h-24 mx-auto mb-6 card-gradient-orange rounded-full flex items-center justify-center glow-pulse">
+                <span className="text-4xl">🏥</span>
               </div>
-            ) : (
-              <>🚀 تسجيل الدخول</>
-            )}
-          </button>
-        </form>
+              <h1 className="text-4xl font-bold text-gradient mb-3">نظام إدارة المناديب</h1>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>منصة إدارة المناديب الطبية المتقدمة</p>
+            </div>
 
-        <div className="mt-8 text-center">
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-            <p className="text-sm text-blue-800 font-medium mb-2">💡 للتجربة:</p>
-            <div className="space-y-1 text-xs text-blue-600">
-              <p><strong>أدمن:</strong> admin / admin123</p>
-              <p><strong>مندوب:</strong> أنشئ من لوحة الأدمن</p>
+            <form onSubmit={handleSubmit} className="space-y-8 form-modern">
+              <div>
+                <label>
+                  <span className="text-shadow-glow">🧑‍💼 اسم المستخدم</span>
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full focus-visible"
+                  placeholder="أدخل اسم المستخدم"
+                  required
+                />
+              </div>
+
+              <div>
+                <label>
+                  <span className="text-shadow-glow">🔒 كلمة المرور</span>
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full focus-visible"
+                  placeholder="أدخل كلمة المرور"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="alert-modern alert-error scale-in">
+                  <span className="ml-2">⚠️</span>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full btn-primary neon-glow"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="loading-shimmer w-6 h-6 rounded-full"></div>
+                    <span>جاري التحقق...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <span>🚀</span>
+                    <span>تسجيل الدخول</span>
+                  </div>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-8">
+              <div className="card-gradient-blue p-6 rounded-2xl text-center">
+                <h3 className="font-bold mb-3 flex items-center justify-center gap-2">
+                  <span>💡</span>
+                  <span>بيانات التجربة</span>
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold">أدمن:</span>
+                    <span>admin / admin123</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold">مندوب:</span>
+                    <span>أنشئ من لوحة الأدمن</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
