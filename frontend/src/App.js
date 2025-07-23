@@ -1085,58 +1085,94 @@ const SalesRepDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Visit Statistics Section */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">قسم الزيارات</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <h3 className="text-lg font-semibold text-green-800">زيارات اليوم</h3>
-            <p className="text-3xl font-bold text-green-600">{detailedStats.visits?.today || 0}</p>
+      <div className="card-modern p-6">
+        <div className="flex items-center mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center ml-4">
+            <span className="text-2xl">📊</span>
           </div>
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <h3 className="text-lg font-semibold text-blue-800">زيارات الأسبوع</h3>
-            <p className="text-3xl font-bold text-blue-600">{detailedStats.visits?.week || 0}</p>
+          <h2 className="text-2xl font-bold text-gradient">قسم الزيارات</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="stat-card stat-green text-center scale-in">
+            <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🌅</span>
+            </div>
+            <h3 className="text-lg font-semibold text-green-800 mb-2">زيارات اليوم</h3>
+            <p className="text-4xl font-bold text-green-600 pulse-gentle">{detailedStats.visits?.today || 0}</p>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg text-center">
-            <h3 className="text-lg font-semibold text-purple-800">زيارات الشهر</h3>
-            <p className="text-3xl font-bold text-purple-600">{detailedStats.visits?.month || 0}</p>
+          <div className="stat-card stat-blue text-center scale-in">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📅</span>
+            </div>
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">زيارات الأسبوع</h3>
+            <p className="text-4xl font-bold text-blue-600 pulse-gentle">{detailedStats.visits?.week || 0}</p>
           </div>
-          <div className="bg-indigo-50 p-4 rounded-lg text-center">
-            <h3 className="text-lg font-semibold text-indigo-800">إجمالي الزيارات</h3>
-            <p className="text-3xl font-bold text-indigo-600">{detailedStats.visits?.total || 0}</p>
+          <div className="stat-card stat-purple text-center scale-in">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🗓️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-purple-800 mb-2">زيارات الشهر</h3>
+            <p className="text-4xl font-bold text-purple-600 pulse-gentle">{detailedStats.visits?.month || 0}</p>
+          </div>
+          <div className="stat-card stat-orange text-center scale-in">
+            <div className="w-16 h-16 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🏆</span>
+            </div>
+            <h3 className="text-lg font-semibold text-indigo-800 mb-2">إجمالي الزيارات</h3>
+            <p className="text-4xl font-bold text-indigo-600 pulse-gentle">{detailedStats.visits?.total || 0}</p>
           </div>
         </div>
       </div>
 
       {/* General Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">إجمالي العيادات المضافة</h3>
-          <p className="text-3xl font-bold text-blue-600">{detailedStats.total_clinics_added || 0}</p>
-          <p className="text-sm text-gray-500 mt-1">عن طريقك</p>
+        <div className="card-modern p-6 interactive-element">
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center ml-4">
+              <span className="text-2xl">🏥</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">إجمالي العيادات المضافة</h3>
+              <p className="text-sm text-gray-500">عن طريقك</p>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-blue-600">{detailedStats.total_clinics_added || 0}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">إجمالي الأطباء المسجلين</h3>
-          <p className="text-3xl font-bold text-green-600">{detailedStats.total_doctors_added || 0}</p>
-          <p className="text-sm text-gray-500 mt-1">عن طريقك</p>
+        <div className="card-modern p-6 interactive-element">
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center ml-4">
+              <span className="text-2xl">👨‍⚕️</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">إجمالي الأطباء المسجلين</h3>
+              <p className="text-sm text-gray-500">عن طريقك</p>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-green-600">{detailedStats.total_doctors_added || 0}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">في انتظار الموافقة</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">زيارات:</span>
-              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.visits || 0}</span>
+        <div className="card-modern p-6 interactive-element">
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center ml-4">
+              <span className="text-2xl">⏳</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">عيادات:</span>
-              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.clinic_requests || 0}</span>
+            <h3 className="text-lg font-semibold text-gray-800">في انتظار الموافقة</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">👁️</span>زيارات:</span>
+              <span className="badge-modern badge-warning">{detailedStats.pending?.visits || 0}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">أوردرات:</span>
-              <span className="text-sm font-semibold text-orange-600">{detailedStats.pending?.orders || 0}</span>
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">🏥</span>عيادات:</span>
+              <span className="badge-modern badge-info">{detailedStats.pending?.clinic_requests || 0}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">📦</span>أوردرات:</span>
+              <span className="badge-modern badge-success">{detailedStats.pending?.orders || 0}</span>
             </div>
           </div>
         </div>
