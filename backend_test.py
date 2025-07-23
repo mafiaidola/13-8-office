@@ -1110,7 +1110,7 @@ class BackendTester:
             status_code, warehouses = self.make_request("GET", "/warehouses", token=self.admin_token)
             if status_code == 200:
                 created_warehouse = next((w for w in warehouses if w.get("id") == warehouse_id), None)
-                if created_warehouse and created_warehouse.get("warehouse_number") == 4:
+                if created_warehouse and created_warehouse.get("warehouse_number") == 5:
                     # Test invalid warehouse number (should fail)
                     invalid_warehouse_data = {
                         "name": "مخزن رقم غير صحيح",
