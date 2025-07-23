@@ -2036,7 +2036,11 @@ const Dashboard = () => {
         </div>
 
         {/* Content */}
-        {activeTab === 'dashboard' && (
+        {activeTab === 'dashboard' && user.role === 'sales_rep' && (
+          <SalesRepDashboard />
+        )}
+
+        {activeTab === 'dashboard' && user.role !== 'sales_rep' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Stats Cards */}
             {Object.entries(stats).map(([key, value]) => {
@@ -2086,6 +2090,14 @@ const Dashboard = () => {
               );
             })}
           </div>
+        )}
+
+        {activeTab === 'clinic-registration' && user.role === 'sales_rep' && (
+          <ClinicRegistration />
+        )}
+
+        {activeTab === 'order-creation' && user.role === 'sales_rep' && (
+          <OrderCreation />
         )}
 
         {activeTab === 'users' && canAccessTab('users') && (
