@@ -2848,7 +2848,7 @@ async def generate_qr_code(
 @api_router.post("/qr/scan")
 async def process_qr_scan(
     scan_data: dict,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Process scanned QR code data"""
     try:
@@ -2857,7 +2857,7 @@ async def process_qr_scan(
         if qr_content.get("type") == "clinic":
             # Return clinic information for visit registration
             clinic_id = qr_content.get("id")
-            clinic = await db.clinics.find_one({"id": clinic_id})
+            clinic = await db.clinics.find_one({"id": clinic_id}, {"_id": 0})
             
             if clinic:
                 return {
@@ -2868,7 +2868,7 @@ async def process_qr_scan(
         elif qr_content.get("type") == "product":
             # Return product information for order creation
             product_id = qr_content.get("id")
-            product = await db.products.find_one({"id": product_id})
+            product = await db.products.find_one({"id": product_id}, {"_id": 0})
             
             if product:
                 return {
