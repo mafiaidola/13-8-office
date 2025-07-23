@@ -2135,39 +2135,41 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="header-modern">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center ml-4">
-                <span className="text-2xl">🏥</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gradient">نظام إدارة المناديب</h1>
-                <div className="flex items-center text-sm text-gray-600">
-                  <div className="flex items-center ml-4">
-                    <span className="ml-2">👤</span>
-                    <span>مرحباً، {user.full_name}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="ml-2">🎭</span>
-                    <span className="badge-modern badge-info">{getRoleText(user.role)}</span>
+    <>
+      <ThemeToggle />
+      <div className="min-h-screen page-transition">
+        {/* Header */}
+        <header className="header-modern">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center">
+                <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
+                  <span className="text-3xl">🏥</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gradient">نظام إدارة المناديب</h1>
+                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="flex items-center gap-2">
+                      <span>👤</span>
+                      <span>مرحباً، {user.full_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>🎭</span>
+                      <span className="badge-modern badge-info">{getRoleText(user.role)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+              <button
+                onClick={logout}
+                className="btn-warning flex items-center gap-2"
+              >
+                <span>🚪</span>
+                <span>تسجيل الخروج</span>
+              </button>
             </div>
-            <button
-              onClick={logout}
-              className="btn-warning flex items-center"
-            >
-              <span className="ml-2">🚪</span>
-              تسجيل الخروج
-            </button>
           </div>
-        </div>
-      </header>
+        </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
