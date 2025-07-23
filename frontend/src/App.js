@@ -3132,22 +3132,8 @@ const WarehouseManagement = () => {
 };
 
 // Helper Components and Sub-systems
-          >
-            <span>➕</span>
-            <span>مستخدم جديد</span>
-          </button>
-        </div>
 
-        {/* Alerts */}
-        {error && (
-          <div className="alert-modern alert-error mb-6 scale-in">
-            <span className="ml-2">⚠️</span>
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="alert-modern alert-success mb-6 scale-in">
+// User Management Component
             <span className="ml-2">✅</span>
             {success}
           </div>
