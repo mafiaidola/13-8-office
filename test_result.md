@@ -297,11 +297,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Multi-role authentication system with JWT"
-    - "GPS geofencing for visit validation within 20m"
-    - "Visit registration form with HTML5 geolocation"
-  stuck_tasks: []
-  test_all: true
+    - "Enhanced sales rep detailed statistics API"
+    - "Clinic requests system with manager approval"
+    - "Orders API endpoints"
+  stuck_tasks:
+    - "Orders API endpoints"
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
