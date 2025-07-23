@@ -2422,12 +2422,396 @@ class BackendTester:
         
         return passed, total
 
+    def test_comprehensive_arabic_review_apis(self):
+        """Test all APIs mentioned in the Arabic review request"""
+        print("🚀 اختبار شامل لجميع backend APIs المطلوبة للتطويرات الجديدة...")
+        print("=" * 80)
+        
+        # 1. Dashboard/Statistics APIs
+        print("\n📊 1. Dashboard/Statistics APIs:")
+        self.test_dashboard_stats_admin_manager_sales()
+        
+        # 2. Enhanced User Management APIs  
+        print("\n👥 2. Enhanced User Management APIs:")
+        self.test_enhanced_user_management_comprehensive()
+        
+        # 3. Warehouse Management APIs
+        print("\n🏪 3. Warehouse Management APIs:")
+        self.test_warehouse_management_comprehensive()
+        
+        # 4. Enhanced Visits Log APIs
+        print("\n📋 4. Enhanced Visits Log APIs:")
+        self.test_enhanced_visits_log_comprehensive()
+        
+        # 5. System Settings APIs
+        print("\n⚙️ 5. System Settings APIs:")
+        self.test_system_settings_comprehensive()
+        
+        # Print Summary
+        self.print_arabic_test_summary()
+
+    def test_dashboard_stats_admin_manager_sales(self):
+        """Test GET /api/dashboard/stats for admin, managers, and sales reps"""
+        if not self.admin_token:
+            self.log_test("Dashboard Stats - Admin Login", False, "No admin token available")
+            return
+        
+        # Test admin dashboard stats
+        status_code, response = self.make_request("GET", "/dashboard/stats", token=self.admin_token)
+        if status_code == 200:
+            required_stats = ["total_users", "total_clinics", "total_doctors", "total_visits", "total_warehouses", "total_products"]
+            if all(stat in response for stat in required_stats):
+                self.log_test("Dashboard Stats - Admin", True, f"Admin stats: Users={response.get('total_users')}, Clinics={response.get('total_clinics')}, Doctors={response.get('total_doctors')}, Visits={response.get('total_visits')}, Warehouses={response.get('total_warehouses')}, Products={response.get('total_products')}")
+            else:
+                self.log_test("Dashboard Stats - Admin", False, f"Missing required stats: {response}")
+        else:
+            self.log_test("Dashboard Stats - Admin", False, f"Status: {status_code}", response)
+        
+        # Test manager dashboard stats
+        if self.manager_token:
+            status_code, response = self.make_request("GET", "/dashboard/stats", token=self.manager_token)
+            if status_code == 200:
+                if "pending_reviews" in response:
+                    self.log_test("Dashboard Stats - Manager", True, f"Manager stats with pending reviews: {response.get('pending_reviews')}")
+                else:
+                    self.log_test("Dashboard Stats - Manager", False, "Missing pending_reviews in manager stats")
+            else:
+                self.log_test("Dashboard Stats - Manager", False, f"Status: {status_code}", response)
+        
+        # Test sales rep dashboard stats
+        if self.sales_rep_token:
+            status_code, response = self.make_request("GET", "/dashboard/stats", token=self.sales_rep_token)
+            if status_code == 200:
+                required_stats = ["total_visits", "today_visits", "total_clinics", "total_doctors"]
+                if all(stat in response for stat in required_stats):
+                    self.log_test("Dashboard Stats - Sales Rep", True, f"Sales rep personal stats: Visits={response.get('total_visits')}, Today={response.get('today_visits')}")
+                else:
+                    self.log_test("Dashboard Stats - Sales Rep", False, f"Missing required stats: {response}")
+            else:
+                self.log_test("Dashboard Stats - Sales Rep", False, f"Status: {status_code}", response)
+
+    def test_enhanced_user_management_comprehensive(self):
+        """Test all Enhanced User Management APIs"""
+        if not self.admin_token:
+            self.log_test("Enhanced User Management - Setup", False, "No admin token available")
+            return
+        
+        # Test GET /api/users (get all users)
+        status_code, response = self.make_request("GET", "/users", token=self.admin_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("GET /api/users", True, f"Retrieved {len(response)} users successfully")
+            
+            if len(response) > 0:
+                test_user_id = response[0]["id"]
+                
+                # Test GET /api/users/{user_id} (get user details)
+                status_code, user_details = self.make_request("GET", f"/users/{test_user_id}", token=self.admin_token)
+                if status_code == 200:
+                    required_fields = ["id", "username", "full_name", "role", "email"]
+                    if all(field in user_details for field in required_fields):
+                        self.log_test("GET /api/users/{user_id}", True, f"User details retrieved: {user_details.get('full_name')} ({user_details.get('role')})")
+                    else:
+                        self.log_test("GET /api/users/{user_id}", False, f"Missing required fields: {user_details}")
+                else:
+                    self.log_test("GET /api/users/{user_id}", False, f"Status: {status_code}", user_details)
+                
+                # Test PATCH /api/users/{user_id} (update user)
+                update_data = {
+                    "full_name": "اسم محدث للاختبار",
+                    "phone": "+966501111111"
+                }
+                status_code, update_response = self.make_request("PATCH", f"/users/{test_user_id}", update_data, self.admin_token)
+                if status_code == 200:
+                    self.log_test("PATCH /api/users/{user_id}", True, "User updated successfully")
+                else:
+                    self.log_test("PATCH /api/users/{user_id}", False, f"Status: {status_code}", update_response)
+                
+                # Test PATCH /api/users/{user_id}/toggle-status (activate/deactivate)
+                status_code, toggle_response = self.make_request("PATCH", f"/users/{test_user_id}/toggle-status", {}, self.admin_token)
+                if status_code == 200:
+                    self.log_test("PATCH /api/users/{user_id}/toggle-status", True, "User status toggled successfully")
+                else:
+                    self.log_test("PATCH /api/users/{user_id}/toggle-status", False, f"Status: {status_code}", toggle_response)
+        else:
+            self.log_test("GET /api/users", False, f"Status: {status_code}", response)
+        
+        # Test POST /api/users (create new user)
+        import time
+        timestamp = str(int(time.time()))
+        new_user_data = {
+            "username": f"test_user_{timestamp}",
+            "email": f"testuser_{timestamp}@test.com",
+            "password": "testuser123",
+            "role": "sales_rep",
+            "full_name": "مستخدم تجريبي جديد",
+            "phone": "+966502222222"
+        }
+        
+        status_code, create_response = self.make_request("POST", "/auth/register", new_user_data, self.admin_token)
+        if status_code == 200:
+            new_user_id = create_response.get("user_id")
+            self.log_test("POST /api/users (Create User)", True, f"New user created with ID: {new_user_id}")
+            
+            # Test DELETE /api/users/{user_id} (delete user)
+            if new_user_id:
+                status_code, delete_response = self.make_request("DELETE", f"/users/{new_user_id}", token=self.admin_token)
+                if status_code == 200:
+                    self.log_test("DELETE /api/users/{user_id}", True, "User deleted successfully")
+                else:
+                    self.log_test("DELETE /api/users/{user_id}", False, f"Status: {status_code}", delete_response)
+        else:
+            self.log_test("POST /api/users (Create User)", False, f"Status: {status_code}", create_response)
+
+    def test_warehouse_management_comprehensive(self):
+        """Test all Warehouse Management APIs"""
+        if not self.admin_token:
+            self.log_test("Warehouse Management - Setup", False, "No admin token available")
+            return
+        
+        # Test GET /api/warehouses (get all warehouses)
+        status_code, response = self.make_request("GET", "/warehouses", token=self.admin_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("GET /api/warehouses", True, f"Retrieved {len(response)} warehouses successfully")
+        else:
+            self.log_test("GET /api/warehouses", False, f"Status: {status_code}", response)
+        
+        # Create warehouse manager for testing
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"wh_mgr_comp_{timestamp}",
+            "email": f"whmgrcomp_{timestamp}@test.com",
+            "password": "whmgrcomp123",
+            "role": "warehouse_manager",
+            "full_name": "مدير مخزن شامل",
+            "phone": "+966508888888"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Warehouse Management - Create Manager", False, "Failed to create warehouse manager")
+            return
+        
+        warehouse_manager_id = response.get('user_id')
+        
+        # Login as warehouse manager
+        login_data = {"username": f"wh_mgr_comp_{timestamp}", "password": "whmgrcomp123"}
+        status_code, login_response = self.make_request("POST", "/auth/login", login_data)
+        if status_code != 200:
+            self.log_test("Warehouse Management - Manager Login", False, "Failed to login as warehouse manager")
+            return
+        
+        wh_manager_token = login_response["token"]
+        
+        # Create warehouse
+        warehouse_data = {
+            "name": "مخزن الاختبار الشامل",
+            "location": "الدمام",
+            "address": "شارع الملك عبدالعزيز، الدمام",
+            "manager_id": warehouse_manager_id,
+            "warehouse_number": 3
+        }
+        
+        status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
+        if status_code == 200:
+            warehouse_id = response.get("warehouse_id")
+            self.log_test("Create Warehouse for Testing", True, f"Warehouse created with ID: {warehouse_id}")
+            
+            # Test GET /api/dashboard/warehouse-stats (warehouse statistics)
+            status_code, stats_response = self.make_request("GET", "/dashboard/warehouse-stats", token=wh_manager_token)
+            if status_code == 200:
+                required_fields = ["total_warehouses", "available_products", "orders", "total_products", "low_stock_products"]
+                if all(field in stats_response for field in required_fields):
+                    self.log_test("GET /api/dashboard/warehouse-stats", True, f"Warehouse stats: {stats_response}")
+                else:
+                    self.log_test("GET /api/dashboard/warehouse-stats", False, f"Missing required fields: {stats_response}")
+            else:
+                self.log_test("GET /api/dashboard/warehouse-stats", False, f"Status: {status_code}", stats_response)
+            
+            # Test GET /api/orders/pending (pending orders)
+            status_code, pending_response = self.make_request("GET", "/orders/pending", token=wh_manager_token)
+            if status_code == 200:
+                self.log_test("GET /api/orders/pending", True, f"Retrieved {len(pending_response)} pending orders")
+            else:
+                self.log_test("GET /api/orders/pending", False, f"Status: {status_code}", pending_response)
+            
+            # Test GET /api/warehouses/{warehouse_id}/movements (movement history)
+            if warehouse_id:
+                status_code, movements_response = self.make_request("GET", f"/warehouses/{warehouse_id}/movements", token=wh_manager_token)
+                if status_code == 200:
+                    self.log_test("GET /api/warehouses/{warehouse_id}/movements", True, f"Retrieved {len(movements_response)} movements")
+                else:
+                    self.log_test("GET /api/warehouses/{warehouse_id}/movements", False, f"Status: {status_code}", movements_response)
+            
+            # Test GET /api/inventory (inventory management)
+            if warehouse_id:
+                status_code, inventory_response = self.make_request("GET", f"/inventory/{warehouse_id}", token=wh_manager_token)
+                if status_code == 200:
+                    self.log_test("GET /api/inventory", True, f"Retrieved inventory for warehouse: {len(inventory_response)} items")
+                else:
+                    self.log_test("GET /api/inventory", False, f"Status: {status_code}", inventory_response)
+        else:
+            self.log_test("Create Warehouse for Testing", False, f"Status: {status_code}", response)
+
+    def test_enhanced_visits_log_comprehensive(self):
+        """Test Enhanced Visits Log APIs"""
+        if not self.sales_rep_token:
+            self.log_test("Enhanced Visits Log - Setup", False, "No sales rep token available")
+            return
+        
+        # Test GET /api/visits/comprehensive (comprehensive visits log)
+        status_code, response = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("GET /api/visits/comprehensive", True, f"Retrieved {len(response)} visits with comprehensive data")
+            
+            if len(response) > 0:
+                visit = response[0]
+                visit_id = visit.get("id")
+                
+                # Check for enriched data
+                required_fields = ["doctor_name", "clinic_name", "sales_rep_name"]
+                if all(field in visit for field in required_fields):
+                    self.log_test("Visits Data Enrichment", True, f"Visits contain enriched data: doctor={visit.get('doctor_name')}, clinic={visit.get('clinic_name')}")
+                else:
+                    self.log_test("Visits Data Enrichment", False, f"Missing enriched fields: {visit}")
+                
+                # Test GET /api/visits/{visit_id}/details (visit details)
+                if visit_id:
+                    status_code, details_response = self.make_request("GET", f"/visits/{visit_id}", token=self.sales_rep_token)
+                    if status_code == 200:
+                        self.log_test("GET /api/visits/{visit_id}/details", True, f"Visit details retrieved successfully")
+                    else:
+                        self.log_test("GET /api/visits/{visit_id}/details", False, f"Status: {status_code}", details_response)
+                    
+                    # Test GET /api/visits/{visit_id}/voice-notes (voice notes)
+                    status_code, voice_notes_response = self.make_request("GET", f"/visits/{visit_id}/voice-notes", token=self.sales_rep_token)
+                    if status_code == 200:
+                        self.log_test("GET /api/visits/{visit_id}/voice-notes", True, f"Retrieved {len(voice_notes_response)} voice notes")
+                    else:
+                        self.log_test("GET /api/visits/{visit_id}/voice-notes", False, f"Status: {status_code}", voice_notes_response)
+        else:
+            self.log_test("GET /api/visits/comprehensive", False, f"Status: {status_code}", response)
+
+    def test_system_settings_comprehensive(self):
+        """Test System Settings APIs"""
+        # Test GET /api/settings (get current settings)
+        status_code, response = self.make_request("GET", "/settings")
+        if status_code == 200:
+            required_fields = ["company_name", "primary_color", "secondary_color", "available_themes", "role_permissions"]
+            if all(field in response for field in required_fields):
+                self.log_test("GET /api/settings", True, f"Settings retrieved with all required fields")
+                
+                # Check role permissions structure
+                role_permissions = response.get("role_permissions", {})
+                expected_roles = ["admin", "manager", "sales_rep", "warehouse_manager"]
+                if all(role in role_permissions for role in expected_roles):
+                    self.log_test("Role Permissions Structure", True, f"All roles defined in permissions: {list(role_permissions.keys())}")
+                else:
+                    self.log_test("Role Permissions Structure", False, f"Missing roles in permissions: {role_permissions}")
+                
+                # Check available themes
+                available_themes = response.get("available_themes", [])
+                if len(available_themes) > 0:
+                    self.log_test("Available Themes", True, f"Themes available: {available_themes}")
+                else:
+                    self.log_test("Available Themes", False, "No themes available")
+            else:
+                self.log_test("GET /api/settings", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("GET /api/settings", False, f"Status: {status_code}", response)
+        
+        # Test POST /api/settings (update settings) - Admin only
+        if self.admin_token:
+            settings_update = {
+                "company_name": "نظام إدارة المناديب المحدث",
+                "primary_color": "#1e40af",
+                "secondary_color": "#dc2626",
+                "available_themes": ["dark", "light", "blue", "green"],
+                "notifications_enabled": True,
+                "chat_enabled": True,
+                "voice_notes_enabled": True
+            }
+            
+            status_code, response = self.make_request("POST", "/settings", settings_update, self.admin_token)
+            if status_code == 200:
+                self.log_test("POST /api/settings", True, "Settings updated successfully by admin")
+                
+                # Verify settings were updated
+                status_code, updated_settings = self.make_request("GET", "/settings")
+                if status_code == 200:
+                    if updated_settings.get("company_name") == settings_update["company_name"]:
+                        self.log_test("Settings Update Verification", True, "Settings changes persisted correctly")
+                    else:
+                        self.log_test("Settings Update Verification", False, "Settings changes not persisted")
+                else:
+                    self.log_test("Settings Update Verification", False, "Failed to retrieve updated settings")
+            else:
+                self.log_test("POST /api/settings", False, f"Status: {status_code}", response)
+        else:
+            self.log_test("POST /api/settings", False, "No admin token available")
+
+    def print_arabic_test_summary(self):
+        """Print Arabic test results summary"""
+        print("\n" + "=" * 80)
+        print("📊 ملخص نتائج اختبار APIs المطلوبة")
+        print("=" * 80)
+        
+        # Count tests by category
+        dashboard_tests = [r for r in self.test_results if "Dashboard" in r["test"] or "Stats" in r["test"]]
+        user_mgmt_tests = [r for r in self.test_results if "User" in r["test"] or "users" in r["test"]]
+        warehouse_tests = [r for r in self.test_results if "Warehouse" in r["test"] or "warehouse" in r["test"]]
+        visits_tests = [r for r in self.test_results if "Visit" in r["test"] or "visits" in r["test"]]
+        settings_tests = [r for r in self.test_results if "Settings" in r["test"] or "settings" in r["test"]]
+        
+        categories = [
+            ("Dashboard/Statistics APIs", dashboard_tests),
+            ("Enhanced User Management APIs", user_mgmt_tests),
+            ("Warehouse Management APIs", warehouse_tests),
+            ("Enhanced Visits Log APIs", visits_tests),
+            ("System Settings APIs", settings_tests)
+        ]
+        
+        for category_name, category_tests in categories:
+            if category_tests:
+                passed = sum(1 for t in category_tests if t["success"])
+                total = len(category_tests)
+                success_rate = (passed / total * 100) if total > 0 else 0
+                status = "✅" if success_rate >= 80 else "⚠️" if success_rate >= 50 else "❌"
+                print(f"{status} {category_name}: {passed}/{total} ({success_rate:.1f}%)")
+        
+        print("\n" + "=" * 80)
+
+    def run_comprehensive_arabic_review_tests(self):
+        """Run comprehensive tests focusing on Arabic review requirements"""
+        print("🚀 Starting Comprehensive Backend Testing for Arabic Review...")
+        print("=" * 60)
+        
+        # Phase 1: Authentication and Basic Setup
+        if not self.test_admin_login():
+            print("❌ Critical: Admin login failed. Stopping tests.")
+            return
+        
+        if not self.test_jwt_token_validation():
+            print("❌ Critical: JWT validation failed. Stopping tests.")
+            return
+        
+        # Phase 2: User Management
+        self.test_create_manager_user()
+        self.test_create_sales_rep_user()
+        self.test_role_based_access()
+        
+        # Phase 3: Run Arabic Review Comprehensive Tests
+        self.test_comprehensive_arabic_review_apis()
+        
+        # Print Summary
+        self.print_test_summary()
+
 if __name__ == "__main__":
     tester = BackendTester()
     
-    # Run Phase 2 tests focusing on review request requirements
-    print("🎯 Running Phase 2 Backend Tests (Review Request Focus)")
-    tester.run_phase2_tests()
+    # Run comprehensive Arabic review tests
+    print("🎯 Running Comprehensive Arabic Review Backend Tests")
+    tester.run_comprehensive_arabic_review_tests()
     
     # Exit with appropriate code
     passed = sum(1 for result in tester.test_results if result["success"])
