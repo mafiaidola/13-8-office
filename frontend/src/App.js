@@ -165,12 +165,27 @@ const AuthProvider = ({ children }) => {
 };
 
 // Login Component
+// Enhanced Login Page with Logo Support
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [systemSettings, setSystemSettings] = useState(null);
   const { login } = useAuth();
+
+  useEffect(() => {
+    fetchSystemSettings();
+  }, []);
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/settings`);
+      setSystemSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -193,10 +208,25 @@ const LoginPage = () => {
         <div className="floating">
           <div className="card-modern w-full max-w-md p-8 fade-in-up glass-effect">
             <div className="text-center mb-8">
-              <div className="w-24 h-24 mx-auto mb-6 card-gradient-orange rounded-full flex items-center justify-center glow-pulse">
-                <span className="text-4xl">🏥</span>
+              {/* Logo Section */}
+              <div className="mb-6">
+                {systemSettings?.logo_image ? (
+                  <img 
+                    src={systemSettings.logo_image} 
+                    alt="شعار الشركة"
+                    className="w-24 h-24 mx-auto rounded-full object-cover glow-pulse"
+                  />
+                ) : (
+                  <div className="w-24 h-24 mx-auto card-gradient-orange rounded-full flex items-center justify-center glow-pulse">
+                    <span className="text-4xl">🏥</span>
+                  </div>
+                )}
               </div>
-              <h1 className="text-4xl font-bold text-gradient mb-3">نظام إدارة المناديب</h1>
+              
+              {/* Company Name */}
+              <h1 className="text-4xl font-bold text-gradient mb-3">
+                {systemSettings?.company_name || 'نظام إدارة المناديب'}
+              </h1>
               <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>منصة إدارة المناديب الطبية المتقدمة</p>
             </div>
 
