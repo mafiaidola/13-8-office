@@ -102,6 +102,7 @@ class Warehouse(BaseModel):
     location: str
     address: str
     manager_id: str  # warehouse manager
+    warehouse_number: int  # 1-5 for the 5 warehouses
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -110,6 +111,7 @@ class WarehouseCreate(BaseModel):
     location: str
     address: str
     manager_id: str
+    warehouse_number: int
 
 class Inventory(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
