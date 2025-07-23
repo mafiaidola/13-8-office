@@ -1047,6 +1047,64 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     
     return orders
 
+# New Pending Orders for Warehouse Manager
+@api_router.get("/orders/pending", response_model=List[Dict[str, Any]])
+async def get_pending_orders(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.WAREHOUSE_MANAGER:
+        raise HTTPException(status_code=403, detail="Only warehouse managers can access pending orders")
+    
+    # Get warehouses managed by current user
+    my_warehouses = await db.warehouses.find({"manager_id": current_user.id}).to_list(100)
+    warehouse_ids = [w["id"] for w in my_warehouses]
+    
+    if not warehouse_ids:
+        return []
+    
+    # Get approved orders for user's warehouses that need fulfillment
+    orders = await db.orders.find({
+        "warehouse_id": {"$in": warehouse_ids},
+        "status": "APPROVED"
+    }, {"_id": 0}).to_list(1000)
+    
+    # Enrich with related information
+    for order in orders:
+        # Get sales rep info
+        sales_rep = await db.users.find_one({"id": order["sales_rep_id"]}, {"_id": 0})
+        order["sales_rep_name"] = sales_rep["full_name"] if sales_rep else "Unknown"
+        
+        # Get doctor info
+        doctor = await db.doctors.find_one({"id": order["doctor_id"]}, {"_id": 0})
+        order["doctor_name"] = doctor["name"] if doctor else "Unknown"
+        
+        # Get clinic info
+        clinic = await db.clinics.find_one({"id": order["clinic_id"]}, {"_id": 0})
+        order["clinic_name"] = clinic["name"] if clinic else "Unknown"
+        
+        # Get warehouse info
+        warehouse = await db.warehouses.find_one({"id": order["warehouse_id"]}, {"_id": 0})
+        order["warehouse_name"] = warehouse["name"] if warehouse else "Unknown"
+        
+        # Get manager approval info
+        if order.get("approved_by"):
+            manager = await db.users.find_one({"id": order["approved_by"]}, {"_id": 0})
+            order["manager_approved"] = True
+            order["approved_by_name"] = manager["full_name"] if manager else "Unknown"
+        else:
+            order["manager_approved"] = False
+            order["approved_by_name"] = None
+        
+        # Get order items with product details
+        items = await db.order_items.find({"order_id": order["id"]}, {"_id": 0}).to_list(100)
+        for item in items:
+            product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+            if product:
+                item["product_name"] = product["name"]
+                item["product_unit"] = product["unit"]
+                item["product_image"] = product.get("image", "")
+        order["items"] = items
+    
+    return orders
+
 @api_router.patch("/orders/{order_id}/review")
 async def review_order(order_id: str, approved: bool, current_user: User = Depends(get_current_user)):
     if current_user.role not in [UserRole.MANAGER, UserRole.WAREHOUSE_MANAGER, UserRole.ADMIN]:
