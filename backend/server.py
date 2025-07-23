@@ -1489,11 +1489,11 @@ async def get_conversations(current_user: User = Depends(get_current_user)):
         conversation["participant_names"] = participant_names
         
         # Get last message
-        last_message = await db.chat_messages.find_one(
+        last_message = await db.chat_messages.find(
             {"conversation_id": conversation["id"]},
             {"_id": 0}
-        ).sort("created_at", -1)
-        conversation["last_message"] = last_message
+        ).sort("created_at", -1).limit(1).to_list(1)
+        conversation["last_message"] = last_message[0] if last_message else None
     
     return conversations
 
