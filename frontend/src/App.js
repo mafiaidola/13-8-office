@@ -5718,7 +5718,8 @@ const Dashboard = () => {
       admin: 'أدمن',
       warehouse_manager: 'مدير مخزن',
       manager: 'مدير',
-      sales_rep: 'مندوب'
+      sales_rep: 'مندوب',
+      accounting: 'محاسب'
     };
     return roles[role] || role;
   };
@@ -5728,7 +5729,8 @@ const Dashboard = () => {
       users: ['admin', 'warehouse_manager', 'manager'],
       warehouse: ['admin', 'warehouse_manager'],
       visit: ['sales_rep'],
-      reports: ['admin', 'warehouse_manager', 'manager']
+      reports: ['admin', 'warehouse_manager', 'manager', 'accounting'],
+      accounting: ['admin', 'accounting']
     };
     
     return permissions[tabName]?.includes(user.role) || false;
