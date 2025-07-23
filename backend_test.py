@@ -510,6 +510,267 @@ class BackendTester:
         else:
             self.log_test("Distance Calculation", False, f"Expected distance error, got {status_code}", response)
         return False
+
+    def test_enhanced_sales_rep_stats(self):
+        """Test 21: Enhanced sales rep detailed statistics API"""
+        if not self.sales_rep_token:
+            self.log_test("Enhanced Sales Rep Stats", False, "No sales rep token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/dashboard/sales-rep-stats", token=self.sales_rep_token)
+        
+        if status_code == 200:
+            # Check for required structure
+            required_sections = ["visits", "total_clinics_added", "total_doctors_added", "pending"]
+            if all(section in response for section in required_sections):
+                # Check visits breakdown
+                visits = response.get("visits", {})
+                required_visit_stats = ["today", "week", "month", "total"]
+                if all(stat in visits for stat in required_visit_stats):
+                    # Check pending section
+                    pending = response.get("pending", {})
+                    required_pending = ["visits", "clinic_requests", "orders"]
+                    if all(item in pending for item in required_pending):
+                        self.log_test("Enhanced Sales Rep Stats", True, f"Complete stats structure: {response}")
+                        return True
+                    else:
+                        self.log_test("Enhanced Sales Rep Stats", False, "Missing pending statistics")
+                else:
+                    self.log_test("Enhanced Sales Rep Stats", False, "Missing visit breakdown statistics")
+            else:
+                self.log_test("Enhanced Sales Rep Stats", False, "Missing required statistics sections")
+        else:
+            self.log_test("Enhanced Sales Rep Stats", False, f"Status: {status_code}", response)
+        return False
+
+    def test_create_clinic_request(self):
+        """Test 22: Create clinic request (sales rep only)"""
+        if not self.sales_rep_token:
+            self.log_test("Create Clinic Request", False, "No sales rep token available")
+            return False
+        
+        clinic_request_data = {
+            "clinic_name": "عيادة الدكتور سالم الجديدة",
+            "clinic_phone": "+966501234567",
+            "doctor_name": "د. سالم الأحمد",
+            "doctor_specialty": "طب الأسرة",
+            "doctor_address": "شارع الأمير محمد بن عبدالعزيز",
+            "clinic_manager_name": "أحمد المدير",
+            "latitude": 24.7136,
+            "longitude": 46.6753,
+            "address": "الرياض، حي الملز",
+            "clinic_image": None,  # Optional base64 image
+            "notes": "عيادة جديدة تحتاج موافقة"
+        }
+        
+        status_code, response = self.make_request("POST", "/clinic-requests", clinic_request_data, self.sales_rep_token)
+        
+        if status_code == 200 and "request_id" in response:
+            self.test_clinic_request_id = response["request_id"]
+            self.log_test("Create Clinic Request", True, f"Clinic request created with ID: {self.test_clinic_request_id}")
+            return True
+        else:
+            self.log_test("Create Clinic Request", False, f"Status: {status_code}", response)
+        return False
+
+    def test_get_clinic_requests(self):
+        """Test 23: Get clinic requests list"""
+        if not self.sales_rep_token:
+            self.log_test("Get Clinic Requests", False, "No sales rep token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/clinic-requests", token=self.sales_rep_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            if len(response) > 0:
+                request = response[0]
+                required_fields = ["clinic_name", "doctor_name", "status", "sales_rep_name"]
+                if all(field in request for field in required_fields):
+                    self.log_test("Get Clinic Requests", True, f"Found {len(response)} requests with enriched data")
+                    return True
+                else:
+                    self.log_test("Get Clinic Requests", False, "Missing required fields in request data")
+            else:
+                self.log_test("Get Clinic Requests", True, "No clinic requests found (expected if none created)")
+                return True
+        else:
+            self.log_test("Get Clinic Requests", False, f"Status: {status_code}", response)
+        return False
+
+    def test_manager_review_clinic_request(self):
+        """Test 24: Manager review and approve clinic request"""
+        if not self.manager_token:
+            self.log_test("Manager Review Clinic Request", False, "No manager token available")
+            return False
+        
+        # First get clinic requests as manager
+        status_code, requests = self.make_request("GET", "/clinic-requests", token=self.manager_token)
+        
+        if status_code == 200 and len(requests) > 0:
+            request_id = requests[0]["id"]
+            
+            # Approve the request
+            status_code, response = self.make_request("PATCH", f"/clinic-requests/{request_id}/review?approved=true", {}, self.manager_token)
+            
+            if status_code == 200:
+                self.log_test("Manager Review Clinic Request", True, "Clinic request approved successfully")
+                return True
+            else:
+                self.log_test("Manager Review Clinic Request", False, f"Status: {status_code}", response)
+        else:
+            self.log_test("Manager Review Clinic Request", False, "No clinic requests available for review")
+        return False
+
+    def test_clinic_request_role_restrictions(self):
+        """Test 25: Only sales reps can create clinic requests"""
+        if not self.manager_token:
+            self.log_test("Clinic Request Role Restrictions", False, "No manager token available")
+            return False
+        
+        clinic_request_data = {
+            "clinic_name": "عيادة غير مسموحة",
+            "doctor_name": "د. غير مسموح",
+            "doctor_specialty": "طب عام",
+            "doctor_address": "عنوان تجريبي",
+            "clinic_manager_name": "مدير تجريبي",
+            "latitude": 24.7136,
+            "longitude": 46.6753,
+            "address": "الرياض",
+            "notes": "طلب من مدير (يجب أن يفشل)"
+        }
+        
+        status_code, response = self.make_request("POST", "/clinic-requests", clinic_request_data, self.manager_token)
+        
+        if status_code == 403:
+            self.log_test("Clinic Request Role Restrictions", True, "Manager correctly denied clinic request creation")
+            return True
+        else:
+            self.log_test("Clinic Request Role Restrictions", False, f"Expected 403, got {status_code}", response)
+        return False
+
+    def test_orders_api_exists(self):
+        """Test 26: Check if orders API endpoint exists"""
+        if not self.sales_rep_token:
+            self.log_test("Orders API Exists", False, "No sales rep token available")
+            return False
+        
+        # Try to get orders (should return empty list or proper response)
+        status_code, response = self.make_request("GET", "/orders", token=self.sales_rep_token)
+        
+        # Accept 200 (working) or 404 (not implemented yet)
+        if status_code == 200:
+            self.log_test("Orders API Exists", True, f"Orders API working, found {len(response) if isinstance(response, list) else 0} orders")
+            return True
+        elif status_code == 404:
+            self.log_test("Orders API Exists", False, "Orders API endpoint not implemented yet")
+            return False
+        else:
+            self.log_test("Orders API Exists", False, f"Unexpected status: {status_code}", response)
+        return False
+
+    def test_create_order_demo(self):
+        """Test 27: Create DEMO order"""
+        if not self.sales_rep_token or not self.test_doctor_id or not self.test_clinic_id:
+            self.log_test("Create DEMO Order", False, "Missing required tokens or IDs")
+            return False
+        
+        # First need to get a visit ID
+        status_code, visits = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code != 200 or len(visits) == 0:
+            self.log_test("Create DEMO Order", False, "No visits available for order creation")
+            return False
+        
+        visit_id = visits[0]["id"]
+        
+        # Get warehouses
+        status_code, warehouses = self.make_request("GET", "/warehouses", token=self.sales_rep_token)
+        if status_code != 200 or len(warehouses) == 0:
+            self.log_test("Create DEMO Order", False, "No warehouses available")
+            return False
+        
+        warehouse_id = warehouses[0]["id"]
+        
+        # Get products
+        status_code, products = self.make_request("GET", "/products", token=self.sales_rep_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("Create DEMO Order", False, "No products available")
+            return False
+        
+        product_id = products[0]["id"]
+        
+        order_data = {
+            "visit_id": visit_id,
+            "doctor_id": self.test_doctor_id,
+            "clinic_id": self.test_clinic_id,
+            "warehouse_id": warehouse_id,
+            "order_type": "DEMO",
+            "items": [{"product_id": product_id, "quantity": 2}],
+            "notes": "طلبية ديمو تجريبية"
+        }
+        
+        status_code, response = self.make_request("POST", "/orders", order_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Create DEMO Order", True, f"DEMO order created successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Create DEMO Order", False, "Orders API not implemented yet")
+            return False
+        else:
+            self.log_test("Create DEMO Order", False, f"Status: {status_code}", response)
+        return False
+
+    def test_create_order_sale(self):
+        """Test 28: Create SALE order"""
+        if not self.sales_rep_token or not self.test_doctor_id or not self.test_clinic_id:
+            self.log_test("Create SALE Order", False, "Missing required tokens or IDs")
+            return False
+        
+        # First need to get a visit ID
+        status_code, visits = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code != 200 or len(visits) == 0:
+            self.log_test("Create SALE Order", False, "No visits available for order creation")
+            return False
+        
+        visit_id = visits[0]["id"]
+        
+        # Get warehouses
+        status_code, warehouses = self.make_request("GET", "/warehouses", token=self.sales_rep_token)
+        if status_code != 200 or len(warehouses) == 0:
+            self.log_test("Create SALE Order", False, "No warehouses available")
+            return False
+        
+        warehouse_id = warehouses[0]["id"]
+        
+        # Get products
+        status_code, products = self.make_request("GET", "/products", token=self.sales_rep_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("Create SALE Order", False, "No products available")
+            return False
+        
+        product_id = products[0]["id"]
+        
+        order_data = {
+            "visit_id": visit_id,
+            "doctor_id": self.test_doctor_id,
+            "clinic_id": self.test_clinic_id,
+            "warehouse_id": warehouse_id,
+            "order_type": "SALE",
+            "items": [{"product_id": product_id, "quantity": 5}],
+            "notes": "طلبية مبيعات تجريبية"
+        }
+        
+        status_code, response = self.make_request("POST", "/orders", order_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Create SALE Order", True, f"SALE order created successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Create SALE Order", False, "Orders API not implemented yet")
+            return False
+        else:
+            self.log_test("Create SALE Order", False, f"Status: {status_code}", response)
+        return False
     
     def run_all_tests(self):
         """Run all backend tests"""
