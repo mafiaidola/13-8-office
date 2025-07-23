@@ -88,63 +88,49 @@ class OrdersAPITester:
             self.log_test("Admin Login", False, f"Status: {status_code}", response)
             return False
         
-        # 2. Get existing users (from previous tests)
-        status_code, users = self.make_request("GET", "/auth/users", token=self.admin_token)
+        # 2. Create manager first
+        timestamp = str(int(time.time()))
+        manager_data = {
+            "username": f"orders_test_mgr_{timestamp}",
+            "email": f"orders_mgr_{timestamp}@test.com",
+            "password": "manager123",
+            "role": "manager",
+            "full_name": "مدير اختبار الطلبيات",
+            "phone": "+966502222222"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", manager_data, self.admin_token)
         if status_code == 200:
-            # Find sales rep and manager
-            for user in users:
-                if user.get("role") == "sales_rep" and not self.sales_rep_id:
-                    self.sales_rep_id = user["id"]
-                elif user.get("role") == "manager" and not self.manager_id:
-                    self.manager_id = user["id"]
-                elif user.get("role") == "warehouse_manager" and not self.warehouse_manager_id:
-                    self.warehouse_manager_id = user["id"]
-        
-        # 3. Login as sales rep
-        if self.sales_rep_id:
-            # Find sales rep credentials from recent tests
-            timestamp = str(int(time.time()))
-            # Try to find existing sales rep or create new one
-            sales_rep_data = {
-                "username": f"orders_test_sales_{timestamp}",
-                "email": f"orders_sales_{timestamp}@test.com",
-                "password": "salesrep123",
-                "role": "sales_rep",
-                "full_name": "مندوب اختبار الطلبيات",
-                "phone": "+966501111111",
-                "managed_by": self.manager_id
-            }
-            
-            status_code, response = self.make_request("POST", "/auth/register", sales_rep_data, self.admin_token)
+            self.manager_id = response.get('user_id')
+            # Login as manager
+            login_data = {"username": f"orders_test_mgr_{timestamp}", "password": "manager123"}
+            status_code, login_response = self.make_request("POST", "/auth/login", login_data)
             if status_code == 200:
-                self.sales_rep_id = response.get('user_id')
-                # Login as sales rep
-                login_data = {"username": f"orders_test_sales_{timestamp}", "password": "salesrep123"}
-                status_code, login_response = self.make_request("POST", "/auth/login", login_data)
-                if status_code == 200:
-                    self.sales_rep_token = login_response["token"]
+                self.manager_token = login_response["token"]
+                self.log_test("Create Manager", True, f"Manager created and logged in: {self.manager_id}")
         
-        # 4. Login as manager
-        if self.manager_id:
-            manager_data = {
-                "username": f"orders_test_mgr_{timestamp}",
-                "email": f"orders_mgr_{timestamp}@test.com",
-                "password": "manager123",
-                "role": "manager",
-                "full_name": "مدير اختبار الطلبيات",
-                "phone": "+966502222222"
-            }
-            
-            status_code, response = self.make_request("POST", "/auth/register", manager_data, self.admin_token)
+        # 3. Create sales rep under manager
+        sales_rep_data = {
+            "username": f"orders_test_sales_{timestamp}",
+            "email": f"orders_sales_{timestamp}@test.com",
+            "password": "salesrep123",
+            "role": "sales_rep",
+            "full_name": "مندوب اختبار الطلبيات",
+            "phone": "+966501111111",
+            "managed_by": self.manager_id
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", sales_rep_data, self.admin_token)
+        if status_code == 200:
+            self.sales_rep_id = response.get('user_id')
+            # Login as sales rep
+            login_data = {"username": f"orders_test_sales_{timestamp}", "password": "salesrep123"}
+            status_code, login_response = self.make_request("POST", "/auth/login", login_data)
             if status_code == 200:
-                self.manager_id = response.get('user_id')
-                # Login as manager
-                login_data = {"username": f"orders_test_mgr_{timestamp}", "password": "manager123"}
-                status_code, login_response = self.make_request("POST", "/auth/login", login_data)
-                if status_code == 200:
-                    self.manager_token = login_response["token"]
+                self.sales_rep_token = login_response["token"]
+                self.log_test("Create Sales Rep", True, f"Sales rep created and logged in: {self.sales_rep_id}")
         
-        # 5. Get test data (clinics, doctors, warehouses, products, visits)
+        # 4. Get test data (clinics, doctors, warehouses, products, visits)
         self.get_test_data()
         
         return True
