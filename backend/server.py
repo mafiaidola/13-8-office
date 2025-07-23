@@ -2784,7 +2784,104 @@ async def sync_offline_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# QR Code generation endpoint
+@app.post("/api/qr/generate")
+async def generate_qr_code(
+    qr_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate QR code for clinics or products"""
+    try:
+        import qrcode
+        import io
+        import base64
+        
+        # Validate QR data
+        if qr_data.get("type") == "clinic":
+            clinic_id = qr_data.get("clinic_id")
+            clinic = await db.clinics.find_one({"id": clinic_id})
+            if not clinic:
+                raise HTTPException(status_code=404, detail="Clinic not found")
+            
+            qr_content = {
+                "type": "clinic",
+                "id": clinic_id,
+                "name": clinic["name"],
+                "address": clinic["address"],
+                "coordinates": clinic.get("coordinates", {})
+            }
+        elif qr_data.get("type") == "product":
+            product_id = qr_data.get("product_id")
+            product = await db.products.find_one({"id": product_id})
+            if not product:
+                raise HTTPException(status_code=404, detail="Product not found")
+            
+            qr_content = {
+                "type": "product",
+                "id": product_id,
+                "name": product["name"],
+                "price": product["price"],
+                "unit": product["unit"]
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Invalid QR type")
+        
+        # Generate QR code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(str(qr_content))
+        qr.make(fit=True)
+        
+        # Create image
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        
+        return {
+            "qr_code": f"data:image/png;base64,{img_str}",
+            "content": qr_content
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/qr/scan")
+async def process_qr_scan(
+    scan_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Process scanned QR code data"""
+    try:
+        qr_content = scan_data.get("content")
+        
+        if qr_content.get("type") == "clinic":
+            # Return clinic information for visit registration
+            clinic_id = qr_content.get("id")
+            clinic = await db.clinics.find_one({"id": clinic_id})
+            
+            if clinic:
+                return {
+                    "type": "clinic",
+                    "data": clinic,
+                    "action": "prefill_visit_form"
+                }
+        elif qr_content.get("type") == "product":
+            # Return product information for order creation
+            product_id = qr_content.get("id")
+            product = await db.products.find_one({"id": product_id})
+            
+            if product:
+                return {
+                    "type": "product",
+                    "data": product,
+                    "action": "add_to_order"
+                }
+        
+        return {"error": "Invalid QR code"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Chart data endpoints
 
 # Include the router in the main app
 app.include_router(api_router)
