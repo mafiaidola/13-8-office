@@ -132,13 +132,15 @@ class BackendTester:
             "password": "salesrep123",
             "role": "sales_rep",
             "full_name": "مندوب المبيعات التجريبي",
-            "phone": "+966501111111"
+            "phone": "+966501111111",
+            "managed_by": getattr(self, 'manager_id', None)  # Link to manager if available
         }
         
         status_code, response = self.make_request("POST", "/auth/register", sales_rep_data, self.admin_token)
         
         if status_code == 200:
-            self.log_test("Create Sales Rep User", True, f"User created with ID: {response.get('user_id')}")
+            self.sales_rep_id = response.get('user_id')
+            self.log_test("Create Sales Rep User", True, f"User created with ID: {self.sales_rep_id}")
             
             # Login as sales rep
             login_data = {"username": f"sales_rep_{timestamp}", "password": "salesrep123"}
