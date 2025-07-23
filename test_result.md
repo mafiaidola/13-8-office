@@ -302,9 +302,7 @@ test_plan:
   current_focus:
     - "Enhanced sales rep detailed statistics API"
     - "Clinic requests system with manager approval"
-    - "Orders API endpoints"
-  stuck_tasks:
-    - "Orders API endpoints"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
