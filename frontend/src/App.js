@@ -2998,6 +2998,536 @@ const EnhancedUserManagement = () => {
 
 // Helper Components and Sub-systems
 
+// Real-time Analytics Hook
+const useRealTimeAnalytics = () => {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API}/analytics/realtime`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAnalytics(response.data);
+      } catch (error) {
+        console.error('Error fetching real-time analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+    const interval = setInterval(fetchAnalytics, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return { analytics, loading };
+};
+
+// Global Search Component
+const GlobalSearchBox = ({ onResults }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState({});
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleSearch = async (searchQuery) => {
+    if (!searchQuery.trim()) {
+      setResults({});
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/search/global?q=${encodeURIComponent(searchQuery)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setResults(response.data);
+      setShowResults(true);
+      if (onResults) onResults(response.data);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const debounceSearch = useCallback(
+    debounce((query) => handleSearch(query), 500),
+    []
+  );
+
+  useEffect(() => {
+    debounceSearch(query);
+  }, [query, debounceSearch]);
+
+  const getTotalResults = () => {
+    return Object.values(results).reduce((total, category) => total + (category?.length || 0), 0);
+  };
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="🔍 بحث عام في النظام..."
+          className="form-modern w-full pl-10 pr-4 py-3 text-sm"
+          style={{ direction: 'rtl' }}
+        />
+        {isSearching && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <div className="loading-shimmer w-4 h-4 rounded-full"></div>
+          </div>
+        )}
+      </div>
+
+      {showResults && getTotalResults() > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white shadow-xl rounded-lg border max-h-96 overflow-y-auto">
+          {Object.entries(results).map(([category, items]) => {
+            if (!items || items.length === 0) return null;
+            
+            const categoryLabels = {
+              users: '👥 المستخدمين',
+              clinics: '🏥 العيادات',
+              doctors: '👨‍⚕️ الأطباء',
+              products: '📦 المنتجات'
+            };
+
+            return (
+              <div key={category} className="p-3 border-b">
+                <h4 className="font-bold text-sm text-gray-600 mb-2">
+                  {categoryLabels[category]} ({items.length})
+                </h4>
+                {items.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-2 hover:bg-gray-50 rounded cursor-pointer text-sm"
+                    onClick={() => {
+                      setShowResults(false);
+                      setQuery('');
+                    }}
+                  >
+                    <div className="font-medium text-gray-800">
+                      {item.full_name || item.name || item.username}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {category === 'users' && item.role && `${item.email} • ${item.role}`}
+                      {category === 'clinics' && item.address}
+                      {category === 'doctors' && item.specialty}
+                      {category === 'products' && `${item.price} ريال • ${item.unit}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Advanced Reports Component
+const AdvancedReports = () => {
+  const [reportType, setReportType] = useState('visits_performance');
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    end_date: new Date().toISOString().split('T')[0]
+  });
+
+  const fetchReport = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        report_type: reportType,
+        start_date: dateRange.start_date,
+        end_date: dateRange.end_date
+      });
+      
+      const response = await axios.get(`${API}/reports/advanced?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setReportData(response.data);
+    } catch (error) {
+      console.error('Error fetching report:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, [reportType, dateRange]);
+
+  const ChartRenderer = ({ data, type, title }) => {
+    if (!data || !data.data) return <div>لا توجد بيانات للعرض</div>;
+
+    return (
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 text-center">{title}</h3>
+        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl mb-4">📊</div>
+            <p className="text-gray-600">رسم بياني تفاعلي</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {data.data.length} نقطة بيانات
+            </p>
+            <div className="mt-4 text-xs text-gray-400">
+              {data.data.slice(0, 3).map((point, index) => (
+                <div key={index}>
+                  {point._id}: {point.total_visits || point.total_orders || 'N/A'}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="w-16 h-16 card-gradient-green rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-3xl">📈</span>
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold text-gradient">التقارير التفاعلية المتقدمة</h2>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                تحليلات وتقارير شاملة مع رسوم بيانية تفاعلية
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Report Controls */}
+        <div className="card-modern p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">نوع التقرير:</label>
+              <select
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="visits_performance">أداء الزيارات</option>
+                <option value="sales_by_rep">المبيعات بواسطة المناديب</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">من تاريخ:</label>
+              <input
+                type="date"
+                value={dateRange.start_date}
+                onChange={(e) => setDateRange({...dateRange, start_date: e.target.value})}
+                className="form-modern w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">إلى تاريخ:</label>
+              <input
+                type="date"
+                value={dateRange.end_date}
+                onChange={(e) => setDateRange({...dateRange, end_date: e.target.value})}
+                className="form-modern w-full"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchReport}
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="loading-shimmer w-4 h-4 rounded-full"></div>
+                    <span>جاري التحميل...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔄</span>
+                    <span>تحديث التقرير</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Report Display */}
+        {reportData && (
+          <ChartRenderer 
+            data={reportData} 
+            type={reportData.type} 
+            title={reportData.title}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// QR Code Scanner Component
+const QRCodeScanner = ({ onScan, onClose }) => {
+  const [scanning, setScanning] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const startScanning = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setScanning(true);
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert('لا يمكن الوصول للكاميرا. تأكد من السماح للموقع باستخدام الكاميرا.');
+    }
+  };
+
+  const stopScanning = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+    }
+    setScanning(false);
+  };
+
+  const captureAndScan = () => {
+    if (canvasRef.current && videoRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      
+      // Simulate QR code scanning (in real app, use a QR code library)
+      const imageData = canvas.toDataURL();
+      onScan({ 
+        type: 'clinic', 
+        id: 'sample-clinic-id',
+        name: 'عيادة تجريبية',
+        address: 'عنوان تجريبي' 
+      });
+    }
+  };
+
+  useEffect(() => {
+    return () => stopScanning();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gradient">📱 مسح QR Code</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '1' }}>
+            {scanning ? (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-4 border-2 border-green-400 rounded-lg animate-pulse"></div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <button
+                    onClick={captureAndScan}
+                    className="btn-success w-full flex items-center justify-center gap-2"
+                  >
+                    <span>📷</span>
+                    <span>مسح الكود</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-white">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📱</div>
+                  <p className="text-lg mb-4">اضغط لبدء المسح</p>
+                  <button
+                    onClick={startScanning}
+                    className="btn-primary"
+                  >
+                    🎥 تشغيل الكاميرا
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          
+          <div className="text-center">
+            <p className="text-sm text-gray-500">
+              📋 وجه الكاميرا نحو QR Code للعيادة أو المنتج
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Language Selector Component
+const LanguageSelector = () => {
+  const [currentLang, setCurrentLang] = useState('ar');
+  const [translations, setTranslations] = useState({});
+
+  const languages = [
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+  ];
+
+  const loadTranslations = async (lang) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/language/translations?lang=${lang}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTranslations(response.data);
+      localStorage.setItem('app_language', lang);
+    } catch (error) {
+      console.error('Error loading translations:', error);
+    }
+  };
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('app_language') || 'ar';
+    setCurrentLang(savedLang);
+    loadTranslations(savedLang);
+  }, []);
+
+  const handleLanguageChange = (lang) => {
+    setCurrentLang(lang);
+    loadTranslations(lang);
+    
+    // Apply RTL/LTR direction
+    document.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  return (
+    <div className="relative">
+      <select 
+        value={currentLang}
+        onChange={(e) => handleLanguageChange(e.target.value)}
+        className="form-modern text-sm pr-8 pl-4 py-2 appearance-none bg-white"
+        style={{ direction: 'ltr' }}
+      >
+        {languages.map((lang) => (
+          <option key={lang.code} value={lang.code}>
+            {lang.flag} {lang.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// Offline Status Component
+const OfflineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [pendingSync, setPendingSync] = useState([]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncOfflineData();
+    };
+    
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const syncOfflineData = async () => {
+    const offlineData = JSON.parse(localStorage.getItem('offline_data') || '{"visits": [], "orders": []}');
+    
+    if (offlineData.visits.length === 0 && offlineData.orders.length === 0) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/offline/sync`, offlineData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Clear offline data after successful sync
+      localStorage.removeItem('offline_data');
+      setPendingSync([]);
+      
+      console.log('Offline data synced successfully:', response.data);
+    } catch (error) {
+      console.error('Error syncing offline data:', error);
+    }
+  };
+
+  const addOfflineData = (type, data) => {
+    const offlineData = JSON.parse(localStorage.getItem('offline_data') || '{"visits": [], "orders": []}');
+    offlineData[type].push({
+      ...data,
+      local_id: Date.now().toString(),
+      offline_created_at: new Date().toISOString()
+    });
+    localStorage.setItem('offline_data', JSON.stringify(offlineData));
+    setPendingSync([...pendingSync, { type, data }]);
+  };
+
+  if (isOnline) return null;
+
+  return (
+    <div className="fixed bottom-4 left-4 right-4 bg-orange-100 border border-orange-400 text-orange-800 px-4 py-3 rounded-lg shadow-lg z-50">
+      <div className="flex items-center gap-3">
+        <span className="text-xl">📡</span>
+        <div className="flex-1">
+          <div className="font-medium">وضع عدم الاتصال</div>
+          <div className="text-sm">سيتم مزامنة البيانات عند عودة الاتصال</div>
+          {pendingSync.length > 0 && (
+            <div className="text-xs mt-1">
+              {pendingSync.length} عناصر في انتظار المزامنة
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Accounting Role Component
+
 // Warehouse Management Component
 // Enhanced Warehouse Management Component  
 const WarehouseManagement = () => {
