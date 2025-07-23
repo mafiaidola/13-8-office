@@ -2416,11 +2416,6 @@ const App = () => {
 const AppContent = () => {
   const { user, loading } = useAuth();
 
-  // Set initial theme
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }, []);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
