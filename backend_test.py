@@ -2781,6 +2781,497 @@ class BackendTester:
         
         print("\n" + "=" * 80)
 
+    # NEW ARABIC REVIEW REQUEST TESTS - Advanced APIs
+    
+    def test_realtime_analytics_api(self):
+        """Test 50: Real-time Analytics API - GET /api/analytics/realtime"""
+        if not self.admin_token:
+            self.log_test("Real-time Analytics API", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/analytics/realtime", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["timestamp", "live_stats", "chart_data"]
+            if all(field in response for field in required_fields):
+                live_stats = response.get("live_stats", {})
+                required_stats = ["visits_today", "active_sales_reps", "pending_orders"]
+                if all(stat in live_stats for stat in required_stats):
+                    chart_data = response.get("chart_data", [])
+                    if isinstance(chart_data, list) and len(chart_data) == 7:
+                        self.log_test("Real-time Analytics API", True, f"Analytics data: visits_today={live_stats['visits_today']}, active_reps={live_stats['active_sales_reps']}, pending_orders={live_stats['pending_orders']}, chart_days={len(chart_data)}")
+                        return True
+                    else:
+                        self.log_test("Real-time Analytics API", False, f"Invalid chart data: expected 7 days, got {len(chart_data) if isinstance(chart_data, list) else 'not list'}")
+                else:
+                    self.log_test("Real-time Analytics API", False, f"Missing live stats: {live_stats}")
+            else:
+                self.log_test("Real-time Analytics API", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Real-time Analytics API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_global_search_api(self):
+        """Test 51: Global Search API - GET /api/search/global?q=test"""
+        if not self.admin_token:
+            self.log_test("Global Search API", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/search/global?q=test", token=self.admin_token)
+        
+        if status_code == 200:
+            required_categories = ["users", "clinics", "doctors", "products"]
+            if all(category in response for category in required_categories):
+                # Check that each category returns max 5 results
+                valid_results = True
+                for category in required_categories:
+                    results = response.get(category, [])
+                    if not isinstance(results, list) or len(results) > 5:
+                        valid_results = False
+                        break
+                
+                if valid_results:
+                    total_results = sum(len(response.get(cat, [])) for cat in required_categories)
+                    self.log_test("Global Search API", True, f"Search results: users={len(response['users'])}, clinics={len(response['clinics'])}, doctors={len(response['doctors'])}, products={len(response['products'])}, total={total_results}")
+                    return True
+                else:
+                    self.log_test("Global Search API", False, "Invalid result structure or too many results per category")
+            else:
+                self.log_test("Global Search API", False, f"Missing required categories: {response}")
+        else:
+            self.log_test("Global Search API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_advanced_reports_visits_performance(self):
+        """Test 52: Advanced Reports API - visits_performance"""
+        if not self.admin_token:
+            self.log_test("Advanced Reports - Visits Performance", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/reports/advanced?report_type=visits_performance", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["type", "title", "data"]
+            if all(field in response for field in required_fields):
+                if (response.get("type") == "line_chart" and 
+                    response.get("title") == "أداء الزيارات" and
+                    isinstance(response.get("data"), list)):
+                    self.log_test("Advanced Reports - Visits Performance", True, f"Report generated: {len(response['data'])} data points")
+                    return True
+                else:
+                    self.log_test("Advanced Reports - Visits Performance", False, f"Invalid report structure: {response}")
+            else:
+                self.log_test("Advanced Reports - Visits Performance", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Advanced Reports - Visits Performance", False, f"Status: {status_code}", response)
+        return False
+
+    def test_advanced_reports_sales_by_rep(self):
+        """Test 53: Advanced Reports API - sales_by_rep"""
+        if not self.admin_token:
+            self.log_test("Advanced Reports - Sales by Rep", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/reports/advanced?report_type=sales_by_rep", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["type", "title", "data"]
+            if all(field in response for field in required_fields):
+                if (response.get("type") == "bar_chart" and 
+                    response.get("title") == "المبيعات بواسطة المناديب" and
+                    isinstance(response.get("data"), list)):
+                    self.log_test("Advanced Reports - Sales by Rep", True, f"Report generated: {len(response['data'])} sales reps")
+                    return True
+                else:
+                    self.log_test("Advanced Reports - Sales by Rep", False, f"Invalid report structure: {response}")
+            else:
+                self.log_test("Advanced Reports - Sales by Rep", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Advanced Reports - Sales by Rep", False, f"Status: {status_code}", response)
+        return False
+
+    def test_order_approval_workflow_manager(self):
+        """Test 54: Order Approval Workflow - Manager Approval"""
+        if not self.manager_token:
+            self.log_test("Order Approval Workflow - Manager", False, "No manager token available")
+            return False
+        
+        # First create an order to approve
+        if not self.sales_rep_token or not self.test_doctor_id or not self.test_clinic_id:
+            self.log_test("Order Approval Workflow - Manager", False, "Missing required data for order creation")
+            return False
+        
+        # Get visit, warehouse, and product for order creation
+        status_code, visits = self.make_request("GET", "/visits", token=self.sales_rep_token)
+        if status_code != 200 or len(visits) == 0:
+            self.log_test("Order Approval Workflow - Manager", False, "No visits available")
+            return False
+        
+        status_code, warehouses = self.make_request("GET", "/warehouses", token=self.admin_token)
+        if status_code != 200 or len(warehouses) == 0:
+            self.log_test("Order Approval Workflow - Manager", False, "No warehouses available")
+            return False
+        
+        status_code, products = self.make_request("GET", "/products", token=self.admin_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("Order Approval Workflow - Manager", False, "No products available")
+            return False
+        
+        # Create order
+        order_data = {
+            "visit_id": visits[0]["id"],
+            "doctor_id": self.test_doctor_id,
+            "clinic_id": self.test_clinic_id,
+            "warehouse_id": warehouses[0]["id"],
+            "order_type": "SALE",
+            "items": [{"product_id": products[0]["id"], "quantity": 3}],
+            "notes": "طلبية للاختبار workflow"
+        }
+        
+        status_code, response = self.make_request("POST", "/orders", order_data, self.sales_rep_token)
+        if status_code != 200:
+            self.log_test("Order Approval Workflow - Manager", False, f"Failed to create order: {status_code}")
+            return False
+        
+        order_id = response.get("order_id")
+        
+        # Manager approval
+        approval_data = {"notes": "موافقة المدير"}
+        status_code, response = self.make_request("POST", f"/orders/{order_id}/approve", approval_data, self.manager_token)
+        
+        if status_code == 200:
+            if response.get("new_status") == "MANAGER_APPROVED":
+                self.log_test("Order Approval Workflow - Manager", True, f"Order approved by manager: {response.get('message')}")
+                return True
+            else:
+                self.log_test("Order Approval Workflow - Manager", False, f"Unexpected status: {response.get('new_status')}")
+        else:
+            self.log_test("Order Approval Workflow - Manager", False, f"Status: {status_code}", response)
+        return False
+
+    def test_multi_language_support_arabic(self):
+        """Test 55: Multi-language Support - Arabic"""
+        status_code, response = self.make_request("GET", "/language/translations?lang=ar")
+        
+        if status_code == 200:
+            required_keys = ["dashboard", "users", "warehouses", "visits", "reports", "chat", "settings"]
+            if all(key in response for key in required_keys):
+                # Check Arabic translations
+                if (response.get("dashboard") == "لوحة التحكم" and
+                    response.get("users") == "المستخدمين" and
+                    response.get("warehouses") == "المخازن"):
+                    self.log_test("Multi-language Support - Arabic", True, f"Arabic translations loaded: {len(response)} keys")
+                    return True
+                else:
+                    self.log_test("Multi-language Support - Arabic", False, "Incorrect Arabic translations")
+            else:
+                self.log_test("Multi-language Support - Arabic", False, f"Missing translation keys: {response}")
+        else:
+            self.log_test("Multi-language Support - Arabic", False, f"Status: {status_code}", response)
+        return False
+
+    def test_multi_language_support_english(self):
+        """Test 56: Multi-language Support - English"""
+        status_code, response = self.make_request("GET", "/language/translations?lang=en")
+        
+        if status_code == 200:
+            required_keys = ["dashboard", "users", "warehouses", "visits", "reports", "chat", "settings"]
+            if all(key in response for key in required_keys):
+                # Check English translations
+                if (response.get("dashboard") == "Dashboard" and
+                    response.get("users") == "Users" and
+                    response.get("warehouses") == "Warehouses"):
+                    self.log_test("Multi-language Support - English", True, f"English translations loaded: {len(response)} keys")
+                    return True
+                else:
+                    self.log_test("Multi-language Support - English", False, "Incorrect English translations")
+            else:
+                self.log_test("Multi-language Support - English", False, f"Missing translation keys: {response}")
+        else:
+            self.log_test("Multi-language Support - English", False, f"Status: {status_code}", response)
+        return False
+
+    def test_multi_language_support_french(self):
+        """Test 57: Multi-language Support - French"""
+        status_code, response = self.make_request("GET", "/language/translations?lang=fr")
+        
+        if status_code == 200:
+            required_keys = ["dashboard", "users", "warehouses", "visits", "reports", "chat", "settings"]
+            if all(key in response for key in required_keys):
+                # Check French translations
+                if (response.get("dashboard") == "Tableau de Bord" and
+                    response.get("users") == "Utilisateurs" and
+                    response.get("warehouses") == "Entrepôts"):
+                    self.log_test("Multi-language Support - French", True, f"French translations loaded: {len(response)} keys")
+                    return True
+                else:
+                    self.log_test("Multi-language Support - French", False, "Incorrect French translations")
+            else:
+                self.log_test("Multi-language Support - French", False, f"Missing translation keys: {response}")
+        else:
+            self.log_test("Multi-language Support - French", False, f"Status: {status_code}", response)
+        return False
+
+    def test_qr_code_generation_clinic(self):
+        """Test 58: QR Code Generation - Clinic"""
+        if not self.admin_token or not self.test_clinic_id:
+            self.log_test("QR Code Generation - Clinic", False, "Missing admin token or clinic ID")
+            return False
+        
+        qr_data = {
+            "type": "clinic",
+            "clinic_id": self.test_clinic_id
+        }
+        
+        status_code, response = self.make_request("POST", "/qr/generate", qr_data, self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["qr_code", "content"]
+            if all(field in response for field in required_fields):
+                qr_code = response.get("qr_code", "")
+                content = response.get("content", {})
+                
+                if (qr_code.startswith("data:image/png;base64,") and
+                    content.get("type") == "clinic" and
+                    content.get("id") == self.test_clinic_id):
+                    self.log_test("QR Code Generation - Clinic", True, f"QR code generated for clinic: {content.get('name')}")
+                    return True
+                else:
+                    self.log_test("QR Code Generation - Clinic", False, f"Invalid QR code format or content: {response}")
+            else:
+                self.log_test("QR Code Generation - Clinic", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("QR Code Generation - Clinic", False, f"Status: {status_code}", response)
+        return False
+
+    def test_qr_code_generation_product(self):
+        """Test 59: QR Code Generation - Product"""
+        if not self.admin_token:
+            self.log_test("QR Code Generation - Product", False, "No admin token available")
+            return False
+        
+        # Get a product first
+        status_code, products = self.make_request("GET", "/products", token=self.admin_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("QR Code Generation - Product", False, "No products available")
+            return False
+        
+        product_id = products[0]["id"]
+        
+        qr_data = {
+            "type": "product",
+            "product_id": product_id
+        }
+        
+        status_code, response = self.make_request("POST", "/qr/generate", qr_data, self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["qr_code", "content"]
+            if all(field in response for field in required_fields):
+                qr_code = response.get("qr_code", "")
+                content = response.get("content", {})
+                
+                if (qr_code.startswith("data:image/png;base64,") and
+                    content.get("type") == "product" and
+                    content.get("id") == product_id):
+                    self.log_test("QR Code Generation - Product", True, f"QR code generated for product: {content.get('name')}")
+                    return True
+                else:
+                    self.log_test("QR Code Generation - Product", False, f"Invalid QR code format or content: {response}")
+            else:
+                self.log_test("QR Code Generation - Product", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("QR Code Generation - Product", False, f"Status: {status_code}", response)
+        return False
+
+    def test_qr_code_scanning_clinic(self):
+        """Test 60: QR Code Scanning - Clinic"""
+        if not self.admin_token or not self.test_clinic_id:
+            self.log_test("QR Code Scanning - Clinic", False, "Missing admin token or clinic ID")
+            return False
+        
+        # Simulate scanned QR content
+        scan_data = {
+            "content": {
+                "type": "clinic",
+                "id": self.test_clinic_id,
+                "name": "عيادة الدكتور أحمد الطبية",
+                "address": "شارع الملك فهد، الرياض"
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/qr/scan", scan_data, self.admin_token)
+        
+        if status_code == 200:
+            if (response.get("type") == "clinic" and
+                response.get("action") == "prefill_visit_form" and
+                "data" in response):
+                clinic_data = response.get("data", {})
+                if clinic_data.get("id") == self.test_clinic_id:
+                    self.log_test("QR Code Scanning - Clinic", True, f"Clinic QR scanned successfully: {clinic_data.get('name')}")
+                    return True
+                else:
+                    self.log_test("QR Code Scanning - Clinic", False, "Incorrect clinic data returned")
+            else:
+                self.log_test("QR Code Scanning - Clinic", False, f"Invalid scan response: {response}")
+        else:
+            self.log_test("QR Code Scanning - Clinic", False, f"Status: {status_code}", response)
+        return False
+
+    def test_qr_code_scanning_product(self):
+        """Test 61: QR Code Scanning - Product"""
+        if not self.admin_token:
+            self.log_test("QR Code Scanning - Product", False, "No admin token available")
+            return False
+        
+        # Get a product first
+        status_code, products = self.make_request("GET", "/products", token=self.admin_token)
+        if status_code != 200 or len(products) == 0:
+            self.log_test("QR Code Scanning - Product", False, "No products available")
+            return False
+        
+        product = products[0]
+        
+        # Simulate scanned QR content
+        scan_data = {
+            "content": {
+                "type": "product",
+                "id": product["id"],
+                "name": product["name"],
+                "price": product["price"]
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/qr/scan", scan_data, self.admin_token)
+        
+        if status_code == 200:
+            if (response.get("type") == "product" and
+                response.get("action") == "add_to_order" and
+                "data" in response):
+                product_data = response.get("data", {})
+                if product_data.get("id") == product["id"]:
+                    self.log_test("QR Code Scanning - Product", True, f"Product QR scanned successfully: {product_data.get('name')}")
+                    return True
+                else:
+                    self.log_test("QR Code Scanning - Product", False, "Incorrect product data returned")
+            else:
+                self.log_test("QR Code Scanning - Product", False, f"Invalid scan response: {response}")
+        else:
+            self.log_test("QR Code Scanning - Product", False, f"Status: {status_code}", response)
+        return False
+
+    def test_offline_sync_visits_and_orders(self):
+        """Test 62: Offline Sync - Visits and Orders"""
+        if not self.sales_rep_token:
+            self.log_test("Offline Sync - Visits and Orders", False, "No sales rep token available")
+            return False
+        
+        # Simulate offline data to sync
+        sync_data = {
+            "visits": [
+                {
+                    "local_id": "offline_visit_1",
+                    "doctor_id": self.test_doctor_id if self.test_doctor_id else "test_doctor",
+                    "clinic_id": self.test_clinic_id if self.test_clinic_id else "test_clinic",
+                    "latitude": 24.7136,
+                    "longitude": 46.6753,
+                    "notes": "زيارة مزامنة من وضع عدم الاتصال",
+                    "visit_date": datetime.utcnow().isoformat()
+                }
+            ],
+            "orders": [
+                {
+                    "local_id": "offline_order_1",
+                    "visit_id": "offline_visit_1",
+                    "doctor_id": self.test_doctor_id if self.test_doctor_id else "test_doctor",
+                    "clinic_id": self.test_clinic_id if self.test_clinic_id else "test_clinic",
+                    "warehouse_id": "test_warehouse",
+                    "order_type": "DEMO",
+                    "items": [{"product_id": "test_product", "quantity": 2}],
+                    "notes": "طلبية مزامنة من وضع عدم الاتصال"
+                }
+            ]
+        }
+        
+        status_code, response = self.make_request("POST", "/offline/sync", sync_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            required_fields = ["sync_results", "synced_at"]
+            if all(field in response for field in required_fields):
+                sync_results = response.get("sync_results", [])
+                if len(sync_results) == 2:  # 1 visit + 1 order
+                    visit_result = next((r for r in sync_results if r.get("type") == "visit"), None)
+                    order_result = next((r for r in sync_results if r.get("type") == "order"), None)
+                    
+                    if (visit_result and visit_result.get("status") == "synced" and
+                        order_result and order_result.get("status") == "synced"):
+                        self.log_test("Offline Sync - Visits and Orders", True, f"Synced {len(sync_results)} items successfully")
+                        return True
+                    else:
+                        self.log_test("Offline Sync - Visits and Orders", False, "Sync results indicate failure")
+                else:
+                    self.log_test("Offline Sync - Visits and Orders", False, f"Expected 2 sync results, got {len(sync_results)}")
+            else:
+                self.log_test("Offline Sync - Visits and Orders", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Offline Sync - Visits and Orders", False, f"Status: {status_code}", response)
+        return False
+
+    def run_arabic_review_advanced_apis_tests(self):
+        """Run tests for the new advanced APIs mentioned in Arabic review request"""
+        print("🔥 TESTING NEW ADVANCED APIs FROM ARABIC REVIEW REQUEST...")
+        print("=" * 60)
+        
+        # Setup phase
+        if not self.test_admin_login():
+            print("❌ CRITICAL: Admin login failed. Cannot continue testing.")
+            return
+        
+        # Create required users
+        self.test_create_manager_user()
+        self.test_create_sales_rep_user()
+        
+        # Setup test data
+        self.setup_test_products_and_warehouses()
+        self.test_create_clinic()
+        self.test_approve_clinic()
+        self.test_create_doctor()
+        self.test_approve_doctor()
+        self.test_visit_within_geofence()  # Create a visit for testing
+        
+        print("\n🚀 TESTING ADVANCED APIs...")
+        print("-" * 40)
+        
+        # Real-time Analytics API
+        self.test_realtime_analytics_api()
+        
+        # Global Search API
+        self.test_global_search_api()
+        
+        # Advanced Reports API
+        self.test_advanced_reports_visits_performance()
+        self.test_advanced_reports_sales_by_rep()
+        
+        # Order Approval Workflow
+        self.test_order_approval_workflow_manager()
+        
+        # Multi-language Support
+        self.test_multi_language_support_arabic()
+        self.test_multi_language_support_english()
+        self.test_multi_language_support_french()
+        
+        # QR Code Generation and Scanning
+        self.test_qr_code_generation_clinic()
+        self.test_qr_code_generation_product()
+        self.test_qr_code_scanning_clinic()
+        self.test_qr_code_scanning_product()
+        
+        # Offline Sync
+        self.test_offline_sync_visits_and_orders()
+        
+        # Print summary
+        self.print_test_summary()
+
     def run_comprehensive_arabic_review_tests(self):
         """Run comprehensive tests focusing on Arabic review requirements"""
         print("🚀 Starting Comprehensive Backend Testing for Arabic Review...")
@@ -2802,6 +3293,9 @@ class BackendTester:
         
         # Phase 3: Run Arabic Review Comprehensive Tests
         self.test_comprehensive_arabic_review_apis()
+        
+        # Phase 4: Run Advanced APIs Tests
+        self.run_arabic_review_advanced_apis_tests()
         
         # Print Summary
         self.print_test_summary()
