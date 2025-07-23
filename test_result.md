@@ -609,10 +609,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All new enhancement features testing completed successfully"
-  stuck_tasks: []
+    - "Chat System" 
+    - "Enhanced Visit Registration with Voice Notes"
+  stuck_tasks:
+    - "Chat System"
+    - "Enhanced Visit Registration with Voice Notes"
   test_all: false
-  test_priority: "completed"
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
