@@ -3130,7 +3130,8 @@ const WarehouseManagement = () => {
     </div>
   );
 };
-                إدارة كاملة للمستخدمين مع جميع الصلاحيات
+
+// Helper Components and Sub-systems
               </p>
             </div>
           </div>
