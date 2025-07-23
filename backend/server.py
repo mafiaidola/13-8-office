@@ -220,14 +220,140 @@ class DoctorCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
 
-# Enhanced Models for new features
+# Enhanced Models for Phase 2 and improvements
 class SystemSettings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     logo_image: Optional[str] = None  # base64 image for login page
     company_name: str = "نظام إدارة المناديب"
     primary_color: str = "#ff6b35"
     secondary_color: str = "#0ea5e9"
+    # New enhanced settings
+    available_themes: List[str] = ["dark", "light", "blue", "green", "purple"]
+    default_theme: str = "dark"
+    available_roles: List[str] = ["admin", "manager", "sales_rep", "warehouse_manager", "accounting"]
+    role_permissions: Dict[str, List[str]] = {
+        "admin": ["all"],
+        "manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
+        "sales_rep": ["visits.create", "doctors.create", "orders.create"],
+        "warehouse_manager": ["inventory.manage", "orders.fulfill"],
+        "accounting": ["reports.view", "financial.view"]
+    }
+    display_mode: str = "grid"  # grid, list, compact
+    language: str = "ar"  # ar, en
+    notifications_enabled: bool = True
+    chat_enabled: bool = True
+    voice_notes_enabled: bool = True
     updated_by: str
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Achievement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str
+    icon: str  # emoji or image
+    points: int
+    category: str  # VISITS, SALES, DOCTORS, CLINICS
+    criteria: Dict[str, Any]  # conditions to unlock
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class UserPoints(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    total_points: int = 0
+    level: int = 1
+    achievements_unlocked: List[str] = []  # achievement IDs
+    monthly_points: int = 0
+    weekly_points: int = 0
+    daily_points: int = 0
+    last_activity: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class PointsTransaction(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    points: int  # positive for earned, negative for spent
+    reason: str
+    activity_type: str  # VISIT, ORDER, ACHIEVEMENT, PENALTY
+    reference_id: Optional[str] = None  # related activity ID
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DoctorRating(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    doctor_id: str
+    rated_by: str  # sales rep user_id
+    visit_id: str
+    rating: int  # 1-5 stars
+    feedback: Optional[str] = None
+    categories: Dict[str, int] = {}  # cooperation: 5, interest: 4, etc.
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ClinicRating(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    clinic_id: str
+    rated_by: str  # sales rep user_id
+    visit_id: str
+    rating: int  # 1-5 stars
+    feedback: Optional[str] = None
+    categories: Dict[str, int] = {}  # accessibility: 5, staff: 4, environment: 3
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DoctorPreferences(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    doctor_id: str
+    preferred_products: List[str] = []  # product IDs
+    preferred_visit_times: str = "morning"  # morning, afternoon, evening
+    communication_preference: str = "phone"  # phone, email, whatsapp
+    language_preference: str = "ar"  # ar, en
+    notes: Optional[str] = None
+    updated_by: str
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class LoyaltyProgram(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    clinic_id: str
+    tier: str = "BRONZE"  # BRONZE, SILVER, GOLD, PLATINUM
+    points_earned: int = 0
+    total_orders: int = 0
+    total_visits: int = 0
+    benefits: List[str] = []  # discounts, priority service, etc.
+    last_order_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Appointment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sales_rep_id: str
+    doctor_id: str
+    clinic_id: str
+    scheduled_date: datetime
+    duration_minutes: int = 30
+    purpose: str
+    status: str = "SCHEDULED"  # SCHEDULED, CONFIRMED, COMPLETED, CANCELLED
+    notes: Optional[str] = None
+    reminder_sent: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced User model
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str
+    password_hash: str
+    full_name: str
+    role: UserRole
+    phone: Optional[str] = None
+    manager_id: Optional[str] = None
+    is_active: bool = True
+    # New fields for enhanced user management
+    hire_date: Optional[datetime] = None
+    department: Optional[str] = None
+    employee_id: Optional[str] = None
+    profile_image: Optional[str] = None  # base64
+    permissions: List[str] = []  # custom permissions
+    last_login: Optional[datetime] = None
+    login_attempts: int = 0
+    is_locked: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Notification(BaseModel):
