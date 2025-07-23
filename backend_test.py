@@ -1212,14 +1212,16 @@ class BackendTester:
             {
                 "name": "دواء الضغط",
                 "description": "دواء لعلاج ضغط الدم المرتفع",
-                "price": 50.0,
+                "price_before_discount": 50.0,
+                "discount_percentage": 0.0,
                 "category": "أدوية القلب",
                 "unit": "علبة"
             },
             {
                 "name": "فيتامين د",
                 "description": "مكمل غذائي فيتامين د",
-                "price": 25.0,
+                "price_before_discount": 25.0,
+                "discount_percentage": 0.0,
                 "category": "فيتامينات",
                 "unit": "زجاجة"
             }
