@@ -2996,7 +2996,8 @@ const EnhancedUserManagement = () => {
   );
 };
 
-  return (
+// Enhanced User Management Component
+const EnhancedUserManagement = () => {
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <ThemeToggle />
       <div className="container mx-auto px-4 py-8">
