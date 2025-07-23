@@ -1320,7 +1320,621 @@ const AdminStatsDashboard = () => {
   );
 };
 
-const EnhancedUserManagement = () => {
+// Enhanced Visits Log Component
+const EnhancedVisitsLog = () => {
+  const [visits, setVisits] = useState([]);
+  const [filteredVisits, setFilteredVisits] = useState([]);
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterEffectiveness, setFilterEffectiveness] = useState('all');
+  const [filterDate, setFilterDate] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  useEffect(() => {
+    fetchVisits();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [visits, searchTerm, filterStatus, filterEffectiveness, filterDate, sortBy, sortOrder]);
+
+  const fetchVisits = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/visits/comprehensive`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVisits(response.data);
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchVisitDetails = async (visitId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/visits/${visitId}/details`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedVisit(response.data);
+      setShowDetails(true);
+    } catch (error) {
+      console.error('Error fetching visit details:', error);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...visits];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(visit =>
+        visit.sales_rep_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        visit.doctor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        visit.clinic_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        visit.notes.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Effectiveness filter
+    if (filterEffectiveness !== 'all') {
+      filtered = filtered.filter(visit => {
+        if (filterEffectiveness === 'effective') return visit.is_effective === true;
+        if (filterEffectiveness === 'ineffective') return visit.is_effective === false;
+        if (filterEffectiveness === 'unreviewed') return visit.is_effective === null;
+        return true;
+      });
+    }
+
+    // Date filter
+    if (filterDate !== 'all') {
+      const now = new Date();
+      const filterDate_ms = {
+        'today': now.setHours(0,0,0,0),
+        'week': now.getTime() - (7 * 24 * 60 * 60 * 1000),
+        'month': now.getTime() - (30 * 24 * 60 * 60 * 1000)
+      };
+      
+      if (filterDate_ms[filterDate]) {
+        filtered = filtered.filter(visit => 
+          new Date(visit.created_at).getTime() >= filterDate_ms[filterDate]
+        );
+      }
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aVal = a[sortBy];
+      let bVal = b[sortBy];
+      
+      if (sortBy === 'created_at') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+      
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+    setFilteredVisits(filtered);
+  };
+
+  const getEffectivenessColor = (effectiveness) => {
+    if (effectiveness === true) return 'text-green-600';
+    if (effectiveness === false) return 'text-red-600';
+    return 'text-gray-500';
+  };
+
+  const getEffectivenessText = (effectiveness) => {
+    if (effectiveness === true) return '✅ فعالة';
+    if (effectiveness === false) return '❌ غير فعالة';
+    return '⏳ لم يتم التقييم';
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <ThemeToggle />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center mb-8">
+          <div className="w-16 h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+            <span className="text-3xl">📋</span>
+          </div>
+          <div>
+            <h2 className="text-4xl font-bold text-gradient">سجل الزيارات الشامل</h2>
+            <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+              جميع تفاصيل الزيارات والملاحظات والتقييمات
+            </p>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="card-modern p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">البحث:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ابحث في المندوب، الطبيب، العيادة..."
+                className="form-modern w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الفعالية:</label>
+              <select
+                value={filterEffectiveness}
+                onChange={(e) => setFilterEffectiveness(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الزيارات</option>
+                <option value="effective">فعالة</option>
+                <option value="ineffective">غير فعالة</option>
+                <option value="unreviewed">لم يتم التقييم</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">التاريخ:</label>
+              <select
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع التواريخ</option>
+                <option value="today">اليوم</option>
+                <option value="week">هذا الأسبوع</option>
+                <option value="month">هذا الشهر</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">ترتيب حسب:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="created_at">التاريخ</option>
+                <option value="sales_rep_name">المندوب</option>
+                <option value="doctor_name">الطبيب</option>
+                <option value="clinic_name">العيادة</option>
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="btn-info flex-1 flex items-center justify-center gap-2"
+              >
+                {sortOrder === 'asc' ? '⬆️' : '⬇️'}
+                {sortOrder === 'asc' ? 'تصاعدي' : 'تنازلي'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">{filteredVisits.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الزيارات</div>
+          </div>
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">
+              {filteredVisits.filter(v => v.is_effective === true).length}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات فعالة</div>
+          </div>
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-orange-600">
+              {filteredVisits.filter(v => v.voice_notes_count > 0).length}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات بملاحظات صوتية</div>
+          </div>
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-purple-600">
+              {filteredVisits.filter(v => v.orders_count > 0).length}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات بطلبات</div>
+          </div>
+        </div>
+
+        {/* Visits Table */}
+        <div className="card-modern overflow-hidden">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <span>📋</span>
+              <span>سجل الزيارات ({filteredVisits.length})</span>
+            </h3>
+          </div>
+          
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>جاري التحميل...</p>
+            </div>
+          ) : (
+            <div className="table-modern">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">التاريخ</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">المندوب</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الطبيب/العيادة</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الفعالية</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">المحتوى</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredVisits.map((visit) => (
+                    <tr key={visit.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {new Date(visit.created_at).toLocaleDateString('ar-EG')}
+                        </div>
+                        <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(visit.created_at).toLocaleTimeString('ar-EG')}
+                        </div>
+                        {visit.duration_minutes && (
+                          <div className="text-xs text-blue-600">
+                            مدة الزيارة: {visit.duration_minutes} دقيقة
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                            {visit.sales_rep_name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {visit.sales_rep_name}
+                            </div>
+                            {visit.sales_rep_phone && (
+                              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                                {visit.sales_rep_phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          د. {visit.doctor_name}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {visit.clinic_name}
+                        </div>
+                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {visit.clinic_type}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge-modern ${
+                          visit.is_effective === true ? 'badge-success' :
+                          visit.is_effective === false ? 'badge-danger' : 'badge-warning'
+                        }`}>
+                          {getEffectivenessText(visit.is_effective)}
+                        </span>
+                        {visit.reviewed_by_name && (
+                          <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                            بواسطة: {visit.reviewed_by_name}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2 text-xs">
+                          {visit.voice_notes_count > 0 && (
+                            <span className="badge-modern badge-info">
+                              🎵 {visit.voice_notes_count} صوتي
+                            </span>
+                          )}
+                          {visit.orders_count > 0 && (
+                            <span className="badge-modern badge-success">
+                              📦 {visit.orders_count} طلب
+                            </span>
+                          )}
+                          {visit.doctor_rating && (
+                            <span className="badge-modern badge-warning">
+                              ⭐ {visit.doctor_rating}/5
+                            </span>
+                          )}
+                        </div>
+                        {visit.total_order_amount > 0 && (
+                          <div className="text-xs text-green-600 mt-1">
+                            إجمالي: {visit.total_order_amount} ج.م
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => fetchVisitDetails(visit.id)}
+                          className="btn-primary text-xs px-3 py-1"
+                        >
+                          📄 التفاصيل
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Visit Details Modal */}
+        {showDetails && selectedVisit && (
+          <VisitDetailsModal 
+            visit={selectedVisit} 
+            onClose={() => setShowDetails(false)} 
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Visit Details Modal Component
+const VisitDetailsModal = ({ visit, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">تفاصيل الزيارة الشاملة</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Basic Info */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>ℹ️</span>
+              <span>معلومات أساسية</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">تاريخ الزيارة:</label>
+                <p>{new Date(visit.created_at).toLocaleString('ar-EG')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">مدة الزيارة:</label>
+                <p>{visit.duration_minutes ? `${visit.duration_minutes} دقيقة` : 'غير محدد'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">الفعالية:</label>
+                <p className={getEffectivenessColor(visit.is_effective)}>
+                  {getEffectivenessText(visit.is_effective)}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">تقييم بواسطة:</label>
+                <p>{visit.reviewed_by_name || 'لا يوجد'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sales Rep Details */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>👨‍💼</span>
+              <span>تفاصيل المندوب</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">الاسم:</label>
+                <p>{visit.sales_rep_details?.name}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">رقم الموظف:</label>
+                <p>{visit.sales_rep_details?.employee_id || 'غير محدد'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">البريد الإلكتروني:</label>
+                <p>{visit.sales_rep_details?.email}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">الهاتف:</label>
+                <p>{visit.sales_rep_details?.phone || 'غير محدد'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Doctor Details */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>⚕️</span>
+              <span>تفاصيل الطبيب</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">الاسم:</label>
+                <p>د. {visit.doctor_details?.name}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">التخصص:</label>
+                <p>{visit.doctor_details?.specialty}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">الهاتف:</label>
+                <p>{visit.doctor_details?.phone || 'غير محدد'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">البريد الإلكتروني:</label>
+                <p>{visit.doctor_details?.email || 'غير محدد'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Clinic Details */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>🏥</span>
+              <span>تفاصيل العيادة</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">اسم العيادة:</label>
+                <p>{visit.clinic_details?.name}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">نوع العيادة:</label>
+                <p>{visit.clinic_details?.clinic_type}</p>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-bold mb-1">العنوان:</label>
+                <p>{visit.clinic_details?.address}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Visit Notes */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>📝</span>
+              <span>ملاحظات الزيارة</span>
+            </h4>
+            <div className="p-4 bg-gray-50 bg-opacity-10 rounded-lg">
+              <p className="whitespace-pre-wrap">{visit.notes || 'لا توجد ملاحظات'}</p>
+            </div>
+          </div>
+
+          {/* Voice Notes */}
+          {visit.voice_notes && visit.voice_notes.length > 0 && (
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>🎵</span>
+                <span>الملاحظات الصوتية ({visit.voice_notes.length})</span>
+              </h4>
+              <div className="space-y-3">
+                {visit.voice_notes.map((note, index) => (
+                  <div key={note.id} className="glass-effect p-4 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-sm font-bold">#{index + 1}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        بواسطة: {note.created_by_name}
+                      </span>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        المدة: {note.duration}ث
+                      </span>
+                    </div>
+                    <audio controls className="w-full h-8">
+                      <source src={note.audio_data} type="audio/wav" />
+                    </audio>
+                    {note.transcript && (
+                      <div className="mt-2 text-sm p-2 bg-blue-50 bg-opacity-10 rounded">
+                        <strong>النص:</strong> {note.transcript}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Related Orders */}
+          {visit.orders && visit.orders.length > 0 && (
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>📦</span>
+                <span>الطلبات المرتبطة ({visit.orders.length})</span>
+              </h4>
+              <div className="space-y-4">
+                {visit.orders.map((order) => (
+                  <div key={order.id} className="glass-effect p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="font-bold">رقم الطلب: #{order.id.slice(-8)}</span>
+                        <span className={`badge-modern ml-2 ${
+                          order.status === 'APPROVED' ? 'badge-success' :
+                          order.status === 'PENDING' ? 'badge-warning' : 'badge-info'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="text-lg font-bold text-green-600">
+                        {order.total_amount} ج.م
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {order.items?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 bg-gray-50 bg-opacity-5 rounded">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.product_details?.name}</div>
+                            <div className="text-sm text-gray-500">
+                              الكمية: {item.quantity} | السعر: {item.unit_price} ج.م
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ratings */}
+          {(visit.doctor_rating_details || visit.clinic_rating_details) && (
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>⭐</span>
+                <span>التقييمات</span>
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {visit.doctor_rating_details && (
+                  <div className="glass-effect p-4 rounded-lg">
+                    <h5 className="font-bold mb-2">تقييم الطبيب</h5>
+                    <div className="text-2xl text-yellow-500 mb-2">
+                      {'⭐'.repeat(visit.doctor_rating_details.rating)}
+                    </div>
+                    {visit.doctor_rating_details.feedback && (
+                      <p className="text-sm">{visit.doctor_rating_details.feedback}</p>
+                    )}
+                  </div>
+                )}
+                {visit.clinic_rating_details && (
+                  <div className="glass-effect p-4 rounded-lg">
+                    <h5 className="font-bold mb-2">تقييم العيادة</h5>
+                    <div className="text-2xl text-yellow-500 mb-2">
+                      {'⭐'.repeat(visit.clinic_rating_details.rating)}
+                    </div>
+                    {visit.clinic_rating_details.feedback && (
+                      <p className="text-sm">{visit.clinic_rating_details.feedback}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="btn-primary px-6 py-3"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
