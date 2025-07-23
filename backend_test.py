@@ -170,7 +170,8 @@ class BackendTester:
         status_code, response = self.make_request("POST", "/auth/register", manager_data, self.admin_token)
         
         if status_code == 200:
-            self.log_test("Create Manager User", True, f"Manager created with ID: {response.get('user_id')}")
+            self.manager_id = response.get('user_id')
+            self.log_test("Create Manager User", True, f"Manager created with ID: {self.manager_id}")
             
             # Login as manager
             login_data = {"username": f"manager_{timestamp}", "password": "manager123"}
