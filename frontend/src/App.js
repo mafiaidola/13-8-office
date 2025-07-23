@@ -4325,55 +4325,7 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'dashboard' && user.role !== 'sales_rep' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Stats Cards */}
-            {Object.entries(stats).map(([key, value]) => {
-              const titles = {
-                total_users: 'إجمالي المستخدمين',
-                total_clinics: 'إجمالي العيادات',
-                total_doctors: 'إجمالي الأطباء',
-                total_visits: 'إجمالي الزيارات',
-                total_products: 'إجمالي المنتجات',
-                total_warehouses: 'إجمالي المخازن',
-                low_stock_items: 'منتجات نقص مخزون',
-                today_visits: 'زيارات اليوم',
-                pending_reviews: 'مراجعات معلقة',
-                pending_clinics: 'عيادات في انتظار الموافقة',
-                pending_doctors: 'أطباء في انتظار الموافقة',
-                team_members: 'أعضاء الفريق',
-                today_team_visits: 'زيارات الفريق اليوم',
-                my_warehouses: 'مخازني',
-                inventory_items: 'عناصر المخزون'
-              };
-              
-              const colors = {
-                total_users: 'text-blue-600',
-                total_clinics: 'text-green-600',
-                total_doctors: 'text-purple-600',
-                total_visits: 'text-indigo-600',
-                total_products: 'text-yellow-600',
-                total_warehouses: 'text-pink-600',
-                low_stock_items: 'text-red-600',
-                today_visits: 'text-green-600',
-                pending_reviews: 'text-orange-600',
-                pending_clinics: 'text-orange-600',
-                pending_doctors: 'text-orange-600',
-                team_members: 'text-blue-600',
-                today_team_visits: 'text-green-600',
-                my_warehouses: 'text-purple-600',
-                inventory_items: 'text-indigo-600'
-              };
-              
-              return (
-                <div key={key} className="bg-white p-6 rounded-lg shadow-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {titles[key] || key}
-                  </h3>
-                  <p className={`text-3xl font-bold ${colors[key] || 'text-blue-600'}`}>{value}</p>
-                </div>
-              );
-            })}
-          </div>
+          <EnhancedStatisticsDashboard stats={stats} user={user} />
         )}
 
         {activeTab === 'clinic-registration' && user.role === 'sales_rep' && (
