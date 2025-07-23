@@ -1094,11 +1094,11 @@ class BackendTester:
         
         # Test valid warehouse number (1-5)
         warehouse_data = {
-            "name": "مخزن رقم 4",
+            "name": "مخزن رقم 5",
             "location": "الإسكندرية",
             "address": "شارع الكورنيش، الإسكندرية",
             "manager_id": warehouse_manager_id,
-            "warehouse_number": 4
+            "warehouse_number": 5  # Use 5 to avoid conflicts
         }
         
         status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
