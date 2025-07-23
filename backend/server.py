@@ -344,7 +344,7 @@ class User(BaseModel):
     email: str
     password_hash: str
     full_name: str
-    role: UserRole
+    role: str  # Changed from UserRole to str to fix Pydantic issue
     phone: Optional[str] = None
     manager_id: Optional[str] = None
     is_active: bool = True
