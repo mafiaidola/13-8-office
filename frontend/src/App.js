@@ -2149,10 +2149,12 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
 };
 
 // Enhanced User Management Component
+// Enhanced User Management Component
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newUser, setNewUser] = useState({
     username: '',
@@ -2171,9 +2173,13 @@ const EnhancedUserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [bulkAction, setBulkAction] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
+  const [userStats, setUserStats] = useState({});
 
   useEffect(() => {
     fetchUsers();
+    fetchUserStats();
   }, []);
 
   const fetchUsers = async () => {
@@ -2191,6 +2197,18 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  const fetchUserStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/reports/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserStats(response.data);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -2198,6 +2216,784 @@ const EnhancedUserManagement = () => {
     setSuccess('');
 
     try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/auth/register`, newUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم إنشاء المستخدم بنجاح');
+      setShowCreateUser(false);
+      setNewUser({
+        username: '', email: '', password: '', full_name: '', role: '', 
+        phone: '', manager_id: '', department: '', employee_id: ''
+      });
+      fetchUsers();
+      fetchUserStats();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في إنشاء المستخدم');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const updateData = { ...selectedUser };
+      delete updateData.id;
+      delete updateData.created_at;
+      delete updateData.updated_at;
+      
+      await axios.patch(`${API}/users/${selectedUser.id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم تحديث المستخدم بنجاح');
+      setShowEditUser(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في تحديث المستخدم');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم حذف المستخدم بنجاح');
+      fetchUsers();
+      fetchUserStats();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في حذف المستخدم');
+    }
+  };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const action = currentStatus ? 'تعطيل' : 'تنشيط';
+      setSuccess(`تم ${action} المستخدم بنجاح`);
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في تغيير حالة المستخدم');
+    }
+  };
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedUsers.size === 0) return;
+
+    const confirmed = window.confirm(`هل أنت متأكد من تطبيق "${bulkAction}" على ${selectedUsers.size} مستخدم؟`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const promises = Array.from(selectedUsers).map(userId => {
+        if (bulkAction === 'activate') {
+          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else if (bulkAction === 'deactivate') {
+          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+      });
+
+      await Promise.all(promises);
+      setSuccess(`تم تطبيق الإجراء على ${selectedUsers.size} مستخدم`);
+      setSelectedUsers(new Set());
+      setBulkAction('');
+      fetchUsers();
+    } catch (error) {
+      setError('خطأ في تطبيق الإجراء الجماعي');
+    }
+  };
+
+  const openEditModal = (user) => {
+    setSelectedUser({ ...user });
+    setShowEditUser(true);
+  };
+
+  const openDetailsModal = async (user) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedUser(response.data);
+      setShowUserDetails(true);
+    } catch (error) {
+      setError('خطأ في جلب تفاصيل المستخدم');
+    }
+  };
+
+  const getRoleText = (role) => {
+    const roles = {
+      admin: 'مدير النظام',
+      manager: 'مدير',
+      sales_rep: 'مندوب مبيعات',
+      warehouse_manager: 'مدير مخزن',
+      accounting: 'محاسب'
+    };
+    return roles[role] || role;
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'active' && user.is_active) ||
+                         (filterStatus === 'inactive' && !user.is_active);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <ThemeToggle />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="w-16 h-16 card-gradient-blue rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-3xl">👥</span>
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold text-gradient">إدارة المستخدمين الشاملة</h2>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة كاملة للمستخدمين مع جميع الصلاحيات والإحصائيات
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCreateUser(true)}
+            className="btn-primary flex items-center gap-2 px-6 py-3 neon-glow"
+          >
+            <span>➕</span>
+            <span>مستخدم جديد</span>
+          </button>
+        </div>
+
+        {/* User Statistics */}
+        {userStats.total_users && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-blue-600">{userStats.total_users}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي المستخدمين</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-green-600">{userStats.active_distribution?.active || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مستخدمين نشطين</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-red-600">{userStats.active_distribution?.inactive || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مستخدمين معطلين</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-purple-600">
+                {Object.keys(userStats.role_distribution || {}).length}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>أنواع الأدوار</div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="alert-modern alert-error mb-6 scale-in">
+            <span className="ml-2">❌</span>
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert-modern alert-success mb-6 scale-in">
+            <span className="ml-2">✅</span>
+            {success}
+          </div>
+        )}
+
+        {/* Filters and Bulk Actions */}
+        <div className="card-modern p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">البحث:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ابحث بالاسم أو البريد..."
+                className="form-modern w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">فلترة بالدور:</label>
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الأدوار</option>
+                <option value="admin">مدير النظام</option>
+                <option value="manager">مدير</option>
+                <option value="sales_rep">مندوب مبيعات</option>
+                <option value="warehouse_manager">مدير مخزن</option>
+                <option value="accounting">محاسب</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">فلترة بالحالة:</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الحالات</option>
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">إجراء جماعي:</label>
+              <select
+                value={bulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="">اختر إجراء</option>
+                <option value="activate">تنشيط المحدد</option>
+                <option value="deactivate">تعطيل المحدد</option>
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                onClick={fetchUsers}
+                className="btn-info flex-1 flex items-center justify-center gap-2"
+              >
+                <span>🔄</span>
+                <span>تحديث</span>
+              </button>
+              {selectedUsers.size > 0 && bulkAction && (
+                <button
+                  onClick={handleBulkAction}
+                  className="btn-warning flex-1 flex items-center justify-center gap-2"
+                >
+                  <span>⚡</span>
+                  <span>تطبيق</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Users Table */}
+        <div className="card-modern overflow-hidden">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <span>📋</span>
+              <span>قائمة المستخدمين ({filteredUsers.length})</span>
+              {selectedUsers.size > 0 && (
+                <span className="badge-modern badge-info">
+                  {selectedUsers.size} محدد
+                </span>
+              )}
+            </h3>
+          </div>
+          
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>جاري التحميل...</p>
+            </div>
+          ) : (
+            <div className="table-modern">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+                          } else {
+                            setSelectedUsers(new Set());
+                          }
+                        }}
+                        className="rounded"
+                      />
+                    </th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">المستخدم</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الدور</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الحالة</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">آخر دخول</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(user.id)}
+                          onChange={(e) => {
+                            const newSelected = new Set(selectedUsers);
+                            if (e.target.checked) {
+                              newSelected.add(user.id);
+                            } else {
+                              newSelected.delete(user.id);
+                            }
+                            setSelectedUsers(newSelected);
+                          }}
+                          className="rounded"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                            user.is_active ? 'bg-green-500' : 'bg-gray-500'
+                          }`}>
+                            {user.full_name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {user.full_name}
+                            </div>
+                            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                              {user.username} • {user.email}
+                            </div>
+                            {user.phone && (
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                📱 {user.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge-modern ${
+                          user.role === 'admin' ? 'badge-danger' :
+                          user.role === 'manager' ? 'badge-warning' :
+                          user.role === 'sales_rep' ? 'badge-info' :
+                          user.role === 'warehouse_manager' ? 'badge-success' : 'badge-secondary'
+                        }`}>
+                          {getRoleText(user.role)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge-modern ${
+                          user.is_active ? 'badge-success' : 'badge-danger'
+                        }`}>
+                          {user.is_active ? '✅ نشط' : '❌ معطل'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {user.last_login ? 
+                            new Date(user.last_login).toLocaleDateString('ar-EG') : 
+                            'لم يسجل دخول'
+                          }
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openDetailsModal(user)}
+                            className="btn-info text-xs px-3 py-1"
+                            title="التفاصيل"
+                          >
+                            👁️
+                          </button>
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="btn-primary text-xs px-3 py-1"
+                            title="تعديل"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(user.id, user.is_active)}
+                            className={`text-xs px-3 py-1 rounded ${
+                              user.is_active ? 'btn-warning' : 'btn-success'
+                            }`}
+                            title={user.is_active ? 'تعطيل' : 'تنشيط'}
+                          >
+                            {user.is_active ? '⏸️' : '▶️'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.full_name)}
+                            className="btn-danger text-xs px-3 py-1"
+                            title="حذف"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Create User Modal */}
+        {showCreateUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="modal-modern p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gradient">➕ إضافة مستخدم جديد</h3>
+                <button
+                  onClick={() => setShowCreateUser(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateUser} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">اسم المستخدم *</label>
+                    <input
+                      type="text"
+                      value={newUser.username}
+                      onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                      className="form-modern w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">البريد الإلكتروني *</label>
+                    <input
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      className="form-modern w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">كلمة المرور *</label>
+                    <input
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      className="form-modern w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">الاسم الكامل *</label>
+                    <input
+                      type="text"
+                      value={newUser.full_name}
+                      onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                      className="form-modern w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">الدور *</label>
+                    <select
+                      value={newUser.role}
+                      onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                      className="form-modern w-full"
+                      required
+                    >
+                      <option value="">اختر الدور</option>
+                      <option value="admin">مدير النظام</option>
+                      <option value="manager">مدير</option>
+                      <option value="sales_rep">مندوب مبيعات</option>
+                      <option value="warehouse_manager">مدير مخزن</option>
+                      <option value="accounting">محاسب</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">رقم الهاتف</label>
+                    <input
+                      type="tel"
+                      value={newUser.phone}
+                      onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">القسم</label>
+                    <input
+                      type="text"
+                      value={newUser.department}
+                      onChange={(e) => setNewUser({...newUser, department: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">رقم الموظف</label>
+                    <input
+                      type="text"
+                      value={newUser.employee_id}
+                      onChange={(e) => setNewUser({...newUser, employee_id: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary flex-1"
+                  >
+                    {loading ? 'جاري الإنشاء...' : '✅ إنشاء المستخدم'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateUser(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit User Modal */}
+        {showEditUser && selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="modal-modern p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gradient">✏️ تعديل المستخدم</h3>
+                <button
+                  onClick={() => setShowEditUser(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleEditUser} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">اسم المستخدم</label>
+                    <input
+                      type="text"
+                      value={selectedUser.username}
+                      onChange={(e) => setSelectedUser({...selectedUser, username: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">البريد الإلكتروني</label>
+                    <input
+                      type="email"
+                      value={selectedUser.email}
+                      onChange={(e) => setSelectedUser({...selectedUser, email: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">الاسم الكامل</label>
+                    <input
+                      type="text"
+                      value={selectedUser.full_name}
+                      onChange={(e) => setSelectedUser({...selectedUser, full_name: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">رقم الهاتف</label>
+                    <input
+                      type="tel"
+                      value={selectedUser.phone || ''}
+                      onChange={(e) => setSelectedUser({...selectedUser, phone: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">الدور</label>
+                    <select
+                      value={selectedUser.role}
+                      onChange={(e) => setSelectedUser({...selectedUser, role: e.target.value})}
+                      className="form-modern w-full"
+                    >
+                      <option value="admin">مدير النظام</option>
+                      <option value="manager">مدير</option>
+                      <option value="sales_rep">مندوب مبيعات</option>
+                      <option value="warehouse_manager">مدير مخزن</option>
+                      <option value="accounting">محاسب</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">القسم</label>
+                    <input
+                      type="text"
+                      value={selectedUser.department || ''}
+                      onChange={(e) => setSelectedUser({...selectedUser, department: e.target.value})}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary flex-1"
+                  >
+                    {loading ? 'جاري التحديث...' : '✅ حفظ التغييرات'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditUser(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* User Details Modal */}
+        {showUserDetails && selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="modal-modern p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gradient">👁️ تفاصيل المستخدم</h3>
+                <button
+                  onClick={() => setShowUserDetails(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="card-modern p-6">
+                  <h4 className="text-lg font-bold mb-4">المعلومات الأساسية</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">الاسم الكامل</label>
+                      <p className="text-lg font-medium">{selectedUser.full_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">اسم المستخدم</label>
+                      <p className="text-lg font-medium">{selectedUser.username}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">البريد الإلكتروني</label>
+                      <p className="text-lg font-medium">{selectedUser.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">رقم الهاتف</label>
+                      <p className="text-lg font-medium">{selectedUser.phone || 'غير محدد'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">الدور</label>
+                      <p className="text-lg font-medium">
+                        <span className={`badge-modern ${
+                          selectedUser.role === 'admin' ? 'badge-danger' :
+                          selectedUser.role === 'manager' ? 'badge-warning' :
+                          selectedUser.role === 'sales_rep' ? 'badge-info' : 'badge-success'
+                        }`}>
+                          {getRoleText(selectedUser.role)}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">الحالة</label>
+                      <p className="text-lg font-medium">
+                        <span className={`badge-modern ${
+                          selectedUser.is_active ? 'badge-success' : 'badge-danger'
+                        }`}>
+                          {selectedUser.is_active ? '✅ نشط' : '❌ معطل'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statistics */}
+                {selectedUser.statistics && (
+                  <div className="card-modern p-6">
+                    <h4 className="text-lg font-bold mb-4">الإحصائيات</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedUser.statistics.total_visits !== undefined && (
+                        <div>
+                          <label className="text-sm font-bold text-gray-500">إجمالي الزيارات</label>
+                          <p className="text-2xl font-bold text-blue-600">{selectedUser.statistics.total_visits}</p>
+                        </div>
+                      )}
+                      {selectedUser.statistics.total_orders !== undefined && (
+                        <div>
+                          <label className="text-sm font-bold text-gray-500">إجمالي الطلبات</label>
+                          <p className="text-2xl font-bold text-green-600">{selectedUser.statistics.total_orders}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Activity Log */}
+                <div className="card-modern p-6">
+                  <h4 className="text-lg font-bold mb-4">معلومات النشاط</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">تاريخ الإنشاء</label>
+                      <p className="text-lg">{new Date(selectedUser.created_at).toLocaleDateString('ar-EG')}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-bold text-gray-500">آخر دخول</label>
+                      <p className="text-lg">
+                        {selectedUser.last_login ? 
+                          new Date(selectedUser.last_login).toLocaleString('ar-EG') : 
+                          'لم يسجل دخول بعد'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowUserDetails(false)}
+                  className="btn-primary px-6 py-3"
+                >
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
       const token = localStorage.getItem('token');
       await axios.post(`${API}/users`, newUser, {
         headers: { Authorization: `Bearer ${token}` }
