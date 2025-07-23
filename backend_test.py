@@ -43,6 +43,7 @@ class BackendTester:
         self.manager_token = None
         self.test_clinic_id = None
         self.test_doctor_id = None
+        self.test_clinic_request_id = None
         self.test_results = []
         
     def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
