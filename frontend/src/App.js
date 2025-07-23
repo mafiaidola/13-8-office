@@ -5856,6 +5856,17 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Accounting tab for accounting role */}
+            {canAccessTab('accounting') && (
+              <button
+                onClick={() => setActiveTab('accounting')}
+                className={`nav-tab ${activeTab === 'accounting' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className="ml-2">💰</span>
+                المحاسبة
+              </button>
+            )}
+            
             {/* Chat System for all users */}
             <button
               onClick={() => setActiveTab('chat')}
