@@ -2744,7 +2744,7 @@ async def get_translations(lang: str = "ar"):
 @app.post("/api/offline/sync")
 async def sync_offline_data(
     sync_data: dict,
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Sync offline data when connection is restored"""
     try:
@@ -2754,7 +2754,7 @@ async def sync_offline_data(
         if "visits" in sync_data:
             for visit_data in sync_data["visits"]:
                 # Validate and save offline visit
-                visit_data["created_by"] = current_user["id"]
+                visit_data["sales_rep_id"] = current_user.id
                 visit_data["synced_at"] = datetime.utcnow()
                 
                 result = await db.visits.insert_one(visit_data)
@@ -2768,7 +2768,7 @@ async def sync_offline_data(
         # Process offline orders
         if "orders" in sync_data:
             for order_data in sync_data["orders"]:
-                order_data["created_by"] = current_user["id"]
+                order_data["sales_rep_id"] = current_user.id
                 order_data["synced_at"] = datetime.utcnow()
                 order_data["status"] = OrderWorkflow.PENDING
                 
