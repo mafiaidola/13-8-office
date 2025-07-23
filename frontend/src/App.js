@@ -3134,15 +3134,7 @@ const WarehouseManagement = () => {
 // Helper Components and Sub-systems
 
 // User Management Component
-            <span className="ml-2">✅</span>
-            {success}
-          </div>
-        )}
-
-        {/* Filters and Search */}
-        <div className="card-modern p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
+const UserManagement = () => {
               <label className="block text-sm font-bold mb-2">البحث:</label>
               <input
                 type="text"
