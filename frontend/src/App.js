@@ -5763,6 +5763,8 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
+                <GlobalSearchBox />
+                <LanguageSelector />
                 <NotificationsCenter />
                 <button
                   onClick={logout}
