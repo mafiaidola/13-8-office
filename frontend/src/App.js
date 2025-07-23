@@ -551,6 +551,151 @@ const SystemSettings = () => {
     </div>
   );
 };
+
+// Notifications Component
+const NotificationsCenter = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    fetchNotifications();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(response.data);
+      setUnreadCount(response.data.filter(n => !n.is_read).length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markAsRead = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/notifications/${notificationId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchNotifications(); // Refresh
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'SUCCESS': return '✅';
+      case 'WARNING': return '⚠️';
+      case 'ERROR': return '❌';
+      case 'REMINDER': return '⏰';
+      default: return '📢';
+    }
+  };
+
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'SUCCESS': return 'text-green-600';
+      case 'WARNING': return 'text-orange-600';
+      case 'ERROR': return 'text-red-600';
+      case 'REMINDER': return 'text-blue-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  return (
+    <div className="relative">
+      {/* Notification Bell */}
+      <button
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="relative p-3 rounded-full hover:bg-opacity-10 hover:bg-white transition-colors"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        <span className="text-2xl">🔔</span>
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Notifications Dropdown */}
+      {showDropdown && (
+        <div className="absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto card-modern border shadow-lg z-50">
+          <div className="p-4 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+              الإشعارات ({unreadCount} غير مقروءة)
+            </h3>
+          </div>
+          
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-6 text-center" style={{ color: 'var(--text-secondary)' }}>
+                <span className="text-4xl block mb-2">📭</span>
+                لا توجد إشعارات
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 border-b cursor-pointer hover:bg-opacity-5 hover:bg-white transition-colors ${
+                    !notification.is_read ? 'bg-blue-50 bg-opacity-10' : ''
+                  }`}
+                  style={{ borderColor: 'var(--accent-bg)' }}
+                  onClick={() => !notification.is_read && markAsRead(notification.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">
+                      {getNotificationIcon(notification.type)}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className={`font-semibold ${getNotificationColor(notification.type)}`}>
+                          {notification.title}
+                        </h4>
+                        {!notification.is_read && (
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        )}
+                      </div>
+                      <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {new Date(notification.created_at).toLocaleString('ar-EG')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {notifications.length > 0 && (
+            <div className="p-3 text-center border-t" style={{ borderColor: 'var(--accent-bg)' }}>
+              <button 
+                onClick={() => {
+                  // Mark all as read
+                  notifications.filter(n => !n.is_read).forEach(n => markAsRead(n.id));
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                تحديد الكل كمقروء
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
