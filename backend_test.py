@@ -777,6 +777,396 @@ class BackendTester:
         else:
             self.log_test("Create SALE Order", False, f"Status: {status_code}", response)
         return False
+
+    # NEW ENHANCEMENT TESTS - Focus on the review request requirements
+    
+    def test_warehouse_manager_product_permissions(self):
+        """Test 29: Warehouse managers cannot create/delete products without admin approval"""
+        if not self.admin_token:
+            self.log_test("Warehouse Manager Product Permissions", False, "No admin token available")
+            return False
+        
+        # Create warehouse manager
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"wh_mgr_test_{timestamp}",
+            "email": f"whmgr_{timestamp}@test.com",
+            "password": "whmgr123",
+            "role": "warehouse_manager",
+            "full_name": "مدير مخزن للاختبار",
+            "phone": "+966504444444"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Warehouse Manager Product Permissions", False, "Failed to create warehouse manager")
+            return False
+        
+        # Login as warehouse manager
+        login_data = {"username": f"wh_mgr_test_{timestamp}", "password": "whmgr123"}
+        status_code, login_response = self.make_request("POST", "/auth/login", login_data)
+        if status_code != 200:
+            self.log_test("Warehouse Manager Product Permissions", False, "Failed to login as warehouse manager")
+            return False
+        
+        wh_manager_token = login_response["token"]
+        
+        # Try to create product as warehouse manager (should fail)
+        product_data = {
+            "name": "منتج غير مسموح",
+            "description": "منتج من مدير المخزن",
+            "price_before_discount": 100.0,
+            "discount_percentage": 10.0,
+            "category": "اختبار",
+            "unit": "قطعة"
+        }
+        
+        status_code, response = self.make_request("POST", "/products", product_data, wh_manager_token)
+        
+        if status_code == 403:
+            self.log_test("Warehouse Manager Product Permissions", True, "Warehouse manager correctly denied product creation")
+            return True
+        else:
+            self.log_test("Warehouse Manager Product Permissions", False, f"Expected 403, got {status_code}", response)
+        return False
+
+    def test_enhanced_product_model_egyptian_features(self):
+        """Test 30: Enhanced product model with Egyptian features (EGP, images, discounts)"""
+        if not self.admin_token:
+            self.log_test("Enhanced Product Model Egyptian Features", False, "No admin token available")
+            return False
+        
+        # Test product creation with Egyptian features
+        product_data = {
+            "name": "دواء مصري محسن",
+            "description": "دواء بالمميزات المصرية الجديدة",
+            "price_before_discount": 150.0,
+            "discount_percentage": 15.0,  # 15% discount
+            "category": "أدوية مصرية",
+            "unit": "علبة",
+            "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA=="  # Minimal base64 image
+        }
+        
+        status_code, response = self.make_request("POST", "/products", product_data, self.admin_token)
+        
+        if status_code == 200:
+            product_id = response.get("product_id")
+            
+            # Verify product was created with correct features
+            status_code, products = self.make_request("GET", "/products", token=self.admin_token)
+            if status_code == 200:
+                created_product = next((p for p in products if p.get("id") == product_id), None)
+                if created_product:
+                    # Check Egyptian features
+                    expected_price = 150.0 * (1 - 15.0/100)  # 127.5 EGP after discount
+                    checks = [
+                        created_product.get("currency") == "EGP",
+                        created_product.get("price_before_discount") == 150.0,
+                        created_product.get("discount_percentage") == 15.0,
+                        abs(created_product.get("price", 0) - expected_price) < 0.01,
+                        created_product.get("image") is not None,
+                        created_product.get("approved_by") is not None  # Admin approval
+                    ]
+                    
+                    if all(checks):
+                        self.log_test("Enhanced Product Model Egyptian Features", True, f"Product created with EGP currency, discount calculation, and admin approval")
+                        return True
+                    else:
+                        self.log_test("Enhanced Product Model Egyptian Features", False, f"Missing Egyptian features: {created_product}")
+                else:
+                    self.log_test("Enhanced Product Model Egyptian Features", False, "Created product not found")
+            else:
+                self.log_test("Enhanced Product Model Egyptian Features", False, "Failed to retrieve products")
+        else:
+            self.log_test("Enhanced Product Model Egyptian Features", False, f"Status: {status_code}", response)
+        return False
+
+    def test_warehouse_statistics_api(self):
+        """Test 31: New warehouse statistics API endpoint"""
+        if not self.admin_token:
+            self.log_test("Warehouse Statistics API", False, "No admin token available")
+            return False
+        
+        # Create warehouse manager first
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"wh_stats_mgr_{timestamp}",
+            "email": f"whstats_{timestamp}@test.com",
+            "password": "whstats123",
+            "role": "warehouse_manager",
+            "full_name": "مدير مخزن للإحصائيات",
+            "phone": "+966505555555"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Warehouse Statistics API", False, "Failed to create warehouse manager")
+            return False
+        
+        warehouse_manager_id = response.get('user_id')
+        
+        # Login as warehouse manager
+        login_data = {"username": f"wh_stats_mgr_{timestamp}", "password": "whstats123"}
+        status_code, login_response = self.make_request("POST", "/auth/login", login_data)
+        if status_code != 200:
+            self.log_test("Warehouse Statistics API", False, "Failed to login as warehouse manager")
+            return False
+        
+        wh_manager_token = login_response["token"]
+        
+        # Create a warehouse for this manager
+        warehouse_data = {
+            "name": "مخزن الإحصائيات",
+            "location": "القاهرة",
+            "address": "شارع التحرير، القاهرة",
+            "manager_id": warehouse_manager_id,
+            "warehouse_number": 3
+        }
+        
+        status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Warehouse Statistics API", False, "Failed to create warehouse")
+            return False
+        
+        # Test warehouse statistics API
+        status_code, response = self.make_request("GET", "/dashboard/warehouse-stats", token=wh_manager_token)
+        
+        if status_code == 200:
+            required_fields = [
+                "total_warehouses", "available_products", "orders", 
+                "total_products", "low_stock_products", "withdrawn_products",
+                "product_categories", "warehouses"
+            ]
+            
+            orders_fields = ["today", "week", "month"]
+            
+            if all(field in response for field in required_fields):
+                orders = response.get("orders", {})
+                if all(field in orders for field in orders_fields):
+                    self.log_test("Warehouse Statistics API", True, f"Complete warehouse statistics: {response}")
+                    return True
+                else:
+                    self.log_test("Warehouse Statistics API", False, "Missing orders breakdown fields")
+            else:
+                self.log_test("Warehouse Statistics API", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Warehouse Statistics API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_pending_orders_api(self):
+        """Test 32: New pending orders API endpoint"""
+        if not self.admin_token:
+            self.log_test("Pending Orders API", False, "No admin token available")
+            return False
+        
+        # Create warehouse manager
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"wh_pending_mgr_{timestamp}",
+            "email": f"whpending_{timestamp}@test.com",
+            "password": "whpending123",
+            "role": "warehouse_manager",
+            "full_name": "مدير مخزن للطلبات المعلقة",
+            "phone": "+966506666666"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Pending Orders API", False, "Failed to create warehouse manager")
+            return False
+        
+        warehouse_manager_id = response.get('user_id')
+        
+        # Login as warehouse manager
+        login_data = {"username": f"wh_pending_mgr_{timestamp}", "password": "whpending123"}
+        status_code, login_response = self.make_request("POST", "/auth/login", login_data)
+        if status_code != 200:
+            self.log_test("Pending Orders API", False, "Failed to login as warehouse manager")
+            return False
+        
+        wh_manager_token = login_response["token"]
+        
+        # Test pending orders API
+        status_code, response = self.make_request("GET", "/orders/pending", token=wh_manager_token)
+        
+        if status_code == 200:
+            if isinstance(response, list):
+                # Check if any orders exist and have required enriched fields
+                if len(response) > 0:
+                    order = response[0]
+                    required_fields = [
+                        "sales_rep_name", "doctor_name", "clinic_name", 
+                        "warehouse_name", "manager_approved", "items"
+                    ]
+                    
+                    if all(field in order for field in required_fields):
+                        # Check items have product details
+                        if len(order.get("items", [])) > 0:
+                            item = order["items"][0]
+                            item_fields = ["product_name", "product_unit"]
+                            if all(field in item for field in item_fields):
+                                self.log_test("Pending Orders API", True, f"Found {len(response)} pending orders with enriched data")
+                                return True
+                            else:
+                                self.log_test("Pending Orders API", False, "Missing product details in order items")
+                        else:
+                            self.log_test("Pending Orders API", True, "No items in pending orders (expected)")
+                            return True
+                    else:
+                        self.log_test("Pending Orders API", False, f"Missing enriched fields: {order}")
+                else:
+                    self.log_test("Pending Orders API", True, "No pending orders found (expected)")
+                    return True
+            else:
+                self.log_test("Pending Orders API", False, "Response is not a list")
+        else:
+            self.log_test("Pending Orders API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_warehouse_movement_history_api(self):
+        """Test 33: New warehouse movement history API endpoint"""
+        if not self.admin_token:
+            self.log_test("Warehouse Movement History API", False, "No admin token available")
+            return False
+        
+        # Get existing warehouses
+        status_code, warehouses = self.make_request("GET", "/warehouses", token=self.admin_token)
+        if status_code != 200 or len(warehouses) == 0:
+            self.log_test("Warehouse Movement History API", False, "No warehouses available")
+            return False
+        
+        warehouse_id = warehouses[0]["id"]
+        
+        # Test warehouse movements API
+        status_code, response = self.make_request("GET", f"/warehouses/{warehouse_id}/movements", token=self.admin_token)
+        
+        if status_code == 200:
+            if isinstance(response, list):
+                # Check if movements have enriched data
+                if len(response) > 0:
+                    movement = response[0]
+                    required_fields = [
+                        "product_name", "product_unit", "created_by_name",
+                        "movement_type", "quantity", "reason", "created_at"
+                    ]
+                    
+                    if all(field in movement for field in required_fields):
+                        self.log_test("Warehouse Movement History API", True, f"Found {len(response)} movements with enriched data")
+                        return True
+                    else:
+                        self.log_test("Warehouse Movement History API", False, f"Missing enriched fields: {movement}")
+                else:
+                    self.log_test("Warehouse Movement History API", True, "No movements found (expected for new warehouse)")
+                    return True
+            else:
+                self.log_test("Warehouse Movement History API", False, "Response is not a list")
+        else:
+            self.log_test("Warehouse Movement History API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_warehouse_number_field(self):
+        """Test 34: Updated warehouse model with warehouse_number field (1-5)"""
+        if not self.admin_token:
+            self.log_test("Warehouse Number Field", False, "No admin token available")
+            return False
+        
+        # Create warehouse manager
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"wh_num_mgr_{timestamp}",
+            "email": f"whnum_{timestamp}@test.com",
+            "password": "whnum123",
+            "role": "warehouse_manager",
+            "full_name": "مدير مخزن لاختبار الرقم",
+            "phone": "+966507777777"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Warehouse Number Field", False, "Failed to create warehouse manager")
+            return False
+        
+        warehouse_manager_id = response.get('user_id')
+        
+        # Test valid warehouse number (1-5)
+        warehouse_data = {
+            "name": "مخزن رقم 4",
+            "location": "الإسكندرية",
+            "address": "شارع الكورنيش، الإسكندرية",
+            "manager_id": warehouse_manager_id,
+            "warehouse_number": 4
+        }
+        
+        status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
+        
+        if status_code == 200:
+            warehouse_id = response.get("warehouse_id")
+            
+            # Verify warehouse was created with correct number
+            status_code, warehouses = self.make_request("GET", "/warehouses", token=self.admin_token)
+            if status_code == 200:
+                created_warehouse = next((w for w in warehouses if w.get("id") == warehouse_id), None)
+                if created_warehouse and created_warehouse.get("warehouse_number") == 4:
+                    # Test invalid warehouse number (should fail)
+                    invalid_warehouse_data = {
+                        "name": "مخزن رقم غير صحيح",
+                        "location": "القاهرة",
+                        "address": "شارع النيل، القاهرة",
+                        "manager_id": warehouse_manager_id,
+                        "warehouse_number": 6  # Invalid (should be 1-5)
+                    }
+                    
+                    status_code, response = self.make_request("POST", "/warehouses", invalid_warehouse_data, self.admin_token)
+                    
+                    if status_code == 400:
+                        self.log_test("Warehouse Number Field", True, "Warehouse number validation working (1-5 range enforced)")
+                        return True
+                    else:
+                        self.log_test("Warehouse Number Field", False, f"Invalid warehouse number not rejected: {status_code}")
+                else:
+                    self.log_test("Warehouse Number Field", False, "Warehouse number not saved correctly")
+            else:
+                self.log_test("Warehouse Number Field", False, "Failed to retrieve warehouses")
+        else:
+            self.log_test("Warehouse Number Field", False, f"Status: {status_code}", response)
+        return False
+
+    def test_role_access_restrictions(self):
+        """Test 35: Verify role-based access restrictions for new APIs"""
+        if not self.sales_rep_token:
+            self.log_test("Role Access Restrictions", False, "No sales rep token available")
+            return False
+        
+        # Test that sales rep cannot access warehouse statistics
+        status_code, response = self.make_request("GET", "/dashboard/warehouse-stats", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            # Test that sales rep cannot access pending orders
+            status_code, response = self.make_request("GET", "/orders/pending", token=self.sales_rep_token)
+            
+            if status_code == 403:
+                # Test that sales rep cannot access warehouse movements
+                status_code, warehouses = self.make_request("GET", "/warehouses", token=self.admin_token)
+                if status_code == 200 and len(warehouses) > 0:
+                    warehouse_id = warehouses[0]["id"]
+                    status_code, response = self.make_request("GET", f"/warehouses/{warehouse_id}/movements", token=self.sales_rep_token)
+                    
+                    if status_code == 403:
+                        self.log_test("Role Access Restrictions", True, "Sales rep correctly denied access to warehouse APIs")
+                        return True
+                    else:
+                        self.log_test("Role Access Restrictions", False, f"Sales rep not denied warehouse movements access: {status_code}")
+                else:
+                    self.log_test("Role Access Restrictions", False, "No warehouses available for testing")
+            else:
+                self.log_test("Role Access Restrictions", False, f"Sales rep not denied pending orders access: {status_code}")
+        else:
+            self.log_test("Role Access Restrictions", False, f"Sales rep not denied warehouse stats access: {status_code}")
+        return False
     
     def setup_test_products_and_warehouses(self):
         """Setup: Create test products and warehouses for order testing"""
