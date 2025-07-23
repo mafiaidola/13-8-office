@@ -2998,6 +2998,19 @@ const EnhancedUserManagement = () => {
 
 // Helper Components and Sub-systems
 
+// Helper utility functions
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 // Real-time Analytics Hook
 const useRealTimeAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
