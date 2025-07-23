@@ -3142,6 +3142,26 @@ const Dashboard = () => {
                 التقارير
               </button>
             )}
+            
+            {/* Chat System for all users */}
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`nav-tab ${activeTab === 'chat' ? 'active' : ''} flex items-center whitespace-nowrap`}
+            >
+              <span className="ml-2">💬</span>
+              المحادثات
+            </button>
+            
+            {/* System Settings only for Admin */}
+            {user.role === 'admin' && (
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`nav-tab ${activeTab === 'settings' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className="ml-2">⚙️</span>
+                إعدادات النظام
+              </button>
+            )}
           </nav>
         </div>
 
