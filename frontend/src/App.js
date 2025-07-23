@@ -22,19 +22,52 @@ const ThemeProvider = ({ children }) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
+    // Apply theme to document element and body
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.body.setAttribute('data-theme', savedTheme);
+    // Force theme variables update
+    updateThemeVariables(savedTheme);
   }, []);
+
+  const updateThemeVariables = (currentTheme) => {
+    const root = document.documentElement;
+    if (currentTheme === 'light') {
+      root.style.setProperty('--primary-bg', '#ffffff');
+      root.style.setProperty('--secondary-bg', '#f8fafc');
+      root.style.setProperty('--accent-bg', '#e2e8f0');
+      root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.95)');
+      root.style.setProperty('--glass-bg', 'rgba(248, 250, 252, 0.8)');
+      root.style.setProperty('--text-primary', '#1e293b');
+      root.style.setProperty('--text-secondary', '#475569');
+      root.style.setProperty('--text-muted', '#64748b');
+      root.style.setProperty('--gradient-dark', 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)');
+    } else {
+      root.style.setProperty('--primary-bg', '#0f172a');
+      root.style.setProperty('--secondary-bg', '#1e293b');
+      root.style.setProperty('--accent-bg', '#334155');
+      root.style.setProperty('--card-bg', 'rgba(30, 41, 59, 0.95)');
+      root.style.setProperty('--glass-bg', 'rgba(15, 23, 42, 0.8)');
+      root.style.setProperty('--text-primary', '#f8fafc');
+      root.style.setProperty('--text-secondary', '#cbd5e1');
+      root.style.setProperty('--text-muted', '#94a3b8');
+      root.style.setProperty('--gradient-dark', 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)');
+    }
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
+    document.body.setAttribute('data-theme', newTheme);
+    updateThemeVariables(newTheme);
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
+      <div data-theme={theme} style={{ minHeight: '100vh', background: 'var(--gradient-dark)', color: 'var(--text-primary)' }}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 };
