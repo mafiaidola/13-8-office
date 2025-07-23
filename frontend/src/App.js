@@ -2921,10 +2921,19 @@ const VisitRegistration = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      setCurrentVisitId(response.data.visit_id);
+      
+      // Add any pending voice notes
+      for (const voiceNote of voiceNotes) {
+        await addVoiceNote(response.data.visit_id, voiceNote.audio, voiceNote.duration);
+      }
+      setVoiceNotes([]);
+
       setSuccess('تم تسجيل الزيارة بنجاح');
       setSelectedDoctor('');
       setSelectedClinic('');
       setNotes('');
+      setCurrentVisitId(null);
     } catch (error) {
       setError(error.response?.data?.detail || 'حدث خطأ في تسجيل الزيارة');
     } finally {
