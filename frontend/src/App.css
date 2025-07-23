@@ -85,6 +85,19 @@ body {
 .App {
   min-height: 100vh;
   background: var(--gradient-dark);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+/* Force theme application */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Ensure all containers inherit theme colors */
+.container, .main-content, .content-wrapper {
+  background: transparent;
+  color: inherit;
 }
 
 /* Enhanced Animations */
