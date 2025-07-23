@@ -818,6 +818,22 @@ class BackendTester:
         self.test_sales_rep_dashboard_stats()
         self.test_manager_dashboard_stats()
         
+        # Enhanced Features Tests
+        print("🆕 ENHANCED FEATURES TESTS")
+        print("-" * 30)
+        self.test_enhanced_sales_rep_stats()
+        self.test_create_clinic_request()
+        self.test_get_clinic_requests()
+        self.test_manager_review_clinic_request()
+        self.test_clinic_request_role_restrictions()
+        
+        # Orders System Tests
+        print("📦 ORDERS SYSTEM TESTS")
+        print("-" * 30)
+        self.test_orders_api_exists()
+        self.test_create_order_demo()
+        self.test_create_order_sale()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
