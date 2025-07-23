@@ -1270,6 +1270,226 @@ async def get_warehouse_movements(warehouse_id: str, current_user: User = Depend
     movements.sort(key=lambda x: x["created_at"], reverse=True)
     
     return movements
+
+# System Settings APIs
+@api_router.get("/settings", response_model=Dict[str, Any])
+async def get_system_settings():
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    if not settings:
+        # Create default settings
+        default_settings = SystemSettings(
+            updated_by="system"
+        )
+        await db.system_settings.insert_one(default_settings.dict())
+        return default_settings.dict()
+    return settings
+
+@api_router.post("/settings")
+async def update_system_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update system settings")
+    
+    # Update settings
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            **settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Settings updated successfully"}
+
+# Notifications APIs
+@api_router.get("/notifications", response_model=List[Dict[str, Any]])
+async def get_notifications(current_user: User = Depends(get_current_user)):
+    notifications = await db.notifications.find(
+        {"recipient_id": current_user.id}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return notifications
+
+@api_router.post("/notifications")
+async def create_notification(notification_data: dict, current_user: User = Depends(get_current_user)):
+    notification = Notification(
+        title=notification_data["title"],
+        message=notification_data["message"],
+        type=notification_data.get("type", "INFO"),
+        recipient_id=notification_data["recipient_id"],
+        sender_id=current_user.id,
+        data=notification_data.get("data")
+    )
+    
+    await db.notifications.insert_one(notification.dict())
+    return {"message": "Notification sent successfully"}
+
+@api_router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.notifications.update_one(
+        {"id": notification_id, "recipient_id": current_user.id},
+        {"$set": {"is_read": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification marked as read"}
+
+# Chat APIs
+@api_router.get("/conversations", response_model=List[Dict[str, Any]])
+async def get_conversations(current_user: User = Depends(get_current_user)):
+    conversations = await db.conversations.find(
+        {"participants": current_user.id},
+        {"_id": 0}
+    ).sort("last_message_at", -1).to_list(100)
+    
+    # Enrich with participant info and last message
+    for conversation in conversations:
+        # Get other participants
+        other_participants = [p for p in conversation["participants"] if p != current_user.id]
+        participant_names = []
+        for participant_id in other_participants:
+            user = await db.users.find_one({"id": participant_id}, {"_id": 0})
+            if user:
+                participant_names.append(user["full_name"])
+        
+        conversation["participant_names"] = participant_names
+        
+        # Get last message
+        last_message = await db.chat_messages.find_one(
+            {"conversation_id": conversation["id"]},
+            {"_id": 0}
+        ).sort("created_at", -1)
+        conversation["last_message"] = last_message
+    
+    return conversations
+
+@api_router.post("/conversations")
+async def create_conversation(conversation_data: dict, current_user: User = Depends(get_current_user)):
+    participants = conversation_data["participants"]
+    if current_user.id not in participants:
+        participants.append(current_user.id)
+    
+    conversation = Conversation(
+        participants=participants,
+        title=conversation_data.get("title")
+    )
+    
+    await db.conversations.insert_one(conversation.dict())
+    return {"message": "Conversation created successfully", "conversation_id": conversation.id}
+
+@api_router.get("/conversations/{conversation_id}/messages", response_model=List[Dict[str, Any]])
+async def get_conversation_messages(conversation_id: str, current_user: User = Depends(get_current_user)):
+    # Check if user is participant
+    conversation = await db.conversations.find_one({"id": conversation_id})
+    if not conversation or current_user.id not in conversation["participants"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    messages = await db.chat_messages.find(
+        {"conversation_id": conversation_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(1000)
+    
+    # Enrich with sender info
+    for message in messages:
+        sender = await db.users.find_one({"id": message["sender_id"]}, {"_id": 0})
+        message["sender_name"] = sender["full_name"] if sender else "Unknown"
+    
+    return messages
+
+@api_router.post("/conversations/{conversation_id}/messages")
+async def send_message(conversation_id: str, message_data: dict, current_user: User = Depends(get_current_user)):
+    # Check if user is participant
+    conversation = await db.conversations.find_one({"id": conversation_id})
+    if not conversation or current_user.id not in conversation["participants"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Find recipient (assuming 2-person conversation for now)
+    recipient_id = next(p for p in conversation["participants"] if p != current_user.id)
+    
+    message = ChatMessage(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        recipient_id=recipient_id,
+        message_text=message_data.get("message_text"),
+        voice_note=message_data.get("voice_note"),
+        message_type=message_data.get("message_type", "TEXT")
+    )
+    
+    await db.chat_messages.insert_one(message.dict())
+    
+    # Update conversation last message time
+    await db.conversations.update_one(
+        {"id": conversation_id},
+        {"$set": {"last_message_at": datetime.utcnow()}}
+    )
+    
+    # Send notification to recipient
+    notification = Notification(
+        title="رسالة جديدة",
+        message=f"رسالة جديدة من {current_user.full_name}",
+        type="INFO",
+        recipient_id=recipient_id,
+        sender_id=current_user.id,
+        data={"conversation_id": conversation_id}
+    )
+    await db.notifications.insert_one(notification.dict())
+    
+    return {"message": "Message sent successfully"}
+
+# Voice Notes APIs
+@api_router.post("/visits/{visit_id}/voice-notes")
+async def add_voice_note(visit_id: str, voice_data: dict, current_user: User = Depends(get_current_user)):
+    # Check if visit exists and user has access
+    visit = await db.visits.find_one({"id": visit_id})
+    if not visit:
+        raise HTTPException(status_code=404, detail="Visit not found")
+    
+    if visit["sales_rep_id"] != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    voice_note = VoiceNote(
+        visit_id=visit_id,
+        audio_data=voice_data["audio_data"],
+        duration=voice_data["duration"],
+        transcript=voice_data.get("transcript"),
+        created_by=current_user.id
+    )
+    
+    await db.voice_notes.insert_one(voice_note.dict())
+    
+    # Update visit with voice note ID
+    await db.visits.update_one(
+        {"id": visit_id},
+        {"$push": {"voice_notes": voice_note.id}}
+    )
+    
+    return {"message": "Voice note added successfully", "voice_note_id": voice_note.id}
+
+@api_router.get("/visits/{visit_id}/voice-notes", response_model=List[Dict[str, Any]])  
+async def get_visit_voice_notes(visit_id: str, current_user: User = Depends(get_current_user)):
+    # Check access
+    visit = await db.visits.find_one({"id": visit_id})
+    if not visit:
+        raise HTTPException(status_code=404, detail="Visit not found")
+    
+    if visit["sales_rep_id"] != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    voice_notes = await db.voice_notes.find(
+        {"visit_id": visit_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Enrich with creator info
+    for note in voice_notes:
+        creator = await db.users.find_one({"id": note["created_by"]}, {"_id": 0})
+        note["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return voice_notes
 @api_router.get("/dashboard/sales-rep-stats")
 async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SALES_REP:
