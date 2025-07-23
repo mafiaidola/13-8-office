@@ -778,6 +778,75 @@ class BackendTester:
             self.log_test("Create SALE Order", False, f"Status: {status_code}", response)
         return False
     
+    def setup_test_products_and_warehouses(self):
+        """Setup: Create test products and warehouses for order testing"""
+        if not self.admin_token:
+            self.log_test("Setup Test Data", False, "No admin token available")
+            return False
+        
+        # Create a warehouse manager first
+        import time
+        timestamp = str(int(time.time()))
+        warehouse_manager_data = {
+            "username": f"warehouse_mgr_{timestamp}",
+            "email": f"warehouse_{timestamp}@test.com",
+            "password": "warehouse123",
+            "role": "warehouse_manager",
+            "full_name": "مدير المخزن التجريبي",
+            "phone": "+966503333333"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", warehouse_manager_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Setup Test Data", False, "Failed to create warehouse manager")
+            return False
+        
+        warehouse_manager_id = response.get('user_id')
+        
+        # Create a test warehouse
+        warehouse_data = {
+            "name": "مخزن الرياض الرئيسي",
+            "location": "الرياض",
+            "address": "شارع الملك فهد، الرياض",
+            "manager_id": warehouse_manager_id
+        }
+        
+        status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
+        if status_code != 200:
+            self.log_test("Setup Test Data", False, "Failed to create warehouse")
+            return False
+        
+        # Create test products
+        products = [
+            {
+                "name": "دواء الضغط",
+                "description": "دواء لعلاج ضغط الدم المرتفع",
+                "price": 50.0,
+                "category": "أدوية القلب",
+                "unit": "علبة"
+            },
+            {
+                "name": "فيتامين د",
+                "description": "مكمل غذائي فيتامين د",
+                "price": 25.0,
+                "category": "فيتامينات",
+                "unit": "زجاجة"
+            }
+        ]
+        
+        created_products = 0
+        for product in products:
+            status_code, response = self.make_request("POST", "/products", product, self.admin_token)
+            if status_code == 200:
+                created_products += 1
+        
+        if created_products > 0:
+            self.log_test("Setup Test Data", True, f"Created {created_products} products and 1 warehouse")
+            return True
+        else:
+            self.log_test("Setup Test Data", False, "Failed to create products")
+            return False
+    
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing")
