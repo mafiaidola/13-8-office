@@ -224,6 +224,37 @@ class Visit(BaseModel):
     reviewed_by: Optional[str] = None  # manager user_id
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class ClinicRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    clinic_name: str
+    clinic_phone: Optional[str] = None
+    doctor_name: str
+    doctor_specialty: str
+    doctor_address: str
+    clinic_manager_name: str
+    latitude: float
+    longitude: float
+    address: str
+    clinic_image: Optional[str] = None  # base64 image
+    notes: str
+    sales_rep_id: str
+    status: str = "PENDING"  # PENDING, APPROVED, REJECTED
+    reviewed_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ClinicRequestCreate(BaseModel):
+    clinic_name: str
+    clinic_phone: Optional[str] = None
+    doctor_name: str
+    doctor_specialty: str
+    doctor_address: str
+    clinic_manager_name: str
+    latitude: float
+    longitude: float
+    address: str
+    clinic_image: Optional[str] = None
+    notes: str
+
 class VisitCreate(BaseModel):
     doctor_id: str
     clinic_id: str
