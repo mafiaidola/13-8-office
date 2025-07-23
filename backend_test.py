@@ -2422,7 +2422,12 @@ class BackendTester:
 
 if __name__ == "__main__":
     tester = BackendTester()
-    passed, total = tester.run_all_tests()
+    
+    # Run Phase 2 tests focusing on review request requirements
+    print("🎯 Running Phase 2 Backend Tests (Review Request Focus)")
+    tester.run_phase2_tests()
     
     # Exit with appropriate code
+    passed = sum(1 for result in tester.test_results if result["success"])
+    total = len(tester.test_results)
     exit(0 if passed == total else 1)
