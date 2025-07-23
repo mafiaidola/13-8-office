@@ -1198,7 +1198,8 @@ class BackendTester:
             "name": "مخزن الرياض الرئيسي",
             "location": "الرياض",
             "address": "شارع الملك فهد، الرياض",
-            "manager_id": warehouse_manager_id
+            "manager_id": warehouse_manager_id,
+            "warehouse_number": 1  # Required field (1-5)
         }
         
         status_code, response = self.make_request("POST", "/warehouses", warehouse_data, self.admin_token)
