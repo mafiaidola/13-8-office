@@ -1935,6 +1935,9 @@ const VisitDetailsModal = ({ visit, onClose }) => {
     </div>
   );
 };
+
+// Enhanced User Management Component
+const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
