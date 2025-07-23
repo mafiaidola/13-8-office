@@ -495,10 +495,11 @@ async def get_warehouses(current_user: User = Depends(get_current_user)):
 # Inventory Management Routes
 @api_router.post("/inventory/{warehouse_id}/{product_id}")
 async def update_inventory(warehouse_id: str, product_id: str, inventory_data: InventoryUpdate, current_user: User = Depends(get_current_user)):
+    # Only Admin and warehouse managers can update inventory
     if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
         raise HTTPException(status_code=403, detail="Only admin and warehouse managers can update inventory")
     
-    # Check if user has access to this warehouse
+    # Check if warehouse manager has access to this warehouse
     if current_user.role == UserRole.WAREHOUSE_MANAGER:
         warehouse = await db.warehouses.find_one({"id": warehouse_id, "manager_id": current_user.id})
         if not warehouse:
