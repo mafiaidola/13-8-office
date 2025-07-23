@@ -484,11 +484,21 @@ async def create_warehouse(warehouse_data: WarehouseCreate, current_user: User =
     if not manager or manager["role"] not in [UserRole.WAREHOUSE_MANAGER, UserRole.ADMIN]:
         raise HTTPException(status_code=400, detail="Invalid warehouse manager")
     
+    # Check if warehouse number is valid (1-5)
+    if warehouse_data.warehouse_number < 1 or warehouse_data.warehouse_number > 5:
+        raise HTTPException(status_code=400, detail="Warehouse number must be between 1 and 5")
+    
+    # Check if warehouse number already exists
+    existing_warehouse = await db.warehouses.find_one({"warehouse_number": warehouse_data.warehouse_number})
+    if existing_warehouse:
+        raise HTTPException(status_code=400, detail=f"Warehouse number {warehouse_data.warehouse_number} already exists")
+    
     warehouse = Warehouse(
         name=warehouse_data.name,
         location=warehouse_data.location,
         address=warehouse_data.address,
-        manager_id=warehouse_data.manager_id
+        manager_id=warehouse_data.manager_id,
+        warehouse_number=warehouse_data.warehouse_number
     )
     
     await db.warehouses.insert_one(warehouse.dict())
