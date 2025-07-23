@@ -1178,6 +1178,46 @@ async def review_order(order_id: str, approved: bool, current_user: User = Depen
             raise HTTPException(status_code=500, detail=f"Error updating inventory: {str(e)}")
     
     return {"message": f"Order {new_status.lower()} successfully"}
+
+# New Warehouse Log/Movement History
+@api_router.get("/warehouses/{warehouse_id}/movements", response_model=List[Dict[str, Any]])
+async def get_warehouse_movements(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Check if warehouse manager has access to this warehouse
+    if current_user.role == UserRole.WAREHOUSE_MANAGER:
+        warehouse = await db.warehouses.find_one({"id": warehouse_id, "manager_id": current_user.id})
+        if not warehouse:
+            raise HTTPException(status_code=403, detail="You don't have access to this warehouse")
+    
+    # Get stock movements for this warehouse
+    movements = await db.stock_movements.find({"warehouse_id": warehouse_id}, {"_id": 0}).to_list(1000)
+    
+    # Enrich with product and user information
+    for movement in movements:
+        # Get product info
+        product = await db.products.find_one({"id": movement["product_id"]}, {"_id": 0})
+        movement["product_name"] = product["name"] if product else "Unknown"
+        movement["product_unit"] = product["unit"] if product else "Unknown"
+        
+        # Get user info (who created the movement)
+        user = await db.users.find_one({"id": movement["created_by"]}, {"_id": 0})
+        movement["created_by_name"] = user["full_name"] if user else "Unknown"
+        
+        # Get order info if reference exists
+        if movement.get("reference_id"):
+            order = await db.orders.find_one({"id": movement["reference_id"]}, {"_id": 0})
+            if order:
+                movement["order_info"] = {
+                    "order_type": order["order_type"],
+                    "total_amount": order["total_amount"]
+                }
+    
+    # Sort by created_at desc
+    movements.sort(key=lambda x: x["created_at"], reverse=True)
+    
+    return movements
 @api_router.get("/dashboard/sales-rep-stats")
 async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SALES_REP:
