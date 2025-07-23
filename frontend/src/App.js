@@ -551,7 +551,9 @@ const UserManagement = () => {
 };
 
 // Warehouse Management Component
+// Enhanced Warehouse Management Component
 const WarehouseManagement = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [warehouses, setWarehouses] = useState([]);
   const [products, setProducts] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -560,23 +562,67 @@ const WarehouseManagement = () => {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    price: '',
+    price_before_discount: '',
+    discount_percentage: '0',
     category: '',
-    unit: ''
+    unit: '',
+    image: ''
   });
+  const [warehouseStats, setWarehouseStats] = useState(null);
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [movementHistory, setMovementHistory] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchWarehouses();
     fetchProducts();
+    fetchWarehouseStats();
+    fetchPendingOrders();
   }, []);
 
   useEffect(() => {
     if (selectedWarehouse) {
       fetchInventory(selectedWarehouse);
+      fetchMovementHistory(selectedWarehouse);
     }
   }, [selectedWarehouse]);
+
+  const fetchWarehouseStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/dashboard/warehouse-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouseStats(response.data);
+    } catch (error) {
+      console.error('Error fetching warehouse stats:', error);
+    }
+  };
+
+  const fetchPendingOrders = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/orders/pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingOrders(response.data);
+    } catch (error) {
+      console.error('Error fetching pending orders:', error);
+    }
+  };
+
+  const fetchMovementHistory = async (warehouseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/warehouses/${warehouseId}/movements`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMovementHistory(response.data);
+    } catch (error) {
+      console.error('Error fetching movement history:', error);
+    }
+  };
 
   const fetchWarehouses = async () => {
     try {
@@ -617,20 +663,45 @@ const WarehouseManagement = () => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setNewProduct({...newProduct, image: event.target.result});
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${API}/products`, {
         ...newProduct,
-        price: parseFloat(newProduct.price)
+        price_before_discount: parseFloat(newProduct.price_before_discount),
+        discount_percentage: parseFloat(newProduct.discount_percentage)
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setSuccess('تم إنشاء المنتج بنجاح');
       setShowCreateProduct(false);
-      setNewProduct({ name: '', description: '', price: '', category: '', unit: '' });
+      setNewProduct({ 
+        name: '', 
+        description: '', 
+        price_before_discount: '', 
+        discount_percentage: '0', 
+        category: '', 
+        unit: '',
+        image: ''
+      });
       fetchProducts();
     } catch (error) {
       setError(error.response?.data?.detail || 'خطأ في إنشاء المنتج');
@@ -648,6 +719,150 @@ const WarehouseManagement = () => {
       
       setSuccess('تم تحديث المخزون بنجاح');
       fetchInventory(selectedWarehouse);
+      fetchWarehouseStats(); // Refresh stats
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في تحديث المخزون');
+    }
+  };
+
+  // Warehouse Dashboard Component
+  const WarehouseDashboard = () => (
+    <div className="space-y-8 page-transition">
+      <div className="flex items-center mb-8">
+        <div className="w-16 h-16 card-gradient-blue rounded-full flex items-center justify-center ml-4 glow-pulse">
+          <span className="text-3xl">📊</span>
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gradient">لوحة تحكم المخزن</h2>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>إحصائيات ومعلومات شاملة عن المخزن</p>
+        </div>
+      </div>
+
+      {warehouseStats && (
+        <>
+          {/* Main Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="card-modern p-6 interactive-element">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center ml-4">
+                  <span className="text-2xl">📦</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>المنتجات المتوفرة</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>في المخزن</p>
+                </div>
+              </div>
+              <p className="text-4xl font-bold text-green-600">{warehouseStats.available_products}</p>
+            </div>
+
+            <div className="card-modern p-6 interactive-element">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center ml-4">
+                  <span className="text-2xl">🏢</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>إجمالي المخازن</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>تحت إدارتك</p>
+                </div>
+              </div>
+              <p className="text-4xl font-bold text-blue-600">{warehouseStats.total_warehouses}</p>
+            </div>
+
+            <div className="card-modern p-6 interactive-element">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center ml-4">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>نقص المخزون</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>منتجات قليلة</p>
+                </div>
+              </div>
+              <p className="text-4xl font-bold text-orange-600">{warehouseStats.low_stock_products}</p>
+            </div>
+
+            <div className="card-modern p-6 interactive-element">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center ml-4">
+                  <span className="text-2xl">📤</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>منتجات مسحوبة</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>هذا الشهر</p>
+                </div>
+              </div>
+              <p className="text-4xl font-bold text-purple-600">{warehouseStats.withdrawn_products}</p>
+            </div>
+          </div>
+
+          {/* Orders Statistics */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <span className="text-2xl">📋</span>
+              <span style={{ color: 'var(--text-primary)' }}>إحصائيات الطلبات</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+                <div className="text-3xl mb-2">📅</div>
+                <div className="text-2xl font-bold text-green-600">{warehouseStats.orders.today}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات اليوم</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+                <div className="text-3xl mb-2">📊</div>
+                <div className="text-2xl font-bold text-blue-600">{warehouseStats.orders.week}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات الأسبوع</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-purple-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+                <div className="text-3xl mb-2">📈</div>
+                <div className="text-2xl font-bold text-purple-600">{warehouseStats.orders.month}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات الشهر</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Categories */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <span className="text-2xl">🏷️</span>
+              <span style={{ color: 'var(--text-primary)' }}>أصناف المنتجات</span>
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {Object.entries(warehouseStats.product_categories).map(([category, quantity]) => (
+                <div key={category} className="glass-effect p-4 rounded-xl text-center">
+                  <div className="text-2xl font-bold" style={{ color: 'var(--brand-orange)' }}>{quantity}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{category}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Warehouses List */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+              <span className="text-2xl">🏢</span>
+              <span style={{ color: 'var(--text-primary)' }}>المخازن المدارة</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {warehouseStats.warehouses.map((warehouse) => (
+                <div key={warehouse.id} className="glass-effect p-4 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">{warehouse.warehouse_number || '?'}</span>
+                    </div>
+                    <div>
+                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>{warehouse.name}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{warehouse.location}</div>
+                    </div>
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{warehouse.address}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
     } catch (error) {
       setError(error.response?.data?.detail || 'خطأ في تحديث المخزون');
     }
