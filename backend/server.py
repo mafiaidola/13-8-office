@@ -598,6 +598,7 @@ async def get_warehouse_inventory(warehouse_id: str, current_user: User = Depend
 # Reports Routes
 @api_router.get("/reports/inventory")
 async def get_inventory_report(current_user: User = Depends(get_current_user)):
+    # Only Admin and warehouse managers can access inventory reports
     if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -640,7 +641,14 @@ async def get_inventory_report(current_user: User = Depends(get_current_user)):
     
     try:
         # Note: MongoDB aggregation might not work with motor, so we'll do it manually
-        inventory_items = await db.inventory.find({}, {"_id": 0}).to_list(1000)
+        query = {}
+        if current_user.role == UserRole.WAREHOUSE_MANAGER:
+            # Warehouse managers only see their warehouses
+            my_warehouses = await db.warehouses.find({"manager_id": current_user.id}).to_list(100)
+            warehouse_ids = [w["id"] for w in my_warehouses]
+            query = {"warehouse_id": {"$in": warehouse_ids}}
+            
+        inventory_items = await db.inventory.find(query, {"_id": 0}).to_list(1000)
         report_data = []
         
         for item in inventory_items:
@@ -650,17 +658,107 @@ async def get_inventory_report(current_user: User = Depends(get_current_user)):
             if product and warehouse:
                 report_item = {
                     "warehouse_name": warehouse["name"],
+                    "warehouse_number": warehouse.get("warehouse_number", 0),
                     "product_name": product["name"],
                     "quantity": item["quantity"],
                     "minimum_stock": item["minimum_stock"],
                     "low_stock": item["quantity"] <= item["minimum_stock"],
-                    "total_value": item["quantity"] * product["price"]
+                    "total_value": item["quantity"] * product["price"],
+                    "price_before_discount": product.get("price_before_discount", product["price"]),
+                    "discount_percentage": product.get("discount_percentage", 0),
+                    "currency": product.get("currency", "EGP")
                 }
                 report_data.append(report_item)
         
         return report_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
+
+# New Warehouse Dashboard Statistics
+@api_router.get("/dashboard/warehouse-stats")
+async def get_warehouse_dashboard_stats(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.WAREHOUSE_MANAGER:
+        raise HTTPException(status_code=403, detail="Only warehouse managers can access this endpoint")
+    
+    # Get warehouses managed by current user
+    my_warehouses = await db.warehouses.find({"manager_id": current_user.id}, {"_id": 0}).to_list(100)
+    warehouse_ids = [w["id"] for w in my_warehouses]
+    
+    if not warehouse_ids:
+        return {
+            "total_warehouses": 0,
+            "available_products": 0,
+            "orders": {"today": 0, "week": 0, "month": 0},
+            "total_products": 0,
+            "low_stock_products": 0,
+            "withdrawn_products": 0,
+            "warehouses": []
+        }
+    
+    # Count available products
+    total_products = await db.inventory.count_documents({"warehouse_id": {"$in": warehouse_ids}, "quantity": {"$gt": 0}})
+    
+    # Count low stock products
+    inventory_items = await db.inventory.find({"warehouse_id": {"$in": warehouse_ids}}, {"_id": 0}).to_list(1000)
+    low_stock_count = sum(1 for item in inventory_items if item["quantity"] <= item["minimum_stock"])
+    
+    # Get orders statistics
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=7)
+    month_start = today_start - timedelta(days=30)
+    
+    orders_today = await db.orders.count_documents({
+        "warehouse_id": {"$in": warehouse_ids},
+        "created_at": {"$gte": today_start},
+        "status": {"$in": ["APPROVED", "FULFILLED"]}
+    })
+    
+    orders_week = await db.orders.count_documents({
+        "warehouse_id": {"$in": warehouse_ids},
+        "created_at": {"$gte": week_start},
+        "status": {"$in": ["APPROVED", "FULFILLED"]}
+    })
+    
+    orders_month = await db.orders.count_documents({
+        "warehouse_id": {"$in": warehouse_ids},
+        "created_at": {"$gte": month_start},
+        "status": {"$in": ["APPROVED", "FULFILLED"]}
+    })
+    
+    # Get withdrawn products count (from stock movements)
+    withdrawn_count = 0
+    stock_movements = await db.stock_movements.find({
+        "warehouse_id": {"$in": warehouse_ids},
+        "movement_type": "OUT",
+        "created_at": {"$gte": month_start}
+    }, {"_id": 0}).to_list(1000)
+    withdrawn_count = len(stock_movements)
+    
+    # Get product categories breakdown
+    product_categories = {}
+    for item in inventory_items:
+        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        if product:
+            category = product.get("category", "غير محدد")
+            if category in product_categories:
+                product_categories[category] += item["quantity"]
+            else:
+                product_categories[category] = item["quantity"]
+    
+    return {
+        "total_warehouses": len(my_warehouses),
+        "available_products": total_products,
+        "orders": {
+            "today": orders_today,
+            "week": orders_week,
+            "month": orders_month
+        },
+        "total_products": sum(item["quantity"] for item in inventory_items),
+        "low_stock_products": low_stock_count,
+        "withdrawn_products": withdrawn_count,
+        "product_categories": product_categories,
+        "warehouses": my_warehouses
+    }
 
 @api_router.get("/reports/users")
 async def get_users_report(current_user: User = Depends(get_current_user)):
