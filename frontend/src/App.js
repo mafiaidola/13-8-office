@@ -3132,72 +3132,6 @@ const WarehouseManagement = () => {
 };
 
 // Helper Components and Sub-systems
-
-// User Management Component
-const UserManagement = () => {
-              <label className="block text-sm font-bold mb-2">البحث:</label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ابحث بالاسم أو البريد..."
-                className="form-modern w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold mb-2">فلترة بالدور:</label>
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className="form-modern w-full"
-              >
-                <option value="all">جميع الأدوار</option>
-                <option value="admin">مدير النظام</option>
-                <option value="manager">مدير</option>
-                <option value="sales_rep">مندوب مبيعات</option>
-                <option value="warehouse_manager">مدير مخزن</option>
-                <option value="accounting">محاسب</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-bold mb-2">فلترة بالحالة:</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="form-modern w-full"
-              >
-                <option value="all">جميع الحالات</option>
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={fetchUsers}
-                className="btn-info w-full flex items-center justify-center gap-2"
-              >
-                <span>🔄</span>
-                <span>تحديث</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Users Table */}
-        <div className="card-modern overflow-hidden">
-          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
-            <h3 className="text-xl font-bold flex items-center gap-3">
-              <span>📋</span>
-              <span>قائمة المستخدمين ({filteredUsers.length})</span>
-            </h3>
-          </div>
-          
-          {loading ? (
-            <div className="p-12 text-center">
-              <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
-              <p style={{ color: 'var(--text-secondary)' }}>جاري التحميل...</p>
-            </div>
-          ) : (
             <div className="table-modern">
               <table className="min-w-full">
                 <thead>
