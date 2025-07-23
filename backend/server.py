@@ -75,19 +75,26 @@ class Product(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     description: Optional[str] = None
-    price: float
+    price: float  # Egyptian Pounds (EGP)
+    price_before_discount: float  # Original price before discount
+    discount_percentage: float = 0.0  # Discount percentage (0-100)
     category: str
     unit: str  # piece, box, bottle, etc.
+    image: Optional[str] = None  # base64 image
+    currency: str = "EGP"  # Egyptian Pounds only
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: str
+    approved_by: Optional[str] = None  # Admin approval required
 
 class ProductCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    price: float
+    price_before_discount: float
+    discount_percentage: float = 0.0
     category: str
     unit: str
+    image: Optional[str] = None
 
 class Warehouse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
