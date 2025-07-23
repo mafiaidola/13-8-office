@@ -310,7 +310,247 @@ const LoginPage = () => {
   );
 };
 
-// User Management Component
+// System Settings Component for Admin
+const SystemSettings = () => {
+  const [settings, setSettings] = useState({
+    logo_image: '',
+    company_name: 'نظام إدارة المناديب',
+    primary_color: '#ff6b35',
+    secondary_color: '#0ea5e9'
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(response.data);
+    } catch (error) {
+      setError('خطأ في جلب الإعدادات');
+    }
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSettings({...settings, logo_image: event.target.result});
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/settings`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم حفظ الإعدادات بنجاح');
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في حفظ الإعدادات');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <ThemeToggle />
+      <div className="container mx-auto px-4 py-8">
+        <div className="card-modern p-8 page-transition">
+          <div className="flex items-center mb-8">
+            <div className="w-16 h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-3xl">⚙️</span>
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gradient">إعدادات النظام</h2>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>تخصيص شكل ومظهر النظام</p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="alert-modern alert-error mb-6 scale-in">
+              <span className="ml-2">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="alert-modern alert-success mb-6 scale-in">
+              <span className="ml-2">✅</span>
+              {success}
+            </div>
+          )}
+
+          <div className="space-y-8 form-modern">
+            {/* Logo Section */}
+            <div className="card-modern p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
+                <span className="text-2xl">🖼️</span>
+                <span>شعار الشركة</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold mb-2">
+                    رفع شعار جديد
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="w-full p-4 border-2 border-dashed rounded-xl hover:border-orange-500 transition-colors"
+                    style={{ 
+                      background: 'var(--glass-bg)',
+                      borderColor: 'var(--brand-orange)',
+                      borderOpacity: 0.3
+                    }}
+                  />
+                  <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+                    يُفضل أن يكون الشعار مربع الشكل وبحجم أقصى 5 ميجابايت
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <label className="block text-sm font-bold mb-2">
+                    معاينة الشعار الحالي
+                  </label>
+                  {settings.logo_image ? (
+                    <img 
+                      src={settings.logo_image} 
+                      alt="شعار الشركة"
+                      className="w-32 h-32 mx-auto rounded-full object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 mx-auto card-gradient-orange rounded-full flex items-center justify-center">
+                      <span className="text-4xl">🏥</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Company Info */}
+            <div className="card-modern p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
+                <span className="text-2xl">🏢</span>
+                <span>معلومات الشركة</span>
+              </h3>
+              
+              <div>
+                <label className="block text-sm font-bold mb-2">
+                  اسم الشركة
+                </label>
+                <input
+                  type="text"
+                  value={settings.company_name}
+                  onChange={(e) => setSettings({...settings, company_name: e.target.value})}
+                  className="w-full"
+                  placeholder="اسم الشركة أو المؤسسة"
+                />
+              </div>
+            </div>
+
+            {/* Color Theme */}
+            <div className="card-modern p-6">  
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
+                <span className="text-2xl">🎨</span>
+                <span>ألوان النظام</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold mb-2">
+                    اللون الأساسي
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.primary_color}
+                      onChange={(e) => setSettings({...settings, primary_color: e.target.value})}
+                      className="w-16 h-12 rounded-lg border-2 cursor-pointer"
+                      style={{ borderColor: 'var(--accent-bg)' }}
+                    />
+                    <input
+                      type="text"
+                      value={settings.primary_color}
+                      onChange={(e) => setSettings({...settings, primary_color: e.target.value})}
+                      className="flex-1"
+                      placeholder="#ff6b35"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2">
+                    اللون الثانوي
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.secondary_color}
+                      onChange={(e) => setSettings({...settings, secondary_color: e.target.value})}
+                      className="w-16 h-12 rounded-lg border-2 cursor-pointer"
+                      style={{ borderColor: 'var(--accent-bg)' }}
+                    />
+                    <input
+                      type="text"
+                      value={settings.secondary_color}
+                      onChange={(e) => setSettings({...settings, secondary_color: e.target.value})}
+                      className="flex-1"
+                      placeholder="#0ea5e9"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="text-center">
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="btn-primary text-xl py-4 px-8 neon-glow"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="loading-shimmer w-6 h-6 rounded-full"></div>
+                    <span>جاري الحفظ...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <span>💾</span>
+                    <span>حفظ الإعدادات</span>
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
