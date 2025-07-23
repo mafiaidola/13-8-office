@@ -1933,19 +1933,158 @@ async def award_points_internal(user_id: str, points: int, reason: str, activity
     )
     await db.points_transactions.insert_one(transaction.dict())
     
-    await db.user_points.update_one(
-        {"user_id": user_id},
-        {
-            "$inc": {
-                "total_points": points,
-                "monthly_points": points,
-                "weekly_points": points,
-                "daily_points": points
-            },
-            "$set": {"last_activity": datetime.utcnow()}
-        },
-        upsert=True
-    )
+# Enhanced Visits Log API
+@api_router.get("/visits/comprehensive", response_model=List[Dict[str, Any]])
+async def get_comprehensive_visits_log(current_user: User = Depends(get_current_user)):
+    # All roles can access, but with different data visibility
+    if current_user.role == UserRole.SALES_REP:
+        # Sales reps see only their visits
+        query = {"sales_rep_id": current_user.id}
+    elif current_user.role == UserRole.MANAGER:
+        # Managers see their team's visits
+        team_members = await db.users.find({"manager_id": current_user.id}, {"_id": 0}).to_list(100)
+        team_ids = [member["id"] for member in team_members]
+        team_ids.append(current_user.id)  # Include manager's own visits if any
+        query = {"sales_rep_id": {"$in": team_ids}}
+    else:
+        # Admin and others see all visits
+        query = {}
+    
+    visits = await db.visits.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Enrich visits with comprehensive information
+    for visit in visits:
+        # Get sales rep info
+        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
+        visit["sales_rep_name"] = sales_rep["full_name"] if sales_rep else "Unknown"
+        visit["sales_rep_phone"] = sales_rep.get("phone", "")
+        
+        # Get doctor info
+        doctor = await db.doctors.find_one({"id": visit["doctor_id"]}, {"_id": 0})
+        if doctor:
+            visit["doctor_name"] = doctor["name"]
+            visit["doctor_specialty"] = doctor["specialty"]
+            visit["doctor_phone"] = doctor.get("phone", "")
+        else:
+            visit["doctor_name"] = "Unknown"
+            visit["doctor_specialty"] = ""
+            visit["doctor_phone"] = ""
+        
+        # Get clinic info
+        clinic = await db.clinics.find_one({"id": visit["clinic_id"]}, {"_id": 0})
+        if clinic:
+            visit["clinic_name"] = clinic["name"]
+            visit["clinic_address"] = clinic["address"]
+            visit["clinic_type"] = clinic.get("clinic_type", "غير محدد")
+            visit["clinic_phone"] = clinic.get("phone", "")
+        else:
+            visit["clinic_name"] = "Unknown"
+            visit["clinic_address"] = ""
+            visit["clinic_type"] = ""
+            visit["clinic_phone"] = ""
+        
+        # Get voice notes count
+        voice_notes_count = await db.voice_notes.count_documents({"visit_id": visit["id"]})
+        visit["voice_notes_count"] = voice_notes_count
+        
+        # Get orders related to this visit
+        related_orders = await db.orders.find({"visit_id": visit["id"]}, {"_id": 0}).to_list(100)
+        visit["orders_count"] = len(related_orders)
+        visit["total_order_amount"] = sum(order.get("total_amount", 0) for order in related_orders)
+        
+        # Get ratings for this visit
+        doctor_rating = await db.doctor_ratings.find_one({"visit_id": visit["id"]}, {"_id": 0})
+        clinic_rating = await db.clinic_ratings.find_one({"visit_id": visit["id"]}, {"_id": 0})
+        
+        visit["doctor_rating"] = doctor_rating.get("rating") if doctor_rating else None
+        visit["clinic_rating"] = clinic_rating.get("rating") if clinic_rating else None
+        
+        # Calculate visit duration if departure time exists
+        if visit.get("departure_time"):
+            arrival = datetime.fromisoformat(visit["visit_date"].replace('Z', '+00:00'))
+            departure = datetime.fromisoformat(visit["departure_time"].replace('Z', '+00:00'))
+            duration_minutes = (departure - arrival).total_seconds() / 60
+            visit["duration_minutes"] = int(duration_minutes)
+        else:
+            visit["duration_minutes"] = None
+        
+        # Add effectiveness status
+        if visit.get("is_effective") is not None:
+            visit["effectiveness_status"] = "فعالة" if visit["is_effective"] else "غير فعالة"
+        else:
+            visit["effectiveness_status"] = "لم يتم التقييم"
+        
+        # Manager who reviewed if any
+        if visit.get("reviewed_by"):
+            reviewer = await db.users.find_one({"id": visit["reviewed_by"]}, {"_id": 0})
+            visit["reviewed_by_name"] = reviewer["full_name"] if reviewer else "Unknown"
+        else:
+            visit["reviewed_by_name"] = None
+    
+    return visits
+
+@api_router.get("/visits/{visit_id}/details", response_model=Dict[str, Any])
+async def get_visit_details(visit_id: str, current_user: User = Depends(get_current_user)):
+    # Get visit
+    visit = await db.visits.find_one({"id": visit_id}, {"_id": 0})
+    if not visit:
+        raise HTTPException(status_code=404, detail="Visit not found")
+    
+    # Check access permissions
+    if current_user.role == UserRole.SALES_REP and visit["sales_rep_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if current_user.role == UserRole.MANAGER:
+        # Check if sales rep is in manager's team
+        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
+        if sales_rep and sales_rep.get("manager_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Enrich with all detailed information
+    # Get sales rep details
+    sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
+    visit["sales_rep_details"] = {
+        "name": sales_rep["full_name"] if sales_rep else "Unknown",
+        "email": sales_rep.get("email", ""),
+        "phone": sales_rep.get("phone", ""),
+        "employee_id": sales_rep.get("employee_id", "")
+    }
+    
+    # Get doctor details
+    doctor = await db.doctors.find_one({"id": visit["doctor_id"]}, {"_id": 0})
+    visit["doctor_details"] = doctor if doctor else {}
+    
+    # Get clinic details
+    clinic = await db.clinics.find_one({"id": visit["clinic_id"]}, {"_id": 0})
+    visit["clinic_details"] = clinic if clinic else {}
+    
+    # Get voice notes
+    voice_notes = await db.voice_notes.find({"visit_id": visit_id}, {"_id": 0}).to_list(100)
+    for note in voice_notes:
+        # Get creator info
+        creator = await db.users.find_one({"id": note["created_by"]}, {"_id": 0})
+        note["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    visit["voice_notes"] = voice_notes
+    
+    # Get related orders
+    orders = await db.orders.find({"visit_id": visit_id}, {"_id": 0}).to_list(100)
+    for order in orders:
+        # Get order items
+        items = await db.order_items.find({"order_id": order["id"]}, {"_id": 0}).to_list(100)
+        for item in items:
+            product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+            item["product_details"] = product if product else {}
+        order["items"] = items
+    visit["orders"] = orders
+    
+    # Get ratings
+    doctor_rating = await db.doctor_ratings.find_one({"visit_id": visit_id}, {"_id": 0})
+    clinic_rating = await db.clinic_ratings.find_one({"visit_id": visit_id}, {"_id": 0})
+    
+    visit["doctor_rating_details"] = doctor_rating
+    visit["clinic_rating_details"] = clinic_rating
+    
+    return visit
 @api_router.get("/dashboard/sales-rep-stats")
 async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SALES_REP:
