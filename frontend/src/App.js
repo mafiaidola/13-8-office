@@ -2911,7 +2911,7 @@ const VisitRegistration = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/visits`, {
+      const response = await axios.post(`${API}/visits`, {
         doctor_id: selectedDoctor,
         clinic_id: selectedClinic,
         latitude: location.latitude,
