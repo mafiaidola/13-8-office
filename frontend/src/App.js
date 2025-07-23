@@ -2027,27 +2027,21 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <nav className="flex space-x-8 overflow-x-auto" aria-label="Tabs">
+          <nav className="flex space-x-4 overflow-x-auto bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-lg" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'dashboard'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
+              <span className="ml-2">📊</span>
               لوحة التحكم
             </button>
             
             {canAccessTab('users') && (
               <button
                 onClick={() => setActiveTab('users')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'users'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'users' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">👥</span>
                 إدارة المستخدمين
               </button>
             )}
@@ -2055,12 +2049,9 @@ const Dashboard = () => {
             {canAccessTab('warehouse') && (
               <button
                 onClick={() => setActiveTab('warehouse')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'warehouse'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'warehouse' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">🏭</span>
                 إدارة المخازن
               </button>
             )}
@@ -2068,12 +2059,9 @@ const Dashboard = () => {
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('clinic-registration')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'clinic-registration'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'clinic-registration' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">🏥</span>
                 تسجيل عيادة
               </button>
             )}
@@ -2081,12 +2069,9 @@ const Dashboard = () => {
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('order-creation')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'order-creation'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'order-creation' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">📦</span>
                 عمل طلبية
               </button>
             )}
@@ -2094,36 +2079,27 @@ const Dashboard = () => {
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('visit')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'visit'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'visit' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">📝</span>
                 تسجيل زيارة
               </button>
             )}
             
             <button
               onClick={() => setActiveTab('visits')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'visits'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`nav-tab ${activeTab === 'visits' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
+              <span className="ml-2">📋</span>
               سجل الزيارات
             </button>
 
             {canAccessTab('reports') && (
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'reports'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
+                className={`nav-tab ${activeTab === 'reports' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
+                <span className="ml-2">📈</span>
                 التقارير
               </button>
             )}
