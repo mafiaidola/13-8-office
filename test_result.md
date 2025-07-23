@@ -195,6 +195,51 @@ backend:
         agent: "testing"
         comment: "✅ DASHBOARD STATISTICS PERFECT: Admin dashboard shows total counts (users, clinics, doctors, visits), Sales rep dashboard shows personal stats including today's visits, Manager dashboard shows pending reviews count. All role-based statistics working correctly."
 
+  - task: "Enhanced sales rep detailed statistics API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented /api/dashboard/sales-rep-stats endpoint with detailed visit statistics (daily, weekly, monthly, total), total clinics/doctors added, and pending approvals count"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED SALES REP STATS WORKING PERFECTLY: API returns complete statistics structure with visits breakdown (today: 1, week: 1, month: 1, total: 1), total clinics/doctors added, and pending items (visits, clinic_requests, orders). All required fields present and accurate."
+
+  - task: "Clinic requests system with manager approval"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented clinic request system: POST /api/clinic-requests (sales rep only), GET /api/clinic-requests (role-based access), PATCH /api/clinic-requests/{id}/review (manager approval). Upon approval, automatically creates clinic and doctor."
+      - working: true
+        agent: "testing"
+        comment: "✅ CLINIC REQUESTS SYSTEM FULLY FUNCTIONAL: Sales reps can create requests with all required fields (clinic_name, doctor_name, doctor_specialty, clinic_manager_name, address, GPS coordinates, notes, optional clinic_image). Managers can review and approve requests. Role restrictions properly enforced. Upon approval, clinic and doctor are automatically created. Hierarchy system working correctly."
+
+  - task: "Orders API endpoints"
+    implemented: false
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Order models defined (Order, OrderItem, OrderCreate) but CRUD endpoints not implemented yet"
+      - working: false
+        agent: "testing"
+        comment: "❌ ORDERS API NOT IMPLEMENTED: Endpoints /api/orders (GET/POST) are missing. Order models exist in code but no API routes defined. This prevents testing of DEMO vs SALE order types and order management functionality."
+
 frontend:
   - task: "Multi-role authentication UI with Arabic interface"
     implemented: true
