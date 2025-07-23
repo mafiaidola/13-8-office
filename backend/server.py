@@ -441,8 +441,9 @@ async def get_products(current_user: User = Depends(get_current_user)):
 
 @api_router.patch("/products/{product_id}")
 async def update_product(product_id: str, product_data: ProductCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
-        raise HTTPException(status_code=403, detail="Only admin and warehouse managers can update products")
+    # Only Admin can update products - Warehouse managers need admin approval
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update products")
     
     result = await db.products.update_one(
         {"id": product_id},
