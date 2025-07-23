@@ -1620,6 +1620,332 @@ async def get_visit_voice_notes(visit_id: str, current_user: User = Depends(get_
         note["created_by_name"] = creator["full_name"] if creator else "Unknown"
     
     return voice_notes
+
+# Enhanced User Management APIs
+@api_router.get("/users/{user_id}", response_model=Dict[str, Any])
+async def get_user_details(user_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get additional user statistics
+    if user.get("role") == "sales_rep":
+        visits_count = await db.visits.count_documents({"sales_rep_id": user_id})
+        orders_count = await db.orders.count_documents({"sales_rep_id": user_id})
+        user["statistics"] = {
+            "total_visits": visits_count,
+            "total_orders": orders_count
+        }
+    
+    return user
+
+@api_router.patch("/users/{user_id}")
+async def update_user(user_id: str, user_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update users")
+    
+    # Hash password if provided
+    if "password" in user_data:
+        user_data["password_hash"] = pwd_context.hash(user_data["password"])
+        del user_data["password"]
+    
+    user_data["updated_at"] = datetime.utcnow()
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": user_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User updated successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can delete users")
+    
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    result = await db.users.delete_one({"id": user_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User deleted successfully"}
+
+@api_router.patch("/users/{user_id}/toggle-status")
+async def toggle_user_status(user_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can toggle user status")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_status = not user.get("is_active", True)
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_active": new_status, "updated_at": datetime.utcnow()}}
+    )
+    
+    action = "activated" if new_status else "deactivated"
+    return {"message": f"User {action} successfully", "is_active": new_status}
+
+# Gamification System APIs
+@api_router.get("/achievements", response_model=List[Dict[str, Any]])
+async def get_achievements():
+    achievements = await db.achievements.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return achievements
+
+@api_router.get("/users/{user_id}/points", response_model=Dict[str, Any])
+async def get_user_points(user_id: str, current_user: User = Depends(get_current_user)):
+    # Users can view their own points, admins/managers can view any
+    if current_user.id != user_id and current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user_points = await db.user_points.find_one({"user_id": user_id}, {"_id": 0})
+    if not user_points:
+        # Create initial points record
+        user_points = UserPoints(user_id=user_id)
+        await db.user_points.insert_one(user_points.dict())
+        user_points = user_points.dict()
+    
+    # Get recent transactions
+    transactions = await db.points_transactions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(10)
+    
+    user_points["recent_transactions"] = transactions
+    
+    # Get achievements
+    achievements = await db.achievements.find(
+        {"id": {"$in": user_points.get("achievements_unlocked", [])}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    user_points["achievements"] = achievements
+    
+    return user_points
+
+@api_router.post("/users/{user_id}/points")
+async def award_points(user_id: str, points_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    points = points_data["points"]
+    reason = points_data["reason"]
+    activity_type = points_data.get("activity_type", "MANUAL")
+    
+    # Update user points
+    user_points = await db.user_points.find_one({"user_id": user_id})
+    if not user_points:
+        user_points = UserPoints(user_id=user_id)
+        await db.user_points.insert_one(user_points.dict())
+    
+    # Create transaction
+    transaction = PointsTransaction(
+        user_id=user_id,
+        points=points,
+        reason=reason,
+        activity_type=activity_type
+    )
+    await db.points_transactions.insert_one(transaction.dict())
+    
+    # Update totals
+    await db.user_points.update_one(
+        {"user_id": user_id},
+        {
+            "$inc": {
+                "total_points": points,
+                "monthly_points": points,
+                "weekly_points": points,
+                "daily_points": points
+            },
+            "$set": {"last_activity": datetime.utcnow()}
+        }
+    )
+    
+    return {"message": "Points awarded successfully"}
+
+# Doctor Rating APIs
+@api_router.post("/doctors/{doctor_id}/rating")
+async def rate_doctor(doctor_id: str, rating_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can rate doctors")
+    
+    # Check if doctor exists
+    doctor = await db.doctors.find_one({"id": doctor_id})
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    
+    # Check if user already rated this doctor for this visit
+    existing_rating = await db.doctor_ratings.find_one({
+        "doctor_id": doctor_id,
+        "rated_by": current_user.id,
+        "visit_id": rating_data["visit_id"]
+    })
+    
+    if existing_rating:
+        raise HTTPException(status_code=400, detail="Doctor already rated for this visit")
+    
+    rating = DoctorRating(
+        doctor_id=doctor_id,
+        rated_by=current_user.id,
+        visit_id=rating_data["visit_id"],
+        rating=rating_data["rating"],
+        feedback=rating_data.get("feedback"),
+        categories=rating_data.get("categories", {})
+    )
+    
+    await db.doctor_ratings.insert_one(rating.dict())
+    
+    # Award points for rating
+    await award_points_internal(current_user.id, 5, "Doctor rating", "RATING")
+    
+    return {"message": "Doctor rated successfully"}
+
+@api_router.get("/doctors/{doctor_id}/ratings", response_model=List[Dict[str, Any]])
+async def get_doctor_ratings(doctor_id: str, current_user: User = Depends(get_current_user)):
+    ratings = await db.doctor_ratings.find({"doctor_id": doctor_id}, {"_id": 0}).to_list(100)
+    
+    # Enrich with rater info
+    for rating in ratings:
+        rater = await db.users.find_one({"id": rating["rated_by"]}, {"_id": 0})
+        rating["rater_name"] = rater["full_name"] if rater else "Unknown"
+    
+    return ratings
+
+# Clinic Rating APIs (similar structure)
+@api_router.post("/clinics/{clinic_id}/rating")
+async def rate_clinic(clinic_id: str, rating_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can rate clinics")
+    
+    clinic = await db.clinics.find_one({"id": clinic_id})
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    
+    rating = ClinicRating(
+        clinic_id=clinic_id,
+        rated_by=current_user.id,
+        visit_id=rating_data["visit_id"],
+        rating=rating_data["rating"],
+        feedback=rating_data.get("feedback"),
+        categories=rating_data.get("categories", {})
+    )
+    
+    await db.clinic_ratings.insert_one(rating.dict())
+    await award_points_internal(current_user.id, 5, "Clinic rating", "RATING")
+    
+    return {"message": "Clinic rated successfully"}
+
+# Doctor Preferences APIs
+@api_router.get("/doctors/{doctor_id}/preferences", response_model=Dict[str, Any])
+async def get_doctor_preferences(doctor_id: str, current_user: User = Depends(get_current_user)):
+    preferences = await db.doctor_preferences.find_one({"doctor_id": doctor_id}, {"_id": 0})
+    if not preferences:
+        # Create default preferences
+        preferences = DoctorPreferences(
+            doctor_id=doctor_id,
+            updated_by=current_user.id
+        )
+        await db.doctor_preferences.insert_one(preferences.dict())
+        preferences = preferences.dict()
+    
+    return preferences
+
+@api_router.post("/doctors/{doctor_id}/preferences")
+async def update_doctor_preferences(doctor_id: str, preferences_data: dict, current_user: User = Depends(get_current_user)):
+    preferences_data["doctor_id"] = doctor_id
+    preferences_data["updated_by"] = current_user.id
+    preferences_data["updated_at"] = datetime.utcnow()
+    
+    await db.doctor_preferences.update_one(
+        {"doctor_id": doctor_id},
+        {"$set": preferences_data},
+        upsert=True
+    )
+    
+    return {"message": "Doctor preferences updated successfully"}
+
+# Appointment Management APIs
+@api_router.post("/appointments")
+async def create_appointment(appointment_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.SALES_REP:
+        raise HTTPException(status_code=403, detail="Only sales reps can create appointments")
+    
+    appointment = Appointment(
+        sales_rep_id=current_user.id,
+        doctor_id=appointment_data["doctor_id"],
+        clinic_id=appointment_data["clinic_id"],
+        scheduled_date=datetime.fromisoformat(appointment_data["scheduled_date"]),
+        duration_minutes=appointment_data.get("duration_minutes", 30),
+        purpose=appointment_data["purpose"],
+        notes=appointment_data.get("notes")
+    )
+    
+    await db.appointments.insert_one(appointment.dict())
+    
+    # Send notification to sales rep
+    notification = Notification(
+        title="موعد جديد تم حجزه",
+        message=f"تم حجز موعد جديد في {appointment.scheduled_date.strftime('%Y-%m-%d %H:%M')}",
+        type="INFO",
+        recipient_id=current_user.id,
+        data={"appointment_id": appointment.id}
+    )
+    await db.notifications.insert_one(notification.dict())
+    
+    return {"message": "Appointment created successfully", "appointment_id": appointment.id}
+
+@api_router.get("/appointments", response_model=List[Dict[str, Any]])
+async def get_appointments(current_user: User = Depends(get_current_user)):
+    if current_user.role == UserRole.SALES_REP:
+        appointments = await db.appointments.find({"sales_rep_id": current_user.id}, {"_id": 0}).to_list(100)
+    else:
+        appointments = await db.appointments.find({}, {"_id": 0}).to_list(100)
+    
+    # Enrich with doctor and clinic info
+    for appointment in appointments:
+        doctor = await db.doctors.find_one({"id": appointment["doctor_id"]}, {"_id": 0})
+        clinic = await db.clinics.find_one({"id": appointment["clinic_id"]}, {"_id": 0})
+        
+        appointment["doctor_name"] = doctor["name"] if doctor else "Unknown"
+        appointment["clinic_name"] = clinic["name"] if clinic else "Unknown"
+    
+    return appointments
+
+# Utility function for awarding points
+async def award_points_internal(user_id: str, points: int, reason: str, activity_type: str):
+    transaction = PointsTransaction(
+        user_id=user_id,
+        points=points,
+        reason=reason,
+        activity_type=activity_type
+    )
+    await db.points_transactions.insert_one(transaction.dict())
+    
+    await db.user_points.update_one(
+        {"user_id": user_id},
+        {
+            "$inc": {
+                "total_points": points,
+                "monthly_points": points,
+                "weekly_points": points,
+                "daily_points": points
+            },
+            "$set": {"last_activity": datetime.utcnow()}
+        },
+        upsert=True
+    )
 @api_router.get("/dashboard/sales-rep-stats")
 async def get_sales_rep_detailed_stats(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.SALES_REP:
