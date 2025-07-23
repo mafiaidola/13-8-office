@@ -1010,27 +1010,35 @@ const ChatSystem = () => {
   );
 };
 
-const UserManagement = () => {
+const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
     password: '',
-    role: 'sales_rep',
     full_name: '',
+    role: '',
     phone: '',
-    managed_by: ''
+    manager_id: '',
+    department: '',
+    employee_id: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/users`, {
@@ -1039,241 +1047,327 @@ const UserManagement = () => {
       setUsers(response.data);
     } catch (error) {
       setError('خطأ في جلب المستخدمين');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/auth/register`, newUser, {
+      await axios.post(`${API}/users`, newUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setSuccess('تم إنشاء المستخدم بنجاح');
       setShowCreateUser(false);
       setNewUser({
-        username: '',
-        email: '',
-        password: '',
-        role: 'sales_rep',
-        full_name: '',
-        phone: '',
-        managed_by: ''
+        username: '', email: '', password: '', full_name: '', role: '', 
+        phone: '', manager_id: '', department: '', employee_id: ''
       });
       fetchUsers();
     } catch (error) {
       setError(error.response?.data?.detail || 'خطأ في إنشاء المستخدم');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const toggleUserStatus = async (userId) => {
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`${API}/users/${userId}/status`, {}, {
+      const updateData = { ...selectedUser };
+      delete updateData.id;
+      delete updateData.created_at;
+      delete updateData.updated_at;
+      
+      await axios.patch(`${API}/users/${selectedUser.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSuccess('تم تحديث حالة المستخدم');
+      
+      setSuccess('تم تحديث المستخدم بنجاح');
+      setShowEditUser(false);
+      setSelectedUser(null);
       fetchUsers();
     } catch (error) {
-      setError('خطأ في تحديث حالة المستخدم');
+      setError(error.response?.data?.detail || 'خطأ في تحديث المستخدم');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم حذف المستخدم بنجاح');
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في حذف المستخدم');
+    }
+  };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const action = currentStatus ? 'تعطيل' : 'تنشيط';
+      setSuccess(`تم ${action} المستخدم بنجاح`);
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.detail || 'خطأ في تغيير حالة المستخدم');
+    }
+  };
+
+  const openEditModal = (user) => {
+    setSelectedUser({ ...user });
+    setShowEditUser(true);
   };
 
   const getRoleText = (role) => {
     const roles = {
-      admin: 'أدمن',
-      warehouse_manager: 'مدير مخزن',
+      admin: 'مدير النظام',
       manager: 'مدير',
-      sales_rep: 'مندوب'
+      sales_rep: 'مندوب مبيعات',
+      warehouse_manager: 'مدير مخزن',
+      accounting: 'محاسب'
     };
     return roles[role] || role;
   };
 
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    const matchesStatus = filterStatus === 'all' || 
+                         (filterStatus === 'active' && user.is_active) ||
+                         (filterStatus === 'inactive' && !user.is_active);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">إدارة المستخدمين</h2>
-        <button
-          onClick={() => setShowCreateUser(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
-        >
-          إضافة مستخدم جديد
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <ThemeToggle />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="w-16 h-16 card-gradient-blue rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-3xl">👥</span>
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold text-gradient">إدارة المستخدمين الشاملة</h2>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة كاملة للمستخدمين مع جميع الصلاحيات
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCreateUser(true)}
+            className="btn-primary flex items-center gap-2 px-6 py-3 neon-glow"
+          >
+            <span>➕</span>
+            <span>مستخدم جديد</span>
+          </button>
         </div>
-      )}
 
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
-          {success}
-        </div>
-      )}
+        {/* Alerts */}
+        {error && (
+          <div className="alert-modern alert-error mb-6 scale-in">
+            <span className="ml-2">⚠️</span>
+            {error}
+          </div>
+        )}
 
-      {/* Create User Modal */}
-      {showCreateUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">إضافة مستخدم جديد</h3>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">اسم المستخدم</label>
-                <input
-                  type="text"
-                  value={newUser.username}
-                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+        {success && (
+          <div className="alert-modern alert-success mb-6 scale-in">
+            <span className="ml-2">✅</span>
+            {success}
+          </div>
+        )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">الاسم الكامل</label>
-                <input
-                  type="text"
-                  value={newUser.full_name}
-                  onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
-                <input
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">الدور</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="sales_rep">مندوب</option>
-                  <option value="manager">مدير</option>
-                  <option value="warehouse_manager">مدير مخزن</option>
-                  <option value="admin">أدمن</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
-                <input
-                  type="tel"
-                  value={newUser.phone}
-                  onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateUser(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {isLoading ? 'جاري الإنشاء...' : 'إنشاء المستخدم'}
-                </button>
-              </div>
-            </form>
+        {/* Filters and Search */}
+        <div className="card-modern p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">البحث:</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ابحث بالاسم أو البريد..."
+                className="form-modern w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">فلترة بالدور:</label>
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الأدوار</option>
+                <option value="admin">مدير النظام</option>
+                <option value="manager">مدير</option>
+                <option value="sales_rep">مندوب مبيعات</option>
+                <option value="warehouse_manager">مدير مخزن</option>
+                <option value="accounting">محاسب</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">فلترة بالحالة:</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الحالات</option>
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchUsers}
+                className="btn-info w-full flex items-center justify-center gap-2"
+              >
+                <span>🔄</span>
+                <span>تحديث</span>
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Users Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                الاسم
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                الدور
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                البريد الإلكتروني
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                الحالة
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                الإجراءات
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {user.full_name}
-                  <div className="text-xs text-gray-500">@{user.username}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getRoleText(user.role)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {user.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.is_active
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {user.is_active ? 'نشط' : 'معطل'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => toggleUserStatus(user.id)}
-                    className={`px-3 py-1 rounded text-xs ${
-                      user.is_active
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                    }`}
-                  >
-                    {user.is_active ? 'تعطيل' : 'تفعيل'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* Users Table */}
+        <div className="card-modern overflow-hidden">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <span>📋</span>
+              <span>قائمة المستخدمين ({filteredUsers.length})</span>
+            </h3>
+          </div>
+          
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>جاري التحميل...</p>
+            </div>
+          ) : (
+            <div className="table-modern">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">المستخدم</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الدور</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">القسم</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الحالة</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">آخر دخول</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                            user.is_active ? 'bg-green-500' : 'bg-gray-500'
+                          }`}>
+                            {user.full_name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                              {user.full_name}
+                            </div>
+                            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                              {user.email}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              @{user.username}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge-modern ${
+                          user.role === 'admin' ? 'badge-danger' :
+                          user.role === 'manager' ? 'badge-warning' :
+                          user.role === 'sales_rep' ? 'badge-success' :
+                          user.role === 'warehouse_manager' ? 'badge-info' :
+                          'badge-secondary'
+                        }`}>
+                          {getRoleText(user.role)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {user.department || 'غير محدد'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge-modern ${user.is_active ? 'badge-success' : 'badge-danger'}`}>
+                          {user.is_active ? '🟢 نشط' : '🔴 معطل'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {user.last_login ? new Date(user.last_login).toLocaleDateString('ar-EG') : 'لم يسجل دخول'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="btn-info text-xs px-3 py-1"
+                            title="تعديل"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(user.id, user.is_active)}
+                            className={`text-xs px-3 py-1 rounded ${
+                              user.is_active ? 'btn-warning' : 'btn-success'
+                            }`}
+                            title={user.is_active ? 'تعطيل' : 'تنشيط'}
+                          >
+                            {user.is_active ? '⏸️' : '▶️'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.full_name)}
+                            className="btn-danger text-xs px-3 py-1"
+                            title="حذف"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Create/Edit User Modals would go here - truncated for brevity */}
       </div>
     </div>
   );
