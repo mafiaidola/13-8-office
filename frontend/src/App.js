@@ -1429,18 +1429,6 @@ const EnhancedVisitsLog = () => {
     setFilteredVisits(filtered);
   };
 
-  const getEffectivenessColor = (effectiveness) => {
-    if (effectiveness === true) return 'text-green-600';
-    if (effectiveness === false) return 'text-red-600';
-    return 'text-gray-500';
-  };
-
-  const getEffectivenessText = (effectiveness) => {
-    if (effectiveness === true) return '✅ فعالة';
-    if (effectiveness === false) return '❌ غير فعالة';
-    return '⏳ لم يتم التقييم';
-  };
-
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <ThemeToggle />
