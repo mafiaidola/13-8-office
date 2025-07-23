@@ -3132,12 +3132,6 @@ const WarehouseManagement = () => {
 };
 
 // Helper Components and Sub-systems
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowCreateUser(true)}
-            className="btn-primary flex items-center gap-2 px-6 py-3 neon-glow"
           >
             <span>➕</span>
             <span>مستخدم جديد</span>
