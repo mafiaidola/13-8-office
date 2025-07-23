@@ -863,41 +863,133 @@ const WarehouseManagement = () => {
       )}
     </div>
   );
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في تحديث المخزون');
-    }
-  };
+
+  // Pending Orders Component
+  const PendingOrdersPage = () => (
+    <div className="space-y-6 page-transition">
+      <div className="flex items-center mb-8">
+        <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
+          <span className="text-3xl">⏳</span>
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gradient">الطلبات المنتظرة</h2>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>طلبات تحتاج إلى المراجعة والتنفيذ</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6">
+        {pendingOrders.map((order) => (
+          <div key={order.id} className="card-modern p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المندوب:</span>
+                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.sales_rep_name}</p>
+              </div>
+              <div>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>العيادة:</span>
+                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.clinic_name}</p>
+              </div>
+              <div>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المبلغ الإجمالي:</span>
+                <p className="font-semibold text-green-600">{order.total_amount} ج.م</p>
+              </div>
+              <div>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>موافقة المدير:</span>
+                <span className={`badge-modern ${order.manager_approved ? 'badge-success' : 'badge-warning'}`}>
+                  {order.manager_approved ? '✅ تمت الموافقة' : '⏳ في الانتظار'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4" style={{ borderColor: 'var(--accent-bg)' }}>
+              <h4 className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>المنتجات المطلوبة:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {order.items?.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 glass-effect rounded-lg">
+                    {item.product_image && (
+                      <img 
+                        src={item.product_image} 
+                        alt={item.product_name}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.product_name}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        الكمية: {item.quantity} {item.product_unit} | السعر: {item.unit_price} ج.م
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <ThemeToggle />
+      <div className="container mx-auto px-4 py-8">
+        {error && (
+          <div className="alert-modern alert-error mb-6 scale-in">
+            <span className="ml-2">⚠️</span>
+            {error}
+          </div>
+        )}
 
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-          {success}
-        </div>
-      )}
+        {success && (
+          <div className="alert-modern alert-success mb-6 scale-in">
+            <span className="ml-2">✅</span>
+            {success}
+          </div>
+        )}
 
-      {/* Products Section */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-4 mb-8">
           <button
-            onClick={() => setShowCreateProduct(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+            onClick={() => setActiveTab('dashboard')}
+            className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''} flex items-center`}
           >
-            إضافة منتج جديد
+            <span className="ml-2">📊</span>
+            لوحة التحكم
+          </button>
+          <button
+            onClick={() => setActiveTab('inventory')}
+            className={`nav-tab ${activeTab === 'inventory' ? 'active' : ''} flex items-center`}
+          >
+            <span className="ml-2">📦</span>
+            إدارة المخزن
+          </button>
+          <button
+            onClick={() => setActiveTab('pending-orders')}
+            className={`nav-tab ${activeTab === 'pending-orders' ? 'active' : ''} flex items-center`}
+          >
+            <span className="ml-2">⏳</span>
+            الطلبات المنتظرة
+            {pendingOrders.length > 0 && (
+              <span className="badge-modern badge-warning mr-2">{pendingOrders.length}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('warehouse-log')}
+            className={`nav-tab ${activeTab === 'warehouse-log' ? 'active' : ''} flex items-center`}
+          >
+            <span className="ml-2">📋</span>
+            سجل المخزن
           </button>
         </div>
 
-        {/* Create Product Modal */}
-        {showCreateProduct && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && <WarehouseDashboard />}
+        {activeTab === 'pending-orders' && <PendingOrdersPage />}
+        
+        {/* Add remaining tabs content here */}
+      </div>
+    </div>
+  );
               <h3 className="text-lg font-semibold mb-4">إضافة منتج جديد</h3>
               <form onSubmit={handleCreateProduct} className="space-y-4">
                 <div>
