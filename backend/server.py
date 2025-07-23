@@ -2525,7 +2525,7 @@ async def global_search(q: str, current_user: dict = Depends(get_current_user)):
                 {"username": {"$regex": q, "$options": "i"}},
                 {"email": {"$regex": q, "$options": "i"}}
             ]
-        }).limit(5).to_list(None)
+        }, {"_id": 0, "password_hash": 0}).limit(5).to_list(None)
         results["users"] = users
         
         # Search clinics
@@ -2534,7 +2534,7 @@ async def global_search(q: str, current_user: dict = Depends(get_current_user)):
                 {"name": {"$regex": q, "$options": "i"}},
                 {"address": {"$regex": q, "$options": "i"}}
             ]
-        }).limit(5).to_list(None)
+        }, {"_id": 0}).limit(5).to_list(None)
         results["clinics"] = clinics
         
         # Search doctors
@@ -2543,7 +2543,7 @@ async def global_search(q: str, current_user: dict = Depends(get_current_user)):
                 {"name": {"$regex": q, "$options": "i"}},
                 {"specialty": {"$regex": q, "$options": "i"}}
             ]
-        }).limit(5).to_list(None)
+        }, {"_id": 0}).limit(5).to_list(None)
         results["doctors"] = doctors
         
         # Search products
@@ -2552,7 +2552,7 @@ async def global_search(q: str, current_user: dict = Depends(get_current_user)):
                 {"name": {"$regex": q, "$options": "i"}},
                 {"description": {"$regex": q, "$options": "i"}}
             ]
-        }).limit(5).to_list(None)
+        }, {"_id": 0}).limit(5).to_list(None)
         results["products"] = products
         
         return results
