@@ -2786,6 +2786,10 @@ const VisitRegistration = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [voiceNotes, setVoiceNotes] = useState([]);
+  const [currentVisitId, setCurrentVisitId] = useState(null);
 
   useEffect(() => {
     fetchDoctors();
@@ -2808,6 +2812,65 @@ const VisitRegistration = () => {
       );
     } else {
       setError('المتصفح لا يدعم تحديد الموقع');
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Audio = reader.result;
+          if (currentVisitId) {
+            await addVoiceNote(currentVisitId, base64Audio, blob.size / 1000); // duration in seconds estimate
+          } else {
+            // Store temporarily until visit is created
+            setVoiceNotes([...voiceNotes, { audio: base64Audio, duration: blob.size / 1000 }]);
+          }
+        };
+        reader.readAsDataURL(blob);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setError('خطأ في بدء تسجيل الصوت');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
+  const addVoiceNote = async (visitId, audioData, duration) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/visits/${visitId}/voice-notes`, {
+        audio_data: audioData,
+        duration: Math.round(duration)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess('تم إضافة الملاحظة الصوتية بنجاح');
+    } catch (error) {
+      console.error('Error adding voice note:', error);
+      setError('خطأ في إضافة الملاحظة الصوتية');
     }
   };
 
