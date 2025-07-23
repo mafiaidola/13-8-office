@@ -243,6 +243,78 @@ backend:
         agent: "testing"
         comment: "✅ ORDERS API FULLY FUNCTIONAL: Comprehensive testing completed with 100% success rate (12/12 tests passed). All three endpoints working perfectly: 1) POST /api/orders - Creates DEMO and SALE orders with proper validation (visit_id, doctor_id, clinic_id, warehouse_id, order_type, items array, notes) 2) GET /api/orders - Role-based access (sales reps see own orders, managers see subordinate orders) with enriched data (sales_rep_name, doctor_name, clinic_name, warehouse_name, product_names) 3) PATCH /api/orders/{id}/review - Manager approval/rejection with automatic inventory updates and stock movement tracking. Inventory correctly reduced from 100 to 97 units after DEMO order approval. Role restrictions properly enforced (only sales reps create orders, only managers approve). Order validation working (rejects invalid data). System handles insufficient stock scenarios correctly."
 
+  - task: "Updated warehouse manager permissions system"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WAREHOUSE MANAGER PERMISSIONS UPDATED: Comprehensive testing confirmed warehouse managers can no longer create/delete products without admin approval. Permission restrictions working correctly - warehouse managers receive 403 Forbidden when attempting product creation. Only admin role can create/update/delete products. Role hierarchy properly enforced."
+
+  - task: "Enhanced product model with Egyptian features"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED PRODUCT MODEL WORKING PERFECTLY: All Egyptian market features implemented and tested successfully. Products must have EGP currency (enforced), base64 image support working, price_before_discount and discount_percentage fields functional with automatic price calculation (tested 150 EGP with 15% discount = 127.5 EGP final price), admin approval required for all products. Product creation API updated to use new ProductCreate model with all required fields."
+
+  - task: "New warehouse statistics API endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WAREHOUSE STATISTICS API FULLY FUNCTIONAL: `/api/dashboard/warehouse-stats` endpoint working perfectly with comprehensive statistics. Returns complete data structure: total_warehouses, available_products, orders breakdown (today/week/month), total_products, low_stock_products, withdrawn_products, product_categories breakdown, and warehouses list. Role-based access properly enforced (only warehouse managers can access). API provides real-time statistics for warehouse management dashboard."
+
+  - task: "Pending orders API for warehouse managers"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PENDING ORDERS API WORKING CORRECTLY: `/api/orders/pending` endpoint functional and properly restricted to warehouse managers only. Returns approved orders awaiting fulfillment with enriched data including sales_rep_name, doctor_name, clinic_name, warehouse_name, manager_approved status, and detailed product information in items array. API correctly filters orders by warehouse manager's assigned warehouses and provides all necessary data for order fulfillment workflow."
+
+  - task: "Warehouse movement history API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WAREHOUSE MOVEMENT HISTORY API EXCELLENT: `/api/warehouses/{warehouse_id}/movements` endpoint working with detailed stock movement tracking. Returns enriched movement data with product_name, product_unit, created_by_name, movement_type, quantity, reason, and order_info when applicable. Movements properly sorted by creation date (newest first). Access control working correctly - only admin and warehouse managers can access, with warehouse managers restricted to their assigned warehouses."
+
+  - task: "Updated warehouse model with warehouse_number field"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WAREHOUSE NUMBER FIELD VALIDATION WORKING: Updated warehouse model includes warehouse_number field with proper validation (1-5 range enforced). Warehouse creation correctly validates unique warehouse numbers and rejects invalid numbers outside 1-5 range with appropriate error messages. Database properly stores warehouse_number and API returns it in warehouse listings. Validation prevents duplicate warehouse numbers as expected."
+
 frontend:
   - task: "Multi-role authentication UI with Arabic interface"
     implemented: true
