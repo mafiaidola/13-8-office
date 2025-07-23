@@ -1844,6 +1844,28 @@ class BackendTester:
         self.test_warehouse_number_field()
         self.test_role_access_restrictions()
         
+        # PHASE 1 ENHANCEMENT TESTS - New Features Testing
+        print("🚀 PHASE 1 ENHANCEMENT TESTS")
+        print("-" * 30)
+        self.test_system_settings_get_default()
+        self.test_system_settings_post_admin_only()
+        self.test_system_settings_non_admin_denied()
+        self.test_notifications_get_user_notifications()
+        self.test_notifications_post_send_notification()
+        self.test_notifications_types_validation()
+        self.test_notifications_mark_as_read()
+        self.test_conversations_get_user_conversations()
+        self.test_conversations_post_create_conversation()
+        self.test_conversations_get_messages()
+        self.test_conversations_post_send_message()
+        self.test_conversations_voice_message()
+        self.test_conversations_participant_access_control()
+        self.test_voice_notes_add_to_visit()
+        self.test_voice_notes_get_from_visit()
+        self.test_voice_notes_access_control()
+        self.test_enhanced_visit_model_voice_notes_support()
+        self.test_base64_audio_storage_retrieval()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
