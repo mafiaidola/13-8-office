@@ -637,8 +637,9 @@ async def get_inventory_report(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/reports/users")
 async def get_users_report(current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
-        raise HTTPException(status_code=403, detail="Access denied")
+    # Only Admin can access user reports - warehouse managers cannot access this
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access user reports")
     
     users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     
