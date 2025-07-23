@@ -684,10 +684,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Chat System" 
     - "Enhanced Visit Registration with Voice Notes"
   stuck_tasks:
-    - "Chat System"
     - "Enhanced Visit Registration with Voice Notes"
   test_all: false
   test_priority: "stuck_first"
