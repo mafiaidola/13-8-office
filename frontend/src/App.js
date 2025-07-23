@@ -998,7 +998,12 @@ const WarehouseManagement = () => {
     </div>
   );
 };
-              <h3 className="text-lg font-semibold mb-4">إضافة منتج جديد</h3>
+
+// Product Creation Component (moved to proper location)
+const ProductCreation = () => {
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-4">إضافة منتج جديد</h3>
               <form onSubmit={handleCreateProduct} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">اسم المنتج</label>
