@@ -3309,6 +3309,14 @@ const Dashboard = () => {
         {activeTab === 'reports' && canAccessTab('reports') && (
           <ReportsSection />
         )}
+        
+        {activeTab === 'chat' && (
+          <ChatSystem />
+        )}
+        
+        {activeTab === 'settings' && user.role === 'admin' && (
+          <SystemSettings />
+        )}
         </div>
       </div>
     </>
