@@ -3540,6 +3540,323 @@ const OfflineStatus = () => {
 };
 
 // Accounting Role Component
+const AccountingDashboard = () => {
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [approvedOrders, setApprovedOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalNotes, setApprovalNotes] = useState('');
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch pending orders (manager approved, waiting for accounting)
+      const pendingRes = await axios.get(`${API}/orders?status=MANAGER_APPROVED`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingOrders(pendingRes.data);
+
+      // Fetch accounting approved orders
+      const approvedRes = await axios.get(`${API}/orders?status=ACCOUNTING_APPROVED`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApprovedOrders(approvedRes.data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const approveOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/orders/${orderId}/approve`, {
+        notes: approvalNotes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setShowApprovalModal(false);
+      setApprovalNotes('');
+      setSelectedOrder(null);
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error approving order:', error);
+      alert('خطأ في الموافقة على الطلبية');
+    }
+  };
+
+  const getOrderTotal = (order) => {
+    return order.items?.reduce((total, item) => total + (item.price * item.quantity), 0) || 0;
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="w-16 h-16 card-gradient-yellow rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-3xl">💰</span>
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold text-gradient">لوحة تحكم المحاسبة</h2>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                مراجعة وموافقة الطلبيات المالية
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-orange-600">{pendingOrders.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبيات تحتاج موافقة</div>
+          </div>
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">{approvedOrders.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبيات تمت الموافقة عليها</div>
+          </div>
+          <div className="card-modern p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">
+              {pendingOrders.reduce((total, order) => total + getOrderTotal(order), 0).toLocaleString()} ريال
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي القيمة المعلقة</div>
+          </div>
+        </div>
+
+        {/* Pending Orders for Approval */}
+        <div className="card-modern mb-8">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <span>⏳</span>
+              <span>طلبيات تحتاج موافقة المحاسبة ({pendingOrders.length})</span>
+            </h3>
+          </div>
+          
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+              <p style={{ color: 'var(--text-secondary)' }}>جاري التحميل...</p>
+            </div>
+          ) : (
+            <div className="table-modern">
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">رقم الطلبية</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">المندوب</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">العيادة</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">القيمة الإجمالية</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">تاريخ الإنشاء</th>
+                    <th className="px-6 py-4 text-right text-sm font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          #{order.id.substring(0, 8)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div style={{ color: 'var(--text-primary)' }}>
+                          {order.sales_rep_name || 'غير محدد'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div style={{ color: 'var(--text-primary)' }}>
+                          {order.clinic_name || 'غير محدد'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-lg font-bold text-green-600">
+                          {getOrderTotal(order).toLocaleString()} ريال
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(order.created_at).toLocaleDateString('ar-EG')}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowApprovalModal(true);
+                            }}
+                            className="btn-success text-xs px-3 py-1"
+                            title="موافقة"
+                          >
+                            ✅ موافقة
+                          </button>
+                          <button
+                            className="btn-info text-xs px-3 py-1"
+                            title="تفاصيل"
+                          >
+                            👁️ تفاصيل
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Approved Orders */}
+        <div className="card-modern">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+            <h3 className="text-xl font-bold flex items-center gap-3">
+              <span>✅</span>
+              <span>طلبيات تمت الموافقة عليها ({approvedOrders.length})</span>
+            </h3>
+          </div>
+          
+          <div className="table-modern">
+            <table className="min-w-full">
+              <thead>
+                <tr>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">رقم الطلبية</th>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">المندوب</th>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">العيادة</th>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">القيمة الإجمالية</th>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">تاريخ الموافقة</th>
+                  <th className="px-6 py-4 text-right text-sm font-bold uppercase">الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {approvedOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        #{order.id.substring(0, 8)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div style={{ color: 'var(--text-primary)' }}>
+                        {order.sales_rep_name || 'غير محدد'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div style={{ color: 'var(--text-primary)' }}>
+                        {order.clinic_name || 'غير محدد'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-lg font-bold text-green-600">
+                        {getOrderTotal(order).toLocaleString()} ريال
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {order.approved_at_accounting ? 
+                          new Date(order.approved_at_accounting).toLocaleDateString('ar-EG') : 
+                          'غير محدد'
+                        }
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="badge-modern badge-success">
+                        في انتظار المخزن
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Approval Modal */}
+        {showApprovalModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="modal-modern p-8 w-full max-w-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gradient">💰 موافقة الطلبية</h3>
+                <button
+                  onClick={() => setShowApprovalModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Order Details */}
+                <div className="card-modern p-4">
+                  <h4 className="font-bold mb-3">تفاصيل الطلبية:</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">رقم الطلبية:</span>
+                      <span className="mr-2">#{selectedOrder.id.substring(0, 8)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">المندوب:</span>
+                      <span className="mr-2">{selectedOrder.sales_rep_name}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">العيادة:</span>
+                      <span className="mr-2">{selectedOrder.clinic_name}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">إجمالي القيمة:</span>
+                      <span className="mr-2 text-green-600 font-bold">
+                        {getOrderTotal(selectedOrder).toLocaleString()} ريال
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Approval Notes */}
+                <div>
+                  <label className="block text-sm font-bold mb-2">ملاحظات الموافقة:</label>
+                  <textarea
+                    value={approvalNotes}
+                    onChange={(e) => setApprovalNotes(e.target.value)}
+                    rows={4}
+                    className="form-modern w-full"
+                    placeholder="أضف أي ملاحظات خاصة بالموافقة المالية..."
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => approveOrder(selectedOrder.id)}
+                    className="btn-success flex-1 flex items-center justify-center gap-2"
+                  >
+                    <span>✅</span>
+                    <span>الموافقة على الطلبية</span>
+                  </button>
+                  <button
+                    onClick={() => setShowApprovalModal(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Warehouse Management Component
 
 // Warehouse Management Component
 // Enhanced Warehouse Management Component  
