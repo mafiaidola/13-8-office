@@ -1684,6 +1684,19 @@ const EnhancedVisitsLog = () => {
   );
 };
 
+// Helper functions for visit effectiveness
+const getEffectivenessColor = (effectiveness) => {
+  if (effectiveness === true) return 'text-green-600';
+  if (effectiveness === false) return 'text-red-600';
+  return 'text-gray-500';
+};
+
+const getEffectivenessText = (effectiveness) => {
+  if (effectiveness === true) return '✅ فعالة';
+  if (effectiveness === false) return '❌ غير فعالة';
+  return '⏳ لم يتم التقييم';
+};
+
 // Visit Details Modal Component
 const VisitDetailsModal = ({ visit, onClose }) => {
   return (
