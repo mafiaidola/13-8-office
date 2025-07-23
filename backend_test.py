@@ -788,9 +788,14 @@ class BackendTester:
         print("-" * 30)
         self.test_admin_login()
         self.test_jwt_token_validation()
-        self.test_create_sales_rep_user()
-        self.test_create_manager_user()
+        self.test_create_manager_user()  # Create manager first
+        self.test_create_sales_rep_user()  # Then sales rep with proper hierarchy
         self.test_role_based_access()
+        
+        # Setup Test Data
+        print("🔧 SETUP TEST DATA")
+        print("-" * 30)
+        self.setup_test_products_and_warehouses()
         
         # Clinic Management Tests
         print("🏥 CLINIC MANAGEMENT TESTS")
