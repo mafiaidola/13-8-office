@@ -187,7 +187,7 @@ const LoginPage = () => {
   };
 
   return (
-    <>
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <ThemeToggle />
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="floating">
