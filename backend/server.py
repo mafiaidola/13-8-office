@@ -2784,7 +2784,7 @@ async def sync_offline_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/qr/generate")
+@api_router.post("/qr/generate")
 async def generate_qr_code(
     qr_data: dict,
     current_user: dict = Depends(get_current_user)
@@ -2845,7 +2845,7 @@ async def generate_qr_code(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/qr/scan")
+@api_router.post("/qr/scan")
 async def process_qr_scan(
     scan_data: dict,
     current_user: dict = Depends(get_current_user)
