@@ -2397,7 +2397,8 @@ const Dashboard = () => {
         {activeTab === 'reports' && canAccessTab('reports') && (
           <ReportsSection />
         )}
-      </div>
+        </div>
+      </>
     </div>
   );
 };
