@@ -1303,6 +1303,17 @@ class BackendTester:
         self.test_create_order_demo()
         self.test_create_order_sale()
         
+        # NEW ENHANCEMENT TESTS - Focus on review request requirements
+        print("🔥 NEW ENHANCEMENT TESTS")
+        print("-" * 30)
+        self.test_warehouse_manager_product_permissions()
+        self.test_enhanced_product_model_egyptian_features()
+        self.test_warehouse_statistics_api()
+        self.test_pending_orders_api()
+        self.test_warehouse_movement_history_api()
+        self.test_warehouse_number_field()
+        self.test_role_access_restrictions()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
