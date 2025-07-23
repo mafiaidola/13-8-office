@@ -1010,7 +1010,315 @@ const ChatSystem = () => {
   );
 };
 
-const UserManagement = () => {
+// Enhanced Admin Statistics Dashboard
+const AdminStatsDashboard = () => {
+  const [stats, setStats] = useState({});
+  const [weeklyComparison, setWeeklyComparison] = useState({});
+  const [monthlyComparison, setMonthlyComparison] = useState({});
+  const [activeManagers, setActiveManagers] = useState([]);
+  const [activeSalesReps, setActiveSalesReps] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEnhancedStats();
+  }, []);
+
+  const fetchEnhancedStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch all stats in parallel
+      const [statsRes, usersRes, visitsRes, ordersRes] = await Promise.all([
+        axios.get(`${API}/dashboard/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/users`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/visits`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/orders`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      setStats(statsRes.data);
+      
+      // Calculate manager and sales rep statistics
+      const users = usersRes.data;
+      const visits = visitsRes.data;
+      const orders = ordersRes.data;
+      
+      const managers = users.filter(u => u.role === 'manager');
+      const salesReps = users.filter(u => u.role === 'sales_rep');
+      
+      // Enhanced manager stats
+      const managerStats = managers.map(manager => {
+        const managedReps = salesReps.filter(rep => rep.manager_id === manager.id);
+        const managerOrders = orders.filter(order => 
+          order.approved_by === manager.id || 
+          managedReps.some(rep => rep.id === order.sales_rep_id)
+        );
+        const approvedOrders = managerOrders.filter(order => order.status === 'APPROVED');
+        const teamVisits = visits.filter(visit => 
+          managedReps.some(rep => rep.id === visit.sales_rep_id)
+        );
+
+        return {
+          ...manager,
+          team_size: managedReps.length,
+          total_orders_managed: managerOrders.length,
+          approved_orders: approvedOrders.length,
+          approval_rate: managerOrders.length > 0 ? (approvedOrders.length / managerOrders.length * 100).toFixed(1) : 0,
+          team_visits: teamVisits.length,
+          is_active: teamVisits.some(visit => {
+            const visitDate = new Date(visit.created_at);
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            return visitDate > oneWeekAgo;
+          })
+        };
+      });
+
+      // Enhanced sales rep stats
+      const salesRepStats = salesReps.map(rep => {
+        const repVisits = visits.filter(visit => visit.sales_rep_id === rep.id);
+        const repOrders = orders.filter(order => order.sales_rep_id === rep.id);
+        const thisWeekVisits = repVisits.filter(visit => {
+          const visitDate = new Date(visit.created_at);
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          return visitDate > oneWeekAgo;
+        });
+
+        return {
+          ...rep,
+          total_visits: repVisits.length,
+          total_orders: repOrders.length,
+          this_week_visits: thisWeekVisits.length,
+          is_active: thisWeekVisits.length > 0,
+          last_visit: repVisits.length > 0 ? repVisits[repVisits.length - 1].created_at : null
+        };
+      });
+
+      setActiveManagers(managerStats);
+      setActiveSalesReps(salesRepStats);
+      
+    } catch (error) {
+      console.error('Error fetching enhanced stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 page-transition">
+        <div className="flex items-center mb-8">
+          <div className="w-16 h-16 loading-shimmer rounded-full ml-4"></div>
+          <div>
+            <div className="w-48 h-8 loading-shimmer rounded mb-2"></div>
+            <div className="w-64 h-4 loading-shimmer rounded"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="loading-shimmer h-32 rounded-xl"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 page-transition">
+      {/* Header */}
+      <div className="flex items-center mb-8">
+        <div className="w-16 h-16 card-gradient-blue rounded-full flex items-center justify-center ml-4 glow-pulse">
+          <span className="text-3xl">📊</span>
+        </div>
+        <div>
+          <h2 className="text-4xl font-bold text-gradient">إحصائيات النظام الشاملة</h2>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+            نظرة شاملة على أداء النظام والفرق
+          </p>
+        </div>
+      </div>
+
+      {/* Main Statistics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Object.entries(stats).map(([key, value]) => {
+          const statConfig = {
+            total_users: { title: 'إجمالي المستخدمين', icon: '👥', color: 'text-blue-600', bg: 'bg-gradient-to-r from-blue-500 to-blue-600' },
+            total_clinics: { title: 'إجمالي العيادات', icon: '🏥', color: 'text-green-600', bg: 'bg-gradient-to-r from-green-500 to-green-600' },
+            total_doctors: { title: 'إجمالي الأطباء', icon: '⚕️', color: 'text-purple-600', bg: 'bg-gradient-to-r from-purple-500 to-purple-600' },
+            total_visits: { title: 'إجمالي الزيارات', icon: '📋', color: 'text-indigo-600', bg: 'bg-gradient-to-r from-indigo-500 to-indigo-600' },
+            total_products: { title: 'إجمالي المنتجات', icon: '📦', color: 'text-yellow-600', bg: 'bg-gradient-to-r from-yellow-500 to-yellow-600' },
+            total_warehouses: { title: 'إجمالي المخازن', icon: '🏭', color: 'text-pink-600', bg: 'bg-gradient-to-r from-pink-500 to-pink-600' },
+            today_visits: { title: 'زيارات اليوم', icon: '📅', color: 'text-emerald-600', bg: 'bg-gradient-to-r from-emerald-500 to-emerald-600' },
+            pending_reviews: { title: 'مراجعات معلقة', icon: '⏳', color: 'text-orange-600', bg: 'bg-gradient-to-r from-orange-500 to-orange-600' }
+          };
+          
+          const config = statConfig[key] || { title: key, icon: '📊', color: 'text-gray-600', bg: 'bg-gradient-to-r from-gray-500 to-gray-600' };
+          
+          return (
+            <div key={key} className="card-modern p-6 interactive-element hover:scale-105 transition-transform">
+              <div className="flex items-center mb-4">
+                <div className={`w-14 h-14 ${config.bg} rounded-full flex items-center justify-center ml-4 shadow-lg`}>
+                  <span className="text-2xl text-white">{config.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                    {config.title}
+                  </h3>
+                  <p className={`text-3xl font-bold ${config.color}`}>{value}</p>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className={`${config.bg} h-2 rounded-full`} style={{ width: `${Math.min(100, (value / 100) * 100)}%` }}></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Managers Performance Section */}
+      <div className="card-modern p-8">
+        <div className="flex items-center mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center ml-4">
+            <span className="text-2xl">👔</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>أداء المديرين</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>إحصائيات مفصلة عن أداء فريق الإدارة</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {activeManagers.map((manager) => (
+            <div key={manager.id} className="glass-effect p-6 rounded-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${manager.is_active ? 'bg-green-500' : 'bg-gray-400'}`}>
+                    <span className="text-white font-bold">{manager.full_name.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>{manager.full_name}</h4>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {manager.is_active ? '🟢 نشط' : '🔴 غير نشط'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-blue-600">{manager.approval_rate}%</span>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>معدل الموافقة</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="text-center p-3 bg-blue-50 bg-opacity-10 rounded-lg">
+                  <div className="text-xl font-bold text-blue-600">{manager.team_size}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>حجم الفريق</div>
+                </div>
+                <div className="text-center p-3 bg-green-50 bg-opacity-10 rounded-lg">
+                  <div className="text-xl font-bold text-green-600">{manager.approved_orders}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>طلبات موافق عليها</div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 bg-opacity-10 rounded-lg">
+                  <div className="text-xl font-bold text-purple-600">{manager.total_orders_managed}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>إجمالي الطلبات</div>
+                </div>
+                <div className="text-center p-3 bg-orange-50 bg-opacity-10 rounded-lg">
+                  <div className="text-xl font-bold text-orange-600">{manager.team_visits}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>زيارات الفريق</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sales Reps Performance Section */}
+      <div className="card-modern p-8">
+        <div className="flex items-center mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center ml-4">
+            <span className="text-2xl">🎯</span>
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>أداء المناديب</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>المناديب النشطة والخاملة</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="text-center p-6 bg-gradient-to-r from-green-500 to-green-600 rounded-xl text-white">
+            <div className="text-4xl font-bold mb-2">
+              {activeSalesReps.filter(rep => rep.is_active).length}
+            </div>
+            <div className="text-lg">مناديب نشطة</div>
+          </div>
+          <div className="text-center p-6 bg-gradient-to-r from-red-500 to-red-600 rounded-xl text-white">
+            <div className="text-4xl font-bold mb-2">
+              {activeSalesReps.filter(rep => !rep.is_active).length}
+            </div>
+            <div className="text-lg">مناديب خاملة</div>
+          </div>
+        </div>
+
+        <div className="space-y-3 max-h-64 overflow-y-auto">
+          {activeSalesReps.map((rep) => (
+            <div key={rep.id} className="flex items-center justify-between p-4 glass-effect rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${rep.is_active ? 'bg-green-500' : 'bg-red-500'}`}>
+                  {rep.full_name.charAt(0)}
+                </div>
+                <div>
+                  <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{rep.full_name}</div>
+                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {rep.last_visit ? `آخر زيارة: ${new Date(rep.last_visit).toLocaleDateString('ar-EG')}` : 'لا توجد زيارات'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4 text-sm">
+                <div className="text-center">
+                  <div className="font-bold text-blue-600">{rep.total_visits}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>زيارات</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-green-600">{rep.total_orders}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>طلبات</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-purple-600">{rep.this_week_visits}</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>هذا الأسبوع</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
+          <span className="text-2xl">⚡</span>
+          <span style={{ color: 'var(--text-primary)' }}>إجراءات سريعة</span>
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button className="btn-primary p-4 text-center rounded-xl">
+            <div className="text-2xl mb-2">📊</div>
+            <div className="text-sm">تقرير شامل</div>
+          </button>
+          <button className="btn-success p-4 text-center rounded-xl">
+            <div className="text-2xl mb-2">👥</div>
+            <div className="text-sm">إضافة مستخدم</div>
+          </button>
+          <button className="btn-info p-4 text-center rounded-xl">
+            <div className="text-2xl mb-2">📢</div>
+            <div className="text-sm">إرسال إشعار</div>
+          </button>
+          <button className="btn-warning p-4 text-center rounded-xl">
+            <div className="text-2xl mb-2">⚙️</div>
+            <div className="text-sm">إعدادات النظام</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [newUser, setNewUser] = useState({
