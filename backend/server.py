@@ -220,6 +220,56 @@ class DoctorCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
 
+# Enhanced Models for new features
+class SystemSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    logo_image: Optional[str] = None  # base64 image for login page
+    company_name: str = "نظام إدارة المناديب"
+    primary_color: str = "#ff6b35"
+    secondary_color: str = "#0ea5e9"
+    updated_by: str
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    message: str
+    type: str  # SUCCESS, WARNING, ERROR, INFO, REMINDER
+    recipient_id: str
+    sender_id: Optional[str] = None
+    is_read: bool = False
+    data: Optional[Dict[str, Any]] = None  # Additional data for actions
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: Optional[datetime] = None
+
+class ChatMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str
+    sender_id: str
+    recipient_id: str
+    message_text: Optional[str] = None
+    voice_note: Optional[str] = None  # base64 audio
+    message_type: str = "TEXT"  # TEXT, VOICE, IMAGE, FILE
+    is_read: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Conversation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    participants: List[str]  # user IDs
+    title: Optional[str] = None
+    last_message_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class VoiceNote(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    visit_id: str
+    audio_data: str  # base64 encoded audio
+    duration: int  # in seconds
+    transcript: Optional[str] = None  # AI-generated transcript
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Updated Visit model to include voice notes
 class Visit(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     sales_rep_id: str
@@ -229,7 +279,9 @@ class Visit(BaseModel):
     latitude: float
     longitude: float
     notes: str
+    voice_notes: List[str] = []  # List of voice note IDs
     is_effective: Optional[bool] = None  # To be evaluated by manager
+    effectiveness_rating: Optional[int] = None  # 1-5 stars
     reviewed_by: Optional[str] = None  # manager user_id
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
