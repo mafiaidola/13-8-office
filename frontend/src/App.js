@@ -3049,13 +3049,16 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={logout}
-                className="btn-warning flex items-center gap-2"
-              >
-                <span>🚪</span>
-                <span>تسجيل الخروج</span>
-              </button>
+              <div className="flex items-center gap-4">
+                <NotificationsCenter />
+                <button
+                  onClick={logout}
+                  className="btn-warning flex items-center gap-2"
+                >
+                  <span>🚪</span>
+                  <span>تسجيل الخروج</span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
