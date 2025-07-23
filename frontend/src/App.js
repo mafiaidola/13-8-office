@@ -551,23 +551,13 @@ const UserManagement = () => {
 };
 
 // Warehouse Management Component
-// Enhanced Warehouse Management Component
+// Enhanced Warehouse Management Component  
 const WarehouseManagement = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [warehouses, setWarehouses] = useState([]);
   const [products, setProducts] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
-  const [showCreateProduct, setShowCreateProduct] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    description: '',
-    price_before_discount: '',
-    discount_percentage: '0',
-    category: '',
-    unit: '',
-    image: ''
-  });
   const [warehouseStats, setWarehouseStats] = useState(null);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [movementHistory, setMovementHistory] = useState([]);
@@ -663,51 +653,6 @@ const WarehouseManagement = () => {
     }
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setNewProduct({...newProduct, image: event.target.result});
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCreateProduct = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/products`, {
-        ...newProduct,
-        price_before_discount: parseFloat(newProduct.price_before_discount),
-        discount_percentage: parseFloat(newProduct.discount_percentage)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSuccess('تم إنشاء المنتج بنجاح');
-      setShowCreateProduct(false);
-      setNewProduct({ 
-        name: '', 
-        description: '', 
-        price_before_discount: '', 
-        discount_percentage: '0', 
-        category: '', 
-        unit: '',
-        image: ''
-      });
-      fetchProducts();
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في إنشاء المنتج');
-    }
-  };
-
   const updateInventory = async (productId, quantity) => {
     try {
       const token = localStorage.getItem('token');
@@ -719,7 +664,7 @@ const WarehouseManagement = () => {
       
       setSuccess('تم تحديث المخزون بنجاح');
       fetchInventory(selectedWarehouse);
-      fetchWarehouseStats(); // Refresh stats
+      fetchWarehouseStats();
     } catch (error) {
       setError(error.response?.data?.detail || 'خطأ في تحديث المخزون');
     }
@@ -802,130 +747,25 @@ const WarehouseManagement = () => {
               <span style={{ color: 'var(--text-primary)' }}>إحصائيات الطلبات</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+              <div className="text-center p-4 glass-effect rounded-xl">
                 <div className="text-3xl mb-2">📅</div>
                 <div className="text-2xl font-bold text-green-600">{warehouseStats.orders.today}</div>
                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات اليوم</div>
               </div>
-              <div className="text-center p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+              <div className="text-center p-4 glass-effect rounded-xl">
                 <div className="text-3xl mb-2">📊</div>
                 <div className="text-2xl font-bold text-blue-600">{warehouseStats.orders.week}</div>
                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات الأسبوع</div>
               </div>
-              <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-purple-200 rounded-xl" style={{ background: 'var(--glass-bg)' }}>
+              <div className="text-center p-4 glass-effect rounded-xl">
                 <div className="text-3xl mb-2">📈</div>
                 <div className="text-2xl font-bold text-purple-600">{warehouseStats.orders.month}</div>
                 <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات الشهر</div>
               </div>
             </div>
           </div>
-
-          {/* Product Categories */}
-          <div className="card-modern p-6">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <span className="text-2xl">🏷️</span>
-              <span style={{ color: 'var(--text-primary)' }}>أصناف المنتجات</span>
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Object.entries(warehouseStats.product_categories).map(([category, quantity]) => (
-                <div key={category} className="glass-effect p-4 rounded-xl text-center">
-                  <div className="text-2xl font-bold" style={{ color: 'var(--brand-orange)' }}>{quantity}</div>
-                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{category}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Warehouses List */}
-          <div className="card-modern p-6">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <span className="text-2xl">🏢</span>
-              <span style={{ color: 'var(--text-primary)' }}>المخازن المدارة</span>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {warehouseStats.warehouses.map((warehouse) => (
-                <div key={warehouse.id} className="glass-effect p-4 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">{warehouse.warehouse_number || '?'}</span>
-                    </div>
-                    <div>
-                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>{warehouse.name}</div>
-                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{warehouse.location}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{warehouse.address}</div>
-                </div>
-              ))}
-            </div>
-          </div>
         </>
       )}
-    </div>
-  );
-
-  // Pending Orders Component
-  const PendingOrdersPage = () => (
-    <div className="space-y-6 page-transition">
-      <div className="flex items-center mb-8">
-        <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
-          <span className="text-3xl">⏳</span>
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold text-gradient">الطلبات المنتظرة</h2>
-          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>طلبات تحتاج إلى المراجعة والتنفيذ</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6">
-        {pendingOrders.map((order) => (
-          <div key={order.id} className="card-modern p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المندوب:</span>
-                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.sales_rep_name}</p>
-              </div>
-              <div>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>العيادة:</span>
-                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.clinic_name}</p>
-              </div>
-              <div>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المبلغ الإجمالي:</span>
-                <p className="font-semibold text-green-600">{order.total_amount} ج.م</p>
-              </div>
-              <div>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>موافقة المدير:</span>
-                <span className={`badge-modern ${order.manager_approved ? 'badge-success' : 'badge-warning'}`}>
-                  {order.manager_approved ? '✅ تمت الموافقة' : '⏳ في الانتظار'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="border-t pt-4" style={{ borderColor: 'var(--accent-bg)' }}>
-              <h4 className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>المنتجات المطلوبة:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {order.items?.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 glass-effect rounded-lg">
-                    {item.product_image && (
-                      <img 
-                        src={item.product_image} 
-                        alt={item.product_name}
-                        className="w-12 h-12 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.product_name}</div>
-                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                        الكمية: {item.quantity} {item.product_unit} | السعر: {item.unit_price} ج.م
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 
@@ -984,12 +824,180 @@ const WarehouseManagement = () => {
 
         {/* Tab Content */}
         {activeTab === 'dashboard' && <WarehouseDashboard />}
-        {activeTab === 'pending-orders' && <PendingOrdersPage />}
         
-        {/* Add remaining tabs content here */}
+        {activeTab === 'inventory' && (
+          <div className="space-y-6 page-transition">
+            <div className="card-modern p-6">
+              <h3 className="text-xl font-bold mb-4">إدارة المخزن</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {inventory.map((item, index) => (
+                  <div key={index} className="glass-effect p-4 rounded-xl">
+                    <div className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                      {item.product_name}
+                    </div>
+                    <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      الكمية: {item.quantity} {item.product_unit}
+                    </div>
+                    <div className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      السعر: {item.product_price} ج.م
+                    </div>
+                    {item.low_stock && (
+                      <div className="text-sm text-red-500 font-bold">⚠️ مخزون قليل</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'pending-orders' && (
+          <div className="space-y-6 page-transition">
+            <div className="flex items-center mb-8">
+              <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
+                <span className="text-3xl">⏳</span>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gradient">الطلبات المنتظرة</h2>
+                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>طلبات تحتاج إلى المراجعة والتنفيذ</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6">
+              {pendingOrders.map((order) => (
+                <div key={order.id} className="card-modern p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المندوب:</span>
+                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.sales_rep_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>العيادة:</span>
+                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.clinic_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>المبلغ الإجمالي:</span>
+                      <p className="font-semibold text-green-600">{order.total_amount} ج.م</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>موافقة المدير:</span>
+                      <span className={`badge-modern ${order.manager_approved ? 'badge-success' : 'badge-warning'}`}>
+                        {order.manager_approved ? '✅ تمت الموافقة' : '⏳ في الانتظار'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4" style={{ borderColor: 'var(--accent-bg)' }}>
+                    <h4 className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>المنتجات المطلوبة:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {order.items?.map((item, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 glass-effect rounded-lg">
+                          {item.product_image && (
+                            <img 
+                              src={item.product_image} 
+                              alt={item.product_name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.product_name}</div>
+                            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                              الكمية: {item.quantity} {item.product_unit} | السعر: {item.unit_price} ج.م
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'warehouse-log' && (
+          <div className="space-y-6 page-transition">
+            <div className="flex items-center mb-8">
+              <div className="w-16 h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+                <span className="text-3xl">📋</span>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gradient">سجل المخزن</h2>
+                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>سجل جميع حركات المخزن والأدوية</p>
+              </div>
+            </div>
+
+            {selectedWarehouse && (
+              <div className="mb-6">
+                <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  اختر المخزن:
+                </label>
+                <select
+                  value={selectedWarehouse}
+                  onChange={(e) => setSelectedWarehouse(e.target.value)}
+                  className="form-modern w-full max-w-md"
+                >
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name} - {warehouse.location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="card-modern overflow-hidden">
+              <div className="table-modern">
+                <table className="min-w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">التاريخ</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">المنتج</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">نوع الحركة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">الكمية</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">السبب</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">بواسطة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movementHistory.map((movement, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {new Date(movement.created_at).toLocaleDateString('ar-EG')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {movement.product_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`badge-modern ${
+                            movement.movement_type === 'IN' ? 'badge-success' : 
+                            movement.movement_type === 'OUT' ? 'badge-danger' : 'badge-info'
+                          }`}>
+                            {movement.movement_type === 'IN' ? '📥 إدخال' : 
+                             movement.movement_type === 'OUT' ? '📤 إخراج' : '🔄 تعديل'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {movement.quantity} {movement.product_unit}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {movement.reason}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {movement.created_by_name}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+};
               <h3 className="text-lg font-semibold mb-4">إضافة منتج جديد</h3>
               <form onSubmit={handleCreateProduct} className="space-y-4">
                 <div>
