@@ -1942,6 +1942,7 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
   const [timeRange, setTimeRange] = useState('week');
   const [comparison, setComparison] = useState({});
   const [quickActions, setQuickActions] = useState([]);
+  const { analytics, loading: analyticsLoading } = useRealTimeAnalytics();
 
   useEffect(() => {
     fetchComparisonData();
@@ -1986,12 +1987,20 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <div className="space-y-8">
-        {/* Header with Time Range Selector */}
+        {/* Header with Time Range Selector and Real-time Indicator */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gradient mb-2">📊 لوحة الإحصائيات الشاملة</h2>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-3xl font-bold text-gradient">📊 لوحة الإحصائيات الشاملة</h2>
+              {analytics && (
+                <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm animate-pulse">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>مباشر</span>
+                </div>
+              )}
+            </div>
             <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
-              نظرة شاملة على أداء النظام والفريق
+              نظرة شاملة على أداء النظام والفريق - آخر تحديث: {analytics?.timestamp ? new Date(analytics.timestamp).toLocaleTimeString('ar-EG') : 'جاري التحميل...'}
             </p>
           </div>
           
@@ -2011,6 +2020,31 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
             ))}
           </div>
         </div>
+
+        {/* Real-time Live Stats */}
+        {analytics && (
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>🔴</span>
+              <span>الإحصائيات المباشرة</span>
+              <span className="text-sm text-green-600 animate-pulse">(يتم التحديث كل 30 ثانية)</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="glass-effect p-4 rounded-lg border-l-4 border-blue-500">
+                <div className="text-3xl font-bold text-blue-600">{analytics.live_stats.visits_today}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات اليوم</div>
+              </div>
+              <div className="glass-effect p-4 rounded-lg border-l-4 border-green-500">
+                <div className="text-3xl font-bold text-green-600">{analytics.live_stats.active_sales_reps}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مناديب نشطين الآن</div>
+              </div>
+              <div className="glass-effect p-4 rounded-lg border-l-4 border-orange-500">
+                <div className="text-3xl font-bold text-orange-600">{analytics.live_stats.pending_orders}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبيات معلقة</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         {quickActions.length > 0 && (
