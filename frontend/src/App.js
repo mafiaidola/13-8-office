@@ -104,23 +104,28 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }}>
+      <div className="card-modern w-full max-w-md p-8 fade-in-up">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">نظام إدارة المناديب</h1>
+          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-3xl">🏥</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gradient mb-2">نظام إدارة المناديب</h1>
           <p className="text-gray-600">قم بتسجيل الدخول للمتابعة</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 form-modern">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              اسم المستخدم
+              🧑‍💼 اسم المستخدم
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              className="w-full"
               placeholder="أدخل اسم المستخدم"
               required
             />
@@ -128,35 +133,48 @@ const LoginPage = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              كلمة المرور
+              🔒 كلمة المرور
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              className="w-full"
               placeholder="أدخل كلمة المرور"
               required
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
+            <div className="alert-modern alert-error">
+              ⚠️ {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-primary"
           >
-            {isLoading ? 'جاري التحقق...' : 'تسجيل الدخول'}
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="loading-shimmer w-5 h-5 rounded-full ml-2"></div>
+                جاري التحقق...
+              </div>
+            ) : (
+              <>🚀 تسجيل الدخول</>
+            )}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>للتجربة: admin / admin123</p>
+        <div className="mt-8 text-center">
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+            <p className="text-sm text-blue-800 font-medium mb-2">💡 للتجربة:</p>
+            <div className="space-y-1 text-xs text-blue-600">
+              <p><strong>أدمن:</strong> admin / admin123</p>
+              <p><strong>مندوب:</strong> أنشئ من لوحة الأدمن</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
