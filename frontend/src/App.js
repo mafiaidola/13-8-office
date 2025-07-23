@@ -5983,7 +5983,11 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'reports' && canAccessTab('reports') && (
-          <ReportsSection />
+          <AdvancedReports />
+        )}
+        
+        {activeTab === 'accounting' && canAccessTab('accounting') && (
+          <AccountingDashboard />
         )}
         
         {activeTab === 'chat' && (
