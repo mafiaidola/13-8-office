@@ -1937,6 +1937,217 @@ const VisitDetailsModal = ({ visit, onClose }) => {
   );
 };
 
+// Enhanced Statistics Dashboard Component
+const EnhancedStatisticsDashboard = ({ stats, user }) => {
+  const [timeRange, setTimeRange] = useState('week');
+  const [comparison, setComparison] = useState({});
+  const [quickActions, setQuickActions] = useState([]);
+
+  useEffect(() => {
+    fetchComparisonData();
+    fetchQuickActions();
+  }, [timeRange]);
+
+  const fetchComparisonData = async () => {
+    // Simulate comparison data - in real app, get from API
+    setComparison({
+      users_growth: '+12%',
+      visits_growth: '+8%',
+      clinics_growth: '+15%',
+      revenue_growth: '+22%'
+    });
+  };
+
+  const fetchQuickActions = async () => {
+    const actions = [];
+    if (stats.pending_reviews > 0) {
+      actions.push({ type: 'reviews', count: stats.pending_reviews, text: 'مراجعات تحتاج موافقة' });
+    }
+    if (stats.low_stock_items > 0) {
+      actions.push({ type: 'stock', count: stats.low_stock_items, text: 'منتجات نقص مخزون' });
+    }
+    if (stats.pending_clinics > 0) {
+      actions.push({ type: 'clinics', count: stats.pending_clinics, text: 'عيادات تحتاج موافقة' });
+    }
+    setQuickActions(actions);
+  };
+
+  const statsConfig = [
+    { key: 'total_users', title: 'إجمالي المستخدمين', icon: '👥', color: 'bg-blue-500', growth: comparison.users_growth },
+    { key: 'total_clinics', title: 'إجمالي العيادات', icon: '🏥', color: 'bg-green-500', growth: comparison.clinics_growth },
+    { key: 'total_doctors', title: 'إجمالي الأطباء', icon: '👨‍⚕️', color: 'bg-purple-500', growth: '+5%' },
+    { key: 'total_visits', title: 'إجمالي الزيارات', icon: '📋', color: 'bg-indigo-500', growth: comparison.visits_growth },
+    { key: 'total_products', title: 'إجمالي المنتجات', icon: '📦', color: 'bg-yellow-500', growth: '+3%' },
+    { key: 'total_warehouses', title: 'إجمالي المخازن', icon: '🏪', color: 'bg-pink-500', growth: '+0%' },
+    { key: 'today_visits', title: 'زيارات اليوم', icon: '📅', color: 'bg-teal-500', growth: '+18%' },
+    { key: 'low_stock_items', title: 'منتجات نقص مخزون', icon: '⚠️', color: 'bg-red-500', isAlert: true }
+  ];
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="space-y-8">
+        {/* Header with Time Range Selector */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-gradient mb-2">📊 لوحة الإحصائيات الشاملة</h2>
+            <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+              نظرة شاملة على أداء النظام والفريق
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
+            {['today', 'week', 'month', 'quarter'].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  timeRange === range ? 'btn-primary' : 'btn-secondary'
+                }`}
+              >
+                {range === 'today' ? 'اليوم' : 
+                 range === 'week' ? 'الأسبوع' :
+                 range === 'month' ? 'الشهر' : 'الربع'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        {quickActions.length > 0 && (
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>⚡</span>
+              <span>إجراءات سريعة</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {quickActions.map((action, index) => (
+                <div key={index} className="glass-effect p-4 rounded-lg border-l-4 border-orange-500">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{action.text}</p>
+                      <p className="text-2xl font-bold text-orange-500">{action.count}</p>
+                    </div>
+                    <button className="btn-warning text-sm">
+                      عرض
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Main Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsConfig.map((config) => {
+            const value = stats[config.key] || 0;
+            return (
+              <div key={config.key} className="card-modern p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 -mr-10 -mt-10" 
+                     style={{ background: config.color.replace('bg-', '') }}></div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 ${config.color} rounded-lg flex items-center justify-center text-white text-xl`}>
+                      {config.icon}
+                    </div>
+                    {config.growth && (
+                      <span className={`text-sm font-medium px-2 py-1 rounded-lg ${
+                        config.isAlert ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
+                      }`}>
+                        {config.growth}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    {config.title}
+                  </h3>
+                  <p className={`text-3xl font-bold ${config.isAlert ? 'text-red-500' : ''}`} 
+                     style={{ color: config.isAlert ? undefined : 'var(--text-primary)' }}>
+                    {value}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Detailed Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Performance Chart Placeholder */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>📈</span>
+              <span>أداء الزيارات</span>
+            </h3>
+            <div className="h-64 flex items-center justify-center glass-effect rounded-lg">
+              <div className="text-center">
+                <div className="text-4xl mb-2">📊</div>
+                <p style={{ color: 'var(--text-secondary)' }}>رسم بياني لأداء الزيارات</p>
+                <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+                  يتم تحميل البيانات...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>🕐</span>
+              <span>النشاطات الأخيرة</span>
+            </h3>
+            <div className="space-y-3">
+              {[
+                { type: 'visit', text: 'زيارة جديدة تمت للدكتور أحمد', time: 'منذ 5 دقائق', color: 'text-green-500' },
+                { type: 'clinic', text: 'تم إضافة عيادة جديدة', time: 'منذ 15 دقيقة', color: 'text-blue-500' },
+                { type: 'order', text: 'طلبية جديدة تحتاج موافقة', time: 'منذ 30 دقيقة', color: 'text-orange-500' },
+                { type: 'user', text: 'مستخدم جديد انضم للنظام', time: 'منذ ساعة', color: 'text-purple-500' }
+              ].map((activity, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 glass-effect rounded-lg">
+                  <div className={`w-2 h-2 rounded-full ${activity.color.replace('text-', 'bg-')}`}></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {activity.text}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      {activity.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {user.role === 'admin' && (
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>👑</span>
+              <span>إجراءات المدير</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button className="btn-primary flex items-center justify-center gap-2 py-3">
+                <span>📊</span>
+                <span>تصدير التقارير</span>
+              </button>
+              <button className="btn-info flex items-center justify-center gap-2 py-3">
+                <span>👥</span>
+                <span>إدارة المستخدمين</span>
+              </button>
+              <button className="btn-success flex items-center justify-center gap-2 py-3">
+                <span>⚙️</span>
+                <span>إعدادات النظام</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Enhanced User Management Component
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
