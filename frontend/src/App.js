@@ -2452,7 +2452,7 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)' }}>
         <div className="text-center">
           <div className="w-20 h-20 loading-shimmer rounded-full mx-auto mb-6"></div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '18px' }}>جاري التحميل...</p>
@@ -2461,7 +2461,11 @@ const AppContent = () => {
     );
   }
 
-  return user ? <Dashboard /> : <LoginPage />;
+  return (
+    <div className="App" style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      {user ? <Dashboard /> : <LoginPage />}
+    </div>
+  );
 };
 
 export default App;
