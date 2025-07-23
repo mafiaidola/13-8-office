@@ -2398,8 +2398,8 @@ const Dashboard = () => {
           <ReportsSection />
         )}
         </div>
-      </>
-    </div>
+      </div>
+    </>
   );
 };
 
