@@ -2466,6 +2466,326 @@ async def create_default_admin():
         await db.users.insert_one(admin_user.dict())
         print("Default admin user created: username=admin, password=admin123")
 
+@app.get("/api/analytics/realtime")
+async def get_realtime_analytics(current_user: dict = Depends(get_current_user)):
+    """Real-time analytics endpoint"""
+    try:
+        # Real-time statistics
+        total_visits_today = await db.visits.count_documents({
+            "visit_date": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)}
+        })
+        
+        active_sales_reps = await db.users.count_documents({
+            "role": "sales_rep",
+            "is_active": True,
+            "last_activity": {"$gte": datetime.utcnow() - timedelta(minutes=30)}
+        })
+        
+        pending_orders = await db.orders.count_documents({
+            "status": {"$in": [OrderWorkflow.PENDING, OrderWorkflow.MANAGER_APPROVED, OrderWorkflow.ACCOUNTING_APPROVED]}
+        })
+        
+        # Chart data for last 7 days
+        chart_data = []
+        for i in range(7):
+            date = datetime.utcnow() - timedelta(days=i)
+            daily_visits = await db.visits.count_documents({
+                "visit_date": {
+                    "$gte": date.replace(hour=0, minute=0, second=0, microsecond=0),
+                    "$lt": date.replace(hour=23, minute=59, second=59, microsecond=999999)
+                }
+            })
+            chart_data.append({
+                "date": date.strftime("%Y-%m-%d"),
+                "visits": daily_visits
+            })
+        
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "live_stats": {
+                "visits_today": total_visits_today,
+                "active_sales_reps": active_sales_reps,
+                "pending_orders": pending_orders
+            },
+            "chart_data": chart_data[::-1]  # Reverse for chronological order
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/search/global")
+async def global_search(q: str, current_user: dict = Depends(get_current_user)):
+    """Global search across all entities"""
+    try:
+        results = {}
+        
+        # Search users
+        users = await db.users.find({
+            "$or": [
+                {"full_name": {"$regex": q, "$options": "i"}},
+                {"username": {"$regex": q, "$options": "i"}},
+                {"email": {"$regex": q, "$options": "i"}}
+            ]
+        }).limit(5).to_list(None)
+        results["users"] = users
+        
+        # Search clinics
+        clinics = await db.clinics.find({
+            "$or": [
+                {"name": {"$regex": q, "$options": "i"}},
+                {"address": {"$regex": q, "$options": "i"}}
+            ]
+        }).limit(5).to_list(None)
+        results["clinics"] = clinics
+        
+        # Search doctors
+        doctors = await db.doctors.find({
+            "$or": [
+                {"name": {"$regex": q, "$options": "i"}},
+                {"specialty": {"$regex": q, "$options": "i"}}
+            ]
+        }).limit(5).to_list(None)
+        results["doctors"] = doctors
+        
+        # Search products
+        products = await db.products.find({
+            "$or": [
+                {"name": {"$regex": q, "$options": "i"}},
+                {"description": {"$regex": q, "$options": "i"}}
+            ]
+        }).limit(5).to_list(None)
+        results["products"] = products
+        
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/reports/advanced")
+async def get_advanced_reports(
+    report_type: str,
+    start_date: str = None,
+    end_date: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Advanced reporting with charts"""
+    try:
+        start = datetime.fromisoformat(start_date) if start_date else datetime.utcnow() - timedelta(days=30)
+        end = datetime.fromisoformat(end_date) if end_date else datetime.utcnow()
+        
+        if report_type == "visits_performance":
+            # Visits performance over time
+            pipeline = [
+                {
+                    "$match": {
+                        "visit_date": {"$gte": start, "$lte": end}
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "$dateToString": {
+                                "format": "%Y-%m-%d",
+                                "date": "$visit_date"
+                            }
+                        },
+                        "total_visits": {"$sum": 1},
+                        "effective_visits": {
+                            "$sum": {"$cond": [{"$eq": ["$is_effective", True]}, 1, 0]}
+                        }
+                    }
+                },
+                {"$sort": {"_id": 1}}
+            ]
+            
+            data = await db.visits.aggregate(pipeline).to_list(None)
+            return {
+                "type": "line_chart",
+                "title": "أداء الزيارات",
+                "data": data
+            }
+            
+        elif report_type == "sales_by_rep":
+            # Sales by representative
+            pipeline = [
+                {
+                    "$match": {
+                        "created_at": {"$gte": start, "$lte": end}
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "localField": "created_by",
+                        "foreignField": "id",
+                        "as": "sales_rep"
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": "$created_by",
+                        "sales_rep_name": {"$first": {"$arrayElemAt": ["$sales_rep.full_name", 0]}},
+                        "total_orders": {"$sum": 1},
+                        "total_amount": {"$sum": "$total_amount"}
+                    }
+                }
+            ]
+            
+            data = await db.orders.aggregate(pipeline).to_list(None)
+            return {
+                "type": "bar_chart",
+                "title": "المبيعات بواسطة المناديب",
+                "data": data
+            }
+            
+        return {"error": "Invalid report type"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/orders/{order_id}/approve")
+async def approve_order(
+    order_id: str,
+    approval_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve order with workflow"""
+    try:
+        order = await db.orders.find_one({"id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        user_role = current_user["role"]
+        current_status = order.get("status", OrderWorkflow.PENDING)
+        
+        # Approval workflow logic
+        if user_role == "manager" and current_status == OrderWorkflow.PENDING:
+            new_status = OrderWorkflow.MANAGER_APPROVED
+        elif user_role == "accounting" and current_status == OrderWorkflow.MANAGER_APPROVED:
+            new_status = OrderWorkflow.ACCOUNTING_APPROVED
+        elif user_role == "warehouse_manager" and current_status == OrderWorkflow.ACCOUNTING_APPROVED:
+            new_status = OrderWorkflow.WAREHOUSE_APPROVED
+        else:
+            raise HTTPException(status_code=403, detail="Invalid approval sequence")
+        
+        # Update order
+        await db.orders.update_one(
+            {"id": order_id},
+            {
+                "$set": {
+                    "status": new_status,
+                    f"approved_by_{user_role}": current_user["id"],
+                    f"approved_at_{user_role}": datetime.utcnow(),
+                    "notes": approval_data.get("notes", "")
+                }
+            }
+        )
+        
+        return {"message": f"Order approved by {user_role}", "new_status": new_status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/language/translations")
+async def get_translations(lang: str = "ar"):
+    """Get translations for multi-language support"""
+    translations = {
+        "ar": {
+            "dashboard": "لوحة التحكم",
+            "users": "المستخدمين",
+            "warehouses": "المخازن",
+            "visits": "الزيارات",
+            "reports": "التقارير",
+            "chat": "المحادثات",
+            "settings": "الإعدادات",
+            "login": "تسجيل الدخول",
+            "logout": "تسجيل الخروج",
+            "search": "بحث",
+            "add": "إضافة",
+            "edit": "تعديل",
+            "delete": "حذف",
+            "save": "حفظ",
+            "cancel": "إلغاء"
+        },
+        "en": {
+            "dashboard": "Dashboard",
+            "users": "Users",
+            "warehouses": "Warehouses",
+            "visits": "Visits",
+            "reports": "Reports",
+            "chat": "Chat",
+            "settings": "Settings",
+            "login": "Login",
+            "logout": "Logout",
+            "search": "Search",
+            "add": "Add",
+            "edit": "Edit",
+            "delete": "Delete",
+            "save": "Save",
+            "cancel": "Cancel"
+        },
+        "fr": {
+            "dashboard": "Tableau de Bord",
+            "users": "Utilisateurs",
+            "warehouses": "Entrepôts",
+            "visits": "Visites",
+            "reports": "Rapports",
+            "chat": "Chat",
+            "settings": "Paramètres",
+            "login": "Connexion",
+            "logout": "Déconnexion",
+            "search": "Recherche",
+            "add": "Ajouter",
+            "edit": "Modifier",
+            "delete": "Supprimer",
+            "save": "Enregistrer",
+            "cancel": "Annuler"
+        }
+    }
+    
+    return translations.get(lang, translations["ar"])
+
+@app.post("/api/offline/sync")
+async def sync_offline_data(
+    sync_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Sync offline data when connection is restored"""
+    try:
+        results = []
+        
+        # Process offline visits
+        if "visits" in sync_data:
+            for visit_data in sync_data["visits"]:
+                # Validate and save offline visit
+                visit_data["created_by"] = current_user["id"]
+                visit_data["synced_at"] = datetime.utcnow()
+                
+                result = await db.visits.insert_one(visit_data)
+                results.append({
+                    "type": "visit",
+                    "local_id": visit_data.get("local_id"),
+                    "server_id": str(result.inserted_id),
+                    "status": "synced"
+                })
+        
+        # Process offline orders
+        if "orders" in sync_data:
+            for order_data in sync_data["orders"]:
+                order_data["created_by"] = current_user["id"]
+                order_data["synced_at"] = datetime.utcnow()
+                order_data["status"] = OrderWorkflow.PENDING
+                
+                result = await db.orders.insert_one(order_data)
+                results.append({
+                    "type": "order",
+                    "local_id": order_data.get("local_id"),
+                    "server_id": str(result.inserted_id),
+                    "status": "synced"
+                })
+        
+        return {"sync_results": results, "synced_at": datetime.utcnow().isoformat()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# QR Code generation endpoint
+
 # Include the router in the main app
 app.include_router(api_router)
 
