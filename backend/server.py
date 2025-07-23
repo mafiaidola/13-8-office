@@ -142,6 +142,15 @@ class StockMovement(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class OrderWorkflow:
+    PENDING = "PENDING"
+    MANAGER_APPROVED = "MANAGER_APPROVED"
+    ACCOUNTING_APPROVED = "ACCOUNTING_APPROVED"
+    WAREHOUSE_APPROVED = "WAREHOUSE_APPROVED"
+    DISPATCHED = "DISPATCHED"
+    DELIVERED = "DELIVERED"
+    CANCELLED = "CANCELLED"
+
 class Order(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     visit_id: str
