@@ -5070,8 +5070,7 @@ const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language })
   );
 };
 
-// Warehouse Management Component
-// Enhanced Warehouse Management Component  
+// Reports Component
 const WarehouseManagement = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [warehouses, setWarehouses] = useState([]);
