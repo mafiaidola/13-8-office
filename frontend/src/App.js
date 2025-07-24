@@ -5,7 +5,7 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Theme Context
+// Theme Context with Language Support
 const ThemeContext = createContext();
 
 const useTheme = () => {
@@ -18,6 +18,10 @@ const useTheme = () => {
 
 const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
+  
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('app_language') || 'en'; // English as default
+  });
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -28,6 +32,13 @@ const ThemeProvider = ({ children }) => {
     // Force theme variables update
     updateThemeVariables(savedTheme);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('app_language', language);
+    // Apply direction based on language
+    document.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
 
   const updateThemeVariables = (currentTheme) => {
     const root = document.documentElement;
@@ -64,7 +75,12 @@ const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      toggleTheme, 
+      language, 
+      setLanguage 
+    }}>
       <div data-theme={theme} style={{ minHeight: '100vh', background: 'var(--gradient-dark)', color: 'var(--text-primary)' }}>
         {children}
       </div>
