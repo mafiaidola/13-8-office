@@ -2563,9 +2563,36 @@ const AdminActionButton = ({ icon, text, onClick }) => {
     </button>
   );
 };
-      </div>
-    </div>
-  );
+
+// Functions to handle admin actions
+const handleExportReports = () => {
+  // Export functionality
+  const reportData = {
+    generated_at: new Date().toISOString(),
+    type: 'comprehensive',
+    format: 'pdf'
+  };
+  
+  // Create downloadable link
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reportData, null, 2));
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", `report_${Date.now()}.json`);
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+};
+
+const handleUserManagement = () => {
+  // Navigate to user management (will be handled by proper navigation)
+  const event = new CustomEvent('navigateToTab', { detail: 'users' });
+  window.dispatchEvent(event);
+};
+
+const handleSystemSettings = () => {
+  // Navigate to system settings
+  const event = new CustomEvent('navigateToTab', { detail: 'settings' });
+  window.dispatchEvent(event);
 };
 
 // Enhanced User Management Component
