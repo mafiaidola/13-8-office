@@ -2225,74 +2225,344 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
 
         {/* Detailed Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Performance Chart Placeholder */}
+          {/* Enhanced Performance Chart */}
           <div className="card-modern p-6">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               <span>📈</span>
-              <span>أداء الزيارات</span>
+              <span>{language === 'ar' ? 'أداء الزيارات' : 'Visits Performance'}</span>
             </h3>
-            <div className="h-64 flex items-center justify-center glass-effect rounded-lg">
-              <div className="text-center">
-                <div className="text-4xl mb-2">📊</div>
-                <p style={{ color: 'var(--text-secondary)' }}>رسم بياني لأداء الزيارات</p>
-                <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
-                  يتم تحميل البيانات...
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="card-modern p-6">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <span>🕐</span>
-              <span>النشاطات الأخيرة</span>
-            </h3>
-            <div className="space-y-3">
-              {[
-                { type: 'visit', text: 'زيارة جديدة تمت للدكتور أحمد', time: 'منذ 5 دقائق', color: 'text-green-500' },
-                { type: 'clinic', text: 'تم إضافة عيادة جديدة', time: 'منذ 15 دقيقة', color: 'text-blue-500' },
-                { type: 'order', text: 'طلبية جديدة تحتاج موافقة', time: 'منذ 30 دقيقة', color: 'text-orange-500' },
-                { type: 'user', text: 'مستخدم جديد انضم للنظام', time: 'منذ ساعة', color: 'text-purple-500' }
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 glass-effect rounded-lg">
-                  <div className={`w-2 h-2 rounded-full ${activity.color.replace('text-', 'bg-')}`}></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {activity.text}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      {activity.time}
-                    </p>
+            {analytics?.chart_data ? (
+              <div className="h-64">
+                <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">📊</div>
+                    <p className="text-gray-600 mb-2">{language === 'ar' ? 'رسم بياني تفاعلي للأداء' : 'Interactive Performance Chart'}</p>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {analytics.chart_data.slice(-4).map((point, index) => (
+                        <div key={index} className="bg-white p-3 rounded-lg shadow">
+                          <div className="text-sm text-gray-500">{new Date(point.date).toLocaleDateString()}</div>
+                          <div className="text-lg font-bold text-blue-600">{point.visits} {language === 'ar' ? 'زيارة' : 'visits'}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center glass-effect rounded-lg">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">📊</div>
+                  <p style={{ color: 'var(--text-secondary)' }}>{language === 'ar' ? 'رسم بياني لأداء الزيارات' : 'Visits Performance Chart'}</p>
+                  <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+                    {language === 'ar' ? 'يتم تحميل البيانات...' : 'Loading data...'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Enhanced Recent Activity */}
+          <EnhancedRecentActivity language={language} />
         </div>
 
         {user.role === 'admin' && (
           <div className="card-modern p-6">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               <span>👑</span>
-              <span>إجراءات المدير</span>
+              <span>{language === 'ar' ? 'إجراءات المدير' : 'Admin Actions'}</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button className="btn-primary flex items-center justify-center gap-2 py-3">
-                <span>📊</span>
-                <span>تصدير التقارير</span>
-              </button>
-              <button className="btn-info flex items-center justify-center gap-2 py-3">
-                <span>👥</span>
-                <span>إدارة المستخدمين</span>
-              </button>
-              <button className="btn-success flex items-center justify-center gap-2 py-3">
-                <span>⚙️</span>
-                <span>إعدادات النظام</span>
-              </button>
+              <AdminActionButton 
+                icon="📊" 
+                text={language === 'ar' ? 'تصدير التقارير' : 'Export Reports'} 
+                onClick={() => handleExportReports()} 
+              />
+              <AdminActionButton 
+                icon="👥" 
+                text={language === 'ar' ? 'إدارة المستخدمين' : 'User Management'} 
+                onClick={() => handleUserManagement()} 
+              />
+              <AdminActionButton 
+                icon="⚙️" 
+                text={language === 'ar' ? 'إعدادات النظام' : 'System Settings'} 
+                onClick={() => handleSystemSettings()} 
+              />
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Recent Activity Component
+const EnhancedRecentActivity = ({ language }) => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecentActivities();
+  }, []);
+
+  const fetchRecentActivities = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/activities/recent`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActivities(response.data);
+    } catch (error) {
+      // Fallback to mock data if API not available
+      setActivities([
+        {
+          id: 1,
+          type: 'visit',
+          message: language === 'ar' ? 'زيارة جديدة للدكتور أحمد من المندوب محمود' : 'New visit to Dr. Ahmed by sales rep Mahmoud',
+          details: {
+            doctor: language === 'ar' ? 'د. أحمد محمد' : 'Dr. Ahmed Mohamed',
+            sales_rep: language === 'ar' ? 'محمود علي' : 'Mahmoud Ali',
+            clinic: language === 'ar' ? 'عيادة النور' : 'Al Nour Clinic',
+            visit_time: '10:30 AM',
+            effectiveness: true
+          },
+          timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+          color: 'text-green-500'
+        },
+        {
+          id: 2,
+          type: 'clinic',
+          message: language === 'ar' ? 'تم إضافة عيادة جديدة من المندوب إبراهيم' : 'New clinic added by sales rep Ibrahim',
+          details: {
+            clinic_name: language === 'ar' ? 'عيادة الشفاء' : 'Al Shifa Clinic',
+            sales_rep: language === 'ar' ? 'إبراهيم حسن' : 'Ibrahim Hassan',
+            address: language === 'ar' ? 'شارع الجمهورية، المنصورة' : 'Gomhoria Street, Mansoura',
+            status: 'pending_approval'
+          },
+          timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+          color: 'text-blue-500'
+        },
+        {
+          id: 3,
+          type: 'order',
+          message: language === 'ar' ? 'طلبية جديدة من المندوب إبراهيم تحتاج للموافقة' : 'New order from sales rep Ibrahim needs approval',
+          details: {
+            order_id: 'ORD-2024-001',
+            sales_rep: language === 'ar' ? 'إبراهيم حسن' : 'Ibrahim Hassan',
+            clinic: language === 'ar' ? 'عيادة الأمل' : 'Al Amal Clinic',
+            total_amount: 2500,
+            currency: 'EGP',
+            items_count: 5,
+            status: 'pending_manager_approval'
+          },
+          timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          color: 'text-orange-500'
+        },
+        {
+          id: 4,
+          type: 'user',
+          message: language === 'ar' ? 'تم إضافة مستخدم جديد من المدير علي' : 'New user added by manager Ali',
+          details: {
+            user_name: language === 'ar' ? 'خالد محمد' : 'Khaled Mohamed',
+            role: 'sales_rep',
+            manager: language === 'ar' ? 'علي أحمد' : 'Ali Ahmed',
+            department: language === 'ar' ? 'المبيعات - المنطقة الشرقية' : 'Sales - Eastern Region',
+            employee_id: 'EMP-2024-012'
+          },
+          timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          color: 'text-purple-500'
+        }
+      ]);
+      console.error('Using mock data for activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleActivityClick = (activity) => {
+    // Show detailed modal for activity
+    setSelectedActivity(activity);
+    setShowActivityModal(true);
+  };
+
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+
+  const getActivityIcon = (type) => {
+    const icons = {
+      visit: '👨‍⚕️',
+      clinic: '🏥',
+      order: '📦',
+      user: '👤',
+      approval: '✅',
+      warehouse: '🏪'
+    };
+    return icons[type] || '📋';
+  };
+
+  return (
+    <>
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🕐</span>
+          <span>{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</span>
+        </h3>
+        
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse flex items-center gap-3 p-3">
+                <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {activities.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center gap-3 p-3 glass-effect rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => handleActivityClick(activity)}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                  activity.type === 'visit' ? 'bg-green-500' :
+                  activity.type === 'clinic' ? 'bg-blue-500' :
+                  activity.type === 'order' ? 'bg-orange-500' : 'bg-purple-500'
+                }`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {activity.message}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {new Date(activity.timestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+                  </p>
+                </div>
+                <div className="text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Activity Details Modal */}
+      {showActivityModal && selectedActivity && (
+        <ActivityDetailsModal 
+          activity={selectedActivity}
+          language={language}
+          onClose={() => setShowActivityModal(false)}
+        />
+      )}
+    </>
+  );
+};
+
+// Activity Details Modal Component
+const ActivityDetailsModal = ({ activity, language, onClose }) => {
+  const translations = {
+    en: {
+      activityDetails: 'Activity Details',
+      visitDetails: 'Visit Details',
+      clinicDetails: 'Clinic Details', 
+      orderDetails: 'Order Details',
+      userDetails: 'User Details',
+      close: 'Close'
+    },
+    ar: {
+      activityDetails: 'تفاصيل النشاط',
+      visitDetails: 'تفاصيل الزيارة',
+      clinicDetails: 'تفاصيل العيادة',
+      orderDetails: 'تفاصيل الطلبية',
+      userDetails: 'تفاصيل المستخدم',
+      close: 'إغلاق'
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">{t.activityDetails}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Activity Header */}
+          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-xl ${
+              activity.type === 'visit' ? 'bg-green-500' :
+              activity.type === 'clinic' ? 'bg-blue-500' :
+              activity.type === 'order' ? 'bg-orange-500' : 'bg-purple-500'
+            }`}>
+              {activity.type === 'visit' ? '👨‍⚕️' :
+               activity.type === 'clinic' ? '🏥' :
+               activity.type === 'order' ? '📦' : '👤'}
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-gray-800">{activity.message}</h4>
+              <p className="text-sm text-gray-600">
+                {new Date(activity.timestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+              </p>
+            </div>
+          </div>
+
+          {/* Detailed Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(activity.details || {}).map(([key, value]) => (
+              <div key={key} className="p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm font-bold text-gray-600 capitalize mb-1">
+                  {key.replace('_', ' ')}
+                </div>
+                <div className="text-lg text-gray-800">
+                  {typeof value === 'boolean' ? (value ? '✅' : '❌') : 
+                   typeof value === 'number' ? value.toLocaleString() : 
+                   value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="btn-primary px-6 py-3"
+          >
+            {t.close}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Admin Action Button Component
+const AdminActionButton = ({ icon, text, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className="btn-primary flex items-center justify-center gap-2 py-3 hover:scale-105 transition-transform"
+    >
+      <span className="text-xl">{icon}</span>
+      <span>{text}</span>
+    </button>
+  );
+};
       </div>
     </div>
   );
