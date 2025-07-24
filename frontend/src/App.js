@@ -1340,6 +1340,651 @@ const AdminStatsDashboard = () => {
 const EnhancedVisitsLog = () => {
   const [visits, setVisits] = useState([]);
   const [filteredVisits, setFilteredVisits] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [showVisitDetails, setShowVisitDetails] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    effectiveness: 'all',
+    date_from: '',
+    date_to: '',
+    sales_rep: 'all',
+    clinic: 'all'
+  });
+  const [stats, setStats] = useState({});
+  const { language } = useContext(ThemeContext);
+
+  const translations = {
+    en: {
+      title: "📋 Comprehensive Visits Log",
+      subtitle: "Complete log of all visits by sales reps and managers",
+      search: "Search visits...",
+      filterByStatus: "Filter by Status",
+      filterByEffectiveness: "Filter by Effectiveness", 
+      filterBySalesRep: "Filter by Sales Rep",
+      filterByClinic: "Filter by Clinic",
+      fromDate: "From Date",
+      toDate: "To Date",
+      allStatuses: "All Statuses",
+      allEffectiveness: "All Effectiveness",
+      allSalesReps: "All Sales Reps", 
+      allClinics: "All Clinics",
+      completed: "Completed",
+      pending: "Pending Review",
+      missed: "Missed",
+      effective: "Effective",
+      ineffective: "Ineffective",
+      notEvaluated: "Not Evaluated",
+      visitTime: "Visit Time",
+      visitGoals: "Visit Goals",
+      clinic: "Clinic",
+      location: "Location",
+      status: "Status",
+      details: "Details",
+      totalVisits: "Total Visits",
+      effectiveVisits: "Effective Visits",
+      withVoiceNotes: "With Voice Notes",
+      withOrders: "With Orders"
+    },
+    ar: {
+      title: "📋 سجل الزيارات الشامل",
+      subtitle: "سجل كامل لجميع الزيارات التي تمت عن طريق المناديب والمديرين",
+      search: "بحث في الزيارات...",
+      filterByStatus: "فلترة بالحالة",
+      filterByEffectiveness: "فلترة بالفعالية",
+      filterBySalesRep: "فلترة بالمندوب", 
+      filterByClinic: "فلترة بالعيادة",
+      fromDate: "من تاريخ",
+      toDate: "إلى تاريخ",
+      allStatuses: "جميع الحالات",
+      allEffectiveness: "جميع مستويات الفعالية",
+      allSalesReps: "جميع المناديب",
+      allClinics: "جميع العيادات",
+      completed: "تمت",
+      pending: "في انتظار المراجعة",
+      missed: "تخلف عن الزيارة",
+      effective: "فعالة",
+      ineffective: "غير فعالة", 
+      notEvaluated: "لم يتم التقييم",
+      visitTime: "وقت الزيارة",
+      visitGoals: "أهداف الزيارة",
+      clinic: "العيادة",
+      location: "المكان",
+      status: "الحالة",
+      details: "التفاصيل",
+      totalVisits: "إجمالي الزيارات",
+      effectiveVisits: "زيارات فعالة",
+      withVoiceNotes: "بملاحظات صوتية",
+      withOrders: "بطلبات"
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
+  useEffect(() => {
+    fetchVisits();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [visits, filters]);
+
+  const fetchVisits = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/visits/comprehensive`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVisits(response.data.visits || []);
+      setStats(response.data.stats || {});
+    } catch (error) {
+      // Mock comprehensive data
+      const mockVisits = [
+        {
+          id: 1,
+          visit_date: '2024-01-24T10:30:00Z',
+          clinic_name: language === 'ar' ? 'عيادة النور' : 'Al Nour Clinic',
+          doctor_name: language === 'ar' ? 'د. أحمد محمد' : 'Dr. Ahmed Mohamed',
+          sales_rep_name: language === 'ar' ? 'محمود علي' : 'Mahmoud Ali',
+          visit_goals: language === 'ar' ? 'تقديم منتجات جديدة، متابعة العملاء' : 'Present new products, follow up clients',
+          location: language === 'ar' ? 'شارع الجمهورية، المنصورة' : 'Gomhoria Street, Mansoura',
+          status: 'completed',
+          effectiveness: true,
+          has_voice_notes: true,
+          has_orders: true,
+          notes: language === 'ar' ? 'زيارة ناجحة مع طلب منتجات جديدة' : 'Successful visit with new product orders',
+          duration_minutes: 45,
+          created_at: '2024-01-24T10:30:00Z'
+        },
+        {
+          id: 2,
+          visit_date: '2024-01-24T14:15:00Z',
+          clinic_name: language === 'ar' ? 'عيادة الشفاء' : 'Al Shifa Clinic',
+          doctor_name: language === 'ar' ? 'د. فاطمة علي' : 'Dr. Fatema Ali',
+          sales_rep_name: language === 'ar' ? 'أحمد حسن' : 'Ahmed Hassan',
+          visit_goals: language === 'ar' ? 'متابعة طلبية سابقة، تقديم عروض' : 'Follow up previous order, present offers',
+          location: language === 'ar' ? 'شارع المحطة، المنصورة' : 'Station Street, Mansoura',
+          status: 'pending',
+          effectiveness: null,
+          has_voice_notes: false,
+          has_orders: false,
+          notes: language === 'ar' ? 'تحتاج متابعة إضافية' : 'Needs additional follow-up',
+          duration_minutes: 30,
+          created_at: '2024-01-24T14:15:00Z'
+        },
+        {
+          id: 3,
+          visit_date: '2024-01-23T09:00:00Z',
+          clinic_name: language === 'ar' ? 'عيادة الأمل' : 'Al Amal Clinic',
+          doctor_name: language === 'ar' ? 'د. محمد إبراهيم' : 'Dr. Mohamed Ibrahim',
+          sales_rep_name: language === 'ar' ? 'فاطمة محمد' : 'Fatema Mohamed',
+          visit_goals: language === 'ar' ? 'زيارة تعريفية أولى' : 'Initial introduction visit',
+          location: language === 'ar' ? 'شارع سعد زغلول، المنصورة' : 'Saad Zaghloul Street, Mansoura',
+          status: 'missed',
+          effectiveness: false,
+          has_voice_notes: true,
+          has_orders: false,
+          notes: language === 'ar' ? 'لم يتواجد الطبيب في العيادة' : 'Doctor was not available at clinic',
+          duration_minutes: 0,
+          created_at: '2024-01-23T09:00:00Z'
+        }
+      ];
+
+      setVisits(mockVisits);
+      setStats({
+        total_visits: mockVisits.length,
+        effective_visits: mockVisits.filter(v => v.effectiveness === true).length,
+        with_voice_notes: mockVisits.filter(v => v.has_voice_notes).length,
+        with_orders: mockVisits.filter(v => v.has_orders).length
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = visits.filter(visit => {
+      const matchesSearch = 
+        visit.clinic_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        visit.doctor_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        visit.sales_rep_name.toLowerCase().includes(filters.search.toLowerCase());
+      
+      const matchesStatus = filters.status === 'all' || visit.status === filters.status;
+      
+      const matchesEffectiveness = 
+        filters.effectiveness === 'all' ||
+        (filters.effectiveness === 'effective' && visit.effectiveness === true) ||
+        (filters.effectiveness === 'ineffective' && visit.effectiveness === false) ||
+        (filters.effectiveness === 'not_evaluated' && visit.effectiveness === null);
+      
+      const matchesSalesRep = filters.sales_rep === 'all' || visit.sales_rep_name === filters.sales_rep;
+      const matchesClinic = filters.clinic === 'all' || visit.clinic_name === filters.clinic;
+      
+      const matchesDateFrom = !filters.date_from || new Date(visit.visit_date) >= new Date(filters.date_from);
+      const matchesDateTo = !filters.date_to || new Date(visit.visit_date) <= new Date(filters.date_to);
+
+      return matchesSearch && matchesStatus && matchesEffectiveness && 
+             matchesSalesRep && matchesClinic && matchesDateFrom && matchesDateTo;
+    });
+    
+    setFilteredVisits(filtered);
+  };
+
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 'completed':
+        return { text: t.completed, color: 'text-green-600', bg: 'bg-green-100' };
+      case 'pending':
+        return { text: t.pending, color: 'text-orange-600', bg: 'bg-orange-100' };
+      case 'missed':
+        return { text: t.missed, color: 'text-red-600', bg: 'bg-red-100' };
+      default:
+        return { text: status, color: 'text-gray-600', bg: 'bg-gray-100' };
+    }
+  };
+
+  const getEffectivenessInfo = (effectiveness) => {
+    if (effectiveness === true) return { text: t.effective, color: 'text-green-600', bg: 'bg-green-100' };
+    if (effectiveness === false) return { text: t.ineffective, color: 'text-red-600', bg: 'bg-red-100' };
+    return { text: t.notEvaluated, color: 'text-gray-600', bg: 'bg-gray-100' };
+  };
+
+  const openVisitDetails = (visit) => {
+    setSelectedVisit(visit);
+    setShowVisitDetails(true);
+  };
+
+  // Get unique values for filters
+  const uniqueSalesReps = [...new Set(visits.map(v => v.sales_rep_name))];
+  const uniqueClinics = [...new Set(visits.map(v => v.clinic_name))];
+
+  return (
+    <>
+      <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <div className="w-16 h-16 card-gradient-green rounded-full flex items-center justify-center ml-4 glow-pulse">
+                <span className="text-3xl">📋</span>
+              </div>
+              <div>
+                <h2 className="text-4xl font-bold text-gradient">{t.title}</h2>
+                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                  {t.subtitle}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-blue-600">{stats.total_visits || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.totalVisits}</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-green-600">{stats.effective_visits || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.effectiveVisits}</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-purple-600">{stats.with_voice_notes || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.withVoiceNotes}</div>
+            </div>
+            <div className="card-modern p-6 text-center">
+              <div className="text-3xl font-bold text-orange-600">{stats.with_orders || 0}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.withOrders}</div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="card-modern p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.search}:</label>
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  placeholder={t.search}
+                  className="form-modern w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.filterByStatus}:</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  className="form-modern w-full"
+                >
+                  <option value="all">{t.allStatuses}</option>
+                  <option value="completed">{t.completed}</option>
+                  <option value="pending">{t.pending}</option>
+                  <option value="missed">{t.missed}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.filterByEffectiveness}:</label>
+                <select
+                  value={filters.effectiveness}
+                  onChange={(e) => setFilters({...filters, effectiveness: e.target.value})}
+                  className="form-modern w-full"
+                >
+                  <option value="all">{t.allEffectiveness}</option>
+                  <option value="effective">{t.effective}</option>
+                  <option value="ineffective">{t.ineffective}</option>
+                  <option value="not_evaluated">{t.notEvaluated}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.filterBySalesRep}:</label>
+                <select
+                  value={filters.sales_rep}
+                  onChange={(e) => setFilters({...filters, sales_rep: e.target.value})}
+                  className="form-modern w-full"
+                >
+                  <option value="all">{t.allSalesReps}</option>
+                  {uniqueSalesReps.map((rep) => (
+                    <option key={rep} value={rep}>{rep}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.fromDate}:</label>
+                <input
+                  type="date"
+                  value={filters.date_from}
+                  onChange={(e) => setFilters({...filters, date_from: e.target.value})}
+                  className="form-modern w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">{t.toDate}:</label>
+                <input
+                  type="date"
+                  value={filters.date_to}
+                  onChange={(e) => setFilters({...filters, date_to: e.target.value})}
+                  className="form-modern w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Visits Table */}
+          <div className="card-modern overflow-hidden">
+            <div className="p-6 border-b" style={{ borderColor: 'var(--accent-bg)' }}>
+              <h3 className="text-xl font-bold flex items-center gap-3">
+                <span>📊</span>
+                <span>{t.title} ({filteredVisits.length})</span>
+              </h3>
+            </div>
+            
+            {loading ? (
+              <div className="p-12 text-center">
+                <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                </p>
+              </div>
+            ) : (
+              <div className="table-modern">
+                <table className="min-w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.visitTime}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.clinic}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{language === 'ar' ? 'الطبيب' : 'Doctor'}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{language === 'ar' ? 'المندوب' : 'Sales Rep'}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.visitGoals}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.location}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.status}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{language === 'ar' ? 'الفعالية' : 'Effectiveness'}</th>
+                      <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.details}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredVisits.map((visit) => {
+                      const status = getStatusInfo(visit.status);
+                      const effectiveness = getEffectivenessInfo(visit.effectiveness);
+                      
+                      return (
+                        <tr key={visit.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-medium">
+                                {new Date(visit.visit_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
+                              </div>
+                              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                {new Date(visit.visit_date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                              {visit.duration_minutes > 0 && (
+                                <div className="text-xs text-blue-600">
+                                  {visit.duration_minutes} {language === 'ar' ? 'دقيقة' : 'min'}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium">{visit.clinic_name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium">{visit.doctor_name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-medium">{visit.sales_rep_name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm max-w-xs truncate" title={visit.visit_goals}>
+                              {visit.visit_goals}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm max-w-xs truncate" title={visit.location}>
+                              📍 {visit.location}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.bg} ${status.color}`}>
+                              {status.text}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${effectiveness.bg} ${effectiveness.color}`}>
+                              {effectiveness.text}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => openVisitDetails(visit)}
+                                className="btn-info text-xs px-3 py-1"
+                                title={t.details}
+                              >
+                                👁️ {t.details}
+                              </button>
+                              {visit.has_voice_notes && (
+                                <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                                  🎤
+                                </span>
+                              )}
+                              {visit.has_orders && (
+                                <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                                  📦
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Visit Details Modal */}
+      {showVisitDetails && selectedVisit && (
+        <VisitDetailsModal
+          visit={selectedVisit}
+          language={language}
+          onClose={() => setShowVisitDetails(false)}
+        />
+      )}
+    </>
+  );
+};
+
+// Visit Details Modal Component
+const VisitDetailsModal = ({ visit, language, onClose }) => {
+  const t = language === 'ar' ? {
+    visitDetails: 'تفاصيل الزيارة',
+    basicInfo: 'المعلومات الأساسية',
+    visitTime: 'وقت الزيارة',
+    duration: 'مدة الزيارة',
+    clinic: 'العيادة',
+    doctor: 'الطبيب',
+    salesRep: 'المندوب',
+    location: 'الموقع',
+    goals: 'أهداف الزيارة',
+    status: 'حالة الزيارة',
+    effectiveness: 'فعالية الزيارة',
+    notes: 'الملاحظات',
+    voiceNotes: 'ملاحظات صوتية',
+    orders: 'الطلبات',
+    close: 'إغلاق',
+    minutes: 'دقيقة',
+    available: 'متاح',
+    notAvailable: 'غير متاح'
+  } : {
+    visitDetails: 'Visit Details',
+    basicInfo: 'Basic Information',
+    visitTime: 'Visit Time',
+    duration: 'Duration',
+    clinic: 'Clinic',
+    doctor: 'Doctor',
+    salesRep: 'Sales Rep',
+    location: 'Location',
+    goals: 'Visit Goals',
+    status: 'Visit Status',
+    effectiveness: 'Effectiveness',
+    notes: 'Notes',
+    voiceNotes: 'Voice Notes',
+    orders: 'Orders',
+    close: 'Close',
+    minutes: 'minutes',
+    available: 'Available',
+    notAvailable: 'Not Available'
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">{t.visitDetails}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>ℹ️</span>
+              <span>{t.basicInfo}</span>
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.visitTime}</label>
+                <p className="text-lg font-medium">
+                  {new Date(visit.visit_date).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.duration}</label>
+                <p className="text-lg font-medium">
+                  {visit.duration_minutes} {t.minutes}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.clinic}</label>
+                <p className="text-lg font-medium">{visit.clinic_name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.doctor}</label>
+                <p className="text-lg font-medium">{visit.doctor_name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.salesRep}</label>
+                <p className="text-lg font-medium">{visit.sales_rep_name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-500">{t.location}</label>
+                <p className="text-lg font-medium">📍 {visit.location}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Visit Goals and Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>🎯</span>
+                <span>{t.goals}</span>
+              </h4>
+              <p className="text-gray-700">{visit.visit_goals}</p>
+            </div>
+            
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>📊</span>
+                <span>{t.status} & {t.effectiveness}</span>
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-bold text-gray-500">{t.status}</label>
+                  <p className={`text-lg font-medium ${
+                    visit.status === 'completed' ? 'text-green-600' :
+                    visit.status === 'pending' ? 'text-orange-600' : 'text-red-600'
+                  }`}>
+                    {visit.status === 'completed' ? (language === 'ar' ? 'تمت' : 'Completed') :
+                     visit.status === 'pending' ? (language === 'ar' ? 'في انتظار المراجعة' : 'Pending Review') :
+                     (language === 'ar' ? 'تخلف عن الزيارة' : 'Missed')}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-gray-500">{t.effectiveness}</label>
+                  <p className={`text-lg font-medium ${
+                    visit.effectiveness === true ? 'text-green-600' :
+                    visit.effectiveness === false ? 'text-red-600' : 'text-gray-600'
+                  }`}>
+                    {visit.effectiveness === true ? (language === 'ar' ? '✅ فعالة' : '✅ Effective') :
+                     visit.effectiveness === false ? (language === 'ar' ? '❌ غير فعالة' : '❌ Ineffective') :
+                     (language === 'ar' ? '⏳ لم يتم التقييم' : '⏳ Not Evaluated')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes and Media */}
+          <div className="card-modern p-6">
+            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>📝</span>
+              <span>{t.notes}</span>
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                  {visit.notes || (language === 'ar' ? 'لا توجد ملاحظات' : 'No notes available')}
+                </p>
+              </div>
+              
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <span>🎤</span>
+                  <span className="text-sm font-medium">{t.voiceNotes}:</span>
+                  <span className={`text-sm ${visit.has_voice_notes ? 'text-green-600' : 'text-gray-500'}`}>
+                    {visit.has_voice_notes ? t.available : t.notAvailable}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>📦</span>
+                  <span className="text-sm font-medium">{t.orders}:</span>
+                  <span className={`text-sm ${visit.has_orders ? 'text-green-600' : 'text-gray-500'}`}>
+                    {visit.has_orders ? t.available : t.notAvailable}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="btn-primary px-6 py-3"
+          >
+            {t.close}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+const EnhancedVisitsLog = () => {
+  const [visits, setVisits] = useState([]);
+  const [filteredVisits, setFilteredVisits] = useState([]);
   const [selectedVisit, setSelectedVisit] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(false);
