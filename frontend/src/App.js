@@ -6908,7 +6908,7 @@ const Dashboard = () => {
 
         {/* Content */}
         {activeTab === 'dashboard' && user.role === 'sales_rep' && (
-          <SalesRepDashboard />
+          <SalesRepDashboard stats={stats} user={user} />
         )}
 
         {activeTab === 'dashboard' && user.role !== 'sales_rep' && (
