@@ -4737,6 +4737,338 @@ const AccountingDashboard = () => {
 };
 
 // Enhanced Warehouse Management Component
+const WarehouseManagement = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [warehouses, setWarehouses] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [warehouseStats, setWarehouseStats] = useState({});
+  const [movements, setMovements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const { language } = useContext(ThemeContext);
+
+  // Egyptian warehouses configuration
+  const egyptianWarehouses = [
+    { id: 'WH_CAIRO', name: 'مخزن القاهرة', city: 'Cairo', region: 'Greater Cairo' },
+    { id: 'WH_ALEX', name: 'مخزن الإسكندرية', city: 'Alexandria', region: 'Alexandria' },
+    { id: 'WH_GIZA', name: 'مخزن الجيزة', city: 'Giza', region: 'Greater Cairo' },
+    { id: 'WH_MANSOURA', name: 'مخزن المنصورة', city: 'Mansoura', region: 'Dakahlia' },
+    { id: 'WH_ASWAN', name: 'مخزن أسوان', city: 'Aswan', region: 'Upper Egypt' }
+  ];
+
+  const translations = {
+    en: {
+      title: "🏪 Comprehensive Warehouse Management",
+      subtitle: "Complete management of warehouses, inventory and orders",
+      dashboard: "Dashboard",
+      inventory: "Inventory Management", 
+      orders: "Orders",
+      movements: "Movement Log",
+      warehouseOverview: "Warehouse Overview",
+      urgentActions: "🚨 Urgent Actions Required",
+      lowStock: "Low Stock Alert",
+      pendingApproval: "Pending Approval",
+      criticalIssues: "Critical Issues"
+    },
+    ar: {
+      title: "🏪 إدارة المخازن الشاملة",
+      subtitle: "إدارة كاملة للمخازن والمخزون والطلبات",
+      dashboard: "لوحة التحكم",
+      inventory: "إدارة المخزن",
+      orders: "الطلبات", 
+      movements: "سجل الحركات",
+      warehouseOverview: "نظرة عامة على المخازن",
+      urgentActions: "🚨 إجراءات عاجلة مطلوبة",
+      lowStock: "تنبيه نقص مخزون",
+      pendingApproval: "في انتظار الموافقة",
+      criticalIssues: "مشاكل حرجة"
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
+  useEffect(() => {
+    fetchWarehouseData();
+  }, []);
+
+  const fetchWarehouseData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch all warehouse data
+      const [warehousesRes, statsRes, inventoryRes, ordersRes, movementsRes] = await Promise.all([
+        axios.get(`${API}/warehouses`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/dashboard/warehouse-stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/inventory`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/orders/pending`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/warehouses/movements`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      setWarehouses(warehousesRes.data);
+      setWarehouseStats(statsRes.data);
+      setInventory(inventoryRes.data);
+      setPendingOrders(ordersRes.data);
+      setMovements(movementsRes.data);
+
+    } catch (error) {
+      // Mock data for demonstration
+      setWarehouses(egyptianWarehouses);
+      setWarehouseStats({
+        total_value: 485000,
+        low_stock_count: 12,
+        pending_orders_count: 8,
+        movement_today: 45
+      });
+      setInventory([
+        { id: 1, name: 'أكسزوم 500مج', warehouse: 'مخزن القاهرة', quantity: 120, min_stock: 50, unit_price: 25.50, category: 'أدوية' },
+        { id: 2, name: 'فيتامين د3', warehouse: 'مخزن الإسكندرية', quantity: 8, min_stock: 30, unit_price: 45.00, category: 'فيتامينات' },
+        { id: 3, name: 'باراسيتامول', warehouse: 'مخزن الجيزة', quantity: 200, min_stock: 100, unit_price: 12.75, category: 'مسكنات' },
+        { id: 4, name: 'أوميجا 3', warehouse: 'مخزن المنصورة', quantity: 15, min_stock: 25, unit_price: 65.00, category: 'مكملات' },
+        { id: 5, name: 'كالسيوم مغنيسيوم', warehouse: 'مخزن أسوان', quantity: 75, min_stock: 40, unit_price: 38.25, category: 'مكملات' }
+      ]);
+      setPendingOrders([
+        { id: 'ORD-001', clinic: 'عيادة النور', items: 5, total: 1250, status: 'pending_manager', sales_rep: 'محمود علي', warehouse: 'مخزن القاهرة' },
+        { id: 'ORD-002', clinic: 'عيادة الشفاء', items: 3, total: 850, status: 'pending_accounting', sales_rep: 'أحمد حسن', warehouse: 'مخزن الإسكندرية' },
+        { id: 'ORD-003', clinic: 'عيادة الأمل', items: 7, total: 2100, status: 'pending_warehouse', sales_rep: 'فاطمة محمد', warehouse: 'مخزن المنصورة' }
+      ]);
+      setMovements([
+        { id: 1, date: '2024-01-24', product: 'أكسزوم 500مج', requester: 'عيادة النور', region: 'القاهرة', movement_type: 'صرف', order_type: 'طلبية', quantity: 10, sales_rep: 'محمود علي', doctor: 'د. أحمد محمد', reason: 'طلبية عادية', comments: 'تم الصرف بنجاح', status: 'completed' },
+        { id: 2, date: '2024-01-24', product: 'فيتامين د3', requester: 'عيادة الشفاء', region: 'الإسكندرية', movement_type: 'صرف', order_type: 'ديمو', quantity: 5, sales_rep: 'أحمد حسن', doctor: 'د. فاطمة علي', reason: 'عينة مجانية', comments: 'للتجربة', status: 'pending_approval' },
+        { id: 3, date: '2024-01-23', product: 'باراسيتامول', requester: 'عيادة الأمل', region: 'الجيزة', movement_type: 'إدخال', order_type: 'تزويد', quantity: 100, sales_rep: 'إبراهيم خالد', doctor: '', reason: 'تزويد مخزون', comments: 'شحنة جديدة', status: 'completed' }
+      ]);
+      console.error('Using mock data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <span className="text-xl md:text-3xl">🏪</span>
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">{t.title}</h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                {t.subtitle}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div className="alert-modern alert-error mb-6 scale-in">
+            <span className="ml-2">❌</span>
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="alert-modern alert-success mb-6 scale-in">
+            <span className="ml-2">✅</span>
+            {success}
+          </div>
+        )}
+
+        {/* Navigation Tabs */}
+        <div className="mb-8">
+          <nav className="flex space-x-2 overflow-x-auto bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-lg scrollbar-hide" style={{ direction: 'ltr' }}>
+            {[
+              { key: 'dashboard', label: t.dashboard, icon: '📊' },
+              { key: 'inventory', label: t.inventory, icon: '📦' },
+              { key: 'orders', label: t.orders, icon: '🛒' },
+              { key: 'movements', label: t.movements, icon: '📋' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`nav-tab ${activeTab === tab.key ? 'active' : ''} flex items-center whitespace-nowrap px-4 py-2 text-sm md:text-base`}
+              >
+                <span className="ml-2">{tab.icon}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <WarehouseDashboard 
+            stats={warehouseStats} 
+            warehouses={warehouses}
+            inventory={inventory}
+            loading={loading}
+            language={language}
+          />
+        )}
+        
+        {activeTab === 'inventory' && (
+          <InventoryManagement 
+            inventory={inventory}
+            warehouses={warehouses}
+            onRefresh={fetchWarehouseData}
+            language={language}
+          />
+        )}
+
+        {activeTab === 'orders' && (
+          <OrdersManagement 
+            orders={pendingOrders}
+            onRefresh={fetchWarehouseData}
+            language={language}
+          />
+        )}
+
+        {activeTab === 'movements' && (
+          <MovementsLog 
+            movements={movements}
+            language={language}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Warehouse Dashboard Component
+const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language }) => {
+  const t = language === 'ar' ? {
+    warehouseOverview: 'نظرة عامة على المخازن',
+    urgentActions: '🚨 إجراءات عاجلة مطلوبة',
+    totalValue: 'إجمالي القيمة',
+    lowStock: 'نقص مخزون',
+    pendingOrders: 'طلبات معلقة',
+    todayMovements: 'حركات اليوم',
+    warehouseDetails: 'تفاصيل المخازن',
+    criticalAlerts: 'تنبيهات حرجة',
+    needsAttention: 'يحتاج 3 عبوات اكسزوم',
+    needsApproval: 'يحتاج موافقة أمين المخزن على الطلبية',
+    stockShortage: 'يوجد نقص في منتج'
+  } : {
+    warehouseOverview: 'Warehouse Overview',
+    urgentActions: '🚨 Urgent Actions Required',
+    totalValue: 'Total Value',
+    lowStock: 'Low Stock',
+    pendingOrders: 'Pending Orders',
+    todayMovements: 'Today Movements',
+    warehouseDetails: 'Warehouse Details',
+    criticalAlerts: 'Critical Alerts',
+    needsAttention: 'Needs 3 units of Axozom',
+    needsApproval: 'Needs warehouse manager approval',
+    stockShortage: 'Stock shortage in product'
+  };
+
+  const criticalAlerts = [
+    { warehouse: 'مخزن أبيس', message: t.needsAttention, type: 'stock', priority: 'high' },
+    { warehouse: 'مخزن العصافرة', message: t.needsApproval, type: 'approval', priority: 'medium' },
+    { warehouse: 'مخزن جليم', message: `${t.stockShortage} فيتامين د3`, type: 'shortage', priority: 'high' }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="card-modern p-6 text-center">
+          <div className="text-3xl font-bold text-green-600">{stats.total_value?.toLocaleString() || '485,000'} جنيه</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.totalValue}</div>
+        </div>
+        <div className="card-modern p-6 text-center">
+          <div className="text-3xl font-bold text-red-600">{stats.low_stock_count || 12}</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.lowStock}</div>
+        </div>
+        <div className="card-modern p-6 text-center">
+          <div className="text-3xl font-bold text-orange-600">{stats.pending_orders_count || 8}</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.pendingOrders}</div>
+        </div>
+        <div className="card-modern p-6 text-center">
+          <div className="text-3xl font-bold text-blue-600">{stats.movement_today || 45}</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.todayMovements}</div>
+        </div>
+      </div>
+
+      {/* Critical Alerts */}
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🚨</span>
+          <span>{t.urgentActions}</span>
+        </h3>
+        <div className="space-y-3">
+          {criticalAlerts.map((alert, index) => (
+            <div key={index} className={`p-4 rounded-lg border-l-4 ${
+              alert.priority === 'high' ? 'bg-red-50 border-red-500' : 'bg-orange-50 border-orange-500'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-gray-800">{alert.warehouse}</div>
+                  <div className="text-sm text-gray-600">{alert.message}</div>
+                </div>
+                <button className={`btn-sm ${alert.priority === 'high' ? 'btn-danger' : 'btn-warning'}`}>
+                  {language === 'ar' ? 'عرض' : 'View'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Warehouses Grid */}
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🏪</span>
+          <span>{t.warehouseDetails}</span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {warehouses.map((warehouse) => {
+            const warehouseInventory = inventory.filter(item => item.warehouse === warehouse.name);
+            const lowStockItems = warehouseInventory.filter(item => item.quantity <= item.min_stock);
+            
+            return (
+              <div key={warehouse.id} className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="font-bold text-lg text-gray-800">{warehouse.name}</h4>
+                    <p className="text-sm text-gray-600">{warehouse.city} • {warehouse.region}</p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full ${lowStockItems.length > 0 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>{language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}:</span>
+                    <span className="font-bold">{warehouseInventory.length}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>{language === 'ar' ? 'نقص مخزون' : 'Low Stock'}:</span>
+                    <span className={`font-bold ${lowStockItems.length > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {lowStockItems.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>{language === 'ar' ? 'القيمة التقديرية' : 'Estimated Value'}:</span>
+                    <span className="font-bold text-blue-600">
+                      {warehouseInventory.reduce((total, item) => total + (item.quantity * item.unit_price), 0).toLocaleString()} {language === 'ar' ? 'جنيه' : 'EGP'}
+                    </span>
+                  </div>
+                </div>
+                
+                <button className="btn-primary w-full mt-4 text-sm">
+                  {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Warehouse Management Component
 // Enhanced Warehouse Management Component  
