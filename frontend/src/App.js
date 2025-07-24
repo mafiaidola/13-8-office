@@ -1958,46 +1958,141 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
   const [timeRange, setTimeRange] = useState('week');
   const [comparison, setComparison] = useState({});
   const [quickActions, setQuickActions] = useState([]);
+  const [filteredStats, setFilteredStats] = useState(stats);
+  const [loading, setLoading] = useState(false);
   const { analytics, loading: analyticsLoading } = useRealTimeAnalytics();
+  const { language } = useContext(ThemeContext);
+
+  const translations = {
+    en: {
+      title: "📊 Comprehensive Statistics Dashboard",
+      subtitle: "Complete overview of system and team performance",
+      today: "Today",
+      week: "Week", 
+      month: "Month",
+      quarter: "Quarter",
+      live: "Live",
+      quickActions: "⚡ Quick Actions",
+      liveStats: "🔴 Live Statistics",
+      updatesEvery30: "(Updates every 30 seconds)",
+      visitsToday: "Visits Today",
+      activeSalesReps: "Active Sales Reps",
+      pendingOrders: "Pending Orders",
+      totalUsers: "Total Users",
+      totalClinics: "Total Clinics",
+      totalVisits: "Total Visits",
+      totalWarehouses: "Total Warehouses",
+      lowStockItems: "Low Stock Items",
+      todayVisits: "Today's Visits",
+      lastUpdated: "Last updated:"
+    },
+    ar: {
+      title: "📊 لوحة الإحصائيات الشاملة",
+      subtitle: "نظرة شاملة على أداء النظام والفريق",
+      today: "اليوم",
+      week: "الأسبوع",
+      month: "الشهر", 
+      quarter: "الربع",
+      live: "مباشر",
+      quickActions: "⚡ إجراءات سريعة",
+      liveStats: "🔴 الإحصائيات المباشرة",
+      updatesEvery30: "(يتم التحديث كل 30 ثانية)",
+      visitsToday: "زيارات اليوم",
+      activeSalesReps: "مناديب نشطين الآن",
+      pendingOrders: "طلبيات معلقة",
+      totalUsers: "إجمالي المستخدمين",
+      totalClinics: "إجمالي العيادات", 
+      totalVisits: "إجمالي الزيارات",
+      totalWarehouses: "إجمالي المخازن",
+      lowStockItems: "منتجات نقص مخزون",
+      todayVisits: "زيارات اليوم",
+      lastUpdated: "آخر تحديث:"
+    }
+  };
+
+  const t = translations[language] || translations.en;
 
   useEffect(() => {
     fetchComparisonData();
     fetchQuickActions();
+    applyTimeFilter();
   }, [timeRange]);
 
   const fetchComparisonData = async () => {
-    // Simulate comparison data - in real app, get from API
-    setComparison({
-      users_growth: '+12%',
-      visits_growth: '+8%',
-      clinics_growth: '+15%',
-      revenue_growth: '+22%'
-    });
+    setLoading(true);
+    try {
+      // Simulate filtered data based on timeRange
+      let filtered = { ...stats };
+      
+      switch (timeRange) {
+        case 'today':
+          // Fetch today's data
+          const token = localStorage.getItem('token');
+          const todayResponse = await axios.get(`${API}/dashboard/stats?period=today`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          filtered = todayResponse.data;
+          break;
+        case 'week':
+          // This week's data - default
+          break;
+        case 'month':
+          // This month's data
+          const monthResponse = await axios.get(`${API}/dashboard/stats?period=month`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          filtered = monthResponse.data;
+          break;
+        case 'quarter':
+          // This quarter's data
+          const quarterResponse = await axios.get(`${API}/dashboard/stats?period=quarter`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          filtered = quarterResponse.data;
+          break;
+      }
+      
+      setFilteredStats(filtered);
+      setComparison({
+        users_growth: '+12%',
+        visits_growth: '+8%',
+        clinics_growth: '+15%',
+        revenue_growth: '+22%'
+      });
+    } catch (error) {
+      console.error('Error fetching time-filtered data:', error);
+      setFilteredStats(stats);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyTimeFilter = async () => {
+    await fetchComparisonData();
   };
 
   const fetchQuickActions = async () => {
     const actions = [];
-    if (stats.pending_reviews > 0) {
-      actions.push({ type: 'reviews', count: stats.pending_reviews, text: 'مراجعات تحتاج موافقة' });
+    if (filteredStats.pending_reviews > 0) {
+      actions.push({ type: 'reviews', count: filteredStats.pending_reviews, text: language === 'ar' ? 'مراجعات تحتاج موافقة' : 'Reviews Need Approval' });
     }
-    if (stats.low_stock_items > 0) {
-      actions.push({ type: 'stock', count: stats.low_stock_items, text: 'منتجات نقص مخزون' });
+    if (filteredStats.low_stock_items > 0) {
+      actions.push({ type: 'stock', count: filteredStats.low_stock_items, text: language === 'ar' ? 'منتجات نقص مخزون' : 'Low Stock Items' });
     }
-    if (stats.pending_clinics > 0) {
-      actions.push({ type: 'clinics', count: stats.pending_clinics, text: 'عيادات تحتاج موافقة' });
+    if (filteredStats.pending_clinics > 0) {
+      actions.push({ type: 'clinics', count: filteredStats.pending_clinics, text: language === 'ar' ? 'عيادات تحتاج موافقة' : 'Clinics Need Approval' });
     }
     setQuickActions(actions);
   };
 
+  // Updated stats config - removed doctors and products as requested
   const statsConfig = [
-    { key: 'total_users', title: 'إجمالي المستخدمين', icon: '👥', color: 'bg-blue-500', growth: comparison.users_growth },
-    { key: 'total_clinics', title: 'إجمالي العيادات', icon: '🏥', color: 'bg-green-500', growth: comparison.clinics_growth },
-    { key: 'total_doctors', title: 'إجمالي الأطباء', icon: '👨‍⚕️', color: 'bg-purple-500', growth: '+5%' },
-    { key: 'total_visits', title: 'إجمالي الزيارات', icon: '📋', color: 'bg-indigo-500', growth: comparison.visits_growth },
-    { key: 'total_products', title: 'إجمالي المنتجات', icon: '📦', color: 'bg-yellow-500', growth: '+3%' },
-    { key: 'total_warehouses', title: 'إجمالي المخازن', icon: '🏪', color: 'bg-pink-500', growth: '+0%' },
-    { key: 'today_visits', title: 'زيارات اليوم', icon: '📅', color: 'bg-teal-500', growth: '+18%' },
-    { key: 'low_stock_items', title: 'منتجات نقص مخزون', icon: '⚠️', color: 'bg-red-500', isAlert: true }
+    { key: 'total_users', title: t.totalUsers, icon: '👥', color: 'bg-blue-500', growth: comparison.users_growth },
+    { key: 'total_clinics', title: t.totalClinics, icon: '🏥', color: 'bg-green-500', growth: comparison.clinics_growth },
+    { key: 'total_visits', title: t.totalVisits, icon: '📋', color: 'bg-indigo-500', growth: comparison.visits_growth },
+    { key: 'total_warehouses', title: t.totalWarehouses, icon: '🏪', color: 'bg-pink-500', growth: '+0%' },
+    { key: 'today_visits', title: t.todayVisits, icon: '📅', color: 'bg-teal-500', growth: '+18%' },
+    { key: 'low_stock_items', title: t.lowStockItems, icon: '⚠️', color: 'bg-red-500', isAlert: true }
   ];
 
   return (
@@ -2007,16 +2102,16 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-3xl font-bold text-gradient">📊 لوحة الإحصائيات الشاملة</h2>
+              <h2 className="text-3xl font-bold text-gradient">{t.title}</h2>
               {analytics && (
                 <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm animate-pulse">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>مباشر</span>
+                  <span>{t.live}</span>
                 </div>
               )}
             </div>
             <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
-              نظرة شاملة على أداء النظام والفريق - آخر تحديث: {analytics?.timestamp ? new Date(analytics.timestamp).toLocaleTimeString('ar-EG') : 'جاري التحميل...'}
+              {t.subtitle} - {t.lastUpdated} {analytics?.timestamp ? new Date(analytics.timestamp).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US') : language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
             </p>
           </div>
           
@@ -2024,14 +2119,19 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
             {['today', 'week', 'month', 'quarter'].map((range) => (
               <button
                 key={range}
-                onClick={() => setTimeRange(range)}
+                onClick={() => {
+                  setTimeRange(range);
+                }}
+                disabled={loading}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === range ? 'btn-primary' : 'btn-secondary'
-                }`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {range === 'today' ? 'اليوم' : 
-                 range === 'week' ? 'الأسبوع' :
-                 range === 'month' ? 'الشهر' : 'الربع'}
+                {loading && timeRange === range ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  t[range]
+                )}
               </button>
             ))}
           </div>
@@ -2042,21 +2142,21 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
           <div className="card-modern p-6">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               <span>🔴</span>
-              <span>الإحصائيات المباشرة</span>
-              <span className="text-sm text-green-600 animate-pulse">(يتم التحديث كل 30 ثانية)</span>
+              <span>{t.liveStats}</span>
+              <span className="text-sm text-green-600 animate-pulse">{t.updatesEvery30}</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="glass-effect p-4 rounded-lg border-l-4 border-blue-500">
                 <div className="text-3xl font-bold text-blue-600">{analytics.live_stats.visits_today}</div>
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات اليوم</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.visitsToday}</div>
               </div>
               <div className="glass-effect p-4 rounded-lg border-l-4 border-green-500">
                 <div className="text-3xl font-bold text-green-600">{analytics.live_stats.active_sales_reps}</div>
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مناديب نشطين الآن</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.activeSalesReps}</div>
               </div>
               <div className="glass-effect p-4 rounded-lg border-l-4 border-orange-500">
                 <div className="text-3xl font-bold text-orange-600">{analytics.live_stats.pending_orders}</div>
-                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبيات معلقة</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t.pendingOrders}</div>
               </div>
             </div>
           </div>
@@ -2067,7 +2167,7 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
           <div className="card-modern p-6">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
               <span>⚡</span>
-              <span>إجراءات سريعة</span>
+              <span>{t.quickActions}</span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {quickActions.map((action, index) => (
@@ -2078,7 +2178,7 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
                       <p className="text-2xl font-bold text-orange-500">{action.count}</p>
                     </div>
                     <button className="btn-warning text-sm">
-                      عرض
+                      {language === 'ar' ? 'عرض' : 'View'}
                     </button>
                   </div>
                 </div>
