@@ -6164,6 +6164,17 @@ const Dashboard = () => {
   useEffect(() => {
     fetchStats();
     fetchVisits();
+    
+    // Add event listener for navigation from admin actions
+    const handleNavigation = (event) => {
+      setActiveTab(event.detail);
+    };
+    
+    window.addEventListener('navigateToTab', handleNavigation);
+    
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigation);
+    };
   }, []);
 
   const fetchStats = async () => {
