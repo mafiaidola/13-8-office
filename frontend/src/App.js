@@ -6566,6 +6566,533 @@ const VisitRegistration = () => {
   );
 };
 
+// Inventory Management Component
+const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => {
+  const [selectedWarehouse, setSelectedWarehouse] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  const t = language === 'ar' ? {
+    inventoryTitle: 'إدارة المخزون الشامل',
+    warehouse: 'المخزن',
+    allWarehouses: 'جميع المخازن',
+    search: 'بحث في المنتجات...',
+    category: 'الفئة',
+    allCategories: 'جميع الفئات',
+    productName: 'اسم المنتج',
+    quantity: 'الكمية',
+    minStock: 'أقل مخزون',
+    unitPrice: 'سعر الوحدة',
+    totalValue: 'القيمة الإجمالية',
+    status: 'الحالة',
+    actions: 'الإجراءات',
+    inStock: 'متوفر',
+    lowStock: 'نقص مخزون',
+    outOfStock: 'نفد المخزون',
+    edit: 'تعديل',
+    view: 'عرض'
+  } : {
+    inventoryTitle: 'Comprehensive Inventory Management',
+    warehouse: 'Warehouse',
+    allWarehouses: 'All Warehouses',
+    search: 'Search products...',
+    category: 'Category',
+    allCategories: 'All Categories',
+    productName: 'Product Name',
+    quantity: 'Quantity',
+    minStock: 'Min Stock',
+    unitPrice: 'Unit Price',
+    totalValue: 'Total Value',
+    status: 'Status',
+    actions: 'Actions',
+    inStock: 'In Stock',
+    lowStock: 'Low Stock',
+    outOfStock: 'Out of Stock',
+    edit: 'Edit',
+    view: 'View'
+  };
+
+  const filteredInventory = inventory.filter(item => {
+    const matchesWarehouse = selectedWarehouse === 'all' || item.warehouse === selectedWarehouse;
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    return matchesWarehouse && matchesSearch && matchesCategory;
+  });
+
+  const getStatusInfo = (item) => {
+    if (item.quantity === 0) return { text: t.outOfStock, color: 'text-red-600', bg: 'bg-red-100' };
+    if (item.quantity <= item.min_stock) return { text: t.lowStock, color: 'text-orange-600', bg: 'bg-orange-100' };
+    return { text: t.inStock, color: 'text-green-600', bg: 'bg-green-100' };
+  };
+
+  const categories = [...new Set(inventory.map(item => item.category))];
+
+  return (
+    <div className="space-y-6">
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>📦</span>
+          <span>{t.inventoryTitle}</span>
+        </h3>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.warehouse}:</label>
+            <select
+              value={selectedWarehouse}
+              onChange={(e) => setSelectedWarehouse(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">{t.allWarehouses}</option>
+              {warehouses.map((warehouse) => (
+                <option key={warehouse.id} value={warehouse.name}>
+                  {warehouse.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.search}:</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t.search}
+              className="form-modern w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.category}:</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">{t.allCategories}</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={onRefresh}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <span>🔄</span>
+              <span>{language === 'ar' ? 'تحديث' : 'Refresh'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Inventory Table */}
+        <div className="table-modern overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.productName}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.warehouse}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.quantity}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.minStock}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.unitPrice}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.totalValue}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.status}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInventory.map((item) => {
+                const status = getStatusInfo(item);
+                const totalValue = item.quantity * item.unit_price;
+                
+                return (
+                  <tr key={item.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-lg">{item.name}</div>
+                        <div className="text-sm text-gray-500">{item.category}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{item.warehouse}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-lg font-bold">{item.quantity}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600">{item.min_stock}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{item.unit_price.toFixed(2)} {language === 'ar' ? 'جنيه' : 'EGP'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-lg font-bold text-green-600">
+                        {totalValue.toFixed(2)} {language === 'ar' ? 'جنيه' : 'EGP'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.bg} ${status.color}`}>
+                        {status.text}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="btn-info text-xs px-3 py-1" title={t.view}>
+                          👁️
+                        </button>
+                        <button className="btn-primary text-xs px-3 py-1" title={t.edit}>
+                          ✏️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Orders Management Component
+const OrdersManagement = ({ orders, onRefresh, language }) => {
+  const t = language === 'ar' ? {
+    ordersTitle: 'إدارة الطلبات المنتظرة',
+    orderId: 'رقم الطلبية',
+    clinic: 'العيادة',
+    salesRep: 'المندوب',
+    warehouse: 'المخزن',
+    items: 'عدد العناصر',
+    total: 'الإجمالي',
+    status: 'الحالة',
+    actions: 'الإجراءات',
+    pendingManager: 'في انتظار المدير',
+    pendingAccounting: 'في انتظار المحاسبة',
+    pendingWarehouse: 'في انتظار المخزن',
+    approve: 'موافقة',
+    reject: 'رفض',
+    view: 'عرض'
+  } : {
+    ordersTitle: 'Pending Orders Management',
+    orderId: 'Order ID',
+    clinic: 'Clinic',
+    salesRep: 'Sales Rep',
+    warehouse: 'Warehouse',
+    items: 'Items',
+    total: 'Total',
+    status: 'Status',
+    actions: 'Actions',
+    pendingManager: 'Pending Manager',
+    pendingAccounting: 'Pending Accounting',
+    pendingWarehouse: 'Pending Warehouse',
+    approve: 'Approve',
+    reject: 'Reject',
+    view: 'View'
+  };
+
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 'pending_manager':
+        return { text: t.pendingManager, color: 'text-orange-600', bg: 'bg-orange-100' };
+      case 'pending_accounting':
+        return { text: t.pendingAccounting, color: 'text-blue-600', bg: 'bg-blue-100' };
+      case 'pending_warehouse':
+        return { text: t.pendingWarehouse, color: 'text-purple-600', bg: 'bg-purple-100' };
+      default:
+        return { text: status, color: 'text-gray-600', bg: 'bg-gray-100' };
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🛒</span>
+          <span>{t.ordersTitle}</span>
+        </h3>
+
+        <div className="table-modern overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.orderId}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.clinic}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.salesRep}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.warehouse}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.items}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.total}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.status}</th>
+                <th className="px-6 py-4 text-right text-sm font-bold uppercase">{t.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => {
+                const status = getStatusInfo(order.status);
+                
+                return (
+                  <tr key={order.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-medium">#{order.id}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{order.clinic}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{order.sales_rep}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{order.warehouse}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-center font-bold">{order.items}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-lg font-bold text-green-600">
+                        {order.total.toLocaleString()} {language === 'ar' ? 'جنيه' : 'EGP'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.bg} ${status.color}`}>
+                        {status.text}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="btn-info text-xs px-3 py-1" title={t.view}>
+                          👁️
+                        </button>
+                        <button className="btn-success text-xs px-3 py-1" title={t.approve}>
+                          ✅
+                        </button>
+                        <button className="btn-danger text-xs px-3 py-1" title={t.reject}>
+                          ❌
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Movements Log Component  
+const MovementsLog = ({ movements, language }) => {
+  const [filterDate, setFilterDate] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const t = language === 'ar' ? {
+    movementsTitle: 'سجل حركات المخزن',
+    filterByDate: 'فلترة بالتاريخ',
+    filterByType: 'فلترة بنوع الحركة',
+    filterByStatus: 'فلترة بالحالة',
+    allTypes: 'جميع الأنواع',
+    allStatuses: 'جميع الحالات',
+    date: 'التاريخ',
+    product: 'المنتج',
+    requester: 'الطالب',
+    region: 'المنطقة',
+    movementType: 'نوع الحركة',
+    orderType: 'نوع الطلب',
+    quantity: 'الكمية',
+    salesRep: 'المندوب',
+    doctor: 'الدكتور المستلم',
+    reason: 'السبب',
+    comments: 'تعليقات',
+    status: 'الحالة',
+    actions: 'الإجراءات',
+    completed: 'تمت',
+    pendingApproval: 'في انتظار الموافقة',
+    review: 'مراجعة',
+    cancel: 'إلغاء'
+  } : {
+    movementsTitle: 'Warehouse Movement Log',
+    filterByDate: 'Filter by Date',
+    filterByType: 'Filter by Type',
+    filterByStatus: 'Filter by Status',
+    allTypes: 'All Types',
+    allStatuses: 'All Statuses',
+    date: 'Date',
+    product: 'Product',
+    requester: 'Requester',
+    region: 'Region',
+    movementType: 'Movement Type',
+    orderType: 'Order Type',
+    quantity: 'Quantity',
+    salesRep: 'Sales Rep',
+    doctor: 'Receiving Doctor',
+    reason: 'Reason',
+    comments: 'Comments',
+    status: 'Status',
+    actions: 'Actions',
+    completed: 'Completed',
+    pendingApproval: 'Pending Approval',
+    review: 'Review',
+    cancel: 'Cancel'
+  };
+
+  const filteredMovements = movements.filter(movement => {
+    const matchesDate = !filterDate || movement.date.includes(filterDate);
+    const matchesType = filterType === 'all' || movement.movement_type === filterType;
+    const matchesStatus = filterStatus === 'all' || movement.status === filterStatus;
+    return matchesDate && matchesType && matchesStatus;
+  });
+
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 'completed':
+        return { text: t.completed, color: 'text-green-600', bg: 'bg-green-100' };
+      case 'pending_approval':
+        return { text: t.pendingApproval, color: 'text-orange-600', bg: 'bg-orange-100' };
+      default:
+        return { text: status, color: 'text-gray-600', bg: 'bg-gray-100' };
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card-modern p-6">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>📋</span>
+          <span>{t.movementsTitle}</span>
+        </h3>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.filterByDate}:</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="form-modern w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.filterByType}:</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">{t.allTypes}</option>
+              <option value="صرف">{language === 'ar' ? 'صرف' : 'Dispatch'}</option>
+              <option value="إدخال">{language === 'ar' ? 'إدخال' : 'Receive'}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.filterByStatus}:</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">{t.allStatuses}</option>
+              <option value="completed">{t.completed}</option>
+              <option value="pending_approval">{t.pendingApproval}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Movements Table */}
+        <div className="table-modern overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.date}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.product}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.requester}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.region}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.movementType}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.orderType}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.quantity}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.salesRep}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.doctor}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.reason}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.comments}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.status}</th>
+                <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMovements.map((movement) => {
+                const status = getStatusInfo(movement.status);
+                
+                return (
+                  <tr key={movement.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium">{movement.date}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium">{movement.product}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.requester}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.region}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        movement.movement_type === 'صرف' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {movement.movement_type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.order_type}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-center font-bold">{movement.quantity}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.sales_rep}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.doctor || '-'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.reason}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{movement.comments}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}>
+                        {status.text}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <button className="btn-info text-xs px-2 py-1" title={t.review}>
+                          👁️
+                        </button>
+                        <button className="btn-danger text-xs px-2 py-1" title={t.cancel}>
+                          ❌
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Dashboard Component
 const Dashboard = () => {
   const { user, logout } = useAuth();
