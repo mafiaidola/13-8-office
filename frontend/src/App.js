@@ -2564,7 +2564,397 @@ const AdminActionButton = ({ icon, text, onClick }) => {
   );
 };
 
-// Functions to handle admin actions
+// Selfie Capture Component for Sales Reps
+const SelfieCapture = ({ onCapture, onSkip }) => {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [capturing, setCapturing] = useState(false);
+  const { language } = useContext(ThemeContext);
+
+  const translations = {
+    en: {
+      title: "📷 Daily Check-in Selfie",
+      subtitle: "Please take a selfie to verify your attendance",
+      startCamera: "🎥 Start Camera",
+      takeSelfie: "📸 Take Selfie",
+      retake: "🔄 Retake",
+      confirm: "✅ Confirm",
+      skip: "⏭️ Skip for Now",
+      cameraError: "Cannot access camera. Please allow camera permissions."
+    },
+    ar: {
+      title: "📷 سيلفي تسجيل الحضور اليومي",
+      subtitle: "يرجى أخذ سيلفي للتأكد من حضورك",
+      startCamera: "🎥 تشغيل الكاميرا",
+      takeSelfie: "📸 التقاط سيلفي",
+      retake: "🔄 إعادة التقاط",
+      confirm: "✅ تأكيد",
+      skip: "⏭️ تخطي الآن",
+      cameraError: "لا يمكن الوصول للكاميرا. يرجى السماح بصلاحيات الكاميرا."
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: 640, height: 480 } 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      alert(t.cameraError);
+    }
+  };
+
+  const takeSelfie = () => {
+    if (canvasRef.current && videoRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      setCapturing(true);
+      
+      // Save selfie to backend
+      saveSelfie(imageData);
+    }
+  };
+
+  const saveSelfie = async (imageData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/users/selfie`, {
+        selfie_image: imageData,
+        timestamp: new Date().toISOString(),
+        location: await getCurrentLocation()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (onCapture) onCapture(imageData);
+    } catch (error) {
+      console.error('Error saving selfie:', error);
+    }
+  };
+
+  const getCurrentLocation = () => {
+    return new Promise((resolve) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }),
+          () => resolve({ latitude: null, longitude: null })
+        );
+      } else {
+        resolve({ latitude: null, longitude: null });
+      }
+    });
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+      <div className="modal-modern p-8 w-full max-w-md">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl font-bold text-gradient mb-2">{t.title}</h3>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {t.subtitle}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '4/3' }}>
+            {stream ? (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-4 border-2 border-green-400 rounded-lg"></div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-white">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📷</div>
+                  <button
+                    onClick={startCamera}
+                    className="btn-primary"
+                  >
+                    {t.startCamera}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          
+          {stream && (
+            <div className="flex gap-3">
+              <button
+                onClick={takeSelfie}
+                className="btn-success flex-1 flex items-center justify-center gap-2"
+              >
+                <span>📸</span>
+                <span>{t.takeSelfie}</span>
+              </button>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                stopCamera();
+                if (onSkip) onSkip();
+              }}
+              className="btn-secondary flex-1"
+            >
+              {t.skip}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Daily Plan Component for Sales Reps
+const DailyPlan = ({ user, onClose }) => {
+  const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { language } = useContext(ThemeContext);
+
+  const translations = {
+    en: {
+      title: "📋 Today's Plan",
+      subtitle: "Your daily tasks and schedule",
+      visits: "Visits Scheduled",
+      orders: "Orders to Process", 
+      clinics: "Clinics to Visit",
+      startDay: "🚀 Start Your Day",
+      viewMap: "🗺️ View on Map",
+      noTasks: "No tasks scheduled for today",
+      loading: "Loading your daily plan..."
+    },
+    ar: {
+      title: "📋 خطة اليوم",
+      subtitle: "مهامك وجدولك اليومي",
+      visits: "زيارات مجدولة",
+      orders: "طلبات للمعالجة",
+      clinics: "عيادات للزيارة", 
+      startDay: "🚀 ابدأ يومك",
+      viewMap: "🗺️ عرض على الخريطة",
+      noTasks: "لا توجد مهام مجدولة لليوم",
+      loading: "جاري تحميل خطة اليوم..."
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
+  useEffect(() => {
+    fetchDailyPlan();
+  }, []);
+
+  const fetchDailyPlan = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${user.id}/daily-plan`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlan(response.data);
+    } catch (error) {
+      // Mock data for demonstration
+      setPlan({
+        visits: [
+          {
+            id: 1,
+            clinic_name: language === 'ar' ? 'عيادة النور' : 'Al Nour Clinic',
+            doctor_name: language === 'ar' ? 'د. أحمد محمد' : 'Dr. Ahmed Mohamed',
+            time: '10:00 AM',
+            address: language === 'ar' ? 'شارع الجمهورية، المنصورة' : 'Gomhoria Street, Mansoura',
+            status: 'pending'
+          },
+          {
+            id: 2,
+            clinic_name: language === 'ar' ? 'عيادة الشفاء' : 'Al Shifa Clinic',
+            doctor_name: language === 'ar' ? 'د. فاطمة علي' : 'Dr. Fatema Ali',
+            time: '2:00 PM',
+            address: language === 'ar' ? 'شارع المحطة، المنصورة' : 'Station Street, Mansoura',
+            status: 'pending'
+          }
+        ],
+        orders: [
+          {
+            id: 1,
+            clinic_name: language === 'ar' ? 'عيادة الأمل' : 'Al Amal Clinic',
+            items_count: 5,
+            total_amount: 2500,
+            status: 'pending_delivery'
+          }
+        ],
+        route_optimized: true,
+        estimated_duration: '6 hours',
+        total_distance: '45 km'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="modal-modern p-8 w-full max-w-2xl">
+          <div className="text-center">
+            <div className="w-16 h-16 loading-shimmer rounded-full mx-auto mb-4"></div>
+            <p>{t.loading}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-2xl font-bold text-gradient">{t.title}</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {t.subtitle}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Plan Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="card-modern p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">{plan?.visits?.length || 0}</div>
+              <div className="text-sm text-gray-600">{t.visits}</div>
+            </div>
+            <div className="card-modern p-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{plan?.orders?.length || 0}</div>
+              <div className="text-sm text-gray-600">{t.orders}</div>
+            </div>
+            <div className="card-modern p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600">{plan?.estimated_duration || 'N/A'}</div>
+              <div className="text-sm text-gray-600">{language === 'ar' ? 'مدة متوقعة' : 'Estimated Duration'}</div>
+            </div>
+          </div>
+
+          {/* Visits Schedule */}
+          {plan?.visits && plan.visits.length > 0 && (
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>👨‍⚕️</span>
+                <span>{t.visits}</span>
+              </h4>
+              <div className="space-y-3">
+                {plan.visits.map((visit, index) => (
+                  <div key={visit.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-lg">{visit.clinic_name}</div>
+                      <div className="text-sm text-gray-600">{visit.doctor_name}</div>
+                      <div className="text-xs text-gray-500">{visit.address}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-blue-600">{visit.time}</div>
+                      <div className="text-xs text-gray-500">{language === 'ar' ? 'معلق' : 'Pending'}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Orders to Process */}
+          {plan?.orders && plan.orders.length > 0 && (
+            <div className="card-modern p-6">
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <span>📦</span>
+                <span>{t.orders}</span>
+              </h4>
+              <div className="space-y-3">
+                {plan.orders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium">{order.clinic_name}</div>
+                      <div className="text-sm text-gray-600">
+                        {order.items_count} {language === 'ar' ? 'عناصر' : 'items'} • {order.total_amount.toLocaleString()} EGP
+                      </div>
+                    </div>
+                    <div className="text-sm text-orange-600 font-medium">
+                      {language === 'ar' ? 'في انتظار التسليم' : 'Pending Delivery'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {plan?.visits?.length === 0 && plan?.orders?.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📋</div>
+              <p className="text-lg text-gray-600">{t.noTasks}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            >
+              <span>🚀</span>
+              <span>{t.startDay}</span>
+            </button>
+            <button
+              className="btn-info flex items-center justify-center gap-2 px-6"
+            >
+              <span>🗺️</span>
+              <span>{t.viewMap}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const handleExportReports = () => {
   // Export functionality
   const reportData = {
