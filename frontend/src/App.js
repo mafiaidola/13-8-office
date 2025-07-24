@@ -3487,50 +3487,31 @@ const QRCodeScanner = ({ onScan, onClose }) => {
   );
 };
 
-// Language Selector Component
+// Enhanced Language Selector with English as Primary
 const LanguageSelector = () => {
-  const [currentLang, setCurrentLang] = useState('ar');
-  const [translations, setTranslations] = useState({});
+  const { language, setLanguage } = useContext(ThemeContext);
 
   const languages = [
-    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    { code: 'en', name: 'English', flag: '🇺🇸', dir: 'ltr' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦', dir: 'rtl' }
   ];
 
-  const loadTranslations = async (lang) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/language/translations?lang=${lang}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTranslations(response.data);
-      localStorage.setItem('app_language', lang);
-    } catch (error) {
-      console.error('Error loading translations:', error);
-    }
-  };
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('app_language') || 'ar';
-    setCurrentLang(savedLang);
-    loadTranslations(savedLang);
-  }, []);
-
   const handleLanguageChange = (lang) => {
-    setCurrentLang(lang);
-    loadTranslations(lang);
+    setLanguage(lang);
+    localStorage.setItem('app_language', lang);
     
     // Apply RTL/LTR direction
-    document.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const selectedLang = languages.find(l => l.code === lang);
+    document.dir = selectedLang?.dir || 'ltr';
+    document.documentElement.lang = lang;
   };
 
   return (
     <div className="relative">
       <select 
-        value={currentLang}
+        value={language}
         onChange={(e) => handleLanguageChange(e.target.value)}
-        className="form-modern text-sm pr-8 pl-4 py-2 appearance-none bg-white"
+        className="bg-white/90 backdrop-blur-sm border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none pr-8"
         style={{ direction: 'ltr' }}
       >
         {languages.map((lang) => (
@@ -3539,6 +3520,11 @@ const LanguageSelector = () => {
           </option>
         ))}
       </select>
+      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </div>
   );
 };
