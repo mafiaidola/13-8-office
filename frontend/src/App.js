@@ -3074,12 +3074,13 @@ const useRealTimeAnalytics = () => {
   return { analytics, loading };
 };
 
-// Global Search Component
+// Enhanced Global Search Component with Better Design
 const GlobalSearchBox = ({ onResults }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const { language } = useContext(ThemeContext);
 
   const handleSearch = async (searchQuery) => {
     if (!searchQuery.trim()) {
@@ -3117,64 +3118,107 @@ const GlobalSearchBox = ({ onResults }) => {
     return Object.values(results).reduce((total, category) => total + (category?.length || 0), 0);
   };
 
+  const translations = {
+    en: {
+      placeholder: "🔍 Search across the system...",
+      users: "👥 Users",
+      clinics: "🏥 Clinics", 
+      doctors: "👨‍⚕️ Doctors",
+      products: "📦 Products",
+      noResults: "No results found"
+    },
+    ar: {
+      placeholder: "🔍 بحث عام في النظام...",
+      users: "👥 المستخدمين",
+      clinics: "🏥 العيادات",
+      doctors: "👨‍⚕️ الأطباء", 
+      products: "📦 المنتجات",
+      noResults: "لا توجد نتائج"
+    }
+  };
+
+  const t = translations[language] || translations.en;
+
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-md">
       <div className="relative">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="🔍 بحث عام في النظام..."
-          className="form-modern w-full pl-10 pr-4 py-3 text-sm"
-          style={{ direction: 'rtl' }}
+          placeholder={t.placeholder}
+          className="w-full px-4 py-2.5 pr-10 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl shadow-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
         />
-        {isSearching && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <div className="loading-shimmer w-4 h-4 rounded-full"></div>
-          </div>
-        )}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {isSearching ? (
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <span className="text-gray-400 text-lg">🔍</span>
+          )}
+        </div>
       </div>
 
-      {showResults && getTotalResults() > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white shadow-xl rounded-lg border max-h-96 overflow-y-auto">
-          {Object.entries(results).map(([category, items]) => {
-            if (!items || items.length === 0) return null;
-            
-            const categoryLabels = {
-              users: '👥 المستخدمين',
-              clinics: '🏥 العيادات',
-              doctors: '👨‍⚕️ الأطباء',
-              products: '📦 المنتجات'
-            };
-
-            return (
-              <div key={category} className="p-3 border-b">
-                <h4 className="font-bold text-sm text-gray-600 mb-2">
-                  {categoryLabels[category]} ({items.length})
-                </h4>
-                {items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-2 hover:bg-gray-50 rounded cursor-pointer text-sm"
-                    onClick={() => {
-                      setShowResults(false);
-                      setQuery('');
-                    }}
-                  >
-                    <div className="font-medium text-gray-800">
-                      {item.full_name || item.name || item.username}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {category === 'users' && item.role && `${item.email} • ${item.role}`}
-                      {category === 'clinics' && item.address}
-                      {category === 'doctors' && item.specialty}
-                      {category === 'products' && `${item.price} ريال • ${item.unit}`}
-                    </div>
+      {showResults && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white/95 backdrop-blur-lg shadow-2xl rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
+          {getTotalResults() === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              <div className="text-4xl mb-2">🔍</div>
+              <p>{t.noResults}</p>
+            </div>
+          ) : (
+            Object.entries(results).map(([category, items]) => {
+              if (!items || items.length === 0) return null;
+              
+              return (
+                <div key={category} className="border-b border-gray-100 last:border-b-0">
+                  <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+                    <h4 className="font-bold text-sm text-gray-700 flex items-center gap-2">
+                      <span>{t[category]}</span>
+                      <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs">
+                        {items.length}
+                      </span>
+                    </h4>
                   </div>
-                ))}
-              </div>
-            );
-          })}
+                  <div className="p-2">
+                    {items.map((item, index) => (
+                      <div
+                        key={index}
+                        className="p-3 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors duration-150 border border-transparent hover:border-blue-200"
+                        onClick={() => {
+                          setShowResults(false);
+                          setQuery('');
+                          // Handle navigation to item details
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                            {(item.full_name || item.name || item.username)?.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-800 text-sm">
+                              {item.full_name || item.name || item.username}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {category === 'users' && item.role && `${item.email} • ${item.role}`}
+                              {category === 'clinics' && item.address}
+                              {category === 'doctors' && item.specialty}
+                              {category === 'products' && `${item.price} EGP • ${item.unit}`}
+                            </div>
+                          </div>
+                          <div className="text-gray-400">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>
