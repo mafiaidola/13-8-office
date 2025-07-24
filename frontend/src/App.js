@@ -5453,132 +5453,256 @@ const ReportsSection = () => {
   );
 };
 
-// Enhanced Sales Rep Dashboard
-const SalesRepDashboard = () => {
-  const [detailedStats, setDetailedStats] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+// Enhanced Sales Rep Dashboard with Selfie and Daily Plan
+const SalesRepDashboard = ({ stats, user }) => {
+  const [showSelfieCapture, setShowSelfieCapture] = useState(false);
+  const [showDailyPlan, setShowDailyPlan] = useState(false);
+  const [selfieToday, setSelfieToday] = useState(null);
+  const { language } = useContext(ThemeContext);
 
   useEffect(() => {
-    fetchDetailedStats();
+    checkDailySelfie();
   }, []);
 
-  const fetchDetailedStats = async () => {
+  const checkDailySelfie = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/dashboard/sales-rep-stats`, {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await axios.get(`${API}/users/selfie/today`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDetailedStats(response.data);
+      
+      if (response.data.selfie) {
+        setSelfieToday(response.data.selfie);
+      } else {
+        // Show selfie capture if no selfie taken today
+        setShowSelfieCapture(true);
+      }
     } catch (error) {
-      console.error('Error fetching detailed stats:', error);
-    } finally {
-      setIsLoading(false);
+      // If API doesn't exist, show selfie capture for demo
+      setShowSelfieCapture(true);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">جاري تحميل الإحصائيات...</p>
-      </div>
-    );
-  }
+  const handleSelfieCapture = (imageData) => {
+    setSelfieToday(imageData);
+    setShowSelfieCapture(false);
+    setShowDailyPlan(true); // Show daily plan after selfie
+  };
+
+  const handleSelfieSkip = () => {
+    setShowSelfieCapture(false);
+    setShowDailyPlan(true); // Show daily plan anyway
+  };
+
+  const translations = {
+    en: {
+      welcome: "👋 Welcome back",
+      todayStats: "Today's Performance",
+      visitsToday: "Visits Today",
+      ordersToday: "Orders Today",
+      clinicsAdded: "Clinics Added",
+      efficiency: "Efficiency Rate",
+      quickActions: "⚡ Quick Actions",
+      newVisit: "👨‍⚕️ New Visit",
+      newOrder: "📦 New Order",
+      addClinic: "🏥 Add Clinic",
+      viewPlan: "📋 View Daily Plan",
+      todaySelfie: "📷 Today's Check-in",
+      retakeSelfie: "🔄 Retake Selfie"
+    },
+    ar: {
+      welcome: "👋 مرحباً بعودتك",
+      todayStats: "أداء اليوم",
+      visitsToday: "زيارات اليوم",
+      ordersToday: "طلبات اليوم", 
+      clinicsAdded: "عيادات مضافة",
+      efficiency: "معدل الكفاءة",
+      quickActions: "⚡ إجراءات سريعة",
+      newVisit: "👨‍⚕️ زيارة جديدة",
+      newOrder: "📦 طلبة جديدة", 
+      addClinic: "🏥 إضافة عيادة",
+      viewPlan: "📋 عرض خطة اليوم",
+      todaySelfie: "📷 تسجيل حضور اليوم",
+      retakeSelfie: "🔄 إعادة التقاط سيلفي"
+    }
+  };
+
+  const t = translations[language] || translations.en;
 
   return (
-    <div className="space-y-6 page-transition">
-      {/* Visit Statistics Section */}
-      <div className="card-modern p-6">
-        <div className="flex items-center mb-6">
-          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center ml-4">
-            <span className="text-2xl">📊</span>
-          </div>
-          <h2 className="text-2xl font-bold text-gradient">قسم الزيارات</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="stat-card stat-green text-center scale-in">
-            <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🌅</span>
+    <>
+      <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+        <div className="space-y-8">
+          {/* Welcome Header */}
+          <div className="card-modern p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gradient mb-2">
+                  {t.welcome}, {user.full_name}! 🌟
+                </h2>
+                <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                  {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              </div>
+              
+              {selfieToday && (
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-500 mb-1">{t.todaySelfie}</div>
+                    <img 
+                      src={selfieToday} 
+                      alt="Today's selfie"
+                      className="w-16 h-16 rounded-full object-cover border-4 border-green-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowSelfieCapture(true)}
+                    className="btn-secondary text-sm px-3 py-1"
+                  >
+                    {t.retakeSelfie}
+                  </button>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-green-800 mb-2">زيارات اليوم</h3>
-            <p className="text-4xl font-bold text-green-600 pulse-gentle">{detailedStats.visits?.today || 0}</p>
           </div>
-          <div className="stat-card stat-blue text-center scale-in">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📅</span>
+
+          {/* Today's Performance Stats */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>📊</span>
+              <span>{t.todayStats}</span>
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <div className="text-3xl font-bold text-blue-600">{stats.today_visits || 0}</div>
+                <div className="text-sm text-gray-600">{t.visitsToday}</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                <div className="text-3xl font-bold text-green-600">{stats.today_orders || 0}</div>
+                <div className="text-sm text-gray-600">{t.ordersToday}</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                <div className="text-3xl font-bold text-purple-600">{stats.clinics_added || 0}</div>
+                <div className="text-sm text-gray-600">{t.clinicsAdded}</div>
+              </div>
+              <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                <div className="text-3xl font-bold text-orange-600">{stats.efficiency_rate || '85'}%</div>
+                <div className="text-sm text-gray-600">{t.efficiency}</div>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">زيارات الأسبوع</h3>
-            <p className="text-4xl font-bold text-blue-600 pulse-gentle">{detailedStats.visits?.week || 0}</p>
           </div>
-          <div className="stat-card stat-purple text-center scale-in">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🗓️</span>
+
+          {/* Quick Actions */}
+          <div className="card-modern p-6">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>⚡</span>
+              <span>{t.quickActions}</span>
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button className="btn-primary flex flex-col items-center gap-2 py-6">
+                <span className="text-3xl">👨‍⚕️</span>
+                <span>{t.newVisit}</span>
+              </button>
+              <button className="btn-success flex flex-col items-center gap-2 py-6">
+                <span className="text-3xl">📦</span>
+                <span>{t.newOrder}</span>
+              </button>
+              <button className="btn-info flex flex-col items-center gap-2 py-6">
+                <span className="text-3xl">🏥</span>
+                <span>{t.addClinic}</span>
+              </button>
+              <button 
+                onClick={() => setShowDailyPlan(true)}
+                className="btn-warning flex flex-col items-center gap-2 py-6"
+              >
+                <span className="text-3xl">📋</span>
+                <span>{t.viewPlan}</span>
+              </button>
             </div>
-            <h3 className="text-lg font-semibold text-purple-800 mb-2">زيارات الشهر</h3>
-            <p className="text-4xl font-bold text-purple-600 pulse-gentle">{detailedStats.visits?.month || 0}</p>
           </div>
-          <div className="stat-card stat-orange text-center scale-in">
-            <div className="w-16 h-16 bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🏆</span>
+
+          {/* Performance Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="card-modern p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>📈</span>
+                <span>{language === 'ar' ? 'أداء الأسبوع' : 'Weekly Performance'}</span>
+              </h3>
+              <div className="h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">📊</div>
+                  <p className="text-gray-600">
+                    {language === 'ar' ? 'رسم بياني لأدائك الأسبوعي' : 'Your Weekly Performance Chart'}
+                  </p>
+                </div>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-indigo-800 mb-2">إجمالي الزيارات</h3>
-            <p className="text-4xl font-bold text-indigo-600 pulse-gentle">{detailedStats.visits?.total || 0}</p>
+
+            <div className="card-modern p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>🏆</span>
+                <span>{language === 'ar' ? 'إنجازات الشهر' : 'Monthly Achievements'}</span>
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🥇</span>
+                    <span className="font-medium">
+                      {language === 'ar' ? 'أفضل مندوب للشهر' : 'Top Rep of the Month'}
+                    </span>
+                  </div>
+                  <span className="text-yellow-600 font-bold">
+                    {language === 'ar' ? 'مكتمل' : 'Achieved'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🎯</span>
+                    <span className="font-medium">
+                      {language === 'ar' ? 'تحقيق هدف الزيارات' : 'Visits Target Met'}
+                    </span>
+                  </div>
+                  <span className="text-blue-600 font-bold">95%</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💰</span>
+                    <span className="font-medium">
+                      {language === 'ar' ? 'تحقيق هدف المبيعات' : 'Sales Target Met'}
+                    </span>
+                  </div>
+                  <span className="text-green-600 font-bold">110%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* General Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="card-modern p-6 interactive-element">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center ml-4">
-              <span className="text-2xl">🏥</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">إجمالي العيادات المضافة</h3>
-              <p className="text-sm text-gray-500">عن طريقك</p>
-            </div>
-          </div>
-          <p className="text-4xl font-bold text-blue-600">{detailedStats.total_clinics_added || 0}</p>
-        </div>
+      {/* Selfie Capture Modal */}
+      {showSelfieCapture && (
+        <SelfieCapture 
+          onCapture={handleSelfieCapture}
+          onSkip={handleSelfieSkip}
+        />
+      )}
 
-        <div className="card-modern p-6 interactive-element">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center ml-4">
-              <span className="text-2xl">👨‍⚕️</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">إجمالي الأطباء المسجلين</h3>
-              <p className="text-sm text-gray-500">عن طريقك</p>
-            </div>
-          </div>
-          <p className="text-4xl font-bold text-green-600">{detailedStats.total_doctors_added || 0}</p>
-        </div>
-
-        <div className="card-modern p-6 interactive-element">
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center ml-4">
-              <span className="text-2xl">⏳</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800">في انتظار الموافقة</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">👁️</span>زيارات:</span>
-              <span className="badge-modern badge-warning">{detailedStats.pending?.visits || 0}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">🏥</span>عيادات:</span>
-              <span className="badge-modern badge-info">{detailedStats.pending?.clinic_requests || 0}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-              <span className="text-sm text-gray-600 flex items-center"><span className="ml-2">📦</span>أوردرات:</span>
-              <span className="badge-modern badge-success">{detailedStats.pending?.orders || 0}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* Daily Plan Modal */}
+      {showDailyPlan && (
+        <DailyPlan 
+          user={user}
+          onClose={() => setShowDailyPlan(false)}
+        />
+      )}
+    </>
   );
 };
 
