@@ -3408,10 +3408,23 @@ const EnhancedUserManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                            user.is_active ? 'bg-green-500' : 'bg-gray-500'
-                          }`}>
-                            {user.full_name.charAt(0)}
+                          <div className="relative">
+                            {user.profile_image ? (
+                              <img 
+                                src={user.profile_image} 
+                                alt={user.full_name}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                              />
+                            ) : (
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                user.is_active ? 'bg-gradient-to-br from-blue-500 to-purple-600' : 'bg-gray-500'
+                              }`}>
+                                {user.full_name.charAt(0)}
+                              </div>
+                            )}
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                              user.is_active ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
                           </div>
                           <div>
                             <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
