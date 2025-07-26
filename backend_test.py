@@ -2669,6 +2669,22 @@ class BackendTester:
         self.test_secret_reports_api()
         self.test_daily_plans_api()
         
+        # NEW COMPREHENSIVE ADMIN SETTINGS AND PERMISSIONS TESTS
+        print("🔧 COMPREHENSIVE ADMIN SETTINGS & PERMISSIONS TESTS")
+        print("-" * 30)
+        self.test_admin_permissions_get()
+        self.test_admin_permissions_post()
+        self.test_admin_permissions_access_control()
+        self.test_admin_dashboard_config_get()
+        self.test_admin_dashboard_config_post()
+        self.test_admin_dashboard_config_access_control()
+        self.test_admin_system_health()
+        self.test_admin_system_health_access_control()
+        self.test_admin_activity_logs()
+        self.test_admin_activity_logs_access_control()
+        self.test_user_permissions_api()
+        self.test_user_permissions_role_based()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
