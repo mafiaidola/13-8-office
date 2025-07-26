@@ -5941,68 +5941,182 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
   );
 };
 
-// Enhanced Footer Component
+// Enhanced Footer with Dynamic Copyright Section and Social Links
 const EnhancedFooter = () => {
   const { theme, language } = useTheme();
   
+  const currentYear = new Date().getFullYear();
+  
+  const footerLinks = {
+    ar: {
+      about: 'عن الشركة',
+      services: 'خدماتنا', 
+      contact: 'اتصل بنا',
+      privacy: 'سياسة الخصوصية',
+      terms: 'الشروط والأحكام',
+      support: 'الدعم الفني'
+    },
+    en: {
+      about: 'About Us',
+      services: 'Our Services',
+      contact: 'Contact Us', 
+      privacy: 'Privacy Policy',
+      terms: 'Terms & Conditions',
+      support: 'Technical Support'
+    }
+  };
+
+  const links = footerLinks[language] || footerLinks.ar;
+
   return (
-    <footer className="glass-effect mt-auto border-t" style={{ borderColor: 'var(--border-color)' }}>
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <footer 
+      className="glass-effect border-t border-white border-opacity-20 py-8 px-6"
+      style={{ background: 'var(--secondary-bg)' }}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          
           {/* Company Info */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg">نظام إدارة المبيعات</h3>
-            </div>
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-gradient">EP Group System</h3>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              نظام شامل لإدارة المبيعات والمناديب والعيادات بتقنيات حديثة
+              {language === 'ar' 
+                ? 'نظام إدارة شامل للمؤسسات والشركات مع أحدث التقنيات'
+                : 'Comprehensive enterprise management system with latest technologies'
+              }
             </p>
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-3">
-            <h4 className="font-semibold">روابط سريعة</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-blue-500 transition-colors">لوحة التحكم</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">إدارة المستخدمين</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">التقارير</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">الإعدادات</a></li>
+          <div className="space-y-4">
+            <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {language === 'ar' ? 'روابط سريعة' : 'Quick Links'}
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <a href="#about" className="text-sm hover:text-blue-500 transition-colors" 
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.about}
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.services}
+                </a>
+              </li>
+              <li>
+                <a href="#contact" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.contact}
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="space-y-3">
-            <h4 className="font-semibold">الدعم والمساعدة</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-blue-500 transition-colors">مركز المساعدة</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">اتصل بنا</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">الأسئلة الشائعة</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition-colors">التحديثات</a></li>
+          {/* Legal Links */}
+          <div className="space-y-4">
+            <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {language === 'ar' ? 'قانوني' : 'Legal'}
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <a href="#privacy" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.privacy}
+                </a>
+              </li>
+              <li>
+                <a href="#terms" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.terms}
+                </a>
+              </li>
+              <li>
+                <a href="#support" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  {links.support}
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* System Info */}
-          <div className="space-y-3">
-            <h4 className="font-semibold">معلومات النظام</h4>
-            <div className="text-sm space-y-2">
-              <p>الثيم الحالي: <span className="font-semibold">{theme}</span></p>
-              <p>اللغة: <span className="font-semibold">{language === 'ar' ? 'العربية' : 'English'}</span></p>
-              <p>الإصدار: <span className="font-semibold">v2.0.0</span></p>
+          {/* Contact Info */}
+          <div className="space-y-4">
+            <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {language === 'ar' ? 'تواصل معنا' : 'Contact'}
+            </h4>
+            <div className="space-y-2">
+              <p className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                </svg>
+                info@epgroup.com
+              </p>
+              <p className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                </svg>
+                {language === 'ar' ? 'القاهرة، مصر' : 'Cairo, Egypt'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t mt-6 pt-4 flex items-center justify-between text-sm" style={{ borderColor: 'var(--border-color)' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            © {new Date().getFullYear()} نظام إدارة المبيعات. جميع الحقوق محفوظة.
-          </p>
-          <div className="flex items-center gap-4">
-            <span style={{ color: 'var(--text-secondary)' }}>مطور بواسطة فريق التطوير</span>
+        {/* Animated Copyright Section */}
+        <div className="mt-8 pt-8 border-t border-white border-opacity-20 flex flex-col md:flex-row justify-between items-center">
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            © {currentYear} EP Group System. 
+            {language === 'ar' ? ' جميع الحقوق محفوظة.' : ' All rights reserved.'}
+          </div>
+          
+          {/* Animated Intellectual Property Section */}
+          <div className="mt-4 md:mt-0 text-center md:text-right">
+            <div 
+              className="animated-copyright-section"
+              style={{
+                background: 'linear-gradient(45deg, #ff6b35, #f7931e, #ffd23f, #06d6a0, #118ab2, #073b4c)',
+                backgroundSize: '300% 300%',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'gradientShift 3s ease infinite, pulse 2s ease-in-out infinite alternate'
+              }}
+            >
+              <div className="text-xs mb-1" style={{ fontWeight: '500' }}>
+                جميع حقوق الملكيه الفكريه محفوظه
+              </div>
+              <div 
+                className="text-sm font-bold mb-2"
+                style={{
+                  fontFamily: '"Roboto", "Tajawal", sans-serif',
+                  letterSpacing: '1px',
+                  textShadow: '0 0 10px rgba(255, 107, 53, 0.5)',
+                  animation: 'bounce 2s infinite'
+                }}
+              >
+                Mahmoud Elmnakhli
+              </div>
+              <a 
+                href="https://facebook.com/mafiaidola" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(45deg, #1877f2, #42a5f5)',
+                  color: 'white',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 15px rgba(24, 119, 242, 0.3)',
+                  animation: 'socialPulse 3s ease-in-out infinite'
+                }}
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Facebook
+              </a>
+            </div>
           </div>
         </div>
       </div>
