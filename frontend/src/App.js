@@ -10934,6 +10934,10 @@ const Dashboard = () => {
           <AccountingPage />
         )}
         
+        {activeTab === 'analytics' && canAccessTab('reports') && (
+          <AdvancedAnalyticsDashboard />
+        )}
+        
         {activeTab === 'chat' && (
           <ChatSystem />
         )}
