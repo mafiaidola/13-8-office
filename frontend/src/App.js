@@ -6065,6 +6065,24 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  const handleToggleStatus = async (userId, currentStatus) => {
+    const action = currentStatus ? 'تعطيل' : 'تنشيط';
+    const confirmed = window.confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess(`تم ${action} المستخدم بنجاح`);
+      fetchUsers(); // Refresh the users list
+    } catch (error) {
+      setError(`خطأ في ${action} المستخدم`);
+    }
+  };
+
   const UserCard = ({ user }) => (
     <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
       <div className="flex items-start gap-4">
