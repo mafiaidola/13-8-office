@@ -815,15 +815,18 @@ backend:
 
   - task: "User Assignment Management"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added /api/admin/users/{user_id}/assignment endpoint for assigning users to regions, districts, and lines. Updated User model with region_id, district_id, and line fields for proper hierarchical assignments."
+      - working: true
+        agent: "testing"
+        comment: "✅ USER ASSIGNMENT MANAGEMENT WORKING PERFECTLY: PATCH /api/admin/users/{user_id}/assignment endpoint fully functional. Successfully assigned medical rep user to region (5d7fce01-4e08-43e9-afc0-cc589ca80b60), district (9aaea716-1a0d-4da2-a539-fee57b49f625), and line (line_1). User model properly updated with region_id, district_id, and line fields. Assignment API correctly validates and saves hierarchical user assignments for proper organizational structure management."
 
 frontend:
   - task: "Multi-role authentication UI with Arabic interface"
