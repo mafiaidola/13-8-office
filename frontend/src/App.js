@@ -12283,6 +12283,581 @@ const GamificationDashboard = () => {
   );
 }
 
+// Advanced GPS Tracking & Route Management Dashboard
+const GPSTrackingDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState('team'); // team, history, geofence, routes
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [timeRange, setTimeRange] = useState(24);
+  
+  // Data states
+  const [teamLocations, setTeamLocations] = useState(null);
+  const [locationHistory, setLocationHistory] = useState(null);
+  const [routeOptimization, setRouteOptimization] = useState(null);
+  const [geofenceAlerts, setGeofenceAlerts] = useState([]);
+  
+  // Map state
+  const [mapCenter, setMapCenter] = useState({ lat: 30.0444, lng: 31.2357 }); // Cairo default
+  const [mapZoom, setMapZoom] = useState(10);
+  
+  const { language, t } = useLanguage();
+
+  useEffect(() => {
+    loadGPSData();
+    // Auto-refresh every 30 seconds for real-time updates
+    const interval = setInterval(loadGPSData, 30000);
+    return () => clearInterval(interval);
+  }, [activeView, selectedUser, timeRange]);
+
+  const loadGPSData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      if (activeView === 'team') {
+        const response = await axios.get(`${API}/gps/team-locations?include_history_hours=2`, { headers });
+        setTeamLocations(response.data);
+        
+        // Update map center to team average location
+        if (response.data.locations.length > 0) {
+          const validLocations = response.data.locations.filter(loc => loc.current_location);
+          if (validLocations.length > 0) {
+            const avgLat = validLocations.reduce((sum, loc) => sum + loc.current_location.latitude, 0) / validLocations.length;
+            const avgLng = validLocations.reduce((sum, loc) => sum + loc.current_location.longitude, 0) / validLocations.length;
+            setMapCenter({ lat: avgLat, lng: avgLng });
+          }
+        }
+      } else if (activeView === 'history' && selectedUser) {
+        const response = await axios.get(`${API}/gps/location-history/${selectedUser}?hours=${timeRange}&include_route=true`, { headers });
+        setLocationHistory(response.data);
+        
+        // Update map to show route
+        if (response.data.locations.length > 0) {
+          const firstLocation = response.data.locations[0];
+          setMapCenter({ lat: firstLocation.latitude, lng: firstLocation.longitude });
+        }
+      } else if (activeView === 'routes') {
+        // Load route optimization data (mock for now)
+        setRouteOptimization({
+          suggestions: [],
+          loading: false
+        });
+      }
+    } catch (error) {
+      setError('خطأ في تحميل بيانات GPS');
+      console.error('GPS data error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'online': 'bg-green-500 text-green-400',
+      'inactive': 'bg-yellow-500 text-yellow-400', 
+      'offline': 'bg-red-500 text-red-400',
+      'no_data': 'bg-gray-500 text-gray-400'
+    };
+    return colors[status] || colors.no_data;
+  };
+
+  const getStatusText = (status) => {
+    const texts = {
+      'online': 'متصل',
+      'inactive': 'غير نشط',
+      'offline': 'غير متصل',
+      'no_data': 'لا توجد بيانات'
+    };
+    return texts[status] || texts.no_data;
+  };
+
+  // Team Locations View
+  const TeamLocationsView = () => {
+    if (!teamLocations) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Team Summary */}
+        <div className="glass-effect p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>👥</span>
+            <span>مواقع الفريق المباشرة</span>
+            <span className="bg-blue-500 bg-opacity-20 text-blue-400 px-2 py-1 rounded-full text-sm">
+              {teamLocations.team_size} عضو
+            </span>
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {teamLocations.online_members}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                متصل حالياً
+              </div>
+            </div>
+            <div className="text-center p-4 bg-yellow-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">
+                {teamLocations.offline_members}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                غير متصل
+              </div>
+            </div>
+            <div className="text-center p-4 bg-red-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-red-400">
+                {teamLocations.no_data_members}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                لا توجد بيانات
+              </div>
+            </div>
+            <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {teamLocations.locations.reduce((sum, loc) => sum + loc.recent_activity.visits_completed, 0)}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                زيارات اليوم
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Team Members Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {teamLocations.locations.map((member, index) => (
+            <div key={member.user_id} className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
+              <div className="flex items-start gap-4 mb-4">
+                {/* User Photo */}
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    {member.photo ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${member.photo}`}
+                        alt={member.full_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold">
+                        {member.full_name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  {/* Status Indicator */}
+                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                    member.status === 'online' ? 'bg-green-500' :
+                    member.status === 'inactive' ? 'bg-yellow-500' :
+                    member.status === 'offline' ? 'bg-red-500' : 'bg-gray-500'
+                  }`}></div>
+                </div>
+
+                {/* User Info */}
+                <div className="flex-1">
+                  <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                    {member.full_name}
+                  </div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    @{member.username}
+                  </div>
+                  <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(member.status)} bg-opacity-20`}>
+                    {getStatusText(member.status)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Info */}
+              {member.current_location ? (
+                <div className="space-y-3">
+                  <div className="text-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-blue-400">📍</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        الموقع الحالي:
+                      </span>
+                    </div>
+                    <div className="bg-white bg-opacity-5 p-3 rounded-lg text-xs">
+                      <div style={{ color: 'var(--text-primary)' }}>
+                        {member.current_location.address}
+                      </div>
+                      <div className="mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {member.current_location.latitude.toFixed(4)}, {member.current_location.longitude.toFixed(4)}
+                      </div>
+                      <div className="mt-1" style={{ color: 'var(--text-muted)' }}>
+                        آخر تحديث: منذ {member.minutes_since_update} دقيقة
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="bg-blue-500 bg-opacity-20 p-2 rounded-lg">
+                      <div className="text-lg font-bold text-blue-400">
+                        {member.recent_activity.location_points}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        نقاط تتبع
+                      </div>
+                    </div>
+                    <div className="bg-green-500 bg-opacity-20 p-2 rounded-lg">
+                      <div className="text-lg font-bold text-green-400">
+                        {member.recent_activity.visits_completed}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        زيارات اليوم
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedUser(member.user_id);
+                        setActiveView('history');
+                      }}
+                      className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                    >
+                      📍 عرض المسار
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Open map centered on user location
+                        setMapCenter({ 
+                          lat: member.current_location.latitude, 
+                          lng: member.current_location.longitude 
+                        });
+                        setMapZoom(15);
+                      }}
+                      className="py-2 px-3 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                    >
+                      🗺️
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-2xl mb-2">📍</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    لا توجد بيانات موقع
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    يجب تفعيل GPS على الهاتف
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Location History View
+  const LocationHistoryView = () => {
+    if (!locationHistory) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* History Header */}
+        <div className="glass-effect p-6 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <span>📍</span>
+              <span>مسار {locationHistory.user_info.full_name}</span>
+            </h3>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(parseInt(e.target.value))}
+              className="px-4 py-2 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+            >
+              <option value={2}>آخر ساعتين</option>
+              <option value={6}>آخر 6 ساعات</option>
+              <option value={12}>آخر 12 ساعة</option>
+              <option value={24}>آخر 24 ساعة</option>
+              <option value={48}>آخر يومين</option>
+            </select>
+          </div>
+
+          {/* Route Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {locationHistory.route_statistics.total_points}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                نقاط التتبع
+              </div>
+            </div>
+            <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {locationHistory.route_statistics.total_distance} km
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                المسافة المقطوعة
+              </div>
+            </div>
+            <div className="text-center p-4 bg-purple-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">
+                {locationHistory.route_statistics.average_speed} km/h
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                متوسط السرعة
+              </div>
+            </div>
+            <div className="text-center p-4 bg-orange-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-orange-400">
+                {locationHistory.route_statistics.max_speed} km/h
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                أقصى سرعة
+              </div>
+            </div>
+            <div className="text-center p-4 bg-red-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-red-400">
+                {locationHistory.route_statistics.stops.length}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                نقاط التوقف
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stops Analysis */}
+        {locationHistory.route_statistics.stops.length > 0 && (
+          <div className="glass-effect p-6 rounded-xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>⏱️</span>
+              <span>تحليل نقاط التوقف</span>
+            </h3>
+            <div className="space-y-4">
+              {locationHistory.route_statistics.stops.map((stop, index) => (
+                <div key={index} className="bg-white bg-opacity-5 p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {stop.location.address}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-orange-400">
+                      {stop.duration_minutes} دقيقة
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)' }}>وقت الوصول: </span>
+                      <span style={{ color: 'var(--text-primary)' }}>
+                        {new Date(stop.start_time).toLocaleTimeString('ar-EG')}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-secondary)' }}>وقت المغادرة: </span>
+                      <span style={{ color: 'var(--text-primary)' }}>
+                        {new Date(stop.end_time).toLocaleTimeString('ar-EG')}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                    📍 {stop.location.latitude.toFixed(4)}, {stop.location.longitude.toFixed(4)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Location Timeline */}
+        {locationHistory.locations.length > 0 && (
+          <div className="glass-effect p-6 rounded-xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>🕐</span>
+              <span>خط زمني للمواقع</span>
+            </h3>
+            
+            <div className="max-h-96 overflow-y-auto space-y-3">
+              {locationHistory.locations.slice(-20).reverse().map((location, index) => (
+                <div key={location.id} className="flex items-center gap-4 p-3 bg-white bg-opacity-5 rounded-lg">
+                  <div className="text-2xl">
+                    {location.activity_type === 'visit' ? '🏥' : 
+                     location.calculated_speed > 20 ? '🚗' : 
+                     location.calculated_speed > 5 ? '🚶' : '⏸️'}
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {location.address}
+                      </span>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {new Date(location.timestamp).toLocaleTimeString('ar-EG')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <span>📍 {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</span>
+                      {location.calculated_speed > 0 && (
+                        <span>🏃 {location.calculated_speed} km/h</span>
+                      )}
+                      {location.distance_from_last > 0 && (
+                        <span>📏 {(location.distance_from_last * 1000).toFixed(0)} متر</span>
+                      )}
+                      <span>🎯 {location.accuracy}m دقة</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-gradient">🗺️ نظام تتبع GPS المتقدم</h2>
+        <div className="text-sm bg-gradient-to-r from-green-500 to-blue-500 bg-opacity-20 px-4 py-2 rounded-lg">
+          <span style={{ color: 'var(--text-secondary)' }}>
+            تحديث مباشر كل 30 ثانية ⚡
+          </span>
+        </div>
+      </div>
+
+      {/* View Toggle */}
+      <div className="glass-effect p-2 rounded-xl inline-flex">
+        <button
+          onClick={() => setActiveView('team')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'team'
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          👥 مواقع الفريق
+        </button>
+        <button
+          onClick={() => setActiveView('history')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'history'
+              ? 'bg-purple-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          📍 تاريخ المواقع
+        </button>
+        <button
+          onClick={() => setActiveView('geofence')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'geofence'
+              ? 'bg-green-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          🚧 الحدود الجغرافية
+        </button>
+        <button
+          onClick={() => setActiveView('routes')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'routes'
+              ? 'bg-orange-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          🛣️ تحسين المسارات
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="space-y-6">
+          {[1,2,3].map(i => (
+            <div key={i} className="glass-effect p-6 rounded-xl animate-pulse">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-600 rounded w-1/3 mb-2"></div>
+                    <div className="h-3 bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-4">
+                  {[1,2,3,4].map(j => (
+                    <div key={j} className="h-16 bg-gray-600 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {activeView === 'team' && <TeamLocationsView />}
+          {activeView === 'history' && (
+            selectedUser ? (
+              <LocationHistoryView />
+            ) : (
+              <div className="glass-effect p-12 rounded-xl text-center">
+                <div className="text-4xl mb-4">📍</div>
+                <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  اختر مستخدماً لعرض مساره
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  ارجع لتبويب "مواقع الفريق" واضغط "عرض المسار" لأي عضو
+                </p>
+                <button
+                  onClick={() => setActiveView('team')}
+                  className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  العودة لمواقع الفريق
+                </button>
+              </div>
+            )
+          )}
+          {activeView === 'geofence' && (
+            <div className="glass-effect p-12 rounded-xl text-center">
+              <div className="text-4xl mb-4">🚧</div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                إدارة الحدود الجغرافية
+              </h3>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                قريباً - إنشاء مناطق مسموحة ومحظورة مع تنبيهات تلقائية
+              </p>
+            </div>
+          )}
+          {activeView === 'routes' && (
+            <div className="glass-effect p-12 rounded-xl text-center">
+              <div className="text-4xl mb-4">🛣️</div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                تحسين المسارات الذكي
+              </h3>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                قريباً - اقتراح أفضل المسارات للزيارات بناء على الموقع والوقت
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // Main App Component
 const App = () => {
   return (
