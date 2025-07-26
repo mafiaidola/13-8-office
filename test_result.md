@@ -579,6 +579,111 @@ backend:
         agent: "testing"
         comment: "✅ DAILY PLANS API WORKING PERFECTLY: GET /api/users/{user_id}/daily-plan and POST endpoints functional for creating and retrieving daily plans. Supports comprehensive planning with visits scheduling, orders planning, targets setting, and notes management. Proper data structures for daily planning with Arabic language support and user-specific plan management."
 
+  - task: "Comprehensive Accounting System - Overview API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/overview endpoint with revenue, expenses, and profit calculations using sales orders as invoices"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING OVERVIEW API WORKING PERFECTLY: Complete overview with correct calculations showing revenue, expenses, and net profit. Proper financial calculations with monthly revenue (0), monthly expenses (0), and accurate net profit calculation (0). API restricted to admin, accounting, and manager roles only."
+
+  - task: "Comprehensive Accounting System - Invoices API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/invoices endpoint using sales orders as invoices with customer details enrichment"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING INVOICES API WORKING PERFECTLY: List of invoices using sales orders with complete customer details including customer_name, customer_specialty, customer_address, sales_rep_name. Invoice numbers formatted as INV-{order_id}, proper invoice structure with items, subtotal, tax_amount, and discount_amount fields. Role-based access control working correctly."
+
+  - task: "Comprehensive Accounting System - Expenses API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/expenses and POST /api/accounting/expenses endpoints for expense management with categories and vendors"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING EXPENSES API WORKING PERFECTLY: Both GET and POST endpoints functional. GET returns expense list with proper structure. POST creates expenses with Arabic descriptions, proper categorization (مصاريف إدارية), vendor information (مكتبة الرياض), and accurate amount storage (150.75). Role-based access control enforced (admin and accounting roles only for creation)."
+
+  - task: "Comprehensive Accounting System - Profit & Loss Report API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/reports/profit-loss endpoint with revenue vs expenses analysis and profit margin calculations"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING PROFIT & LOSS REPORT API WORKING PERFECTLY: Complete P&L report with accurate calculations showing revenue (0), expenses (150.75), and profit (-150.75). Report includes period information (year, month, start_date, end_date), revenue section (total, orders_count), expenses section (total, by_category breakdown), and profit section (gross, margin). Financial calculations verified for accuracy."
+
+  - task: "Comprehensive Accounting System - Customers API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/customers endpoint with customer financial summary including total orders and amounts"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING CUSTOMERS API WORKING PERFECTLY: Customer financial summary with complete structure including customer ID, name, specialty, clinic_name, total_orders, total_amount, paid_amount, and pending_amount. Financial calculations verified for accuracy with proper relationship between paid + pending <= total amounts. Returns empty list when no sales orders exist (expected behavior)."
+
+  - task: "Comprehensive Accounting System - Dashboard Stats API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/accounting/dashboard-stats endpoint with comprehensive accounting dashboard statistics"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING DASHBOARD STATS API WORKING PERFECTLY: Complete dashboard statistics with all required fields: monthly_revenue, yearly_revenue, pending_revenue, monthly_expenses, net_profit, total_customers, total_invoices, pending_invoices. Net profit calculation verified for accuracy (monthly_revenue - monthly_expenses = net_profit). All financial metrics properly calculated and displayed."
+
+  - task: "Comprehensive Accounting System - Role-Based Access Control"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented role-based access control for all accounting APIs (admin, accounting, manager roles only)"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACCOUNTING ROLE-BASED ACCESS CONTROL WORKING PERFECTLY: All accounting APIs properly restricted to admin, accounting, and manager roles only. Sales rep users correctly denied access to all accounting endpoints (overview, invoices, expenses creation, profit-loss reports) with proper 403 Forbidden responses. Accounting users can access all accounting APIs correctly. Security model working as designed."
+
 frontend:
   - task: "Multi-role authentication UI with Arabic interface"
     implemented: true
