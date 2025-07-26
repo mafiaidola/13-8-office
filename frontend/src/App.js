@@ -6904,7 +6904,6 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
   const { theme, changeTheme } = useTheme();
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
 
   const themes = [
     { id: 'light', name: t('themeLight'), icon: '☀️' },
