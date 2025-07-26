@@ -8822,6 +8822,192 @@ async def get_features_status(current_user: User = Depends(get_current_user)):
     
     return features
 
+# Google Maps & Location Services Management APIs
+@api_router.post("/admin/settings/google-maps")
+async def update_google_maps_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update Google Maps settings")
+    
+    # Validate Google API key if provided
+    if 'google_maps_api_key' in settings_data and settings_data['google_maps_api_key']:
+        # Basic validation - you can add more sophisticated validation
+        if not settings_data['google_maps_api_key'].startswith('AIza'):
+            raise HTTPException(status_code=400, detail="Invalid Google Maps API key format")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "google_maps_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Google Maps settings updated successfully"}
+
+@api_router.get("/admin/settings/google-maps")
+async def get_google_maps_settings(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access Google Maps settings")
+    
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    maps_settings = settings.get("google_maps_settings", {}) if settings else {}
+    
+    # Never return the actual API key for security
+    if 'google_maps_api_key' in maps_settings:
+        maps_settings['google_maps_api_key'] = '***HIDDEN***' if maps_settings['google_maps_api_key'] else ''
+    
+    return maps_settings
+
+@api_router.post("/admin/test-google-maps-api")
+async def test_google_maps_api(api_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can test Google Maps API")
+    
+    api_key = api_data.get('api_key')
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API key is required")
+    
+    try:
+        import requests
+        # Test geocoding API
+        test_url = f"https://maps.googleapis.com/maps/api/geocode/json?address=Cairo,Egypt&key={api_key}"
+        response = requests.get(test_url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'OK':
+                return {"status": "success", "message": "Google Maps API key is valid and working"}
+            else:
+                return {"status": "error", "message": f"API Error: {data.get('status')} - {data.get('error_message', 'Unknown error')}"}
+        else:
+            return {"status": "error", "message": f"HTTP Error: {response.status_code}"}
+    
+    except Exception as e:
+        return {"status": "error", "message": f"Connection error: {str(e)}"}
+
+@api_router.get("/admin/google-services-status")
+async def get_google_services_status(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access Google services status")
+    
+    # Get current settings
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    maps_settings = settings.get("google_maps_settings", {}) if settings else {}
+    
+    # Check which Google services are configured
+    services_status = {
+        "google_maps": {
+            "enabled": bool(maps_settings.get('google_maps_api_key')),
+            "api_key_configured": bool(maps_settings.get('google_maps_api_key')),
+            "geocoding_enabled": maps_settings.get('enable_geocoding', False),
+            "directions_enabled": maps_settings.get('enable_directions', False),
+            "places_enabled": maps_settings.get('enable_places', False)
+        },
+        "google_analytics": {
+            "enabled": bool(maps_settings.get('google_analytics_id')),
+            "tracking_id_configured": bool(maps_settings.get('google_analytics_id'))
+        },
+        "google_drive": {
+            "enabled": maps_settings.get('enable_google_drive_backup', False),
+            "credentials_configured": bool(maps_settings.get('google_drive_credentials'))
+        }
+    }
+    
+    return services_status
+
+# Enhanced Website Configuration APIs
+@api_router.post("/admin/settings/website-config")
+async def update_website_config(config_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update website configuration")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "website_config": config_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Website configuration updated successfully"}
+
+@api_router.get("/admin/settings/website-config")
+async def get_website_config(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access website configuration")
+    
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    return settings.get("website_config", {}) if settings else {}
+
+# Advanced System Configuration APIs
+@api_router.post("/admin/settings/advanced-config")
+async def update_advanced_config(config_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update advanced configuration")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "advanced_config": config_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Advanced configuration updated successfully"}
+
+@api_router.get("/admin/settings/performance-metrics")
+async def get_performance_metrics(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access performance metrics")
+    
+    try:
+        import psutil
+        import time
+        
+        # System performance metrics
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Database performance metrics
+        db_stats = await db.command("dbStats")
+        
+        # Application metrics
+        total_users = await db.users.count_documents({"is_active": True})
+        total_visits_today = await db.visits.count_documents({
+            "created_at": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)}
+        })
+        
+        return {
+            "system_performance": {
+                "cpu_usage_percent": cpu_percent,
+                "memory_usage_percent": memory.percent,
+                "memory_used_gb": round(memory.used / (1024**3), 2),
+                "memory_total_gb": round(memory.total / (1024**3), 2),
+                "disk_usage_percent": round(disk.used / disk.total * 100, 2),
+                "disk_free_gb": round(disk.free / (1024**3), 2)
+            },
+            "database_performance": {
+                "collections_count": db_stats.get("collections", 0),
+                "data_size_mb": round(db_stats.get("dataSize", 0) / (1024**2), 2),
+                "index_size_mb": round(db_stats.get("indexSize", 0) / (1024**2), 2),
+                "storage_size_mb": round(db_stats.get("storageSize", 0) / (1024**2), 2)
+            },
+            "application_metrics": {
+                "active_users": total_users,
+                "visits_today": total_visits_today,
+                "uptime_hours": round(time.time() - startup_time, 2) / 3600 if 'startup_time' in globals() else 0
+            }
+        }
+    except Exception as e:
+        return {"error": f"Could not retrieve performance metrics: {str(e)}"}
+
 app.include_router(api_router)
 
 app.add_middleware(
