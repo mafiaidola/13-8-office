@@ -14920,4 +14920,411 @@ const AdminThemeSettings = () => {
   );
 };
 
+// Additional Admin Components for Comprehensive Control
+const AdminRoleManagement = () => {
+  const [rolePermissions, setRolePermissions] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const updateRolePermissions = async (role, permissions) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/roles/${role}/permissions`, {
+        permissions: permissions
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(`تم تحديث صلاحيات ${role}`);
+    } catch (error) {
+      console.error('Error updating role permissions:', error);
+      alert('حدث خطأ في تحديث الصلاحيات');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-gradient">إدارة الأدوار والصلاحيات</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">صلاحيات الأدوار</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-right p-4">الدور</th>
+                <th className="text-center p-4">إدارة المستخدمين</th>
+                <th className="text-center p-4">إدارة المناطق</th>
+                <th className="text-center p-4">إدارة المنتجات</th>
+                <th className="text-center p-4">نظام GPS</th>
+                <th className="text-center p-4">التقارير</th>
+                <th className="text-center p-4">المحاسبة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {['gm', 'admin', 'line_manager', 'area_manager', 'district_manager', 'key_account', 'medical_rep'].map((role) => (
+                <tr key={role} className="border-b">
+                  <td className="p-4 font-bold">{role}</td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={['gm', 'admin', 'line_manager'].includes(role)} />
+                  </td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={['gm', 'admin', 'line_manager', 'area_manager'].includes(role)} />
+                  </td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={['gm', 'admin'].includes(role)} />
+                  </td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={true} />
+                  </td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={!['medical_rep'].includes(role)} />
+                  </td>
+                  <td className="text-center p-4">
+                    <input type="checkbox" defaultChecked={['gm', 'admin', 'accounting'].includes(role)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminNotificationSettings = () => {
+  const [settings, setSettings] = useState({
+    enableNotifications: true,
+    enableEmailNotifications: true,
+    enableSMSNotifications: false,
+    enablePushNotifications: true,
+    notificationTypes: {
+      visit_approved: true,
+      visit_rejected: true,
+      new_order: true,
+      user_registered: true,
+      gps_alert: true,
+      system_maintenance: true
+    },
+    retentionDays: 30,
+    maxNotificationsPerDay: 50
+  });
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات نظام الإشعارات</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الإعدادات العامة</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Object.entries({
+            enableNotifications: 'تفعيل الإشعارات',
+            enableEmailNotifications: 'إشعارات البريد الإلكتروني',
+            enableSMSNotifications: 'إشعارات الرسائل النصية',
+            enablePushNotifications: 'الإشعارات المنبثقة'
+          }).map(([key, label]) => (
+            <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
+              <span>{label}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={settings[key]}
+                  onChange={(e) => setSettings({...settings, [key]: e.target.checked})}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">أنواع الإشعارات</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Object.entries(settings.notificationTypes).map(([type, enabled]) => (
+            <div key={type} className="flex items-center justify-between p-4 border rounded-lg">
+              <span>{type.replace('_', ' ')}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    notificationTypes: {
+                      ...settings.notificationTypes,
+                      [type]: e.target.checked
+                    }
+                  })}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminLanguageSettings = () => {
+  const [settings, setSettings] = useState({
+    defaultLanguage: 'ar',
+    enableLanguageSwitching: true,
+    availableLanguages: ['ar', 'en'],
+    rtlSupport: true,
+    autoDetectLanguage: false,
+    translateUserContent: false
+  });
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات اللغة</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">إعدادات اللغة الأساسية</h4>
+        
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <label className="block font-bold mb-2">اللغة الافتراضية</label>
+            <select
+              value={settings.defaultLanguage}
+              onChange={(e) => setSettings({...settings, defaultLanguage: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            >
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              ['enableLanguageSwitching', 'السماح بتبديل اللغة'],
+              ['rtlSupport', 'دعم اللغات من اليمين لليسار'],
+              ['autoDetectLanguage', 'اكتشاف اللغة تلقائياً'],
+              ['translateUserContent', 'ترجمة محتوى المستخدمين']
+            ].map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                <span>{label}</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings[key]}
+                    onChange={(e) => setSettings({...settings, [key]: e.target.checked})}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AdminSecuritySettings = () => {
+  const [settings, setSettings] = useState({
+    passwordMinLength: 8,
+    requireSpecialChars: true,
+    requireNumbers: true,
+    requireUppercase: true,
+    sessionTimeout: 24,
+    maxLoginAttempts: 5,
+    enableTwoFactor: false,
+    enableIPWhitelist: false,
+    allowedIPs: [],
+    enableAuditLog: true,
+    logRetentionDays: 90
+  });
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات الأمان</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">سياسة كلمات المرور</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block font-bold mb-2">الحد الأدنى لطول كلمة المرور</label>
+            <input
+              type="number"
+              value={settings.passwordMinLength}
+              onChange={(e) => setSettings({...settings, passwordMinLength: parseInt(e.target.value)})}
+              className="w-full p-3 border rounded-lg glass-effect"
+              min="6"
+              max="32"
+            />
+          </div>
+
+          <div className="space-y-3">
+            {[
+              ['requireSpecialChars', 'رموز خاصة مطلوبة'],
+              ['requireNumbers', 'أرقام مطلوبة'],
+              ['requireUppercase', 'أحرف كبيرة مطلوبة']
+            ].map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                <span>{label}</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings[key]}
+                    onChange={(e) => setSettings({...settings, [key]: e.target.checked})}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">إعدادات الجلسة والدخول</h4>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="block font-bold mb-2">مهلة الجلسة (ساعات)</label>
+            <input
+              type="number"
+              value={settings.sessionTimeout}
+              onChange={(e) => setSettings({...settings, sessionTimeout: parseInt(e.target.value)})}
+              className="w-full p-3 border rounded-lg glass-effect"
+              min="1"
+              max="168"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">محاولات الدخول القصوى</label>
+            <input
+              type="number"
+              value={settings.maxLoginAttempts}
+              onChange={(e) => setSettings({...settings, maxLoginAttempts: parseInt(e.target.value)})}
+              className="w-full p-3 border rounded-lg glass-effect"
+              min="3"
+              max="10"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">حفظ السجلات (أيام)</label>
+            <input
+              type="number"
+              value={settings.logRetentionDays}
+              onChange={(e) => setSettings({...settings, logRetentionDays: parseInt(e.target.value)})}
+              className="w-full p-3 border rounded-lg glass-effect"
+              min="30"
+              max="365"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Feature Toggle Component
+const AdminFeatureToggle = () => {
+  const [features, setFeatures] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeatures();
+  }, []);
+
+  const fetchFeatures = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/features/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFeatures(response.data);
+    } catch (error) {
+      console.error('Error fetching features:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleFeature = async (featureName, enabled) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/features/toggle`, {
+        feature_name: featureName,
+        enabled: enabled
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setFeatures({...features, [featureName]: enabled});
+      alert(`تم ${enabled ? 'تفعيل' : 'إلغاء'} ميزة ${featureName}`);
+    } catch (error) {
+      console.error('Error toggling feature:', error);
+      alert('حدث خطأ في تغيير حالة الميزة');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p>جاري تحميل المميزات...</p>
+      </div>
+    );
+  }
+
+  const featureLabels = {
+    gps_tracking: 'نظام تتبع GPS',
+    gamification: 'نظام الألعاب',
+    chat_system: 'نظام الدردشة',
+    document_scanner: 'ماسح المستندات',
+    visit_management: 'إدارة الزيارات',
+    accounting_system: 'نظام المحاسبة',
+    notifications: 'نظام الإشعارات',
+    analytics: 'التحليلات المتقدمة',
+    user_registration: 'تسجيل المستخدمين',
+    theme_switching: 'تبديل الثيمات',
+    language_switching: 'تبديل اللغات'
+  };
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold text-gradient">تحكم في مميزات النظام</h3>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(features).map(([featureName, enabled]) => (
+          <div key={featureName} className="card-glass p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold">{featureLabels[featureName] || featureName}</h4>
+              <div className={`w-3 h-3 rounded-full ${enabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-400">
+                {enabled ? 'مفعل' : 'معطل'}
+              </span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  onChange={(e) => toggleFeature(featureName, e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Placeholder components for remaining admin settings
+const AdminRegionManagement = () => <RegionManagement />;
+const AdminProductManagement = () => <div>إدارة المنتجات - قيد التطوير</div>;
+const AdminGamificationSettings = () => <div>إعدادات نظام الألعاب - قيد التطوير</div>;
+const AdminAccountingSettings = () => <div>إعدادات نظام المحاسبة - قيد التطوير</div>;
+const AdminChatSettings = () => <div>إعدادات نظام الدردشة - قيد التطوير</div>;
+const AdminScannerSettings = () => <div>إعدادات ماسح المستندات - قيد التطوير</div>;
+const AdminVisitSettings = () => <div>إعدادات نظام الزيارات - قيد التطوير</div>;
+const AdminReportSettings = () => <div>إعدادات التقارير - قيد التطوير</div>;
+
 export default App;
