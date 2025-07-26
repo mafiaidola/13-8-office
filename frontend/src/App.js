@@ -4801,7 +4801,6 @@ const EnhancedRecentActivity = () => {
       )}
     </>
   );
-  );
 };
 
 // Activity Details Modal Component
