@@ -5471,165 +5471,155 @@ const EnhancedUserManagement = () => {
     }
   };
 
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/auth/register`, newUser, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSuccess('تم إنشاء المستخدم بنجاح');
-      setShowCreateUser(false);
-      setNewUser({
-        username: '', email: '', password: '', full_name: '', role: '', 
-        phone: '', manager_id: '', department: '', employee_id: ''
-      });
-      fetchUsers();
-      fetchUserStats();
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في إنشاء المستخدم');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditUser = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const updateData = { ...selectedUser };
-      delete updateData.id;
-      delete updateData.created_at;
-      delete updateData.updated_at;
-      
-      await axios.patch(`${API}/users/${selectedUser.id}`, updateData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSuccess('تم تحديث المستخدم بنجاح');
-      setShowEditUser(false);
-      setSelectedUser(null);
-      fetchUsers();
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في تحديث المستخدم');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSuccess('تم حذف المستخدم بنجاح');
-      fetchUsers();
-      fetchUserStats();
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في حذف المستخدم');
-    }
-  };
-
-  const handleToggleStatus = async (userId, currentStatus) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const action = currentStatus ? 'تعطيل' : 'تنشيط';
-      setSuccess(`تم ${action} المستخدم بنجاح`);
-      fetchUsers();
-    } catch (error) {
-      setError(error.response?.data?.detail || 'خطأ في تغيير حالة المستخدم');
-    }
-  };
-
-  const handleBulkAction = async () => {
-    if (!bulkAction || selectedUsers.size === 0) return;
-
-    const confirmed = window.confirm(`هل أنت متأكد من تطبيق "${bulkAction}" على ${selectedUsers.size} مستخدم؟`);
-    if (!confirmed) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const promises = Array.from(selectedUsers).map(userId => {
-        if (bulkAction === 'activate') {
-          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-        } else if (bulkAction === 'deactivate') {
-          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-        }
-      });
-
-      await Promise.all(promises);
-      setSuccess(`تم تطبيق الإجراء على ${selectedUsers.size} مستخدم`);
-      setSelectedUsers(new Set());
-      setBulkAction('');
-      fetchUsers();
-    } catch (error) {
-      setError('خطأ في تطبيق الإجراء الجماعي');
-    }
-  };
-
-  const openEditModal = (user) => {
-    setSelectedUser({ ...user });
-    setShowEditUser(true);
-  };
-
-  const openDetailsModal = async (user) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/users/${user.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSelectedUser(response.data);
-      setShowUserDetails(true);
-    } catch (error) {
-      setError('خطأ في جلب تفاصيل المستخدم');
-    }
-  };
-
   const getRoleText = (role) => {
-    const roles = {
-      admin: 'مدير النظام',
-      manager: 'مدير',
-      sales_rep: 'مندوب مبيعات',
-      warehouse_manager: 'مدير مخزن',
-      accounting: 'محاسب'
+    const roleMap = {
+      'admin': 'مدير',
+      'manager': 'مدير فرع',
+      'sales_rep': 'مندوب مبيعات',
+      'warehouse_manager': 'مدير مخزن',
+      'accounting': 'محاسب'
     };
-    return roles[role] || role;
+    return roleMap[role] || role;
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'active' && user.is_active) ||
-                         (filterStatus === 'inactive' && !user.is_active);
+  const getStatusColor = (user) => {
+    if (!user.is_active) return 'bg-red-500';
+    if (user.is_online) return 'bg-green-500';
+    return 'bg-gray-500';
+  };
+
+  const formatLastSeen = (lastSeen) => {
+    if (!lastSeen) return 'غير متاح';
     
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+    const now = new Date();
+    const lastSeenDate = new Date(lastSeen);
+    const diffInMinutes = Math.floor((now - lastSeenDate) / 60000);
+    
+    if (diffInMinutes < 5) return 'متصل الآن';
+    if (diffInMinutes < 60) return `منذ ${diffInMinutes} دقيقة`;
+    if (diffInMinutes < 1440) return `منذ ${Math.floor(diffInMinutes / 60)} ساعة`;
+    return `منذ ${Math.floor(diffInMinutes / 1440)} يوم`;
+  };
+
+  const UserCard = ({ user }) => (
+    <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
+      <div className="flex items-start gap-4">
+        {/* User Photo */}
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            {user.photo ? (
+              <img 
+                src={`data:image/jpeg;base64,${user.photo}`}
+                alt={user.full_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-white text-xl font-bold">
+                {user.full_name.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          {/* Online Status Indicator */}
+          <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${getStatusColor(user)}`}></div>
+        </div>
+
+        {/* User Info */}
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+              {user.full_name}
+            </h3>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+              user.is_active ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-red-500 bg-opacity-20 text-red-400'
+            }`}>
+              {user.is_active ? 'نشط' : 'غير نشط'}
+            </span>
+          </div>
+          
+          <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+            @{user.username} • {getRoleText(user.role)}
+          </p>
+          
+          <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+            آخر ظهور: {formatLastSeen(user.last_seen_formatted)}
+          </p>
+
+          {/* KPIs */}
+          {user.kpis && Object.keys(user.kpis).length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {user.role === 'sales_rep' && (
+                <>
+                  <div className="text-center p-2 bg-blue-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-blue-400">{user.kpis.visits_today || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>زيارات اليوم</div>
+                  </div>
+                  <div className="text-center p-2 bg-green-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-green-400">{user.kpis.total_orders || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>إجمالي الطلبات</div>
+                  </div>
+                </>
+              )}
+              {user.role === 'manager' && (
+                <>
+                  <div className="text-center p-2 bg-purple-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-purple-400">{user.kpis.team_members || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>أعضاء الفريق</div>
+                  </div>
+                  <div className="text-center p-2 bg-orange-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-orange-400">{user.kpis.pending_approvals || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>موافقات معلقة</div>
+                  </div>
+                </>
+              )}
+              {user.role === 'warehouse_manager' && (
+                <>
+                  <div className="text-center p-2 bg-indigo-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-indigo-400">{user.kpis.managed_warehouses || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>المخازن المدارة</div>
+                  </div>
+                  <div className="text-center p-2 bg-red-500 bg-opacity-20 rounded-lg">
+                    <div className="text-lg font-bold text-red-400">{user.kpis.low_stock_items || 0}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>نقص مخزون</div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setSelectedUser(user);
+                setShowUserDetails(true);
+              }}
+              className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+            >
+              عرض التفاصيل
+            </button>
+            <button
+              onClick={() => {
+                setSelectedUser(user);
+                setShowPhotoUpload(true);
+              }}
+              className="py-2 px-3 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+            >
+              📷
+            </button>
+            <button
+              onClick={() => {
+                setSelectedUser(user);
+                setShowEditUser(true);
+              }}
+              className="py-2 px-3 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg transition-colors"
+            >
+              ✏️
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
