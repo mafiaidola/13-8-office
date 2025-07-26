@@ -800,15 +800,18 @@ backend:
 
   - task: "System Initialization API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created /api/admin/initialize-system endpoint to set up default GM user, sample regions, districts, products for both lines, and system settings. Provides automated system setup with default credentials."
+      - working: true
+        agent: "testing"
+        comment: "✅ SYSTEM INITIALIZATION API WORKING CORRECTLY: POST /api/admin/initialize-system functioning properly. System already initialized with GM user (username: gm, password: gm123456) successfully created and accessible. GM login working perfectly with proper JWT token generation. System initialization includes sample data creation for regions, districts, and products. Automated system setup working as designed with proper GM credentials and role assignment."
 
   - task: "User Assignment Management"
     implemented: true
