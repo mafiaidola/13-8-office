@@ -20,8 +20,11 @@ const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
   
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('app_language') || 'en'; // English as default
+    return localStorage.getItem('app_language') || 'ar'; // Arabic as default
   });
+
+  // Available themes
+  const availableThemes = ['light', 'dark', 'minimal', 'modern', 'fancy'];
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -42,36 +45,144 @@ const ThemeProvider = ({ children }) => {
 
   const updateThemeVariables = (currentTheme) => {
     const root = document.documentElement;
-    if (currentTheme === 'light') {
-      root.style.setProperty('--primary-bg', '#ffffff');
-      root.style.setProperty('--secondary-bg', '#f8fafc');
-      root.style.setProperty('--accent-bg', '#e2e8f0');
-      root.style.setProperty('--card-bg', 'rgba(255, 255, 255, 0.95)');
-      root.style.setProperty('--glass-bg', 'rgba(248, 250, 252, 0.8)');
-      root.style.setProperty('--text-primary', '#1e293b');
-      root.style.setProperty('--text-secondary', '#475569');
-      root.style.setProperty('--text-muted', '#64748b');
-      root.style.setProperty('--gradient-dark', 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)');
+    
+    // Base colors for all themes
+    const themeConfigs = {
+      light: {
+        '--primary-bg': '#ffffff',
+        '--secondary-bg': '#f8fafc',
+        '--accent-bg': '#e2e8f0',
+        '--card-bg': 'rgba(255, 255, 255, 0.95)',
+        '--glass-bg': 'rgba(248, 250, 252, 0.8)',
+        '--text-primary': '#1e293b',
+        '--text-secondary': '#475569',
+        '--text-muted': '#64748b',
+        '--gradient-dark': 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)',
+        '--border-color': '#e2e8f0',
+        '--hover-bg': 'rgba(0, 0, 0, 0.05)',
+        '--shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        '--primary-color': '#3b82f6',
+        '--success-color': '#10b981',
+        '--warning-color': '#f59e0b',
+        '--error-color': '#ef4444'
+      },
+      dark: {
+        '--primary-bg': '#0f172a',
+        '--secondary-bg': '#1e293b',
+        '--accent-bg': '#334155',
+        '--card-bg': 'rgba(30, 41, 59, 0.95)',
+        '--glass-bg': 'rgba(15, 23, 42, 0.8)',
+        '--text-primary': '#f8fafc',
+        '--text-secondary': '#cbd5e1',
+        '--text-muted': '#94a3b8',
+        '--gradient-dark': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+        '--border-color': '#334155',
+        '--hover-bg': 'rgba(255, 255, 255, 0.05)',
+        '--shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+        '--primary-color': '#60a5fa',
+        '--success-color': '#34d399',
+        '--warning-color': '#fbbf24',
+        '--error-color': '#f87171'
+      },
+      minimal: {
+        '--primary-bg': '#fefefe',
+        '--secondary-bg': '#f9f9f9',
+        '--accent-bg': '#f0f0f0',
+        '--card-bg': 'rgba(255, 255, 255, 0.98)',
+        '--glass-bg': 'rgba(249, 249, 249, 0.95)',
+        '--text-primary': '#333333',
+        '--text-secondary': '#666666',
+        '--text-muted': '#999999',
+        '--gradient-dark': 'linear-gradient(135deg, #fefefe 0%, #f9f9f9 100%)',
+        '--border-color': '#e0e0e0',
+        '--hover-bg': 'rgba(0, 0, 0, 0.03)',
+        '--shadow': '0 1px 3px rgba(0, 0, 0, 0.1)',
+        '--primary-color': '#4a5568',
+        '--success-color': '#48bb78',
+        '--warning-color': '#ed8936',
+        '--error-color': '#e53e3e'
+      },
+      modern: {
+        '--primary-bg': '#0a0a0a',
+        '--secondary-bg': '#1a1a1a',
+        '--accent-bg': '#2d2d2d',
+        '--card-bg': 'rgba(26, 26, 26, 0.95)',
+        '--glass-bg': 'rgba(10, 10, 10, 0.8)',
+        '--text-primary': '#ffffff',
+        '--text-secondary': '#a0a0a0',
+        '--text-muted': '#707070',
+        '--gradient-dark': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)',
+        '--border-color': '#404040',
+        '--hover-bg': 'rgba(255, 255, 255, 0.08)',
+        '--shadow': '0 8px 32px rgba(0, 0, 0, 0.4)',
+        '--primary-color': '#00d4ff',
+        '--success-color': '#00ff88',
+        '--warning-color': '#ffaa00',
+        '--error-color': '#ff4757'
+      },
+      fancy: {
+        '--primary-bg': '#1a1a2e',
+        '--secondary-bg': '#16213e',
+        '--accent-bg': '#0f3460',
+        '--card-bg': 'rgba(22, 33, 62, 0.95)',
+        '--glass-bg': 'rgba(26, 26, 46, 0.8)',
+        '--text-primary': '#eee6ff',
+        '--text-secondary': '#b8b5ff',
+        '--text-muted': '#8a87ff',
+        '--gradient-dark': 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        '--border-color': '#533483',
+        '--hover-bg': 'rgba(238, 230, 255, 0.1)',
+        '--shadow': '0 8px 32px rgba(83, 52, 131, 0.3)',
+        '--primary-color': '#bb86fc',
+        '--success-color': '#4ade80',
+        '--warning-color': '#fbbf24',
+        '--error-color': '#f87171'
+      }
+    };
+
+    const config = themeConfigs[currentTheme] || themeConfigs.dark;
+    
+    // Apply theme variables
+    Object.entries(config).forEach(([property, value]) => {
+      root.style.setProperty(property, value);
+    });
+
+    // Add special effects for fancy theme
+    if (currentTheme === 'fancy') {
+      root.style.setProperty('--glow-primary', '0 0 20px rgba(187, 134, 252, 0.5)');
+      root.style.setProperty('--glow-secondary', '0 0 10px rgba(184, 181, 255, 0.3)');
     } else {
-      root.style.setProperty('--primary-bg', '#0f172a');
-      root.style.setProperty('--secondary-bg', '#1e293b');
-      root.style.setProperty('--accent-bg', '#334155');
-      root.style.setProperty('--card-bg', 'rgba(30, 41, 59, 0.95)');
-      root.style.setProperty('--glass-bg', 'rgba(15, 23, 42, 0.8)');
-      root.style.setProperty('--text-primary', '#f8fafc');
-      root.style.setProperty('--text-secondary', '#cbd5e1');
-      root.style.setProperty('--text-muted', '#94a3b8');
-      root.style.setProperty('--gradient-dark', 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)');
+      root.style.setProperty('--glow-primary', 'none');
+      root.style.setProperty('--glow-secondary', 'none');
     }
   };
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
+  const cycleTheme = () => {
+    const currentIndex = availableThemes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % availableThemes.length;
+    const newTheme = availableThemes[nextIndex];
+    
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     document.body.setAttribute('data-theme', newTheme);
     updateThemeVariables(newTheme);
+  };
+
+  const setSpecificTheme = (newTheme) => {
+    if (availableThemes.includes(newTheme)) {
+      setTheme(newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.documentElement.setAttribute('data-theme', newTheme);
+      document.body.setAttribute('data-theme', newTheme);
+      updateThemeVariables(newTheme);
+    }
+  };
+
+  // Legacy support for toggleTheme
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setSpecificTheme(newTheme);
   };
 
   return (
