@@ -11192,8 +11192,16 @@ const Dashboard = () => {
           <ChatSystem />
         )}
         
-        {activeTab === 'settings' && user.role === 'admin' && (
+        {activeTab === 'settings' && (user.role === 'admin' || user.role === 'gm') && (
           <AdminSettingsPage />
+        )}
+
+        {activeTab === 'regions' && (user.role === 'admin' || user.role === 'gm' || user.role === 'line_manager') && (
+          <RegionManagement />
+        )}
+
+        {activeTab === 'comprehensive' && (user.role === 'admin' || user.role === 'gm') && (
+          <ComprehensiveAdminSettings />
         )}
 
         {activeTab === 'secret' && user.role === 'admin' && (
