@@ -3320,7 +3320,7 @@ async def get_secret_comprehensive_report(
 # Enhanced Statistics API with Time Filtering
 @api_router.get("/dashboard/statistics/filtered")
 async def get_filtered_statistics(
-    time_period: str = "today",  # today, week, month, quarter, year
+    period: str = "today",  # today, week, month, quarter, year
     current_user: User = Depends(get_current_user)
 ):
     """Get statistics filtered by time period"""
@@ -3351,7 +3351,7 @@ async def get_filtered_statistics(
             }
         }
         
-        date_filter = date_ranges.get(time_period, date_ranges["today"])
+        date_filter = date_ranges.get(period, date_ranges["today"])
         
         # Build MongoDB date filter
         mongo_filter = {
@@ -3362,44 +3362,45 @@ async def get_filtered_statistics(
         }
         
         # Get filtered statistics
-        stats = {
-            "visits": {
-                "total": await db.visits.count_documents(mongo_filter),
-                "effective": await db.visits.count_documents({
-                    **mongo_filter,
-                    "is_effective": True
-                }),
-                "pending_review": await db.visits.count_documents({
-                    **mongo_filter,
-                    "is_effective": None
-                })
-            },
-            "orders": {
-                "total": await db.orders.count_documents(mongo_filter),
-                "pending": await db.orders.count_documents({
-                    **mongo_filter,
-                    "status": "PENDING"
-                }),
-                "approved": await db.orders.count_documents({
-                    **mongo_filter,
-                    "status": "APPROVED"
-                })
-            },
-            "users": {
-                "new_users": await db.users.count_documents(mongo_filter),
-                "active_reps": await db.users.count_documents({
-                    **mongo_filter,
-                    "role": "sales_rep",
-                    "is_active": True
-                })
-            },
-            "clinics": {
-                "new_clinics": await db.clinics.count_documents(mongo_filter),
-                "pending_approval": await db.clinics.count_documents({
-                    **mongo_filter,
-                    "is_approved": False
-                })
-            }
+        visits = {
+            "total": await db.visits.count_documents(mongo_filter),
+            "effective": await db.visits.count_documents({
+                **mongo_filter,
+                "is_effective": True
+            }),
+            "pending_review": await db.visits.count_documents({
+                **mongo_filter,
+                "is_effective": None
+            })
+        }
+        
+        orders = {
+            "total": await db.orders.count_documents(mongo_filter),
+            "pending": await db.orders.count_documents({
+                **mongo_filter,
+                "status": "PENDING"
+            }),
+            "approved": await db.orders.count_documents({
+                **mongo_filter,
+                "status": "APPROVED"
+            })
+        }
+        
+        users = {
+            "new_users": await db.users.count_documents(mongo_filter),
+            "active_reps": await db.users.count_documents({
+                **mongo_filter,
+                "role": "sales_rep",
+                "is_active": True
+            })
+        }
+        
+        clinics = {
+            "new_clinics": await db.clinics.count_documents(mongo_filter),
+            "pending_approval": await db.clinics.count_documents({
+                **mongo_filter,
+                "is_approved": False
+            })
         }
         
         # Calculate totals for comparison
@@ -3411,9 +3412,12 @@ async def get_filtered_statistics(
         }
         
         return {
-            "period": time_period,
+            "period": period,
             "date_range": date_filter,
-            "filtered_stats": stats,
+            "visits": visits,
+            "orders": orders,
+            "users": users,
+            "clinics": clinics,
             "total_stats": total_stats
         }
         
