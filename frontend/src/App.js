@@ -9929,6 +9929,7 @@ const MovementsLog = ({ movements, language }) => {
 // Dashboard Component
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { language, t, isRTL } = useLanguage();
   const [stats, setStats] = useState({});
   const [visits, setVisits] = useState([]);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -9974,14 +9975,7 @@ const Dashboard = () => {
   };
 
   const getRoleText = (role) => {
-    const roles = {
-      admin: 'أدمن',
-      warehouse_manager: 'مدير مخزن',
-      manager: 'مدير',
-      sales_rep: 'مندوب',
-      accounting: 'محاسب'
-    };
-    return roles[role] || role;
+    return t(role) || role;
   };
 
   const canAccessTab = (tabName) => {
