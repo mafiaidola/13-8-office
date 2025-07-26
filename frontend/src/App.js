@@ -4595,7 +4595,7 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
           </div>
 
           {/* Enhanced Recent Activity */}
-          <EnhancedRecentActivity language={language} />
+          <EnhancedRecentActivity />
         </div>
 
         {user.role === 'admin' && (
