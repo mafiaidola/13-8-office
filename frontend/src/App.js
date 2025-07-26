@@ -697,9 +697,7 @@ const ThemeProvider = ({ children }) => {
       toggleTheme,
       cycleTheme,
       setSpecificTheme,
-      availableThemes,
-      language, 
-      setLanguage 
+      availableThemes
     }}>
       <div data-theme={theme} style={{ minHeight: '100vh', background: 'var(--gradient-dark)', color: 'var(--text-primary)' }}>
         {children}
