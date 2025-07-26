@@ -2462,9 +2462,10 @@ async def get_enhanced_users_list(
             
             # Get basic KPIs based on role
             kpis = {}
+            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            
             if user["role"] == "sales_rep":
                 # Get today's visits and orders
-                today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 kpis = {
                     "visits_today": await db.visits.count_documents({
                         "sales_rep_id": user["id"],
