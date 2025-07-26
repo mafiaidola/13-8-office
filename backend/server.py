@@ -529,6 +529,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     user = await db.users.find_one({"id": payload["user_id"]})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    
+    # Ensure password_hash is included for User model
+    if "password_hash" not in user:
+        user["password_hash"] = ""  # Set empty string as default
+    
     return User(**user)
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
