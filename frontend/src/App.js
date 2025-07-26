@@ -5924,7 +5924,6 @@ const EnhancedUserManagement = () => {
   const [userStats, setUserStats] = useState({});
   const [filterRole, setFilterRole] = useState('all');
   const [sortBy, setSortBy] = useState('full_name');
-  const [currentPage, setCurrentPageLegacy] = useState(1);
   const [usersPerPage] = useState(10);
   
   const { language } = useLanguage();
