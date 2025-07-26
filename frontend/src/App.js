@@ -10271,6 +10271,163 @@ const Dashboard = () => {
   );
 };
 
+// Comprehensive Accounting System Page
+const AccountingPage = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [accountingData, setAccountingData] = useState(null);
+  const [invoices, setInvoices] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [profitLossReport, setProfitLossReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { language, t, isRTL } = useLanguage();
+
+  const tabs = [
+    { id: 'dashboard', label: language === 'ar' ? 'لوحة المحاسبة' : 'Accounting Dashboard', icon: '📊' },
+    { id: 'invoices', label: language === 'ar' ? 'الفواتير' : 'Invoices', icon: '📋' },
+    { id: 'expenses', label: language === 'ar' ? 'المصروفات' : 'Expenses', icon: '💸' },
+    { id: 'customers', label: language === 'ar' ? 'العملاء' : 'Customers', icon: '👥' },
+    { id: 'reports', label: language === 'ar' ? 'التقارير المالية' : 'Financial Reports', icon: '📈' }
+  ];
+
+  useEffect(() => {
+    loadAccountingData();
+  }, [activeTab]);
+
+  const loadAccountingData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Load different data based on active tab
+      if (activeTab === 'dashboard') {
+        const [overviewResponse, statsResponse] = await Promise.all([
+          axios.get(`${API}/accounting/overview`, { headers }),
+          axios.get(`${API}/accounting/dashboard-stats`, { headers })
+        ]);
+        setAccountingData({
+          overview: overviewResponse.data,
+          stats: statsResponse.data
+        });
+      } else if (activeTab === 'invoices') {
+        const response = await axios.get(`${API}/accounting/invoices`, { headers });
+        setInvoices(response.data);
+      } else if (activeTab === 'expenses') {
+        const response = await axios.get(`${API}/accounting/expenses`, { headers });
+        setExpenses(response.data);
+      } else if (activeTab === 'customers') {
+        const response = await axios.get(`${API}/accounting/customers`, { headers });
+        setCustomers(response.data);
+      } else if (activeTab === 'reports') {
+        const response = await axios.get(`${API}/accounting/reports/profit-loss`, { headers });
+        setProfitLossReport(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading accounting data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createExpense = async (expenseData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/accounting/expenses`, expenseData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(language === 'ar' ? 'تم إضافة المصروف بنجاح' : 'Expense added successfully');
+      loadAccountingData(); // Reload data
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      alert(language === 'ar' ? 'حدث خطأ في إضافة المصروف' : 'Error adding expense');
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
+      style: 'currency',
+      currency: 'EGP',
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  };
+
+  if (loading && !accountingData && !invoices.length && !expenses.length && !customers.length) {
+    return (
+      <div className="glass-effect p-8 text-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {language === 'ar' ? 'جاري تحميل بيانات المحاسبة...' : 'Loading accounting data...'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6">
+        <h2 className="text-3xl font-bold mb-4 text-gradient">
+          {language === 'ar' ? 'نظام المحاسبة الشامل' : 'Comprehensive Accounting System'}
+        </h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {language === 'ar' 
+            ? 'إدارة شاملة للشؤون المالية، الفواتير، المصروفات، والتقارير'
+            : 'Complete financial management, invoices, expenses, and reports'
+          }
+        </p>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="glass-effect p-2">
+        <div className={`flex gap-2 overflow-x-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-all duration-300 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white'
+                  : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span className="text-xl">{tab.icon}</span>
+              <span className="font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="glass-effect p-8">
+        {activeTab === 'dashboard' && (
+          <AccountingDashboard data={accountingData} formatCurrency={formatCurrency} />
+        )}
+        
+        {activeTab === 'invoices' && (
+          <InvoicesTab invoices={invoices} formatCurrency={formatCurrency} />
+        )}
+        
+        {activeTab === 'expenses' && (
+          <ExpensesTab 
+            expenses={expenses} 
+            onCreateExpense={createExpense}
+            formatCurrency={formatCurrency}
+          />
+        )}
+        
+        {activeTab === 'customers' && (
+          <CustomersTab customers={customers} formatCurrency={formatCurrency} />
+        )}
+        
+        {activeTab === 'reports' && (
+          <FinancialReportsTab report={profitLossReport} formatCurrency={formatCurrency} />
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 const App = () => {
   return (
