@@ -9757,7 +9757,7 @@ const Dashboard = () => {
         )}
         
         {activeTab === 'settings' && user.role === 'admin' && (
-          <SystemSettings />
+          <AdminSettingsPage />
         )}
 
         {activeTab === 'secret' && user.role === 'admin' && (
