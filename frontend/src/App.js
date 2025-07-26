@@ -5975,6 +5975,9 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  // Legacy function for compatibility
+  const fetchUsers = fetchEnhancedUsers;
+
   const handlePhotoUpload = async (userId, photoFile) => {
     try {
       const token = localStorage.getItem('token');
