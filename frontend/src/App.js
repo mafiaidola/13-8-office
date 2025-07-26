@@ -6423,28 +6423,34 @@ const EnhancedFooter = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* System Features */}
           <div className="space-y-4">
             <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {language === 'ar' ? 'روابط سريعة' : 'Quick Links'}
+              {language === 'ar' ? 'مميزات النظام' : 'System Features'}
             </h4>
             <ul className="space-y-2">
               <li>
-                <a href="#about" className="text-sm hover:text-blue-500 transition-colors" 
+                <a href="#accounting" className="text-sm hover:text-blue-500 transition-colors" 
                    style={{ color: 'var(--text-secondary)' }}>
-                  {links.about}
+                  💰 {language === 'ar' ? 'نظام المحاسبة' : 'Accounting System'}
                 </a>
               </li>
               <li>
-                <a href="#services" className="text-sm hover:text-blue-500 transition-colors"
+                <a href="#sales" className="text-sm hover:text-blue-500 transition-colors"
                    style={{ color: 'var(--text-secondary)' }}>
-                  {links.services}
+                  👥 {language === 'ar' ? 'إدارة المناديب' : 'Sales Management'}
                 </a>
               </li>
               <li>
-                <a href="#contact" className="text-sm hover:text-blue-500 transition-colors"
+                <a href="#warehouse" className="text-sm hover:text-blue-500 transition-colors"
                    style={{ color: 'var(--text-secondary)' }}>
-                  {links.contact}
+                  🏪 {language === 'ar' ? 'إدارة المخازن' : 'Warehouse Management'}
+                </a>
+              </li>
+              <li>
+                <a href="#reports" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  📊 {language === 'ar' ? 'التقارير المالية' : 'Financial Reports'}
                 </a>
               </li>
             </ul>
