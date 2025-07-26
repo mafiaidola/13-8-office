@@ -8454,6 +8454,138 @@ async def get_system_health(current_user: User = Depends(get_current_user)):
     
     return system_metrics
 
+# Initialize System with Default Data
+@api_router.post("/admin/initialize-system")
+async def initialize_system():
+    """Initialize system with default GM user and sample data"""
+    try:
+        # Check if GM already exists
+        existing_gm = await db.users.find_one({"role": UserRole.GM})
+        if existing_gm:
+            return {"message": "System already initialized", "gm_exists": True}
+        
+        # Create default GM user
+        gm_user = User(
+            username="gm",
+            email="gm@epgroup.com",
+            password_hash=hash_password("gm123456"),
+            role=UserRole.GM,
+            full_name="General Manager",
+            phone="+20123456789",
+            is_active=True,
+            created_by="system"
+        )
+        await db.users.insert_one(gm_user.dict())
+        
+        # Create sample regions
+        region1 = Region(
+            name="القاهرة الكبرى",
+            code="CAI",
+            description="منطقة القاهرة الكبرى والجيزة",
+            line=UserRole.LINE_1,
+            created_by=gm_user.id
+        )
+        
+        region2 = Region(
+            name="الإسكندرية",
+            code="ALX", 
+            description="منطقة الإسكندرية والساحل الشمالي",
+            line=UserRole.LINE_2,
+            created_by=gm_user.id
+        )
+        
+        await db.regions.insert_one(region1.dict())
+        await db.regions.insert_one(region2.dict())
+        
+        # Create sample districts
+        district1 = District(
+            name="مصر الجديدة",
+            code="HD",
+            region_id=region1.id,
+            line=UserRole.LINE_1,
+            created_by=gm_user.id
+        )
+        
+        district2 = District(
+            name="المهندسين",
+            code="MOH",
+            region_id=region1.id,
+            line=UserRole.LINE_1,
+            created_by=gm_user.id
+        )
+        
+        await db.districts.insert_one(district1.dict())
+        await db.districts.insert_one(district2.dict())
+        
+        # Create sample products for each line
+        product1 = Product(
+            name="منتج الخط الأول - دواء أ",
+            description="دواء عالي الجودة للخط الأول",
+            price=45.0,
+            price_before_discount=50.0,
+            discount_percentage=10.0,
+            category="أدوية",
+            unit="علبة",
+            currency="EGP",
+            line=UserRole.LINE_1,
+            created_by=gm_user.id,
+            approved_by=gm_user.id
+        )
+        
+        product2 = Product(
+            name="منتج الخط الثاني - دواء ب",
+            description="دواء متخصص للخط الثاني",
+            price=75.0,
+            price_before_discount=85.0,
+            discount_percentage=12.0,
+            category="أدوية متخصصة",
+            unit="علبة",
+            currency="EGP",
+            line=UserRole.LINE_2,
+            created_by=gm_user.id,
+            approved_by=gm_user.id
+        )
+        
+        await db.products.insert_one(product1.dict())
+        await db.products.insert_one(product2.dict())
+        
+        # Initialize system settings
+        system_settings = SystemSettings(
+            company_name="EP Group System",
+            available_themes=["dark", "light", "modern", "fancy", "cyber", "sunset", "ocean", "forest", "minimal"],
+            default_theme="dark",
+            available_roles=list(UserRole.ROLE_HIERARCHY.keys()),
+            role_permissions={
+                "gm": ["all"],
+                "admin": ["all"],
+                "line_manager": ["regions.manage", "users.manage", "products.view"],
+                "area_manager": ["districts.manage", "users.view", "visits.approve"],
+                "district_manager": ["key_accounts.manage", "visits.view"],
+                "key_account": ["medical_reps.manage", "visits.create"],
+                "medical_rep": ["visits.create", "doctors.create", "orders.create"]
+            },
+            language="ar",
+            updated_by=gm_user.id
+        )
+        await db.system_settings.insert_one(system_settings.dict())
+        
+        return {
+            "message": "System initialized successfully",
+            "gm_credentials": {
+                "username": "gm",
+                "password": "gm123456",
+                "role": "gm"
+            },
+            "sample_data_created": {
+                "regions": 2,
+                "districts": 2,
+                "products": 2
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error initializing system: {str(e)}")
+
 app.include_router(api_router)
 
 app.add_middleware(
