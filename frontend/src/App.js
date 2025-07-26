@@ -10971,6 +10971,15 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Document Scanner tab for all users */}
+            <button
+              onClick={() => setActiveTab('documents')}
+              className={`nav-item ${activeTab === 'documents' ? 'active' : ''} flex items-center whitespace-nowrap`}
+            >
+              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📱</span>
+              {language === 'ar' ? 'مسح الوثائق' : 'Document Scanner'}
+            </button>
+            
             {/* Accounting tab for admin, accounting, and manager roles */}
             {canAccessTab('accounting') && (
               <button
