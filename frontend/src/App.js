@@ -4648,7 +4648,37 @@ const EnhancedRecentActivity = () => {
   const fetchRecentActivities = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Try to get real activities, but fallback to mock data
+      
+      // Try to get real activities from API first
+      try {
+        const response = await axios.get(`${API}/activities/recent`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data && response.data.activities) {
+          // Backend returns {activities: [...], total_count: N} structure
+          const apiActivities = response.data.activities.map((activity, index) => ({
+            id: index + 1,
+            type: activity.type || 'general',
+            message: language === 'ar' ? activity.title : activity.description || activity.title,
+            details: activity.details || {},
+            timestamp: activity.timestamp || new Date().toISOString(),
+            color: activity.color || getColorForActivityType(activity.type)
+          }));
+          
+          if (apiActivities.length > 0) {
+            console.log(`✅ Loaded ${apiActivities.length} real activities from API`);
+            setActivities(apiActivities);
+            return;
+          }
+        }
+      } catch (apiError) {
+        console.error('Failed to load real activities from API:', apiError);
+        // Fall through to mock data
+      }
+      
+      // Fallback to mock data if API fails or returns no data
+      console.log('Using mock activities data');
       setActivities([
         {
           id: 1,
@@ -4713,6 +4743,19 @@ const EnhancedRecentActivity = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to get color for activity type
+  const getColorForActivityType = (type) => {
+    const colorMap = {
+      'visit': 'text-green-500',
+      'clinic': 'text-blue-500', 
+      'order': 'text-orange-500',
+      'user': 'text-purple-500',
+      'approval': 'text-yellow-500',
+      'warehouse': 'text-indigo-500'
+    };
+    return colorMap[type] || 'text-gray-500';
   };
 
   const handleActivityClick = (activity) => {
