@@ -6582,7 +6582,13 @@ const EnhancedUserManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`badge-modern ${
+                          user.role === 'gm' ? 'badge-danger' :
                           user.role === 'admin' ? 'badge-danger' :
+                          user.role === 'line_manager' ? 'badge-warning' :
+                          user.role === 'area_manager' ? 'badge-warning' :
+                          user.role === 'district_manager' ? 'badge-info' :
+                          user.role === 'key_account' ? 'badge-info' :
+                          user.role === 'medical_rep' ? 'badge-success' :
                           user.role === 'manager' ? 'badge-warning' :
                           user.role === 'sales_rep' ? 'badge-info' :
                           user.role === 'warehouse_manager' ? 'badge-success' : 'badge-secondary'
