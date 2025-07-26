@@ -6121,6 +6121,26 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedUser) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/users/${selectedUser.id}`, selectedUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess(`تم تحديث المستخدم "${selectedUser.full_name}" بنجاح`);
+      setShowEditUser(false);
+      setSelectedUser(null);
+      fetchUsers(); // Refresh the users list
+    } catch (error) {
+      setError('خطأ في تحديث المستخدم');
+    }
+  };
+
   const UserCard = ({ user }) => (
     <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
       <div className="flex items-start gap-4">
