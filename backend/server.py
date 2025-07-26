@@ -38,21 +38,41 @@ api_router = APIRouter(prefix="/api")
 # Security
 security = HTTPBearer()
 
-# User Roles with Hierarchy
+# User Roles with New Hierarchical Structure
 class UserRole:
-    ADMIN = "admin"  # Level 4 - Full control
-    WAREHOUSE_MANAGER = "warehouse_manager"  # Level 3 - Manage warehouses
-    MANAGER = "manager"  # Level 2 - Manage sales reps
-    SALES_REP = "sales_rep"  # Level 1 - Basic operations
+    # New Role Structure
+    GM = "gm"  # General Manager - Level 6 - Full control
+    LINE_MANAGER = "line_manager"  # Line Manager - Level 5 - Manage multiple areas
+    AREA_MANAGER = "area_manager"  # Area Manager - Level 4 - Manage districts
+    DISTRICT_MANAGER = "district_manager"  # District Manager - Level 3 - Manage key accounts
+    KEY_ACCOUNT = "key_account"  # Key Account - Level 2 - Manage medical reps
+    MEDICAL_REP = "medical_rep"  # Medical Rep - Level 1 - Basic operations
+    
+    # Legacy roles for backward compatibility
+    ADMIN = "admin"  # Equivalent to GM
+    WAREHOUSE_MANAGER = "warehouse_manager"  # Special role - Level 3
+    MANAGER = "manager"  # Equivalent to Area Manager
+    SALES_REP = "sales_rep"  # Equivalent to Medical Rep
+    ACCOUNTING = "accounting"  # Special role - Level 3
     
     # Role hierarchy for permissions
     ROLE_HIERARCHY = {
-        "admin": 4,
+        "gm": 6,
+        "admin": 6,  # Legacy compatibility
+        "line_manager": 5,
+        "area_manager": 4,
+        "manager": 4,  # Legacy compatibility
+        "district_manager": 3,
         "warehouse_manager": 3,
-        "manager": 2,
-        "accounting": 2,  # Added accounting role
-        "sales_rep": 1
+        "accounting": 3,
+        "key_account": 2,
+        "medical_rep": 1,
+        "sales_rep": 1  # Legacy compatibility
     }
+    
+    # Line Assignment
+    LINE_1 = "line_1"
+    LINE_2 = "line_2"
     
     @classmethod
     def can_manage(cls, manager_role: str, target_role: str) -> bool:
@@ -60,6 +80,12 @@ class UserRole:
         manager_level = cls.ROLE_HIERARCHY.get(manager_role, 0)
         target_level = cls.ROLE_HIERARCHY.get(target_role, 0)
         return manager_level > target_level
+    
+    @classmethod
+    def get_subordinate_roles(cls, role: str) -> List[str]:
+        """Get list of roles that can be managed by given role"""
+        role_level = cls.ROLE_HIERARCHY.get(role, 0)
+        return [r for r, level in cls.ROLE_HIERARCHY.items() if level < role_level]
 
 # Models
 class User(BaseModel):
