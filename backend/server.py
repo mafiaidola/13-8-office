@@ -3427,7 +3427,7 @@ async def get_filtered_statistics(
 # Interactive Charts Data API
 @api_router.get("/charts/performance")
 async def get_performance_charts(
-    chart_type: str = "visits",  # visits, orders, revenue, representatives
+    type: str = "visits",  # visits, orders, revenue, representatives
     time_period: str = "week",
     current_user: User = Depends(get_current_user)
 ):
@@ -3450,8 +3450,9 @@ async def get_performance_charts(
             date_format = "%Y-%m"
         
         chart_data = []
+        labels = []
         
-        if chart_type == "visits":
+        if type == "visits":
             # Visits performance over time
             pipeline = [
                 {"$match": {"created_at": {"$gte": start_date}}},
@@ -3465,6 +3466,7 @@ async def get_performance_charts(
             ]
             
             async for doc in db.visits.aggregate(pipeline):
+                labels.append(doc["_id"])
                 chart_data.append({
                     "date": doc["_id"],
                     "total_visits": doc["total_visits"],
@@ -3473,7 +3475,7 @@ async def get_performance_charts(
                     "effectiveness_rate": (doc["effective_visits"] / doc["total_visits"] * 100) if doc["total_visits"] > 0 else 0
                 })
         
-        elif chart_type == "orders":
+        elif type == "orders":
             # Orders performance over time
             pipeline = [
                 {"$match": {"created_at": {"$gte": start_date}}},
@@ -3488,6 +3490,7 @@ async def get_performance_charts(
             ]
             
             async for doc in db.orders.aggregate(pipeline):
+                labels.append(doc["_id"])
                 chart_data.append({
                     "date": doc["_id"],
                     "total_orders": doc["total_orders"],
@@ -3497,7 +3500,7 @@ async def get_performance_charts(
                     "approval_rate": (doc["approved_orders"] / doc["total_orders"] * 100) if doc["total_orders"] > 0 else 0
                 })
         
-        elif chart_type == "revenue":
+        elif type == "revenue":
             # Revenue performance over time
             pipeline = [
                 {"$match": {
@@ -3514,6 +3517,7 @@ async def get_performance_charts(
             ]
             
             async for doc in db.orders.aggregate(pipeline):
+                labels.append(doc["_id"])
                 chart_data.append({
                     "date": doc["_id"],
                     "total_revenue": doc["total_revenue"],
@@ -3521,7 +3525,7 @@ async def get_performance_charts(
                     "average_order_value": doc["average_order_value"]
                 })
         
-        elif chart_type == "representatives":
+        elif type == "representatives":
             # Representatives performance over time
             pipeline = [
                 {"$match": {"created_at": {"$gte": start_date}}},
@@ -3549,6 +3553,7 @@ async def get_performance_charts(
                 # Sort top performers for this date
                 top_performers = sorted(doc["top_performers"], key=lambda x: x["visits"], reverse=True)[:3]
                 
+                labels.append(doc["_id"])
                 chart_data.append({
                     "date": doc["_id"],
                     "active_representatives": doc["active_representatives"],
@@ -3558,10 +3563,11 @@ async def get_performance_charts(
                 })
         
         return {
-            "chart_type": chart_type,
+            "chart_type": type,
             "time_period": time_period,
             "data": chart_data,
-            "title": f"أداء {chart_type} - {time_period}",
+            "labels": labels,
+            "title": f"أداء {type} - {time_period}",
             "generated_at": datetime.utcnow().isoformat()
         }
         
