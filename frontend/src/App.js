@@ -8887,6 +8887,17 @@ const Dashboard = () => {
                 إعدادات النظام
               </button>
             )}
+
+            {/* Secret Reports only for Admin */}
+            {user.role === 'admin' && (
+              <button
+                onClick={() => setActiveTab('secret')}
+                className={`nav-tab ${activeTab === 'secret' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className="ml-2">🔒</span>
+                التقرير السري
+              </button>
+            )}
           </nav>
         </div>
 
