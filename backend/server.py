@@ -8057,6 +8057,377 @@ async def get_accounting_dashboard_stats(current_user: User = Depends(get_curren
         "pending_invoices": len(pending_orders)
     }
 
+# ========================================
+# Enhanced Admin Settings and Region Management APIs
+# ========================================
+
+# Region Management APIs
+@api_router.post("/admin/regions")
+async def create_region(region_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can create regions")
+    
+    # Validate line
+    if region_data["line"] not in [UserRole.LINE_1, UserRole.LINE_2]:
+        raise HTTPException(status_code=400, detail="Invalid line. Must be line_1 or line_2")
+    
+    # Check if region code already exists
+    existing_region = await db.regions.find_one({"code": region_data["code"]})
+    if existing_region:
+        raise HTTPException(status_code=400, detail="Region code already exists")
+    
+    region = Region(
+        name=region_data["name"],
+        code=region_data["code"],
+        description=region_data.get("description"),
+        manager_id=region_data.get("manager_id"),
+        coordinates=region_data.get("coordinates"),
+        boundaries=region_data.get("boundaries"),
+        line=region_data["line"],
+        created_by=current_user.id
+    )
+    
+    await db.regions.insert_one(region.dict())
+    return {"message": "Region created successfully", "region_id": region.id}
+
+@api_router.get("/admin/regions")
+async def get_regions(line: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    query = {"is_active": True}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.LINE_MANAGER:
+        # Line managers see only their line's regions
+        user_line = current_user.line
+        if user_line:
+            query["line"] = user_line
+    elif current_user.role == UserRole.AREA_MANAGER:
+        # Area managers see only their assigned region
+        if current_user.region_id:
+            query["id"] = current_user.region_id
+    elif line:  # Admin/GM can filter by line
+        query["line"] = line
+    
+    regions = await db.regions.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich with manager information
+    for region in regions:
+        if region.get("manager_id"):
+            manager = await db.users.find_one({"id": region["manager_id"]}, {"_id": 0})
+            region["manager_name"] = manager["full_name"] if manager else "Unknown"
+            region["manager_role"] = manager["role"] if manager else "Unknown"
+    
+    return regions
+
+@api_router.patch("/admin/regions/{region_id}")
+async def update_region(region_id: str, region_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.LINE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Area managers can only update their own region
+    if current_user.role == UserRole.AREA_MANAGER and current_user.region_id != region_id:
+        raise HTTPException(status_code=403, detail="You can only update your assigned region")
+    
+    update_data = {k: v for k, v in region_data.items() if v is not None}
+    
+    result = await db.regions.update_one(
+        {"id": region_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Region not found")
+    
+    return {"message": "Region updated successfully"}
+
+# District Management APIs
+@api_router.post("/admin/districts")
+async def create_district(district_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Verify region exists and user has access
+    region = await db.regions.find_one({"id": district_data["region_id"]})
+    if not region:
+        raise HTTPException(status_code=404, detail="Region not found")
+    
+    # Check permissions based on role
+    if current_user.role == UserRole.AREA_MANAGER and current_user.region_id != district_data["region_id"]:
+        raise HTTPException(status_code=403, detail="You can only create districts in your assigned region")
+    
+    district = District(
+        name=district_data["name"],
+        code=district_data["code"],
+        region_id=district_data["region_id"],
+        manager_id=district_data.get("manager_id"),
+        line=region["line"],  # Inherit line from region
+        coordinates=district_data.get("coordinates"),
+        boundaries=district_data.get("boundaries"),
+        created_by=current_user.id
+    )
+    
+    await db.districts.insert_one(district.dict())
+    return {"message": "District created successfully", "district_id": district.id}
+
+@api_router.get("/admin/districts")
+async def get_districts(region_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    query = {"is_active": True}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.AREA_MANAGER:
+        if current_user.region_id:
+            query["region_id"] = current_user.region_id
+    elif current_user.role == UserRole.DISTRICT_MANAGER:
+        if current_user.district_id:
+            query["id"] = current_user.district_id
+    elif region_id:
+        query["region_id"] = region_id
+    
+    districts = await db.districts.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich with manager and region information
+    for district in districts:
+        if district.get("manager_id"):
+            manager = await db.users.find_one({"id": district["manager_id"]}, {"_id": 0})
+            district["manager_name"] = manager["full_name"] if manager else "Unknown"
+        
+        # Get region info
+        region = await db.regions.find_one({"id": district["region_id"]}, {"_id": 0})
+        district["region_name"] = region["name"] if region else "Unknown"
+    
+    return districts
+
+# Line Management APIs
+@api_router.post("/admin/lines")
+async def create_line_management(line_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can create line management")
+    
+    # Validate line manager exists and has correct role
+    manager = await db.users.find_one({"id": line_data["line_manager_id"]})
+    if not manager or manager["role"] != UserRole.LINE_MANAGER:
+        raise HTTPException(status_code=400, detail="Invalid line manager")
+    
+    line_management = LineManagement(
+        line=line_data["line"],
+        line_manager_id=line_data["line_manager_id"],
+        name=line_data["name"],
+        description=line_data.get("description"),
+        regions=line_data.get("regions", []),
+        products=line_data.get("products", []),
+        targets=line_data.get("targets", {}),
+        created_by=current_user.id
+    )
+    
+    await db.line_management.insert_one(line_management.dict())
+    return {"message": "Line management created successfully", "line_id": line_management.id}
+
+@api_router.get("/admin/lines")
+async def get_line_management(current_user: User = Depends(get_current_user)):
+    query = {"is_active": True}
+    
+    # Line managers see only their line
+    if current_user.role == UserRole.LINE_MANAGER:
+        query["line_manager_id"] = current_user.id
+    
+    lines = await db.line_management.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich with manager information
+    for line in lines:
+        manager = await db.users.find_one({"id": line["line_manager_id"]}, {"_id": 0})
+        line["manager_name"] = manager["full_name"] if manager else "Unknown"
+        
+        # Get regions count
+        regions_count = await db.regions.count_documents({"line": line["line"], "is_active": True})
+        line["regions_count"] = regions_count
+        
+        # Get products count
+        products_count = await db.products.count_documents({"line": line["line"], "is_active": True})
+        line["products_count"] = products_count
+    
+    return lines
+
+# Enhanced Admin Settings APIs
+@api_router.get("/admin/settings/comprehensive")
+async def get_comprehensive_admin_settings(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access comprehensive settings")
+    
+    # Get system settings
+    system_settings = await db.system_settings.find_one({}, {"_id": 0}) or {}
+    
+    # Get role statistics
+    role_stats = {}
+    for role in UserRole.ROLE_HIERARCHY.keys():
+        count = await db.users.count_documents({"role": role, "is_active": True})
+        role_stats[role] = count
+    
+    # Get line statistics
+    line_stats = {}
+    for line in [UserRole.LINE_1, UserRole.LINE_2]:
+        regions_count = await db.regions.count_documents({"line": line, "is_active": True})
+        districts_count = await db.districts.count_documents({"line": line, "is_active": True})
+        products_count = await db.products.count_documents({"line": line, "is_active": True})
+        users_count = await db.users.count_documents({"line": line, "is_active": True})
+        
+        line_stats[line] = {
+            "regions": regions_count,
+            "districts": districts_count,
+            "products": products_count,
+            "users": users_count
+        }
+    
+    # Get recent activities
+    recent_activities = await db.users.find(
+        {"is_active": True}, 
+        {"_id": 0, "username": 1, "full_name": 1, "role": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    return {
+        "system_settings": system_settings,
+        "role_statistics": role_stats,
+        "line_statistics": line_stats,
+        "recent_activities": recent_activities,
+        "total_users": sum(role_stats.values()),
+        "available_roles": list(UserRole.ROLE_HIERARCHY.keys()),
+        "available_lines": [UserRole.LINE_1, UserRole.LINE_2]
+    }
+
+@api_router.post("/admin/settings/comprehensive")
+async def update_comprehensive_admin_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update comprehensive settings")
+    
+    # Update system settings
+    if "system_settings" in settings_data:
+        await db.system_settings.update_one(
+            {},
+            {"$set": {
+                **settings_data["system_settings"],
+                "updated_by": current_user.id,
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+    
+    # Update role permissions if provided
+    if "role_permissions" in settings_data:
+        await db.system_settings.update_one(
+            {},
+            {"$set": {
+                "role_permissions": settings_data["role_permissions"],
+                "updated_by": current_user.id,
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+    
+    return {"message": "Comprehensive settings updated successfully"}
+
+# User Assignment APIs (for assigning users to regions/districts/lines)
+@api_router.patch("/admin/users/{user_id}/assignment")
+async def update_user_assignment(user_id: str, assignment_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.LINE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Verify user exists
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if current user can manage target user
+    if not UserRole.can_manage(current_user.role, user["role"]):
+        raise HTTPException(status_code=403, detail="You cannot manage this user's assignments")
+    
+    update_data = {}
+    
+    # Update region assignment
+    if "region_id" in assignment_data:
+        if assignment_data["region_id"]:
+            region = await db.regions.find_one({"id": assignment_data["region_id"]})
+            if not region:
+                raise HTTPException(status_code=404, detail="Region not found")
+            update_data["region_id"] = assignment_data["region_id"]
+            update_data["line"] = region["line"]  # Inherit line from region
+        else:
+            update_data["region_id"] = None
+    
+    # Update district assignment
+    if "district_id" in assignment_data:
+        if assignment_data["district_id"]:
+            district = await db.districts.find_one({"id": assignment_data["district_id"]})
+            if not district:
+                raise HTTPException(status_code=404, detail="District not found")
+            update_data["district_id"] = assignment_data["district_id"]
+        else:
+            update_data["district_id"] = None
+    
+    # Update line assignment (for line-specific roles)
+    if "line" in assignment_data and assignment_data["line"] in [UserRole.LINE_1, UserRole.LINE_2]:
+        update_data["line"] = assignment_data["line"]
+    
+    if update_data:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_data}
+        )
+    
+    return {"message": "User assignment updated successfully"}
+
+# Enhanced Product Management with Line Support
+@api_router.get("/products/by-line/{line}")
+async def get_products_by_line(line: str, current_user: User = Depends(get_current_user)):
+    if line not in [UserRole.LINE_1, UserRole.LINE_2]:
+        raise HTTPException(status_code=400, detail="Invalid line")
+    
+    products = await db.products.find(
+        {"line": line, "is_active": True}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Add creator information
+    for product in products:
+        creator = await db.users.find_one({"id": product["created_by"]}, {"_id": 0})
+        product["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    
+    return products
+
+# System Health and Monitoring
+@api_router.get("/admin/system-health")
+async def get_system_health(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access system health")
+    
+    # Database collections health
+    collections_health = {}
+    collection_names = ["users", "regions", "districts", "products", "orders", "clinics", "doctors"]
+    
+    for collection_name in collection_names:
+        try:
+            count = await db[collection_name].count_documents({})
+            collections_health[collection_name] = {"status": "healthy", "count": count}
+        except Exception as e:
+            collections_health[collection_name] = {"status": "error", "error": str(e)}
+    
+    # Active users in last 24 hours
+    yesterday = datetime.utcnow() - timedelta(days=1)
+    active_users_24h = await db.users.count_documents({
+        "last_login": {"$gte": yesterday},
+        "is_active": True
+    })
+    
+    # System performance metrics
+    system_metrics = {
+        "total_active_users": await db.users.count_documents({"is_active": True}),
+        "active_users_24h": active_users_24h,
+        "total_orders_today": await db.orders.count_documents({
+            "created_at": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)}
+        }),
+        "pending_approvals": await db.orders.count_documents({"status": "PENDING"}),
+        "database_collections": collections_health
+    }
+    
+    return system_metrics
+
 app.include_router(api_router)
 
 app.add_middleware(
