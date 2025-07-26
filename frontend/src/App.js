@@ -15394,14 +15394,350 @@ const AdminFeatureToggle = () => {
   );
 };
 
-// Placeholder components for remaining admin settings
-const AdminRegionManagement = () => <RegionManagement />;
-const AdminProductManagement = () => <div>إدارة المنتجات - قيد التطوير</div>;
-const AdminGamificationSettings = () => <div>إعدادات نظام الألعاب - قيد التطوير</div>;
-const AdminAccountingSettings = () => <div>إعدادات نظام المحاسبة - قيد التطوير</div>;
-const AdminChatSettings = () => <div>إعدادات نظام الدردشة - قيد التطوير</div>;
-const AdminScannerSettings = () => <div>إعدادات ماسح المستندات - قيد التطوير</div>;
-const AdminVisitSettings = () => <div>إعدادات نظام الزيارات - قيد التطوير</div>;
-const AdminReportSettings = () => <div>إعدادات التقارير - قيد التطوير</div>;
+// Google Maps Management Component
+const AdminGoogleMapsSettings = () => {
+  const [settings, setSettings] = useState({
+    google_maps_api_key: '',
+    enable_geocoding: true,
+    enable_directions: true,
+    enable_places: true,
+    default_map_center: { lat: 30.0444, lng: 31.2357 }, // Cairo
+    default_zoom_level: 10,
+    map_style: 'roadmap',
+    enable_traffic_layer: false,
+    enable_satellite_view: true,
+    enable_street_view: true,
+    marker_clustering: true,
+    enable_drawing_tools: false,
+    enable_heatmaps: false,
+    restrict_to_country: 'EG',
+    language: 'ar',
+    region: 'EG',
+    libraries: ['places', 'geometry', 'drawing'],
+    google_analytics_id: '',
+    enable_google_drive_backup: false,
+    google_drive_credentials: ''
+  });
+
+  const [apiKeyTest, setApiKeyTest] = useState({ status: '', message: '' });
+  const [servicesStatus, setServicesStatus] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchSettings();
+    fetchServicesStatus();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/settings/google-maps`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings({ ...settings, ...response.data });
+    } catch (error) {
+      console.error('Error fetching Google Maps settings:', error);
+    }
+  };
+
+  const fetchServicesStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/google-services-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setServicesStatus(response.data);
+    } catch (error) {
+      console.error('Error fetching services status:', error);
+    }
+  };
+
+  const testApiKey = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/test-google-maps-api`, {
+        api_key: settings.google_maps_api_key
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApiKeyTest(response.data);
+    } catch (error) {
+      setApiKeyTest({ status: 'error', message: 'Test failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/settings/google-maps`, settings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم تحديث إعدادات خرائط جوجل بنجاح');
+      fetchServicesStatus();
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      alert('حدث خطأ في تحديث الإعدادات');
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient flex items-center gap-3">
+          <SVGIcon name="maps" size={32} />
+          إعدادات خرائط جوجل والخدمات
+        </h3>
+        <div className="flex gap-2">
+          <button
+            onClick={testApiKey}
+            disabled={loading || !settings.google_maps_api_key}
+            className="btn-modern bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+          >
+            {loading ? '⏳ جاري الاختبار...' : '🧪 اختبار المفتاح'}
+          </button>
+          <button
+            onClick={updateSettings}
+            className="btn-modern bg-green-500 text-white px-6 py-2 rounded-lg"
+          >
+            💾 حفظ الإعدادات
+          </button>
+        </div>
+      </div>
+
+      {/* API Key Status Display */}
+      {apiKeyTest.message && (
+        <div className={`p-4 rounded-lg border ${apiKeyTest.status === 'success' ? 'bg-green-500/20 border-green-500' : 'bg-red-500/20 border-red-500'}`}>
+          <div className="flex items-center gap-2">
+            <SVGIcon name={apiKeyTest.status === 'success' ? 'success' : 'error'} size={20} />
+            <span>{apiKeyTest.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Services Status Overview */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {Object.entries(servicesStatus).map(([service, status]) => (
+          <div key={service} className="card-glass p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-bold capitalize">{service.replace('_', ' ')}</h4>
+              <div className={`w-3 h-3 rounded-full ${status.enabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            </div>
+            <div className="text-sm space-y-1">
+              {Object.entries(status).map(([key, value]) => (
+                <div key={key} className="flex justify-between">
+                  <span className="text-gray-400">{key.replace('_', ' ')}</span>
+                  <span className={value ? 'text-green-400' : 'text-red-400'}>
+                    {value ? '✓' : '✗'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Google Maps API Configuration */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="maps" size={24} />
+          إعدادات Google Maps API
+        </h4>
+        
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label className="block font-bold mb-2">Google Maps API Key *</label>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={settings.google_maps_api_key}
+                onChange={(e) => setSettings({...settings, google_maps_api_key: e.target.value})}
+                className="flex-1 p-3 border rounded-lg glass-effect"
+                placeholder="AIzaSy... أدخل مفتاح API"
+              />
+              <button
+                onClick={() => window.open('https://console.cloud.google.com/apis/credentials', '_blank')}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                title="فتح Google Cloud Console"
+              >
+                🔗
+              </button>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">
+              احصل على مفتاح API من Google Cloud Console وفعّل APIs: Maps JavaScript, Geocoding, Directions, Places
+            </p>
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">المركز الافتراضي للخريطة</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                step="0.000001"
+                value={settings.default_map_center.lat}
+                onChange={(e) => setSettings({
+                  ...settings, 
+                  default_map_center: { ...settings.default_map_center, lat: parseFloat(e.target.value) }
+                })}
+                className="p-3 border rounded-lg glass-effect"
+                placeholder="خط العرض"
+              />
+              <input
+                type="number"
+                step="0.000001"
+                value={settings.default_map_center.lng}
+                onChange={(e) => setSettings({
+                  ...settings, 
+                  default_map_center: { ...settings.default_map_center, lng: parseFloat(e.target.value) }
+                })}
+                className="p-3 border rounded-lg glass-effect"
+                placeholder="خط الطول"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">مستوى التكبير الافتراضي</label>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={settings.default_zoom_level}
+              onChange={(e) => setSettings({...settings, default_zoom_level: parseInt(e.target.value)})}
+              className="w-full"
+            />
+            <div className="text-center text-sm text-gray-400">المستوى: {settings.default_zoom_level}</div>
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">نوع الخريطة</label>
+            <select
+              value={settings.map_style}
+              onChange={(e) => setSettings({...settings, map_style: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            >
+              <option value="roadmap">خريطة عادية</option>
+              <option value="satellite">صور جوية</option>
+              <option value="hybrid">مختلطة</option>
+              <option value="terrain">تضاريس</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">تقييد البلد</label>
+            <select
+              value={settings.restrict_to_country}
+              onChange={(e) => setSettings({...settings, restrict_to_country: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            >
+              <option value="">بدون تقييد</option>
+              <option value="EG">مصر</option>
+              <option value="SA">السعودية</option>
+              <option value="AE">الإمارات</option>
+              <option value="KW">الكويت</option>
+              <option value="QA">قطر</option>
+              <option value="BH">البحرين</option>
+              <option value="OM">عمان</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Google Maps Features */}
+        <div className="mt-6">
+          <h5 className="font-bold mb-4">المميزات المتاحة</h5>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              ['enable_geocoding', 'تحويل العناوين لإحداثيات'],
+              ['enable_directions', 'الاتجاهات والمسارات'],
+              ['enable_places', 'البحث عن الأماكن'],
+              ['enable_traffic_layer', 'طبقة حركة المرور'],
+              ['enable_satellite_view', 'العرض الجوي'],
+              ['enable_street_view', 'عرض الشارع'],
+              ['marker_clustering', 'تجميع العلامات'],
+              ['enable_drawing_tools', 'أدوات الرسم'],
+              ['enable_heatmaps', 'خرائط الحرارة']
+            ].map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                <span>{label}</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings[key]}
+                    onChange={(e) => setSettings({...settings, [key]: e.target.checked})}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Google Analytics Integration */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="analytics" size={24} />
+          تكامل Google Analytics
+        </h4>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block font-bold mb-2">معرف Google Analytics</label>
+            <input
+              type="text"
+              value={settings.google_analytics_id}
+              onChange={(e) => setSettings({...settings, google_analytics_id: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+              placeholder="G-XXXXXXXXXX أو UA-XXXXXXXXX"
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={() => window.open('https://analytics.google.com/', '_blank')}
+              className="w-full px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+            >
+              📊 فتح Google Analytics
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Google Drive Backup */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="scanner" size={24} />
+          نسخ احتياطي Google Drive
+        </h4>
+        
+        <div className="flex items-center justify-between mb-4">
+          <span>تفعيل النسخ الاحتياطي التلقائي</span>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={settings.enable_google_drive_backup}
+              onChange={(e) => setSettings({...settings, enable_google_drive_backup: e.target.checked})}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
+
+        {settings.enable_google_drive_backup && (
+          <div>
+            <label className="block font-bold mb-2">Google Drive Service Account Credentials (JSON)</label>
+            <textarea
+              value={settings.google_drive_credentials}
+              onChange={(e) => setSettings({...settings, google_drive_credentials: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect h-32"
+              placeholder="ألصق محتوى ملف service account JSON هنا..."
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default App;
