@@ -14356,60 +14356,64 @@ const ComprehensiveAdminSettings = () => {
           </div>
         )}
 
-        {activeTab === 'roles' && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gradient">توزيع الأدوار</h3>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(settings?.role_statistics || {}).map(([role, count]) => (
-                <div key={role} className="card-glass p-4 flex items-center justify-between">
-                  <div>
-                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                      {t(role) || role}
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      المستخدمون النشطون
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-gradient">
-                    {count}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {activeTab === 'users' && (
+          <AdminUserManagement />
         )}
 
-        {activeTab === 'lines' && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gradient">إحصائيات الخطوط</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              {Object.entries(settings?.line_statistics || {}).map(([line, stats]) => (
-                <div key={line} className="card-glass p-6">
-                  <h4 className="text-lg font-bold mb-4 text-gradient">
-                    {line === 'line_1' ? t('line1') : t('line2')}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-gradient">{stats.regions}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المناطق</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-gradient">{stats.districts}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المقاطعات</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-gradient">{stats.products}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المنتجات</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-gradient">{stats.users}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المستخدمون</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {activeTab === 'roles' && (
+          <AdminRoleManagement />
+        )}
+
+        {activeTab === 'regions' && (
+          <AdminRegionManagement />
+        )}
+
+        {activeTab === 'products' && (
+          <AdminProductManagement />
+        )}
+
+        {activeTab === 'gps' && (
+          <AdminGPSSettings />
+        )}
+
+        {activeTab === 'gamification' && (
+          <AdminGamificationSettings />
+        )}
+
+        {activeTab === 'accounting' && (
+          <AdminAccountingSettings />
+        )}
+
+        {activeTab === 'notifications' && (
+          <AdminNotificationSettings />
+        )}
+
+        {activeTab === 'chat' && (
+          <AdminChatSettings />
+        )}
+
+        {activeTab === 'scanner' && (
+          <AdminScannerSettings />
+        )}
+
+        {activeTab === 'visits' && (
+          <AdminVisitSettings />
+        )}
+
+        {activeTab === 'reports' && (
+          <AdminReportSettings />
+        )}
+
+        {activeTab === 'themes' && (
+          <AdminThemeSettings />
+        )}
+
+        {activeTab === 'languages' && (
+          <AdminLanguageSettings />
+        )}
+
+        {activeTab === 'security' && (
+          <AdminSecuritySettings />
         )}
 
         {activeTab === 'initialize' && (
