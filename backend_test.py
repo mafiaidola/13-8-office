@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Advanced Analytics APIs Testing for Medical Sales Rep Visit Management System
-Tests the new Advanced Analytics APIs with comprehensive validation
+GPS Tracking System Testing for Medical Sales Rep Visit Management System
+Tests the GPS functionality and Advanced Analytics APIs with comprehensive validation
 """
 
 import requests
