@@ -9009,6 +9009,10 @@ const Dashboard = () => {
         {activeTab === 'settings' && user.role === 'admin' && (
           <SystemSettings />
         )}
+
+        {activeTab === 'secret' && user.role === 'admin' && (
+          <SecretReports />
+        )}
         </div>
         
         {/* Enhanced Footer */}
