@@ -4756,42 +4756,296 @@ const useRealTimeAnalytics = () => {
   return { analytics, loading };
 };
 
-// Enhanced Global Search Button
-const GlobalSearchButton = () => {
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
-  const { language } = useContext(ThemeContext);
+// Enhanced Header Component
+const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
+  const { theme, setSpecificTheme, availableThemes, language, setLanguage } = useTheme();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
-  const translations = {
-    en: {
-      searchPlaceholder: "🔍 Search across the system...",
-      searchTitle: "Global Search"
-    },
-    ar: {
-      searchPlaceholder: "🔍 بحث عام في النظام...",
-      searchTitle: "البحث الشامل"
-    }
+  const getThemeLabel = (themeName) => {
+    const labels = {
+      light: 'فاتح', dark: 'داكن', minimal: 'بسيط', modern: 'عصري', fancy: 'فاخر',
+      cyber: 'سايبر', sunset: 'غروب', ocean: 'محيط', forest: 'غابة'
+    };
+    return labels[themeName] || themeName;
   };
 
-  const t = translations[language] || translations.en;
+  const getLanguageLabel = (lang) => {
+    const labels = { ar: 'العربية', en: 'English', fr: 'Français' };
+    return labels[lang] || lang;
+  };
 
   return (
-    <>
-      <div className="relative">
-        <button
-          onClick={() => setShowGlobalSearch(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 w-full max-w-md"
-          style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
-        >
-          <SVGIcon name="search" size={20} />
-          <span className="text-sm">{t.searchPlaceholder}</span>
-        </button>
-      </div>
+    <header className="glass-effect sticky top-0 z-50 border-b" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Logo and Brand */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                  <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gradient">نظام إدارة المبيعات</h1>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Sales Management System
+                </p>
+              </div>
+            </div>
+          </div>
 
-      <GlobalSearch 
-        isOpen={showGlobalSearch}
-        onClose={() => setShowGlobalSearch(false)}
-      />
-    </>
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md mx-8">
+            <button
+              onClick={onSearchOpen}
+              className="w-full flex items-center gap-3 px-4 py-2.5 bg-white/10 backdrop-blur-sm border border-gray-300/20 rounded-xl hover:bg-white/20 transition-all duration-200 text-right"
+            >
+              <SVGIcon name="search" size={20} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                بحث شامل في النظام...
+              </span>
+            </button>
+          </div>
+
+          {/* User Actions */}
+          <div className="flex items-center gap-4">
+            {/* Theme Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowThemeMenu(!showThemeMenu)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+                title="اختر الثيم"
+              >
+                <SVGIcon name="theme" size={20} />
+                <span className="text-sm hidden md:block">{getThemeLabel(theme)}</span>
+              </button>
+              
+              {showThemeMenu && (
+                <div className="absolute right-0 mt-2 w-48 glass-effect rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                  <div className="p-2">
+                    <h3 className="text-sm font-bold mb-2 px-2" style={{ color: 'var(--text-primary)' }}>
+                      اختر الثيم
+                    </h3>
+                    {availableThemes.map((themeName) => (
+                      <button
+                        key={themeName}
+                        onClick={() => {
+                          setSpecificTheme(themeName);
+                          setShowThemeMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors rounded-lg ${
+                          theme === themeName ? 'bg-blue-500 bg-opacity-20' : ''
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full ${
+                          themeName === 'light' ? 'bg-white border-2 border-gray-300' :
+                          themeName === 'dark' ? 'bg-gray-800' :
+                          themeName === 'minimal' ? 'bg-gray-200' :
+                          themeName === 'modern' ? 'bg-black' :
+                          themeName === 'fancy' ? 'bg-purple-600' :
+                          themeName === 'cyber' ? 'bg-green-500' :
+                          themeName === 'sunset' ? 'bg-orange-500' :
+                          themeName === 'ocean' ? 'bg-blue-500' :
+                          themeName === 'forest' ? 'bg-green-600' : 'bg-gray-500'
+                        }`}></div>
+                        <span className="text-sm">{getThemeLabel(themeName)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Language Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+                title="اختر اللغة"
+              >
+                <SVGIcon name="settings" size={20} />
+                <span className="text-sm hidden md:block">{getLanguageLabel(language)}</span>
+              </button>
+              
+              {showLanguageMenu && (
+                <div className="absolute right-0 mt-2 w-40 glass-effect rounded-lg shadow-lg z-50">
+                  <div className="p-2">
+                    {[
+                      { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+                      { code: 'en', label: 'English', flag: '🇺🇸' },
+                      { code: 'fr', label: 'Français', flag: '🇫🇷' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setShowLanguageMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors rounded-lg ${
+                          language === lang.code ? 'bg-blue-500 bg-opacity-20' : ''
+                        }`}
+                      >
+                        <span className="text-lg">{lang.flag}</span>
+                        <span className="text-sm">{lang.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Notifications */}
+            <button
+              className="relative p-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+              title="الإشعارات"
+            >
+              <SVGIcon name="notification" size={20} />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            </button>
+
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  {user?.photo ? (
+                    <img src={user.photo} alt={user.full_name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    user?.full_name?.charAt(0) || 'A'
+                  )}
+                </div>
+                <div className="text-right hidden md:block">
+                  <p className="text-sm font-medium">مرحباً {user?.full_name || 'المستخدم'}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {user?.role === 'admin' ? 'مدير النظام' : 
+                     user?.role === 'sales_rep' ? 'مندوب مبيعات' :
+                     user?.role === 'manager' ? 'مدير' : 'مستخدم'}
+                  </p>
+                </div>
+              </button>
+              
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 glass-effect rounded-lg shadow-lg z-50">
+                  <div className="p-2">
+                    <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                      <p className="text-sm font-bold">{user?.full_name}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        // Navigate to profile
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors rounded-lg"
+                    >
+                      <SVGIcon name="user" size={16} />
+                      <span className="text-sm">الملف الشخصي</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        // Navigate to settings
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors rounded-lg"
+                    >
+                      <SVGIcon name="settings" size={16} />
+                      <span className="text-sm">الإعدادات</span>
+                    </button>
+                    <div className="border-t mt-2 pt-2" style={{ borderColor: 'var(--border-color)' }}>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          onLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-right hover:bg-red-500 hover:bg-opacity-20 transition-colors rounded-lg text-red-500"
+                      >
+                        <SVGIcon name="logout" size={16} />
+                        <span className="text-sm">تسجيل الخروج</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// Enhanced Footer Component
+const EnhancedFooter = () => {
+  const { theme, language } = useTheme();
+  
+  return (
+    <footer className="glass-effect mt-auto border-t" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Company Info */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg">نظام إدارة المبيعات</h3>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              نظام شامل لإدارة المبيعات والمناديب والعيادات بتقنيات حديثة
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div className="space-y-3">
+            <h4 className="font-semibold">روابط سريعة</h4>
+            <ul className="space-y-2 text-sm">
+              <li><a href="#" className="hover:text-blue-500 transition-colors">لوحة التحكم</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">إدارة المستخدمين</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">التقارير</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">الإعدادات</a></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div className="space-y-3">
+            <h4 className="font-semibold">الدعم والمساعدة</h4>
+            <ul className="space-y-2 text-sm">
+              <li><a href="#" className="hover:text-blue-500 transition-colors">مركز المساعدة</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">اتصل بنا</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">الأسئلة الشائعة</a></li>
+              <li><a href="#" className="hover:text-blue-500 transition-colors">التحديثات</a></li>
+            </ul>
+          </div>
+
+          {/* System Info */}
+          <div className="space-y-3">
+            <h4 className="font-semibold">معلومات النظام</h4>
+            <div className="text-sm space-y-2">
+              <p>الثيم الحالي: <span className="font-semibold">{theme}</span></p>
+              <p>اللغة: <span className="font-semibold">{language === 'ar' ? 'العربية' : 'English'}</span></p>
+              <p>الإصدار: <span className="font-semibold">v2.0.0</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t mt-6 pt-4 flex items-center justify-between text-sm" style={{ borderColor: 'var(--border-color)' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            © {new Date().getFullYear()} نظام إدارة المبيعات. جميع الحقوق محفوظة.
+          </p>
+          <div className="flex items-center gap-4">
+            <span style={{ color: 'var(--text-secondary)' }}>مطور بواسطة فريق التطوير</span>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 
