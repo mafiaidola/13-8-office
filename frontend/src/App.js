@@ -1982,18 +1982,7 @@ const VisitDetailsModal = ({ visit, language, onClose }) => {
     </div>
   );
 };
-const EnhancedVisitsLog = () => {
-  const [visits, setVisits] = useState([]);
-  const [filteredVisits, setFilteredVisits] = useState([]);
-  const [selectedVisit, setSelectedVisit] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterEffectiveness, setFilterEffectiveness] = useState('all');
-  const [filterDate, setFilterDate] = useState('all');
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
+};
 
   useEffect(() => {
     fetchVisits();
