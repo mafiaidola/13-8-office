@@ -6034,6 +6034,37 @@ const EnhancedUserManagement = () => {
     return `منذ ${Math.floor(diffInMinutes / 1440)} يوم`;
   };
 
+  // Legacy function for bulk actions
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedUsers.size === 0) return;
+
+    const confirmed = window.confirm(`هل أنت متأكد من تطبيق "${bulkAction}" على ${selectedUsers.size} مستخدم؟`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const promises = Array.from(selectedUsers).map(userId => {
+        if (bulkAction === 'activate') {
+          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else if (bulkAction === 'deactivate') {
+          return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        }
+      });
+
+      await Promise.all(promises);
+      setSuccess(`تم تطبيق الإجراء على ${selectedUsers.size} مستخدم`);
+      setSelectedUsers(new Set());
+      setBulkAction('');
+      fetchUsers();
+    } catch (error) {
+      setError('خطأ في تطبيق الإجراء الجماعي');
+    }
+  };
+
   const UserCard = ({ user }) => (
     <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
       <div className="flex items-start gap-4">
