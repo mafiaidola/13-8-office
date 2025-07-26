@@ -3329,6 +3329,526 @@ const ChatSystem = () => {
   );
 };
 
+// Advanced Analytics Dashboard Component
+const AdvancedAnalyticsDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState('performance'); // performance, kpis
+  const [timeRange, setTimeRange] = useState('week');
+  const [userFilter, setUserFilter] = useState('');
+  const [kpiType, setKpiType] = useState('sales_performance');
+  
+  // Data states
+  const [performanceData, setPerformanceData] = useState(null);
+  const [kpiData, setKpiData] = useState(null);
+  
+  const { language } = useLanguage();
+
+  useEffect(() => {
+    if (activeView === 'performance') {
+      fetchPerformanceDashboard();
+    } else {
+      fetchKPIMetrics();
+    }
+  }, [activeView, timeRange, userFilter, kpiType]);
+
+  const fetchPerformanceDashboard = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        time_range: timeRange,
+        ...(userFilter && { user_filter: userFilter })
+      });
+
+      const response = await axios.get(`${API}/analytics/performance-dashboard?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setPerformanceData(response.data);
+    } catch (error) {
+      setError('خطأ في تحميل بيانات الأداء');
+      console.error('Performance dashboard error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchKPIMetrics = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        kpi_type: kpiType,
+        period: timeRange
+      });
+
+      const response = await axios.get(`${API}/analytics/kpi-metrics?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setKpiData(response.data);
+    } catch (error) {
+      setError('خطأ في تحميل مؤشرات الأداء');
+      console.error('KPI metrics error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getGrowthColor = (growth) => {
+    if (growth > 0) return 'text-green-400';
+    if (growth < 0) return 'text-red-400';
+    return 'text-gray-400';
+  };
+
+  const getGrowthIcon = (growth) => {
+    if (growth > 0) return '📈';
+    if (growth < 0) return '📉';
+    return '📊';
+  };
+
+  const getKPIStatusColor = (status) => {
+    const colors = {
+      'excellent': 'bg-green-500 bg-opacity-20 text-green-400 border-green-500',
+      'good': 'bg-blue-500 bg-opacity-20 text-blue-400 border-blue-500',
+      'average': 'bg-yellow-500 bg-opacity-20 text-yellow-400 border-yellow-500',
+      'needs_improvement': 'bg-red-500 bg-opacity-20 text-red-400 border-red-500',
+      'no_data': 'bg-gray-500 bg-opacity-20 text-gray-400 border-gray-500'
+    };
+    return colors[status] || colors.no_data;
+  };
+
+  const getKPIStatusText = (status) => {
+    const texts = {
+      'excellent': 'ممتاز',
+      'good': 'جيد',
+      'average': 'متوسط',
+      'needs_improvement': 'يحتاج تحسين',
+      'no_data': 'لا توجد بيانات'
+    };
+    return texts[status] || texts.no_data;
+  };
+
+  const MetricCard = ({ title, value, unit, growth, icon, description }) => (
+    <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-2xl">{icon}</div>
+        <div className={`text-sm font-medium ${getGrowthColor(growth)}`}>
+          {getGrowthIcon(growth)} {growth > 0 ? '+' : ''}{growth.toFixed(1)}%
+        </div>
+      </div>
+      <div className="mb-2">
+        <div className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+          {value.toLocaleString()}{unit}
+        </div>
+        <div className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          {title}
+        </div>
+      </div>
+      {description && (
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {description}
+        </div>
+      )}
+    </div>
+  );
+
+  const KPICard = ({ title, data }) => (
+    <div className={`p-6 rounded-xl border-2 ${getKPIStatusColor(data.status)}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getKPIStatusColor(data.status)}`}>
+          {getKPIStatusText(data.status)}
+        </span>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            {data.value}{data.unit}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            الهدف: {data.target}{data.unit}
+          </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <div 
+            className={`h-2 rounded-full transition-all duration-300 ${
+              data.status === 'excellent' ? 'bg-green-500' :
+              data.status === 'good' ? 'bg-blue-500' :
+              data.status === 'average' ? 'bg-yellow-500' : 'bg-red-500'
+            }`}
+            style={{ width: `${Math.min(100, data.achievement)}%` }}
+          ></div>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span style={{ color: 'var(--text-secondary)' }}>التحقيق: {data.achievement}%</span>
+          <span className={`font-medium ${
+            data.trend === 'up' ? 'text-green-400' :
+            data.trend === 'down' ? 'text-red-400' : 'text-gray-400'
+          }`}>
+            {data.trend === 'up' ? '↗️' : data.trend === 'down' ? '↘️' : '➡️'} {data.trend}
+          </span>
+        </div>
+        
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {data.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-gradient">📊 لوحة التحليلات المتقدمة</h2>
+        <div className="flex items-center gap-4">
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="px-4 py-2 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+          >
+            <option value="today">اليوم</option>
+            <option value="week">هذا الأسبوع</option>
+            <option value="month">هذا الشهر</option>
+            <option value="quarter">هذا الربع</option>
+            <option value="year">هذا العام</option>
+          </select>
+          
+          {activeView === 'performance' && (
+            <select
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              className="px-4 py-2 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+            >
+              <option value="">جميع المستخدمين</option>
+              <option value="sales_rep">مناديب المبيعات</option>
+              <option value="manager">المدراء</option>
+              <option value="warehouse_manager">مدراء المخازن</option>
+            </select>
+          )}
+          
+          {activeView === 'kpis' && (
+            <select
+              value={kpiType}
+              onChange={(e) => setKpiType(e.target.value)}
+              className="px-4 py-2 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+            >
+              <option value="sales_performance">أداء المبيعات</option>
+              <option value="team_efficiency">كفاءة الفريق</option>
+              <option value="customer_satisfaction">رضا العملاء</option>
+            </select>
+          )}
+        </div>
+      </div>
+
+      {/* View Toggle */}
+      <div className="glass-effect p-2 rounded-xl inline-flex">
+        <button
+          onClick={() => setActiveView('performance')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'performance'
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          📈 لوحة الأداء
+        </button>
+        <button
+          onClick={() => setActiveView('kpis')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'kpis'
+              ? 'bg-purple-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          🎯 مؤشرات الأداء
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="glass-effect p-6 rounded-xl animate-pulse">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 bg-gray-600 rounded"></div>
+                  <div className="w-16 h-4 bg-gray-600 rounded"></div>
+                </div>
+                <div className="w-24 h-8 bg-gray-600 rounded"></div>
+                <div className="w-32 h-4 bg-gray-700 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Performance Dashboard View */}
+          {activeView === 'performance' && performanceData && (
+            <div className="space-y-8">
+              {/* Core Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <MetricCard
+                  title="إجمالي الزيارات"
+                  value={performanceData.core_metrics.visits.current}
+                  unit=""
+                  growth={performanceData.core_metrics.visits.growth}
+                  icon="🚗"
+                  description="مقارنة بالفترة السابقة"
+                />
+                <MetricCard
+                  title="الزيارات الفعالة"
+                  value={performanceData.core_metrics.effective_visits.current}
+                  unit=""
+                  growth={performanceData.core_metrics.effective_visits.growth}
+                  icon="✅"
+                  description="زيارات حققت نتائج إيجابية"
+                />
+                <MetricCard
+                  title="إجمالي الطلبات"
+                  value={performanceData.core_metrics.orders.current}
+                  unit=""
+                  growth={performanceData.core_metrics.orders.growth}
+                  icon="📦"
+                  description="طلبات تم إنشاؤها"
+                />
+                <MetricCard
+                  title="معدل التحويل"
+                  value={performanceData.core_metrics.conversion_rate.current}
+                  unit="%"
+                  growth={performanceData.core_metrics.conversion_rate.growth}
+                  icon="🎯"
+                  description="معدل نجاح الزيارات"
+                />
+              </div>
+
+              {/* Top Performers */}
+              {performanceData.top_performers.length > 0 && (
+                <div className="glass-effect p-6 rounded-xl">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span>🏆</span>
+                    <span>أفضل المؤدين</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {performanceData.top_performers.map((performer, index) => (
+                      <div key={index} className="p-4 bg-white bg-opacity-5 rounded-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                            index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-blue-500'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {performer.user_info.full_name}
+                            </div>
+                            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                              @{performer.user_info.username}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>إجمالي الزيارات:</span>
+                            <span className="font-medium text-blue-400">{performer.total_visits}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>الزيارات الفعالة:</span>
+                            <span className="font-medium text-green-400">{performer.effective_visits}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>معدل الفعالية:</span>
+                            <span className="font-medium text-purple-400">{performer.effectiveness_rate.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Daily Trends Chart */}
+              {performanceData.daily_trends.length > 0 && (
+                <div className="glass-effect p-6 rounded-xl">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span>📈</span>
+                    <span>اتجاهات الأداء اليومية</span>
+                  </h3>
+                  <div className="space-y-4">
+                    {performanceData.daily_trends.slice(-7).map((day, index) => (
+                      <div key={index} className="flex items-center gap-4 p-3 bg-white bg-opacity-5 rounded-lg">
+                        <div className="w-24 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(day.date).toLocaleDateString('ar-EG', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-blue-400">🚗 {day.visits}</span>
+                            <span className="text-green-400">✅ {day.effective_visits}</span>
+                            <span className="text-purple-400">📦 {day.orders}</span>
+                            <span className="text-yellow-400">🎯 {day.effectiveness_rate.toFixed(1)}%</span>
+                          </div>
+                          <div className="mt-2">
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div 
+                                className="h-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min(100, day.effectiveness_rate)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Team Summary */}
+              {performanceData.team_summary.length > 0 && (
+                <div className="glass-effect p-6 rounded-xl">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span>👥</span>
+                    <span>ملخص الفرق</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {performanceData.team_summary.map((team, index) => (
+                      <div key={index} className="p-4 bg-white bg-opacity-5 rounded-lg">
+                        <div className="font-medium mb-3" style={{ color: 'var(--text-primary)' }}>
+                          {team.manager_name}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>حجم الفريق:</span>
+                            <span className="font-medium">{team.team_size}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>إجمالي الزيارات:</span>
+                            <span className="font-medium text-blue-400">{team.total_visits}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>الزيارات الفعالة:</span>
+                            <span className="font-medium text-green-400">{team.effective_visits}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span style={{ color: 'var(--text-secondary)' }}>معدل الفعالية:</span>
+                            <span className="font-medium text-purple-400">{team.effectiveness_rate.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Insights */}
+              {performanceData.insights && (
+                <div className="glass-effect p-6 rounded-xl">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <span>💡</span>
+                    <span>رؤى ذكية</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+                      <div className="text-2xl mb-2">🌟</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>أفضل يوم أداء</div>
+                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {performanceData.insights.best_performing_day ? 
+                          new Date(performanceData.insights.best_performing_day).toLocaleDateString('ar-EG') : 
+                          'غير متاح'
+                        }
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+                      <div className="text-2xl mb-2">👥</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>عدد المؤدين الفريدين</div>
+                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {performanceData.insights.total_unique_performers}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-500 bg-opacity-20 rounded-lg">
+                      <div className="text-2xl mb-2">📊</div>
+                      <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>متوسط الفعالية</div>
+                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {performanceData.insights.average_effectiveness}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* KPIs Dashboard View */}
+          {activeView === 'kpis' && kpiData && (
+            <div className="space-y-8">
+              {/* KPI Summary */}
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold">ملخص مؤشرات الأداء</h3>
+                  <div className="flex items-center gap-4">
+                    <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                      kpiData.summary.overall_performance === 'excellent' 
+                        ? 'bg-green-500 bg-opacity-20 text-green-400'
+                        : 'bg-blue-500 bg-opacity-20 text-blue-400'
+                    }`}>
+                      الأداء العام: {kpiData.summary.overall_performance === 'excellent' ? 'ممتاز' : 'جيد'}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-white bg-opacity-5 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-400">{kpiData.summary.total_kpis}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي المؤشرات</div>
+                  </div>
+                  <div className="text-center p-4 bg-white bg-opacity-5 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">{kpiData.summary.excellent_kpis}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مؤشرات ممتازة</div>
+                  </div>
+                  <div className="text-center p-4 bg-white bg-opacity-5 rounded-lg">
+                    <div className="text-2xl font-bold text-red-400">{kpiData.summary.needs_improvement}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>تحتاج تحسين</div>
+                  </div>
+                  <div className="text-center p-4 bg-white bg-opacity-5 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {new Date(kpiData.generated_at).toLocaleDateString('ar-EG')}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>آخر تحديث</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Object.entries(kpiData.metrics).map(([key, data]) => (
+                  <KPICard
+                    key={key}
+                    title={data.description}
+                    data={data}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 // Enhanced Admin Statistics Dashboard
 const AdminStatsDashboard = () => {
   const [stats, setStats] = useState({});
