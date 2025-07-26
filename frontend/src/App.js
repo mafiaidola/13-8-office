@@ -5617,6 +5617,10 @@ const EnhancedUserManagement = () => {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <ThemeToggle />
