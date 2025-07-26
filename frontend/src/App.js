@@ -13913,4 +13913,479 @@ const DocumentViewModal = ({ document, onClose }) => {
   }
 };
 
+// Region Management Component
+const RegionManagement = () => {
+  const { t } = useLanguage();
+  const [regions, setRegions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingRegion, setEditingRegion] = useState(null);
+  const [selectedLine, setSelectedLine] = useState('all');
+
+  useEffect(() => {
+    fetchRegions();
+  }, [selectedLine]);
+
+  const fetchRegions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const params = selectedLine !== 'all' ? `?line=${selectedLine}` : '';
+      const response = await axios.get(`${API}/admin/regions${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRegions(response.data);
+    } catch (error) {
+      console.error('Error fetching regions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRegion = async (regionData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/regions`, regionData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchRegions();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Error creating region:', error);
+      alert('حدث خطأ في إنشاء المنطقة');
+    }
+  };
+
+  const handleEditRegion = async (regionId, regionData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/admin/regions/${regionId}`, regionData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchRegions();
+      setEditingRegion(null);
+    } catch (error) {
+      console.error('Error updating region:', error);
+      alert('حدث خطأ في تحديث المنطقة');
+    }
+  };
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gradient flex items-center gap-3">
+          <span>🗺️</span>
+          <span>{t('regionManagement')}</span>
+        </h2>
+        <div className="flex items-center gap-4">
+          <select
+            value={selectedLine}
+            onChange={(e) => setSelectedLine(e.target.value)}
+            className="glass-effect px-4 py-2 rounded-lg border"
+          >
+            <option value="all">جميع الخطوط</option>
+            <option value="line_1">{t('line1')}</option>
+            <option value="line_2">{t('line2')}</option>
+          </select>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-2 rounded-lg"
+          >
+            + إضافة منطقة
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+          <p style={{ color: 'var(--text-secondary)' }}>جاري تحميل المناطق...</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {regions.map((region) => (
+            <div key={region.id} className="card-glass p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {region.name}
+                </h3>
+                <span className={`badge-modern ${region.line === 'line_1' ? 'badge-info' : 'badge-warning'}`}>
+                  {region.line === 'line_1' ? t('line1') : t('line2')}
+                </span>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm">
+                  <span>🏷️</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>الكود: {region.code}</span>
+                </div>
+                
+                {region.manager_name && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span>👤</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>المدير: {region.manager_name}</span>
+                  </div>
+                )}
+
+                {region.description && (
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {region.description}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4 text-xs">
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    المقاطعات: {region.districts?.length || 0}
+                  </span>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    تم الإنشاء: {new Date(region.created_at).toLocaleDateString('ar-EG')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingRegion(region)}
+                  className="flex-1 px-4 py-2 bg-blue-500 bg-opacity-20 text-blue-400 rounded-lg hover:bg-opacity-30 transition-colors"
+                >
+                  تعديل
+                </button>
+                <button className="flex-1 px-4 py-2 bg-green-500 bg-opacity-20 text-green-400 rounded-lg hover:bg-opacity-30 transition-colors">
+                  إدارة المقاطعات
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Region Modal */}
+      {(showCreateModal || editingRegion) && (
+        <RegionModal
+          region={editingRegion}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingRegion(null);
+          }}
+          onSave={(data) => {
+            if (editingRegion) {
+              handleEditRegion(editingRegion.id, data);
+            } else {
+              handleCreateRegion(data);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Region Modal Component
+const RegionModal = ({ region, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: region?.name || '',
+    code: region?.code || '',
+    description: region?.description || '',
+    line: region?.line || 'line_1',
+    manager_id: region?.manager_id || ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-2xl">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">
+          {region ? 'تعديل المنطقة' : 'إضافة منطقة جديدة'}
+        </h3>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold mb-2">
+                اسم المنطقة *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full px-4 py-3 rounded-lg glass-effect border"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-2">
+                كود المنطقة *
+              </label>
+              <input
+                type="text"
+                value={formData.code}
+                onChange={(e) => setFormData({...formData, code: e.target.value})}
+                className="w-full px-4 py-3 rounded-lg glass-effect border"
+                maxLength="10"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">
+              الخط
+            </label>
+            <select
+              value={formData.line}
+              onChange={(e) => setFormData({...formData, line: e.target.value})}
+              className="w-full px-4 py-3 rounded-lg glass-effect border"
+            >
+              <option value="line_1">الخط الأول</option>
+              <option value="line_2">الخط الثاني</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">
+              الوصف
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full px-4 py-3 rounded-lg glass-effect border h-24"
+              placeholder="وصف اختياري للمنطقة..."
+            />
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button
+              type="submit"
+              className="flex-1 btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-lg"
+            >
+              {region ? 'تحديث' : 'إنشاء'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:bg-opacity-10 transition-colors"
+            >
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Comprehensive Admin Settings Component
+const ComprehensiveAdminSettings = () => {
+  const { t } = useLanguage();
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/settings/comprehensive`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initializeSystem = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/initialize-system`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم تهيئة النظام بنجاح!\n' + JSON.stringify(response.data.gm_credentials, null, 2));
+      fetchSettings();
+    } catch (error) {
+      console.error('Error initializing system:', error);
+      alert('حدث خطأ في تهيئة النظام');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p style={{ color: 'var(--text-secondary)' }}>جاري تحميل الإعدادات الشاملة...</p>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'overview', label: 'نظرة عامة', icon: '📊' },
+    { id: 'roles', label: 'الأدوار', icon: '👥' },
+    { id: 'lines', label: 'الخطوط', icon: '📈' },
+    { id: 'system', label: 'صحة النظام', icon: '⚙️' },
+    { id: 'initialize', label: 'تهيئة النظام', icon: '🚀' }
+  ];
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gradient flex items-center gap-3">
+          <span>⚙️</span>
+          <span>{t('comprehensiveSettings')}</span>
+        </h2>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-8 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'glass-effect hover:bg-white hover:bg-opacity-10'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-8">
+        {activeTab === 'overview' && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="card-glass p-6 text-center">
+              <div className="text-3xl mb-2">👥</div>
+              <div className="text-2xl font-bold text-gradient mb-1">
+                {settings?.total_users || 0}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي المستخدمين
+              </div>
+            </div>
+
+            <div className="card-glass p-6 text-center">
+              <div className="text-3xl mb-2">🗺️</div>
+              <div className="text-2xl font-bold text-gradient mb-1">
+                {(settings?.line_statistics?.line_1?.regions || 0) + (settings?.line_statistics?.line_2?.regions || 0)}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي المناطق
+              </div>
+            </div>
+
+            <div className="card-glass p-6 text-center">
+              <div className="text-3xl mb-2">📦</div>
+              <div className="text-2xl font-bold text-gradient mb-1">
+                {(settings?.line_statistics?.line_1?.products || 0) + (settings?.line_statistics?.line_2?.products || 0)}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي المنتجات
+              </div>
+            </div>
+
+            <div className="card-glass p-6 text-center">
+              <div className="text-3xl mb-2">📈</div>
+              <div className="text-2xl font-bold text-gradient mb-1">
+                {Object.keys(settings?.available_roles || {}).length}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                الأدوار المتاحة
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'roles' && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-gradient">توزيع الأدوار</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(settings?.role_statistics || {}).map(([role, count]) => (
+                <div key={role} className="card-glass p-4 flex items-center justify-between">
+                  <div>
+                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {t(role) || role}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      المستخدمون النشطون
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gradient">
+                    {count}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'lines' && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-gradient">إحصائيات الخطوط</h3>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.entries(settings?.line_statistics || {}).map(([line, stats]) => (
+                <div key={line} className="card-glass p-6">
+                  <h4 className="text-lg font-bold mb-4 text-gradient">
+                    {line === 'line_1' ? t('line1') : t('line2')}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-gradient">{stats.regions}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المناطق</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-gradient">{stats.districts}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المقاطعات</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-gradient">{stats.products}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المنتجات</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-gradient">{stats.users}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>المستخدمون</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'initialize' && (
+          <div className="card-glass p-8 text-center max-w-2xl mx-auto">
+            <div className="text-6xl mb-4">🚀</div>
+            <h3 className="text-2xl font-bold text-gradient mb-4">تهيئة النظام</h3>
+            <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
+              هذا الإجراء سيقوم بإنشاء مستخدم المدير العام الافتراضي وبيانات تجريبية للنظام
+            </p>
+            <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 rounded-lg p-4 mb-6">
+              <p className="text-yellow-400 text-sm">
+                ⚠️ تأكد من أن هذا هو أول استخدام للنظام. هذا الإجراء لا يمكن التراجع عنه.
+              </p>
+            </div>
+            <button
+              onClick={initializeSystem}
+              className="btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white px-8 py-4 text-lg rounded-lg"
+            >
+              🚀 تهيئة النظام الآن
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
