@@ -35,6 +35,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+# Track startup time for performance metrics
+import time
+startup_time = time.time()
+
 # Security
 security = HTTPBearer()
 
