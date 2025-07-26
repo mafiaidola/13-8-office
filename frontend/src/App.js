@@ -5920,6 +5920,9 @@ const EnhancedUserManagement = () => {
     phone: '', manager_id: '', department: '', employee_id: ''
   });
   
+  // Additional states for legacy compatibility
+  const [userStats, setUserStats] = useState({});
+  
   const { language } = useLanguage();
 
   useEffect(() => {
