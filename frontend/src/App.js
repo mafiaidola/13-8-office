@@ -6956,10 +6956,12 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
               const nextIndex = (currentIndex + 1) % themes.length;
               changeTheme(themes[nextIndex].id);
             }}
-            className="glass-effect p-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2"
+            className="theme-toggle-button glass-effect p-3 rounded-full hover:scale-105 transition-all duration-300 flex items-center gap-2"
             title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
           >
-            <span className="text-lg">{themes.find(t => t.id === theme)?.icon}</span>
+            <span className="text-lg transition-transform duration-300 hover:rotate-12">
+              {themes.find(t => t.id === theme)?.icon}
+            </span>
             <SVGIcon name="theme" size={16} className="svg-icon-animated" />
           </button>
 
