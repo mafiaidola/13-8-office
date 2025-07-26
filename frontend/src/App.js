@@ -83,12 +83,35 @@ const translations = {
     save: 'حفظ',
     cancel: 'إلغاء',
     
-    // Roles
+    // Roles - Enhanced with new hierarchy
+    gm: 'مدير عام',
     admin: 'مدير',
-    manager: 'مدير فرع',
-    salesRep: 'مندوب مبيعات',
+    lineManager: 'مدير خط',
+    areaManager: 'مدير منطقة',
+    districtManager: 'مدير مقاطعة', 
+    keyAccount: 'حساب رئيسي',
+    medicalRep: 'مندوب طبي',
+    manager: 'مدير فرع', // Legacy
+    salesRep: 'مندوب مبيعات', // Legacy
     warehouse: 'مخزن',
     accounting: 'محاسب',
+    
+    // Lines and Regions
+    line1: 'الخط الأول',
+    line2: 'الخط الثاني',
+    regions: 'المناطق',
+    districts: 'المقاطعات',
+    regionManagement: 'إدارة المناطق',
+    districtManagement: 'إدارة المقاطعات',
+    lineManagement: 'إدارة الخطوط',
+    areaManagement: 'إدارة المناطق',
+    
+    // Enhanced Admin Settings
+    comprehensiveSettings: 'الإعدادات الشاملة',
+    roleHierarchy: 'هيكل الأدوار',
+    systemHealth: 'صحة النظام',
+    lineStatistics: 'إحصائيات الخطوط',
+    initializeSystem: 'تهيئة النظام'
     
     // Warehouse
     warehouseName: 'اسم المخزن',
