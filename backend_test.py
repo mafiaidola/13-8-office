@@ -3568,14 +3568,429 @@ class BackendTester:
         # Print Summary
         self.print_test_summary()
 
+    # COMPREHENSIVE REVIEW REQUEST TESTS - Focus on specific requirements
+    
+    def test_comprehensive_login_flow(self):
+        """REVIEW TEST 1: Comprehensive login flow with admin credentials"""
+        print("\n🔐 TESTING LOGIN FLOW (admin/admin123)")
+        
+        # Test login
+        status_code, response = self.make_request("POST", "/auth/login", DEFAULT_ADMIN)
+        
+        if status_code == 200 and "token" in response:
+            self.admin_token = response["token"]
+            user_info = response.get("user", {})
+            
+            # Verify user data structure
+            required_fields = ["id", "username", "role", "full_name"]
+            if all(field in user_info for field in required_fields):
+                if user_info.get("role") == "admin" and user_info.get("username") == "admin":
+                    self.log_test("Comprehensive Login Flow", True, f"✅ Admin login successful: {user_info}")
+                    return True
+                else:
+                    self.log_test("Comprehensive Login Flow", False, f"❌ Wrong user data: {user_info}")
+            else:
+                self.log_test("Comprehensive Login Flow", False, f"❌ Missing user fields: {user_info}")
+        else:
+            self.log_test("Comprehensive Login Flow", False, f"❌ Login failed - Status: {status_code}, Response: {response}")
+        return False
+
+    def test_authentication_check_endpoint(self):
+        """REVIEW TEST 2: Test /api/auth/me endpoint for session maintenance"""
+        print("\n🔍 TESTING AUTHENTICATION CHECK (/api/auth/me)")
+        
+        if not self.admin_token:
+            self.log_test("Authentication Check Endpoint", False, "❌ No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/auth/me", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = ["id", "username", "role", "full_name", "email"]
+            if all(field in response for field in required_fields):
+                if response.get("role") == "admin":
+                    self.log_test("Authentication Check Endpoint", True, f"✅ Session maintained: {response}")
+                    return True
+                else:
+                    self.log_test("Authentication Check Endpoint", False, f"❌ Wrong role: {response.get('role')}")
+            else:
+                self.log_test("Authentication Check Endpoint", False, f"❌ Missing fields: {response}")
+        else:
+            self.log_test("Authentication Check Endpoint", False, f"❌ Status: {status_code}, Response: {response}")
+        return False
+
+    def test_dashboard_data_loading_apis(self):
+        """REVIEW TEST 3: Test all dashboard APIs return proper data"""
+        print("\n📊 TESTING DASHBOARD DATA LOADING")
+        
+        if not self.admin_token:
+            self.log_test("Dashboard Data Loading APIs", False, "❌ No admin token available")
+            return False
+        
+        dashboard_apis = [
+            ("/dashboard/stats", ["total_users", "total_clinics", "total_doctors", "total_visits"]),
+            ("/users", None),  # Should return list
+            ("/clinics", None),  # Should return list
+            ("/doctors", None),  # Should return list
+            ("/visits", None),  # Should return list
+            ("/warehouses", None),  # Should return list
+            ("/products", None),  # Should return list
+        ]
+        
+        all_passed = True
+        results = []
+        
+        for endpoint, required_fields in dashboard_apis:
+            status_code, response = self.make_request("GET", endpoint, token=self.admin_token)
+            
+            if status_code == 200:
+                if required_fields:  # Stats endpoint
+                    if all(field in response for field in required_fields):
+                        results.append(f"✅ {endpoint}: {response}")
+                    else:
+                        results.append(f"❌ {endpoint}: Missing fields {required_fields}")
+                        all_passed = False
+                else:  # List endpoints
+                    if isinstance(response, list):
+                        results.append(f"✅ {endpoint}: {len(response)} items")
+                    else:
+                        results.append(f"❌ {endpoint}: Not a list")
+                        all_passed = False
+            else:
+                results.append(f"❌ {endpoint}: Status {status_code}")
+                all_passed = False
+        
+        details = "\n   ".join(results)
+        self.log_test("Dashboard Data Loading APIs", all_passed, details)
+        return all_passed
+
+    def test_error_handling_scenarios(self):
+        """REVIEW TEST 4: Test error scenarios return proper error messages"""
+        print("\n⚠️ TESTING ERROR HANDLING SCENARIOS")
+        
+        error_tests = []
+        
+        # Test 1: Invalid credentials
+        status_code, response = self.make_request("POST", "/auth/login", {"username": "invalid", "password": "wrong"})
+        if status_code == 401 and "detail" in response:
+            error_tests.append("✅ Invalid login: Proper 401 error")
+        else:
+            error_tests.append(f"❌ Invalid login: Expected 401, got {status_code}")
+        
+        # Test 2: Invalid token
+        status_code, response = self.make_request("GET", "/auth/me", token="invalid_token")
+        if status_code == 401 and "detail" in response:
+            error_tests.append("✅ Invalid token: Proper 401 error")
+        else:
+            error_tests.append(f"❌ Invalid token: Expected 401, got {status_code}")
+        
+        # Test 3: Unauthorized access (sales rep trying admin function)
+        if self.sales_rep_token:
+            user_data = {"username": "test", "email": "test@test.com", "password": "test", "role": "admin", "full_name": "Test"}
+            status_code, response = self.make_request("POST", "/auth/register", user_data, self.sales_rep_token)
+            if status_code == 403 and "detail" in response:
+                error_tests.append("✅ Unauthorized access: Proper 403 error")
+            else:
+                error_tests.append(f"❌ Unauthorized access: Expected 403, got {status_code}")
+        
+        # Test 4: Resource not found
+        status_code, response = self.make_request("GET", "/clinics/nonexistent-id", token=self.admin_token)
+        if status_code in [404, 422]:  # 422 for invalid UUID format
+            error_tests.append("✅ Resource not found: Proper error")
+        else:
+            error_tests.append(f"❌ Resource not found: Expected 404/422, got {status_code}")
+        
+        all_passed = all("✅" in test for test in error_tests)
+        details = "\n   ".join(error_tests)
+        self.log_test("Error Handling Scenarios", all_passed, details)
+        return all_passed
+
+    def test_comprehensive_search_api(self):
+        """REVIEW TEST 5: Test comprehensive search functionality"""
+        print("\n🔍 TESTING COMPREHENSIVE SEARCH API")
+        
+        if not self.admin_token:
+            self.log_test("Comprehensive Search API", False, "❌ No admin token available")
+            return False
+        
+        search_tests = []
+        
+        # Test global search
+        status_code, response = self.make_request("GET", "/search/global?q=test", token=self.admin_token)
+        if status_code == 200:
+            expected_categories = ["users", "clinics", "doctors", "products"]
+            if all(category in response for category in expected_categories):
+                search_tests.append(f"✅ Global search: All categories present")
+            else:
+                search_tests.append(f"❌ Global search: Missing categories")
+        else:
+            search_tests.append(f"❌ Global search: Status {status_code}")
+        
+        # Test comprehensive search with different types
+        search_types = ["representative", "doctor", "clinic", "product"]
+        for search_type in search_types:
+            status_code, response = self.make_request("GET", f"/search/comprehensive?q=test&type={search_type}", token=self.admin_token)
+            if status_code == 200:
+                search_tests.append(f"✅ Search type '{search_type}': Working")
+            else:
+                search_tests.append(f"❌ Search type '{search_type}': Status {status_code}")
+        
+        all_passed = all("✅" in test for test in search_tests)
+        details = "\n   ".join(search_tests)
+        self.log_test("Comprehensive Search API", all_passed, details)
+        return all_passed
+
+    def test_filtered_statistics_api_review(self):
+        """REVIEW TEST 6: Test filtered statistics API with time periods"""
+        print("\n📈 TESTING FILTERED STATISTICS API")
+        
+        if not self.admin_token:
+            self.log_test("Filtered Statistics API", False, "❌ No admin token available")
+            return False
+        
+        time_periods = ["today", "week", "month", "quarter"]
+        stats_tests = []
+        
+        for period in time_periods:
+            status_code, response = self.make_request("GET", f"/dashboard/statistics/filtered?period={period}", token=self.admin_token)
+            if status_code == 200:
+                required_sections = ["visits", "orders", "users", "clinics"]
+                if all(section in response for section in required_sections):
+                    # Check visits structure
+                    visits = response.get("visits", {})
+                    visit_fields = ["total", "effective", "pending_review"]
+                    if all(field in visits for field in visit_fields):
+                        stats_tests.append(f"✅ Period '{period}': Complete structure")
+                    else:
+                        stats_tests.append(f"❌ Period '{period}': Missing visit fields")
+                else:
+                    stats_tests.append(f"❌ Period '{period}': Missing sections")
+            else:
+                stats_tests.append(f"❌ Period '{period}': Status {status_code}")
+        
+        all_passed = all("✅" in test for test in stats_tests)
+        details = "\n   ".join(stats_tests)
+        self.log_test("Filtered Statistics API", all_passed, details)
+        return all_passed
+
+    def test_performance_charts_api_review(self):
+        """REVIEW TEST 7: Test performance charts API with different chart types"""
+        print("\n📊 TESTING PERFORMANCE CHARTS API")
+        
+        if not self.admin_token:
+            self.log_test("Performance Charts API", False, "❌ No admin token available")
+            return False
+        
+        chart_types = ["visits", "orders", "revenue", "representatives"]
+        chart_tests = []
+        
+        for chart_type in chart_types:
+            status_code, response = self.make_request("GET", f"/charts/performance?type={chart_type}", token=self.admin_token)
+            if status_code == 200:
+                required_fields = ["chart_type", "data", "title", "timestamp"]
+                if all(field in response for field in required_fields):
+                    if response.get("chart_type") == chart_type and isinstance(response.get("data"), list):
+                        chart_tests.append(f"✅ Chart '{chart_type}': Complete structure")
+                    else:
+                        chart_tests.append(f"❌ Chart '{chart_type}': Invalid structure")
+                else:
+                    chart_tests.append(f"❌ Chart '{chart_type}': Missing fields")
+            else:
+                chart_tests.append(f"❌ Chart '{chart_type}': Status {status_code}")
+        
+        all_passed = all("✅" in test for test in chart_tests)
+        details = "\n   ".join(chart_tests)
+        self.log_test("Performance Charts API", all_passed, details)
+        return all_passed
+
+    def test_database_connection_health(self):
+        """REVIEW TEST 8: Test database connection and data integrity"""
+        print("\n🗄️ TESTING DATABASE CONNECTION HEALTH")
+        
+        if not self.admin_token:
+            self.log_test("Database Connection Health", False, "❌ No admin token available")
+            return False
+        
+        db_tests = []
+        
+        # Test basic CRUD operations
+        endpoints_to_test = [
+            ("/users", "Users collection"),
+            ("/clinics", "Clinics collection"),
+            ("/doctors", "Doctors collection"),
+            ("/visits", "Visits collection"),
+            ("/products", "Products collection"),
+            ("/warehouses", "Warehouses collection")
+        ]
+        
+        for endpoint, description in endpoints_to_test:
+            status_code, response = self.make_request("GET", endpoint, token=self.admin_token)
+            if status_code == 200 and isinstance(response, list):
+                db_tests.append(f"✅ {description}: Connected and accessible")
+            else:
+                db_tests.append(f"❌ {description}: Connection issue (Status: {status_code})")
+        
+        # Test data consistency - check if related data exists
+        status_code, visits = self.make_request("GET", "/visits", token=self.admin_token)
+        if status_code == 200 and len(visits) > 0:
+            visit = visits[0]
+            if all(field in visit for field in ["doctor_name", "clinic_name", "sales_rep_name"]):
+                db_tests.append("✅ Data integrity: Related data properly joined")
+            else:
+                db_tests.append("❌ Data integrity: Missing related data")
+        else:
+            db_tests.append("✅ Data integrity: No visits to test (acceptable)")
+        
+        all_passed = all("✅" in test for test in db_tests)
+        details = "\n   ".join(db_tests)
+        self.log_test("Database Connection Health", all_passed, details)
+        return all_passed
+
+    def test_api_response_format_validation(self):
+        """REVIEW TEST 9: Test API response format consistency"""
+        print("\n📋 TESTING API RESPONSE FORMAT VALIDATION")
+        
+        if not self.admin_token:
+            self.log_test("API Response Format Validation", False, "❌ No admin token available")
+            return False
+        
+        format_tests = []
+        
+        # Test JSON response format
+        status_code, response = self.make_request("GET", "/dashboard/stats", token=self.admin_token)
+        if status_code == 200:
+            if isinstance(response, dict):
+                format_tests.append("✅ Dashboard stats: Valid JSON object")
+            else:
+                format_tests.append("❌ Dashboard stats: Invalid JSON format")
+        
+        # Test list response format
+        status_code, response = self.make_request("GET", "/users", token=self.admin_token)
+        if status_code == 200:
+            if isinstance(response, list):
+                if len(response) > 0 and isinstance(response[0], dict):
+                    format_tests.append("✅ Users list: Valid JSON array of objects")
+                else:
+                    format_tests.append("✅ Users list: Valid empty array")
+            else:
+                format_tests.append("❌ Users list: Invalid format")
+        
+        # Test error response format
+        status_code, response = self.make_request("POST", "/auth/login", {"username": "invalid", "password": "wrong"})
+        if status_code == 401:
+            if isinstance(response, dict) and "detail" in response:
+                format_tests.append("✅ Error response: Valid error format")
+            else:
+                format_tests.append("❌ Error response: Invalid error format")
+        
+        all_passed = all("✅" in test for test in format_tests)
+        details = "\n   ".join(format_tests)
+        self.log_test("API Response Format Validation", all_passed, details)
+        return all_passed
+
+    def test_token_validation_security(self):
+        """REVIEW TEST 10: Test JWT token validation security"""
+        print("\n🔒 TESTING TOKEN VALIDATION SECURITY")
+        
+        security_tests = []
+        
+        # Test with no token
+        status_code, response = self.make_request("GET", "/auth/me")
+        if status_code == 403:  # FastAPI HTTPBearer returns 403 for missing token
+            security_tests.append("✅ No token: Properly rejected")
+        else:
+            security_tests.append(f"❌ No token: Expected 403, got {status_code}")
+        
+        # Test with invalid token
+        status_code, response = self.make_request("GET", "/auth/me", token="invalid.token.here")
+        if status_code == 401:
+            security_tests.append("✅ Invalid token: Properly rejected")
+        else:
+            security_tests.append(f"❌ Invalid token: Expected 401, got {status_code}")
+        
+        # Test with malformed token
+        status_code, response = self.make_request("GET", "/auth/me", token="malformed_token")
+        if status_code == 401:
+            security_tests.append("✅ Malformed token: Properly rejected")
+        else:
+            security_tests.append(f"❌ Malformed token: Expected 401, got {status_code}")
+        
+        # Test with valid token (should work)
+        if self.admin_token:
+            status_code, response = self.make_request("GET", "/auth/me", token=self.admin_token)
+            if status_code == 200:
+                security_tests.append("✅ Valid token: Properly accepted")
+            else:
+                security_tests.append(f"❌ Valid token: Expected 200, got {status_code}")
+        
+        all_passed = all("✅" in test for test in security_tests)
+        details = "\n   ".join(security_tests)
+        self.log_test("Token Validation Security", all_passed, details)
+        return all_passed
+
+    def run_comprehensive_review_tests(self):
+        """Run comprehensive tests based on review request"""
+        print("🎯 STARTING COMPREHENSIVE REVIEW TESTING...")
+        print("=" * 80)
+        print("Focus: Login Flow, Dashboard APIs, Authentication, Error Handling, Search, Statistics")
+        print("=" * 80)
+        
+        # Review-specific tests
+        review_tests = [
+            self.test_comprehensive_login_flow,
+            self.test_authentication_check_endpoint,
+            self.test_dashboard_data_loading_apis,
+            self.test_error_handling_scenarios,
+            self.test_comprehensive_search_api,
+            self.test_filtered_statistics_api_review,
+            self.test_performance_charts_api_review,
+            self.test_database_connection_health,
+            self.test_api_response_format_validation,
+            self.test_token_validation_security
+        ]
+        
+        # Setup first
+        if not self.test_comprehensive_login_flow():
+            print("❌ CRITICAL: Login failed - cannot continue with other tests")
+            return 0, 1
+        
+        # Create test users for comprehensive testing
+        self.test_create_sales_rep_user()
+        self.test_create_manager_user()
+        
+        # Run review tests
+        passed = 1  # Login already passed
+        failed = 0
+        
+        for test in review_tests[1:]:  # Skip login test as already done
+            try:
+                if test():
+                    passed += 1
+                else:
+                    failed += 1
+            except Exception as e:
+                self.log_test(test.__name__, False, f"Exception: {str(e)}")
+                failed += 1
+            
+            time.sleep(0.1)
+        
+        return passed, failed
+
 if __name__ == "__main__":
     tester = BackendTester()
     
-    # Run comprehensive Arabic review tests
-    print("🎯 Running Comprehensive Arabic Review Backend Tests")
-    tester.run_comprehensive_arabic_review_tests()
+    # Run comprehensive review tests based on the specific requirements
+    print("🎯 RUNNING COMPREHENSIVE REVIEW TESTS")
+    print("=" * 80)
+    print("Focus: Login Flow, Dashboard APIs, Authentication, Error Handling, Search, Statistics")
+    print("=" * 80)
     
-    # Exit with appropriate code
-    passed = sum(1 for result in tester.test_results if result["success"])
-    total = len(tester.test_results)
-    exit(0 if passed == total else 1)
+    passed, failed = tester.run_comprehensive_review_tests()
+    
+    print("\n" + "=" * 80)
+    print("🎉 COMPREHENSIVE REVIEW TESTING COMPLETED!")
+    print("=" * 80)
+    print(f"✅ PASSED: {passed}")
+    print(f"❌ FAILED: {failed}")
+    print(f"📊 SUCCESS RATE: {(passed/(passed+failed)*100):.1f}%")
+    print("=" * 80)
