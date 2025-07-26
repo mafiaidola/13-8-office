@@ -2302,6 +2302,262 @@ class BackendTester:
             "results": self.test_results
         }
     
+    # NEW REVIEW REQUEST TESTS - Testing the specific APIs mentioned in the review
+    
+    def test_enhanced_search_api(self):
+        """Test Enhanced Search API: /api/search/comprehensive with different search types"""
+        if not self.admin_token:
+            self.log_test("Enhanced Search API", False, "No admin token available")
+            return False
+        
+        search_types = ["representative", "doctor", "clinic", "invoice", "product"]
+        
+        for search_type in search_types:
+            status_code, response = self.make_request("GET", f"/search/comprehensive?q=test&type={search_type}", token=self.admin_token)
+            
+            if status_code != 200:
+                self.log_test("Enhanced Search API", False, f"Search type '{search_type}' failed with status {status_code}")
+                return False
+        
+        # Test without type parameter (should search all)
+        status_code, response = self.make_request("GET", "/search/comprehensive?q=test", token=self.admin_token)
+        
+        if status_code == 200:
+            required_sections = ["representatives", "doctors", "clinics", "invoices", "products"]
+            if all(section in response for section in required_sections):
+                self.log_test("Enhanced Search API", True, f"All search types working correctly: {list(response.keys())}")
+                return True
+            else:
+                self.log_test("Enhanced Search API", False, f"Missing search sections: {response}")
+        else:
+            self.log_test("Enhanced Search API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_filtered_statistics_api(self):
+        """Test Filtered Statistics API: /api/dashboard/statistics/filtered with different time periods"""
+        if not self.admin_token:
+            self.log_test("Filtered Statistics API", False, "No admin token available")
+            return False
+        
+        time_periods = ["today", "week", "month", "quarter"]
+        
+        for period in time_periods:
+            status_code, response = self.make_request("GET", f"/dashboard/statistics/filtered?period={period}", token=self.admin_token)
+            
+            if status_code != 200:
+                self.log_test("Filtered Statistics API", False, f"Period '{period}' failed with status {status_code}")
+                return False
+            
+            # Check for required statistics structure
+            required_fields = ["visits", "orders", "revenue", "representatives"]
+            if not all(field in response for field in required_fields):
+                self.log_test("Filtered Statistics API", False, f"Missing fields for period '{period}': {response}")
+                return False
+        
+        self.log_test("Filtered Statistics API", True, f"All time periods working correctly: {time_periods}")
+        return True
+
+    def test_performance_charts_api(self):
+        """Test Performance Charts API: /api/charts/performance with different chart types"""
+        if not self.admin_token:
+            self.log_test("Performance Charts API", False, "No admin token available")
+            return False
+        
+        chart_types = ["visits", "orders", "revenue", "representatives"]
+        
+        for chart_type in chart_types:
+            status_code, response = self.make_request("GET", f"/charts/performance?type={chart_type}", token=self.admin_token)
+            
+            if status_code != 200:
+                self.log_test("Performance Charts API", False, f"Chart type '{chart_type}' failed with status {status_code}")
+                return False
+            
+            # Check for chart data structure
+            required_fields = ["chart_type", "data", "labels"]
+            if not all(field in response for field in required_fields):
+                self.log_test("Performance Charts API", False, f"Missing chart fields for type '{chart_type}': {response}")
+                return False
+        
+        self.log_test("Performance Charts API", True, f"All chart types working correctly: {chart_types}")
+        return True
+
+    def test_recent_activities_api(self):
+        """Test Recent Activities API: /api/activities/recent with different activity types"""
+        if not self.admin_token:
+            self.log_test("Recent Activities API", False, "No admin token available")
+            return False
+        
+        activity_types = ["visits", "orders", "approvals", "registrations"]
+        
+        for activity_type in activity_types:
+            status_code, response = self.make_request("GET", f"/activities/recent?type={activity_type}", token=self.admin_token)
+            
+            if status_code != 200:
+                self.log_test("Recent Activities API", False, f"Activity type '{activity_type}' failed with status {status_code}")
+                return False
+            
+            # Check for activities structure
+            if not isinstance(response, list):
+                self.log_test("Recent Activities API", False, f"Response not a list for type '{activity_type}': {response}")
+                return False
+        
+        # Test without type parameter (should return all activities)
+        status_code, response = self.make_request("GET", "/activities/recent", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Recent Activities API", True, f"All activity types working correctly: {activity_types}")
+            return True
+        else:
+            self.log_test("Recent Activities API", False, f"General activities failed: {status_code}", response)
+        return False
+
+    def test_enhanced_user_management_apis(self):
+        """Test Enhanced User Management: photo upload, statistics, password change"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Enhanced User Management APIs", False, "Missing admin token or sales rep ID")
+            return False
+        
+        # Test user statistics
+        status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}/statistics", token=self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("Enhanced User Management APIs", False, f"User statistics failed: {status_code}")
+            return False
+        
+        # Check statistics structure
+        required_stats = ["visits", "orders", "performance", "achievements"]
+        if not all(stat in response for stat in required_stats):
+            self.log_test("Enhanced User Management APIs", False, f"Missing statistics: {response}")
+            return False
+        
+        # Test password change
+        password_data = {
+            "current_password": "salesrep123",
+            "new_password": "newsalesrep123"
+        }
+        
+        status_code, response = self.make_request("PATCH", f"/users/{self.sales_rep_id}/password", password_data, self.sales_rep_token)
+        
+        if status_code != 200:
+            self.log_test("Enhanced User Management APIs", False, f"Password change failed: {status_code}")
+            return False
+        
+        self.log_test("Enhanced User Management APIs", True, "User statistics and password change working correctly")
+        return True
+
+    def test_daily_selfie_api(self):
+        """Test Daily Selfie API: upload and retrieve daily selfies"""
+        if not self.sales_rep_token:
+            self.log_test("Daily Selfie API", False, "No sales rep token available")
+            return False
+        
+        # Test selfie upload
+        selfie_data = {
+            "selfie": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA==",
+            "location": {
+                "latitude": 24.7136,
+                "longitude": 46.6753,
+                "address": "الرياض، المملكة العربية السعودية"
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/users/selfie", selfie_data, self.sales_rep_token)
+        
+        if status_code == 200:
+            self.log_test("Daily Selfie API", True, "Daily selfie upload working correctly")
+            return True
+        else:
+            self.log_test("Daily Selfie API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_secret_reports_api(self):
+        """Test Secret Reports API: password protection (password: 666888) and report generation"""
+        if not self.admin_token:
+            self.log_test("Secret Reports API", False, "No admin token available")
+            return False
+        
+        # Test with correct password
+        secret_data = {
+            "password": "666888",
+            "report_type": "comprehensive"
+        }
+        
+        status_code, response = self.make_request("POST", "/reports/secret", secret_data, self.admin_token)
+        
+        if status_code == 200:
+            # Check for comprehensive report structure
+            required_sections = ["users", "visits", "orders", "revenue", "performance"]
+            if all(section in response for section in required_sections):
+                # Test with wrong password
+                wrong_password_data = {
+                    "password": "wrong123",
+                    "report_type": "comprehensive"
+                }
+                
+                status_code, response = self.make_request("POST", "/reports/secret", wrong_password_data, self.admin_token)
+                
+                if status_code == 403:
+                    self.log_test("Secret Reports API", True, "Password protection and report generation working correctly")
+                    return True
+                else:
+                    self.log_test("Secret Reports API", False, f"Wrong password not rejected: {status_code}")
+            else:
+                self.log_test("Secret Reports API", False, f"Missing report sections: {response}")
+        else:
+            self.log_test("Secret Reports API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_daily_plans_api(self):
+        """Test Daily Plans API: creating and retrieving daily plans for users"""
+        if not self.admin_token or not self.sales_rep_id:
+            self.log_test("Daily Plans API", False, "Missing admin token or sales rep ID")
+            return False
+        
+        # Test creating daily plan
+        plan_data = {
+            "date": datetime.now().isoformat(),
+            "visits": [
+                {
+                    "doctor_id": self.test_doctor_id if self.test_doctor_id else "test_doctor",
+                    "clinic_id": self.test_clinic_id if self.test_clinic_id else "test_clinic",
+                    "scheduled_time": "09:00",
+                    "notes": "زيارة صباحية مجدولة"
+                }
+            ],
+            "orders": [
+                {
+                    "doctor_id": self.test_doctor_id if self.test_doctor_id else "test_doctor",
+                    "products": ["product1", "product2"],
+                    "type": "DEMO"
+                }
+            ],
+            "targets": {
+                "visits_count": 5,
+                "orders_count": 3,
+                "revenue_target": 1000.0
+            },
+            "notes": "خطة يومية للمندوب"
+        }
+        
+        status_code, response = self.make_request("POST", f"/users/{self.sales_rep_id}/daily-plan", plan_data, self.admin_token)
+        
+        if status_code == 200:
+            # Test retrieving daily plan
+            status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}/daily-plan", token=self.admin_token)
+            
+            if status_code == 200:
+                required_fields = ["visits", "orders", "targets", "notes", "status"]
+                if all(field in response for field in required_fields):
+                    self.log_test("Daily Plans API", True, "Daily plans creation and retrieval working correctly")
+                    return True
+                else:
+                    self.log_test("Daily Plans API", False, f"Missing plan fields: {response}")
+            else:
+                self.log_test("Daily Plans API", False, f"Plan retrieval failed: {status_code}")
+        else:
+            self.log_test("Daily Plans API", False, f"Plan creation failed: {status_code}", response)
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing")
