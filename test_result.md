@@ -785,15 +785,18 @@ backend:
 
   - task: "Comprehensive Admin Settings API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented comprehensive admin settings APIs including /api/admin/settings/comprehensive for full system overview, role statistics, line statistics, and system health monitoring. Added /api/admin/system-health for system monitoring."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE ADMIN SETTINGS API EXCELLENT: Both GET and POST endpoints working perfectly. GET /api/admin/settings/comprehensive returns complete system overview with role_statistics (11 roles tracked), line_statistics (2 lines: line_1 and line_2), available_roles, available_lines, and total_users (55 users). POST /api/admin/settings/comprehensive successfully updates system settings including company_name, colors, theme, language, and role_permissions. All required sections present and functional for comprehensive system management."
 
   - task: "System Initialization API"
     implemented: true
