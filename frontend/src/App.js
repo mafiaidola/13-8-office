@@ -111,7 +111,7 @@ const translations = {
     roleHierarchy: 'هيكل الأدوار',
     systemHealth: 'صحة النظام',
     lineStatistics: 'إحصائيات الخطوط',
-    initializeSystem: 'تهيئة النظام'
+    initializeSystem: 'تهيئة النظام',
     
     // Warehouse
     warehouseName: 'اسم المخزن',
