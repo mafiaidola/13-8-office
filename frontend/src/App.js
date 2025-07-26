@@ -4623,6 +4623,11 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
             </div>
           </div>
         )}
+
+        {/* Enhanced Recent Activity - Always Show */}
+        <div className="mt-8">
+          <EnhancedRecentActivity />
+        </div>
       </div>
     </div>
   );
