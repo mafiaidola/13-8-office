@@ -2881,6 +2881,407 @@ async def process_qr_scan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced Global Search API
+@api_router.get("/search/comprehensive")
+async def comprehensive_search(
+    q: str,
+    search_type: str = "all",  # all, representative, doctor, clinic, invoice, product
+    current_user: User = Depends(get_current_user)
+):
+    """Enhanced comprehensive search with detailed results"""
+    try:
+        if not q or len(q.strip()) < 2:
+            return {"results": [], "total": 0}
+        
+        search_term = q.strip()
+        results = {
+            "representatives": [],
+            "doctors": [],
+            "clinics": [],
+            "invoices": [],
+            "products": [],
+            "visits": [],
+            "orders": []
+        }
+        
+        # Search Representatives with detailed info
+        if search_type in ["all", "representative"]:
+            reps_cursor = db.users.find({
+                "role": "sales_rep",
+                "$or": [
+                    {"username": {"$regex": search_term, "$options": "i"}},
+                    {"full_name": {"$regex": search_term, "$options": "i"}},
+                    {"email": {"$regex": search_term, "$options": "i"}},
+                    {"phone": {"$regex": search_term, "$options": "i"}}
+                ]
+            }, {"_id": 0}).limit(10)
+            
+            async for rep in reps_cursor:
+                # Get representative statistics
+                rep_stats = await get_representative_statistics(rep["id"])
+                results["representatives"].append({
+                    "id": rep["id"],
+                    "name": rep["full_name"],
+                    "username": rep["username"],
+                    "email": rep.get("email", ""),
+                    "phone": rep.get("phone", ""),
+                    "statistics": rep_stats,
+                    "type": "representative"
+                })
+        
+        # Search Doctors with clinic info
+        if search_type in ["all", "doctor"]:
+            doctors_cursor = db.doctors.find({
+                "$or": [
+                    {"name": {"$regex": search_term, "$options": "i"}},
+                    {"specialty": {"$regex": search_term, "$options": "i"}},
+                    {"phone": {"$regex": search_term, "$options": "i"}}
+                ]
+            }, {"_id": 0}).limit(10)
+            
+            async for doctor in doctors_cursor:
+                # Get doctor's clinic info
+                clinic = await db.clinics.find_one({"id": doctor["clinic_id"]}, {"_id": 0})
+                # Get doctor's orders and debts
+                orders_cursor = db.orders.find({"doctor_id": doctor["id"]}, {"_id": 0})
+                total_orders = await db.orders.count_documents({"doctor_id": doctor["id"]})
+                pending_debt = await calculate_doctor_debt(doctor["id"])
+                
+                results["doctors"].append({
+                    "id": doctor["id"],
+                    "name": doctor["name"],
+                    "specialty": doctor.get("specialty", ""),
+                    "phone": doctor.get("phone", ""),
+                    "clinic": clinic,
+                    "total_orders": total_orders,
+                    "pending_debt": pending_debt,
+                    "type": "doctor"
+                })
+        
+        # Search Clinics with full details
+        if search_type in ["all", "clinic"]:
+            clinics_cursor = db.clinics.find({
+                "$or": [
+                    {"name": {"$regex": search_term, "$options": "i"}},
+                    {"address": {"$regex": search_term, "$options": "i"}},
+                    {"phone": {"$regex": search_term, "$options": "i"}},
+                    {"manager_name": {"$regex": search_term, "$options": "i"}}
+                ]
+            }, {"_id": 0}).limit(10)
+            
+            async for clinic in clinics_cursor:
+                # Get clinic's doctors
+                doctors_cursor = db.doctors.find({"clinic_id": clinic["id"]}, {"_id": 0})
+                doctors = []
+                async for doc in doctors_cursor:
+                    doctors.append(doc)
+                
+                # Get clinic orders and debt
+                total_orders = await db.orders.count_documents({"clinic_id": clinic["id"]})
+                pending_debt = await calculate_clinic_debt(clinic["id"])
+                
+                results["clinics"].append({
+                    "id": clinic["id"],
+                    "name": clinic["name"],
+                    "address": clinic.get("address", ""),
+                    "phone": clinic.get("phone", ""),
+                    "manager_name": clinic.get("manager_name", ""),
+                    "doctors": doctors,
+                    "total_orders": total_orders,
+                    "pending_debt": pending_debt,
+                    "type": "clinic"
+                })
+        
+        # Search Invoices/Orders by number
+        if search_type in ["all", "invoice"]:
+            if search_term.isdigit():
+                orders_cursor = db.orders.find({
+                    "id": {"$regex": search_term, "$options": "i"}
+                }, {"_id": 0}).limit(10)
+                
+                async for order in orders_cursor:
+                    # Get enriched order data
+                    enriched_order = await enrich_order_data(order)
+                    results["invoices"].append({
+                        **enriched_order,
+                        "type": "invoice"
+                    })
+        
+        # Search Products
+        if search_type in ["all", "product"]:
+            products_cursor = db.products.find({
+                "$or": [
+                    {"name": {"$regex": search_term, "$options": "i"}},
+                    {"description": {"$regex": search_term, "$options": "i"}},
+                    {"category": {"$regex": search_term, "$options": "i"}}
+                ]
+            }, {"_id": 0}).limit(10)
+            
+            async for product in products_cursor:
+                # Get product usage statistics
+                total_ordered = await db.orders.aggregate([
+                    {"$unwind": "$items"},
+                    {"$match": {"items.product_id": product["id"]}},
+                    {"$group": {"_id": None, "total_quantity": {"$sum": "$items.quantity"}}}
+                ]).to_list(1)
+                
+                results["products"].append({
+                    **product,
+                    "total_ordered": total_ordered[0]["total_quantity"] if total_ordered else 0,
+                    "type": "product"
+                })
+        
+        # Calculate totals
+        total_results = sum(len(results[key]) for key in results)
+        
+        return {
+            "results": results,
+            "total": total_results,
+            "query": search_term,
+            "search_type": search_type
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Helper functions for search
+async def get_representative_statistics(rep_id: str):
+    """Get comprehensive statistics for a representative"""
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    
+    # Visits statistics
+    total_visits = await db.visits.count_documents({"sales_rep_id": rep_id})
+    today_visits = await db.visits.count_documents({
+        "sales_rep_id": rep_id,
+        "created_at": {"$gte": today}
+    })
+    week_visits = await db.visits.count_documents({
+        "sales_rep_id": rep_id,
+        "created_at": {"$gte": week_ago}
+    })
+    month_visits = await db.visits.count_documents({
+        "sales_rep_id": rep_id,
+        "created_at": {"$gte": month_ago}
+    })
+    
+    # Orders statistics  
+    total_orders = await db.orders.count_documents({"sales_rep_id": rep_id})
+    pending_orders = await db.orders.count_documents({
+        "sales_rep_id": rep_id,
+        "status": "PENDING"
+    })
+    
+    # Target and debt calculations
+    target_amount = 50000.0  # This should come from targets table
+    pending_debt = await calculate_representative_debt(rep_id)
+    
+    return {
+        "visits": {
+            "total": total_visits,
+            "today": today_visits,
+            "week": week_visits,
+            "month": month_visits
+        },
+        "orders": {
+            "total": total_orders,
+            "pending": pending_orders
+        },
+        "target": target_amount,
+        "pending_debt": pending_debt
+    }
+
+async def calculate_doctor_debt(doctor_id: str):
+    """Calculate pending debt for a doctor"""
+    pipeline = [
+        {"$match": {"doctor_id": doctor_id, "status": "APPROVED"}},
+        {"$group": {"_id": None, "total_debt": {"$sum": "$total_amount"}}}
+    ]
+    
+    result = await db.orders.aggregate(pipeline).to_list(1)
+    return result[0]["total_debt"] if result else 0.0
+
+async def calculate_clinic_debt(clinic_id: str):
+    """Calculate pending debt for a clinic"""
+    pipeline = [
+        {"$match": {"clinic_id": clinic_id, "status": "APPROVED"}},
+        {"$group": {"_id": None, "total_debt": {"$sum": "$total_amount"}}}
+    ]
+    
+    result = await db.orders.aggregate(pipeline).to_list(1)
+    return result[0]["total_debt"] if result else 0.0
+
+async def calculate_representative_debt(rep_id: str):
+    """Calculate pending debt for a representative"""
+    pipeline = [
+        {"$match": {"sales_rep_id": rep_id, "status": "APPROVED"}},
+        {"$group": {"_id": None, "total_debt": {"$sum": "$total_amount"}}}
+    ]
+    
+    result = await db.orders.aggregate(pipeline).to_list(1)
+    return result[0]["total_debt"] if result else 0.0
+
+async def enrich_order_data(order):
+    """Enrich order data with related information"""
+    # Get sales rep info
+    sales_rep = await db.users.find_one({"id": order["sales_rep_id"]}, {"_id": 0})
+    
+    # Get doctor info
+    doctor = await db.doctors.find_one({"id": order["doctor_id"]}, {"_id": 0})
+    
+    # Get clinic info
+    clinic = await db.clinics.find_one({"id": order["clinic_id"]}, {"_id": 0})
+    
+    # Get warehouse info
+    warehouse = await db.warehouses.find_one({"id": order["warehouse_id"]}, {"_id": 0})
+    
+    return {
+        **order,
+        "sales_rep_name": sales_rep["full_name"] if sales_rep else "",
+        "doctor_name": doctor["name"] if doctor else "",
+        "clinic_name": clinic["name"] if clinic else "",
+        "warehouse_name": warehouse["name"] if warehouse else ""
+    }
+
+# Secret Reports API (Password Protected)
+@api_router.post("/reports/secret")
+async def access_secret_reports(
+    credentials: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Access secret reports section with password protection"""
+    try:
+        password = credentials.get("password")
+        if password != "666888":
+            raise HTTPException(status_code=403, detail="Invalid password")
+        
+        # Log access attempt
+        await db.system_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "SECRET_REPORTS_ACCESS",
+            "timestamp": datetime.utcnow(),
+            "ip_address": "unknown",  # You can get this from request
+            "user_agent": "unknown"
+        })
+        
+        return {"access_granted": True, "message": "تم السماح بالوصول للتقارير السرية"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/reports/secret/comprehensive")
+async def get_secret_comprehensive_report(
+    password: str,
+    filter_type: str = "all",
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive secret report with all system activities"""
+    try:
+        if password != "666888":
+            raise HTTPException(status_code=403, detail="Invalid password")
+        
+        # Date range filter
+        date_filter = {}
+        if start_date:
+            date_filter["$gte"] = datetime.fromisoformat(start_date)
+        if end_date:
+            date_filter["$lte"] = datetime.fromisoformat(end_date)
+        
+        match_filter = {}
+        if date_filter:
+            match_filter["created_at"] = date_filter
+        
+        # Comprehensive system activity log
+        activities = []
+        
+        # Get all user activities
+        if filter_type in ["all", "users"]:
+            users_cursor = db.users.find({}, {"_id": 0})
+            async for user in users_cursor:
+                activities.append({
+                    "type": "user_activity",
+                    "action": "USER_CREATED" if user.get("created_at") else "USER_UPDATED",
+                    "user": user["full_name"],
+                    "role": user["role"],
+                    "timestamp": user.get("created_at", datetime.utcnow()),
+                    "details": f"مستخدم {user['full_name']} ({user['role']})"
+                })
+        
+        # Get all visits
+        if filter_type in ["all", "visits"]:
+            visits_cursor = db.visits.find(match_filter, {"_id": 0})
+            async for visit in visits_cursor:
+                activities.append({
+                    "type": "visit_activity",
+                    "action": "VISIT_CREATED",
+                    "user": visit.get("sales_rep_name", ""),
+                    "timestamp": visit["created_at"],
+                    "details": f"زيارة للدكتور {visit.get('doctor_name', '')} في {visit.get('clinic_name', '')}"
+                })
+        
+        # Get all orders
+        if filter_type in ["all", "orders"]:
+            orders_cursor = db.orders.find(match_filter, {"_id": 0})
+            async for order in orders_cursor:
+                activities.append({
+                    "type": "order_activity",
+                    "action": "ORDER_CREATED",
+                    "user": order.get("sales_rep_name", ""),
+                    "timestamp": order["created_at"],
+                    "details": f"طلبية رقم {order['id'][:8]} بقيمة {order['total_amount']} ج.م"
+                })
+        
+        # Get all clinic additions
+        if filter_type in ["all", "clinics"]:
+            clinics_cursor = db.clinics.find(match_filter, {"_id": 0})
+            async for clinic in clinics_cursor:
+                activities.append({
+                    "type": "clinic_activity",
+                    "action": "CLINIC_ADDED",
+                    "user": clinic.get("created_by_name", ""),
+                    "timestamp": clinic.get("created_at", datetime.utcnow()),
+                    "details": f"تم إضافة عيادة {clinic['name']} في {clinic.get('address', '')}"
+                })
+        
+        # Get warehouse movements
+        if filter_type in ["all", "warehouse"]:
+            movements_cursor = db.stock_movements.find(match_filter, {"_id": 0})
+            async for movement in movements_cursor:
+                activities.append({
+                    "type": "warehouse_activity",
+                    "action": "STOCK_MOVEMENT",
+                    "user": movement.get("created_by_name", ""),
+                    "timestamp": movement["created_at"],
+                    "details": f"حركة مخزن: {movement['movement_type']} - {movement['quantity']} {movement.get('product_name', '')}"
+                })
+        
+        # Sort activities by timestamp
+        activities.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        # Generate summary statistics
+        summary = {
+            "total_activities": len(activities),
+            "date_range": {
+                "start": start_date,
+                "end": end_date
+            },
+            "filter_type": filter_type,
+            "generated_at": datetime.utcnow().isoformat(),
+            "generated_by": current_user.full_name
+        }
+        
+        return {
+            "activities": activities,
+            "summary": summary,
+            "printable": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Chart data endpoints
 
 # Include the router in the main app
