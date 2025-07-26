@@ -6456,28 +6456,28 @@ const EnhancedFooter = () => {
             </ul>
           </div>
 
-          {/* Legal Links */}
+          {/* Support & Help */}
           <div className="space-y-4">
             <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {language === 'ar' ? 'قانوني' : 'Legal'}
+              {language === 'ar' ? 'الدعم والمساعدة' : 'Support & Help'}
             </h4>
             <ul className="space-y-2">
               <li>
-                <a href="#privacy" className="text-sm hover:text-blue-500 transition-colors"
+                <a href="#help" className="text-sm hover:text-blue-500 transition-colors"
                    style={{ color: 'var(--text-secondary)' }}>
-                  {links.privacy}
-                </a>
-              </li>
-              <li>
-                <a href="#terms" className="text-sm hover:text-blue-500 transition-colors"
-                   style={{ color: 'var(--text-secondary)' }}>
-                  {links.terms}
+                  📖 {language === 'ar' ? 'دليل المستخدم' : 'User Guide'}
                 </a>
               </li>
               <li>
                 <a href="#support" className="text-sm hover:text-blue-500 transition-colors"
                    style={{ color: 'var(--text-secondary)' }}>
-                  {links.support}
+                  🛠️ {language === 'ar' ? 'الدعم الفني' : 'Technical Support'}
+                </a>
+              </li>
+              <li>
+                <a href="#updates" className="text-sm hover:text-blue-500 transition-colors"
+                   style={{ color: 'var(--text-secondary)' }}>
+                  🔄 {language === 'ar' ? 'التحديثات' : 'System Updates'}
                 </a>
               </li>
             </ul>
