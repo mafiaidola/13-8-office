@@ -3317,6 +3317,292 @@ async def get_secret_comprehensive_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced System Settings API
+@api_router.get("/settings/comprehensive")
+async def get_comprehensive_settings(
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive system settings"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get system settings from database
+        settings = await db.system_settings.find_one({}, {"_id": 0})
+        
+        # Default settings if not found
+        if not settings:
+            settings = {
+                "id": str(uuid.uuid4()),
+                "themes": {
+                    "available_themes": ["light", "dark", "minimal", "modern", "fancy", "cyber", "sunset", "ocean", "forest"],
+                    "enabled_themes": ["light", "dark", "minimal", "modern", "fancy", "cyber", "sunset", "ocean", "forest"],
+                    "default_theme": "dark"
+                },
+                "dashboard": {
+                    "statistics_widgets": {
+                        "total_users": {"enabled": True, "order": 1},
+                        "active_users": {"enabled": True, "order": 2},
+                        "total_visits": {"enabled": True, "order": 3},
+                        "effective_visits": {"enabled": True, "order": 4},
+                        "total_orders": {"enabled": False, "order": 5},
+                        "pending_orders": {"enabled": False, "order": 6},
+                        "approved_orders": {"enabled": False, "order": 7},
+                        "total_revenue": {"enabled": False, "order": 8},
+                        "monthly_revenue": {"enabled": False, "order": 9},
+                        "total_clinics": {"enabled": False, "order": 10},
+                        "approved_clinics": {"enabled": False, "order": 11},
+                        "pending_clinics": {"enabled": False, "order": 12}
+                    },
+                    "max_visible_widgets": 4,
+                    "charts_enabled": True,
+                    "performance_sections": {
+                        "representatives": {"enabled": True, "order": 1},
+                        "managers": {"enabled": True, "order": 2},
+                        "sales": {"enabled": True, "order": 3},
+                        "warehouses": {"enabled": True, "order": 4}
+                    }
+                },
+                "permissions": {
+                    "admin": {
+                        "dashboard": True,
+                        "users": True,
+                        "warehouse": True,
+                        "visits": True,
+                        "reports": True,
+                        "chat": True,
+                        "settings": True,
+                        "secret_reports": True
+                    },
+                    "manager": {
+                        "dashboard": True,
+                        "users": True,
+                        "warehouse": True,
+                        "visits": True,
+                        "reports": True,
+                        "chat": True,
+                        "settings": False,
+                        "secret_reports": False
+                    },
+                    "sales_rep": {
+                        "dashboard": True,
+                        "users": False,
+                        "warehouse": False,
+                        "visits": True,
+                        "reports": False,
+                        "chat": True,
+                        "settings": False,
+                        "secret_reports": False
+                    },
+                    "warehouse_manager": {
+                        "dashboard": True,
+                        "users": False,
+                        "warehouse": True,
+                        "visits": False,
+                        "reports": True,
+                        "chat": True,
+                        "settings": False,
+                        "secret_reports": False
+                    }
+                },
+                "system": {
+                    "company_name": "نظام إدارة المبيعات",
+                    "company_logo": "",
+                    "currency": "ج.م",
+                    "default_language": "ar",
+                    "time_zone": "Africa/Cairo",
+                    "date_format": "dd/mm/yyyy",
+                    "fingerprint_required": True,
+                    "selfie_required": True,
+                    "gps_required": True,
+                    "backup_enabled": True,
+                    "maintenance_mode": False
+                },
+                "security": {
+                    "password_min_length": 6,
+                    "password_require_uppercase": False,
+                    "password_require_numbers": False,
+                    "password_require_symbols": False,
+                    "session_timeout": 480,
+                    "max_login_attempts": 5,
+                    "lockout_duration": 30,
+                    "two_factor_enabled": False
+                },
+                "notifications": {
+                    "email_enabled": True,
+                    "sms_enabled": False,
+                    "push_enabled": True,
+                    "daily_reports": True,
+                    "weekly_reports": True,
+                    "monthly_reports": True
+                },
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            
+            # Save default settings
+            await db.system_settings.insert_one(settings)
+        
+        return settings
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/settings/comprehensive")
+async def update_comprehensive_settings(
+    settings_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update comprehensive system settings"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Update settings
+        settings_data["updated_at"] = datetime.utcnow()
+        settings_data["updated_by"] = current_user.id
+        
+        # Log the change
+        await db.system_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "SYSTEM_SETTINGS_UPDATED",
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "updated_by": current_user.full_name,
+                "changes": settings_data
+            }
+        })
+        
+        result = await db.system_settings.update_one(
+            {},
+            {"$set": settings_data},
+            upsert=True
+        )
+        
+        return {"message": "تم تحديث الإعدادات بنجاح", "modified": result.modified_count}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/settings/permissions/{role}")
+async def get_role_permissions(
+    role: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get permissions for a specific role"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        settings = await db.system_settings.find_one({}, {"_id": 0})
+        if not settings:
+            raise HTTPException(status_code=404, detail="Settings not found")
+        
+        permissions = settings.get("permissions", {}).get(role, {})
+        return {"role": role, "permissions": permissions}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/settings/permissions/{role}")
+async def update_role_permissions(
+    role: str,
+    permissions: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update permissions for a specific role"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Update role permissions
+        update_data = {
+            f"permissions.{role}": permissions,
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        
+        result = await db.system_settings.update_one(
+            {},
+            {"$set": update_data}
+        )
+        
+        # Log the change
+        await db.system_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "ROLE_PERMISSIONS_UPDATED",
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "role": role,
+                "permissions": permissions,
+                "updated_by": current_user.full_name
+            }
+        })
+        
+        return {"message": f"تم تحديث صلاحيات {role} بنجاح", "modified": result.modified_count}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/settings/theme-management")
+async def get_theme_management(
+    current_user: User = Depends(get_current_user)
+):
+    """Get theme management settings"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        settings = await db.system_settings.find_one({}, {"_id": 0})
+        if not settings:
+            raise HTTPException(status_code=404, detail="Settings not found")
+        
+        return settings.get("themes", {})
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/settings/theme-management")
+async def update_theme_management(
+    theme_settings: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update theme management settings"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Update theme settings
+        update_data = {
+            "themes": theme_settings,
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        
+        result = await db.system_settings.update_one(
+            {},
+            {"$set": update_data}
+        )
+        
+        # Log the change
+        await db.system_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "THEME_SETTINGS_UPDATED",
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "theme_settings": theme_settings,
+                "updated_by": current_user.full_name
+            }
+        })
+        
+        return {"message": "تم تحديث إعدادات الثيمات بنجاح", "modified": result.modified_count}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Enhanced Secret Reports API (Password Protected)
 @api_router.post("/reports/secret/access")
 async def access_secret_reports(
