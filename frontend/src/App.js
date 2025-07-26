@@ -14351,6 +14351,8 @@ const ComprehensiveAdminSettings = () => {
     { id: 'reports', label: 'التقارير', icon: '📋' },
     { id: 'themes', label: 'الألوان والثيمات', icon: '🎨' },
     { id: 'languages', label: 'إعدادات اللغة', icon: '🌐' },
+    { id: 'website', label: 'إعدادات الموقع', icon: '⚙️' },
+    { id: 'performance', label: 'مراقبة الأداء', icon: '📊' },
     { id: 'system', label: 'صحة النظام', icon: '⚙️' },
     { id: 'security', label: 'إعدادات الأمان', icon: '🛡️' },
     { id: 'features', label: 'تحكم المميزات', icon: '🎛️' },
