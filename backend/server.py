@@ -1947,12 +1947,101 @@ async def update_dashboard_config(config_data: dict, current_user: User = Depend
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admin can update dashboard configuration")
     
-    config_data["updated_at"] = datetime.utcnow()
-    config_data["updated_by"] = current_user.id
+    # Get existing config or create defaults
+    existing_config = await db.dashboard_config.find_one({}, {"_id": 0})
+    if not existing_config:
+        # Create default dashboard configuration
+        default_config = {
+            "id": str(uuid.uuid4()),
+            "dashboard_sections": {
+                "statistics_cards": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"],
+                    "cards_config": {
+                        "users_card": {"enabled": True, "roles": ["admin", "manager"]},
+                        "clinics_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "doctors_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "visits_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "warehouses_card": {"enabled": True, "roles": ["admin", "warehouse"]},
+                        "products_card": {"enabled": True, "roles": ["admin", "warehouse"]},
+                        "orders_card": {"enabled": True, "roles": ["admin", "manager", "warehouse"]}
+                    }
+                },
+                "charts_section": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager"],
+                    "chart_types": {
+                        "visits_chart": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "orders_chart": {"enabled": True, "roles": ["admin", "manager", "warehouse"]},
+                        "revenue_chart": {"enabled": True, "roles": ["admin", "manager", "accounting"]},
+                        "performance_chart": {"enabled": True, "roles": ["admin", "manager"]}
+                    }
+                },
+                "recent_activities": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager"],
+                    "activities_count": 10,
+                    "show_user_activities": True,
+                    "show_system_activities": True
+                },
+                "navigation_tabs": {
+                    "statistics_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "users_tab": {"enabled": True, "roles": ["admin"]},
+                    "warehouse_tab": {"enabled": True, "roles": ["admin", "warehouse"]},
+                    "visits_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                    "reports_tab": {"enabled": True, "roles": ["admin", "manager", "accounting"]},
+                    "chat_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "settings_tab": {"enabled": True, "roles": ["admin"]}
+                }
+            },
+            "ui_customization": {
+                "company_branding": {
+                    "show_logo": True,
+                    "show_company_name": True,
+                    "custom_colors": False,
+                    "primary_color": "#3b82f6",
+                    "secondary_color": "#1e293b"
+                },
+                "layout_options": {
+                    "sidebar_collapsed": False,
+                    "show_breadcrumbs": True,
+                    "show_page_titles": True,
+                    "compact_mode": False
+                },
+                "theme_options": {
+                    "allow_theme_switching": True,
+                    "default_theme": "dark",
+                    "available_themes": ["light", "dark", "minimal", "modern", "fancy", "cyber", "sunset", "ocean", "forest"]
+                }
+            },
+            "security_settings": {
+                "force_password_change": False,
+                "password_expiry_days": 90,
+                "max_login_attempts": 5,
+                "session_timeout_minutes": 480,
+                "require_2fa": False
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        existing_config = default_config
+    
+    # Merge the updates with existing config
+    def deep_merge(base, updates):
+        for key, value in updates.items():
+            if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                deep_merge(base[key], value)
+            else:
+                base[key] = value
+    
+    deep_merge(existing_config, config_data)
+    existing_config["updated_at"] = datetime.utcnow()
+    existing_config["updated_by"] = current_user.id
     
     await db.dashboard_config.update_one(
         {},
-        {"$set": config_data},
+        {"$set": existing_config},
         upsert=True
     )
     
