@@ -342,7 +342,7 @@ const translations = {
 
 const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('language') || 'ar';
+    return localStorage.getItem('language') || 'en'; // Default to English
   });
 
   const t = (key) => {
