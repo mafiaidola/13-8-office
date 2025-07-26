@@ -11188,6 +11188,10 @@ const Dashboard = () => {
           <GPSTrackingDashboard />
         )}
         
+        {activeTab === 'documents' && (
+          <DocumentScannerDashboard />
+        )}
+        
         {activeTab === 'chat' && (
           <ChatSystem />
         )}
