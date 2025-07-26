@@ -2086,7 +2086,7 @@ async def get_user_permissions(current_user: User = Depends(get_current_user)):
     
     # Get visible navigation tabs based on dashboard config
     visible_tabs = []
-    nav_config = dashboard_config["dashboard_sections"]["navigation_tabs"]
+    nav_config = dashboard_config.get("dashboard_sections", {}).get("navigation_tabs", {})
     
     tab_mapping = {
         "statistics_tab": "الإحصائيات",
