@@ -883,7 +883,11 @@ const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
       dark: 'داكن',
       minimal: 'بسيط',
       modern: 'عصري',
-      fancy: 'فاخر'
+      fancy: 'فاخر',
+      cyber: 'سايبر',
+      sunset: 'غروب',
+      ocean: 'محيط',
+      forest: 'غابة'
     };
     return labels[themeName] || themeName;
   };
