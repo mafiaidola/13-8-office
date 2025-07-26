@@ -3930,6 +3930,20 @@ class BackendTester:
         self.test_secret_reports_api()
         self.test_daily_plans_api()
         
+        # COMPREHENSIVE ADMIN CONTROL SYSTEM TESTS - As requested in review
+        print("🎛️ COMPREHENSIVE ADMIN CONTROL SYSTEM TESTS")
+        print("-" * 30)
+        self.test_admin_settings_user_management()
+        self.test_admin_settings_gps()
+        self.test_admin_settings_theme()
+        self.test_admin_settings_notifications()
+        self.test_admin_settings_category_retrieval()
+        self.test_feature_toggle_system()
+        self.test_feature_status_retrieval()
+        self.test_admin_authorization_restrictions()
+        self.test_manager_authorization_restrictions()
+        self.test_comprehensive_admin_control_integration()
+        
         # NEW COMPREHENSIVE ADMIN SETTINGS AND PERMISSIONS TESTS
         print("🔧 COMPREHENSIVE ADMIN SETTINGS & PERMISSIONS TESTS")
         print("-" * 30)
