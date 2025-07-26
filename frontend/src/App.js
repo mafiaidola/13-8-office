@@ -14280,6 +14280,7 @@ const ComprehensiveAdminSettings = () => {
     { id: 'languages', label: 'إعدادات اللغة', icon: '🌐' },
     { id: 'system', label: 'صحة النظام', icon: '⚙️' },
     { id: 'security', label: 'إعدادات الأمان', icon: '🛡️' },
+    { id: 'features', label: 'تحكم المميزات', icon: '🎛️' },
     { id: 'initialize', label: 'تهيئة النظام', icon: '🚀' }
   ];
 
