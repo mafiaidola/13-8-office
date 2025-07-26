@@ -6126,6 +6126,507 @@ async def get_kpi_metrics(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Integrated Gamification System APIs
+# Points are calculated from real performance: visits, orders, clinics, effectiveness
+
+@api_router.get("/gamification/user-profile/{user_id}")
+async def get_user_gamification_profile(
+    user_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive gamification profile integrated with real performance data"""
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Get user info
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Calculate real performance-based points
+        total_visits = await db.visits.count_documents({"sales_rep_id": user_id})
+        effective_visits = await db.visits.count_documents({"sales_rep_id": user_id, "is_effective": True})
+        total_orders = await db.orders.count_documents({"sales_rep_id": user_id})
+        approved_orders = await db.orders.count_documents({"sales_rep_id": user_id, "status": {"$in": ["APPROVED", "MANAGER_APPROVED"]}})
+        clinics_added = await db.clinics.count_documents({"created_by": user_id})
+        
+        # Points calculation based on real performance
+        points_breakdown = {
+            "visit_points": total_visits * 10,  # 10 points per visit
+            "effectiveness_bonus": effective_visits * 20,  # 20 bonus points for effective visits
+            "order_points": total_orders * 50,  # 50 points per order
+            "approval_bonus": approved_orders * 100,  # 100 bonus for approved orders
+            "clinic_points": clinics_added * 200  # 200 points for new clinic registration
+        }
+        
+        total_points = sum(points_breakdown.values())
+        
+        # Calculate level based on points
+        level = 1
+        level_thresholds = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000, 100000]
+        for i, threshold in enumerate(level_thresholds):
+            if total_points >= threshold:
+                level = i + 1
+        
+        # Get next level info
+        next_level_points = level_thresholds[level] if level < len(level_thresholds) else None
+        points_to_next_level = next_level_points - total_points if next_level_points else 0
+        
+        # Calculate achievements based on real performance
+        achievements = []
+        
+        # Visit-based achievements
+        if total_visits >= 10:
+            achievements.append({
+                "id": "first_10_visits",
+                "title": "أول 10 زيارات",
+                "description": "أكمل 10 زيارات",
+                "icon": "🎯",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        if total_visits >= 50:
+            achievements.append({
+                "id": "veteran_visitor",
+                "title": "زائر محترف",
+                "description": "أكمل 50 زيارة",
+                "icon": "🏆",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        if total_visits >= 100:
+            achievements.append({
+                "id": "visit_master",
+                "title": "خبير الزيارات",
+                "description": "أكمل 100 زيارة",
+                "icon": "👑",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        # Effectiveness achievements
+        effectiveness_rate = (effective_visits / total_visits * 100) if total_visits > 0 else 0
+        if effectiveness_rate >= 75 and total_visits >= 20:
+            achievements.append({
+                "id": "effectiveness_pro",
+                "title": "محترف الفعالية",
+                "description": "حقق 75% فعالية في 20+ زيارة",
+                "icon": "⚡",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        # Order achievements
+        if approved_orders >= 5:
+            achievements.append({
+                "id": "order_champion",
+                "title": "بطل الطلبات",
+                "description": "5+ طلبات معتمدة",
+                "icon": "📦",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        if approved_orders >= 20:
+            achievements.append({
+                "id": "sales_legend",
+                "title": "أسطورة المبيعات",
+                "description": "20+ طلب معتمد",
+                "icon": "🌟",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        # Clinic registration achievements
+        if clinics_added >= 3:
+            achievements.append({
+                "id": "clinic_finder",
+                "title": "مكتشف العيادات",
+                "description": "سجل 3+ عيادات جديدة",
+                "icon": "🏥",
+                "unlocked": True,
+                "unlocked_date": datetime.utcnow().isoformat()
+            })
+        
+        # Weekly/Monthly challenges based on recent performance
+        now = datetime.utcnow()
+        week_start = now - timedelta(days=7)
+        month_start = now - timedelta(days=30)
+        
+        weekly_visits = await db.visits.count_documents({
+            "sales_rep_id": user_id,
+            "created_at": {"$gte": week_start}
+        })
+        
+        monthly_visits = await db.visits.count_documents({
+            "sales_rep_id": user_id,
+            "created_at": {"$gte": month_start}
+        })
+        
+        # Current challenges
+        active_challenges = []
+        
+        # Weekly challenge
+        if weekly_visits < 15:
+            active_challenges.append({
+                "id": "weekly_visit_challenge",
+                "title": "تحدي الأسبوع",
+                "description": "أكمل 15 زيارة هذا الأسبوع",
+                "target": 15,
+                "current": weekly_visits,
+                "progress": (weekly_visits / 15 * 100),
+                "reward_points": 300,
+                "deadline": (now + timedelta(days=(7 - now.weekday()))).isoformat(),
+                "icon": "🎯"
+            })
+        
+        # Monthly challenge
+        if monthly_visits < 50:
+            active_challenges.append({
+                "id": "monthly_visit_challenge", 
+                "title": "تحدي الشهر",
+                "description": "أكمل 50 زيارة هذا الشهر",
+                "target": 50,
+                "current": monthly_visits,
+                "progress": (monthly_visits / 50 * 100),
+                "reward_points": 1000,
+                "deadline": (now.replace(day=1) + timedelta(days=32)).replace(day=1).isoformat(),
+                "icon": "🏆"
+            })
+        
+        # Streak calculations
+        # Calculate consecutive days with visits
+        visit_streak = 0
+        current_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        for i in range(30):  # Check last 30 days
+            day_start = current_date - timedelta(days=i)
+            day_end = day_start + timedelta(days=1)
+            
+            day_visits = await db.visits.count_documents({
+                "sales_rep_id": user_id,
+                "created_at": {"$gte": day_start, "$lt": day_end}
+            })
+            
+            if day_visits > 0:
+                visit_streak += 1
+            else:
+                break
+        
+        # Leaderboard position calculation
+        # Get all sales reps for comparison
+        all_sales_reps = await db.users.find({"role": "sales_rep"}).to_list(1000)
+        
+        leaderboard_data = []
+        for rep in all_sales_reps:
+            rep_visits = await db.visits.count_documents({"sales_rep_id": rep["id"]})
+            rep_effective = await db.visits.count_documents({"sales_rep_id": rep["id"], "is_effective": True})
+            rep_effectiveness = (rep_effective / rep_visits * 100) if rep_visits > 0 else 0
+            
+            # Calculate rep total points
+            rep_orders = await db.orders.count_documents({"sales_rep_id": rep["id"]})
+            rep_approved = await db.orders.count_documents({"sales_rep_id": rep["id"], "status": {"$in": ["APPROVED", "MANAGER_APPROVED"]}})
+            rep_clinics = await db.clinics.count_documents({"created_by": rep["id"]})
+            
+            rep_total_points = (rep_visits * 10) + (rep_effective * 20) + (rep_orders * 50) + (rep_approved * 100) + (rep_clinics * 200)
+            
+            leaderboard_data.append({
+                "user_id": rep["id"],
+                "full_name": rep["full_name"],
+                "total_points": rep_total_points,
+                "effectiveness": rep_effectiveness,
+                "visits": rep_visits
+            })
+        
+        # Sort leaderboard by total points
+        leaderboard_data.sort(key=lambda x: x["total_points"], reverse=True)
+        
+        # Find user position
+        user_position = 1
+        for i, entry in enumerate(leaderboard_data):
+            if entry["user_id"] == user_id:
+                user_position = i + 1
+                break
+        
+        # Get top 3 for comparison
+        top_3 = leaderboard_data[:3]
+        
+        return {
+            "user_info": {
+                "id": user["id"],
+                "username": user["username"],
+                "full_name": user["full_name"],
+                "role": user["role"],
+                "photo": user.get("photo")
+            },
+            "gamification_stats": {
+                "total_points": total_points,
+                "level": level,
+                "next_level_points": next_level_points,
+                "points_to_next_level": points_to_next_level,
+                "level_progress": ((total_points - level_thresholds[level-1]) / (level_thresholds[level] - level_thresholds[level-1]) * 100) if level < len(level_thresholds) else 100
+            },
+            "points_breakdown": points_breakdown,
+            "performance_stats": {
+                "total_visits": total_visits,
+                "effective_visits": effective_visits,
+                "effectiveness_rate": round(effectiveness_rate, 2),
+                "total_orders": total_orders,
+                "approved_orders": approved_orders,
+                "approval_rate": round((approved_orders / total_orders * 100) if total_orders > 0 else 0, 2),
+                "clinics_added": clinics_added,
+                "visit_streak": visit_streak
+            },
+            "achievements": achievements,
+            "active_challenges": active_challenges,
+            "leaderboard": {
+                "position": user_position,
+                "total_participants": len(all_sales_reps),
+                "top_3": top_3,
+                "percentile": round((1 - (user_position - 1) / len(all_sales_reps)) * 100, 1)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/gamification/leaderboard")
+async def get_gamification_leaderboard(
+    period: str = "all_time",  # all_time, monthly, weekly
+    limit: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive leaderboard based on real performance metrics"""
+    try:
+        if current_user.role not in ["admin", "manager", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Calculate date filters
+        now = datetime.utcnow()
+        date_filter = {}
+        
+        if period == "weekly":
+            week_start = now - timedelta(days=7)
+            date_filter = {"created_at": {"$gte": week_start}}
+        elif period == "monthly":
+            month_start = now - timedelta(days=30)
+            date_filter = {"created_at": {"$gte": month_start}}
+        # all_time has no date filter
+        
+        # Get all sales reps
+        sales_reps = await db.users.find({"role": "sales_rep"}, {"_id": 0}).to_list(1000)
+        
+        leaderboard_entries = []
+        
+        for rep in sales_reps:
+            # Get performance data for the period
+            visits = await db.visits.count_documents({
+                "sales_rep_id": rep["id"],
+                **date_filter
+            })
+            
+            effective_visits = await db.visits.count_documents({
+                "sales_rep_id": rep["id"],
+                "is_effective": True,
+                **date_filter
+            })
+            
+            orders = await db.orders.count_documents({
+                "sales_rep_id": rep["id"],
+                **date_filter
+            })
+            
+            approved_orders = await db.orders.count_documents({
+                "sales_rep_id": rep["id"],
+                "status": {"$in": ["APPROVED", "MANAGER_APPROVED"]},
+                **date_filter
+            })
+            
+            clinics = await db.clinics.count_documents({
+                "created_by": rep["id"],
+                **date_filter
+            }) if period == "all_time" else 0  # Clinic registration is typically tracked all-time
+            
+            # Calculate points
+            total_points = (visits * 10) + (effective_visits * 20) + (orders * 50) + (approved_orders * 100) + (clinics * 200)
+            
+            # Calculate rates
+            effectiveness_rate = (effective_visits / visits * 100) if visits > 0 else 0
+            approval_rate = (approved_orders / orders * 100) if orders > 0 else 0
+            
+            # Calculate level
+            level = 1
+            level_thresholds = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000, 100000]
+            for i, threshold in enumerate(level_thresholds):
+                if total_points >= threshold:
+                    level = i + 1
+            
+            leaderboard_entries.append({
+                "user_id": rep["id"],
+                "username": rep["username"],
+                "full_name": rep["full_name"],
+                "photo": rep.get("photo"),
+                "total_points": total_points,
+                "level": level,
+                "performance": {
+                    "visits": visits,
+                    "effective_visits": effective_visits,
+                    "effectiveness_rate": round(effectiveness_rate, 2),
+                    "orders": orders,
+                    "approved_orders": approved_orders,
+                    "approval_rate": round(approval_rate, 2),
+                    "clinics_added": clinics
+                },
+                "badges": []  # Will be populated based on achievements
+            })
+        
+        # Sort by total points
+        leaderboard_entries.sort(key=lambda x: x["total_points"], reverse=True)
+        
+        # Add positions and badges
+        for i, entry in enumerate(leaderboard_entries):
+            entry["position"] = i + 1
+            
+            # Add badges based on performance
+            if entry["position"] <= 3:
+                medals = ["🥇", "🥈", "🥉"]
+                entry["badges"].append({
+                    "icon": medals[entry["position"] - 1],
+                    "title": f"المركز الـ {entry['position']}",
+                    "color": ["gold", "silver", "bronze"][entry["position"] - 1]
+                })
+            
+            if entry["performance"]["effectiveness_rate"] >= 80:
+                entry["badges"].append({
+                    "icon": "⚡",
+                    "title": "فعالية عالية",
+                    "color": "blue"
+                })
+            
+            if entry["performance"]["approval_rate"] >= 75:
+                entry["badges"].append({
+                    "icon": "✅",
+                    "title": "معدل موافقة ممتاز",
+                    "color": "green"
+                })
+        
+        # Get statistics
+        total_participants = len(leaderboard_entries)
+        avg_points = sum(entry["total_points"] for entry in leaderboard_entries) / total_participants if total_participants > 0 else 0
+        
+        return {
+            "period": period,
+            "leaderboard": leaderboard_entries[:limit],
+            "statistics": {
+                "total_participants": total_participants,
+                "average_points": round(avg_points, 2),
+                "highest_score": leaderboard_entries[0]["total_points"] if leaderboard_entries else 0,
+                "period_label": {
+                    "all_time": "كل الأوقات",
+                    "monthly": "هذا الشهر", 
+                    "weekly": "هذا الأسبوع"
+                }.get(period, period)
+            },
+            "generated_at": now.isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/gamification/achievements")
+async def get_available_achievements(current_user: User = Depends(get_current_user)):
+    """Get all available achievements with unlock conditions"""
+    try:
+        achievements_catalog = [
+            {
+                "id": "first_10_visits",
+                "title": "أول 10 زيارات",
+                "description": "أكمل أول 10 زيارات",
+                "icon": "🎯",
+                "category": "visits",
+                "unlock_condition": "إكمال 10 زيارات",
+                "points_reward": 200
+            },
+            {
+                "id": "veteran_visitor", 
+                "title": "زائر محترف",
+                "description": "أكمل 50 زيارة",
+                "icon": "🏆",
+                "category": "visits",
+                "unlock_condition": "إكمال 50 زيارة",
+                "points_reward": 500
+            },
+            {
+                "id": "visit_master",
+                "title": "خبير الزيارات", 
+                "description": "أكمل 100 زيارة",
+                "icon": "👑",
+                "category": "visits",
+                "unlock_condition": "إكمال 100 زيارة",
+                "points_reward": 1000
+            },
+            {
+                "id": "effectiveness_pro",
+                "title": "محترف الفعالية",
+                "description": "حقق 75% فعالية في 20+ زيارة",
+                "icon": "⚡",
+                "category": "effectiveness",
+                "unlock_condition": "75% فعالية مع 20+ زيارة",
+                "points_reward": 800
+            },
+            {
+                "id": "order_champion",
+                "title": "بطل الطلبات",
+                "description": "5+ طلبات معتمدة",
+                "icon": "📦",
+                "category": "orders",
+                "unlock_condition": "5 طلبات معتمدة",
+                "points_reward": 600
+            },
+            {
+                "id": "sales_legend",
+                "title": "أسطورة المبيعات",
+                "description": "20+ طلب معتمد",
+                "icon": "🌟",
+                "category": "orders", 
+                "unlock_condition": "20 طلب معتمد",
+                "points_reward": 2000
+            },
+            {
+                "id": "clinic_finder",
+                "title": "مكتشف العيادات",
+                "description": "سجل 3+ عيادات جديدة",
+                "icon": "🏥",
+                "category": "clinics",
+                "unlock_condition": "تسجيل 3 عيادات جديدة",
+                "points_reward": 1500
+            },
+            {
+                "id": "consistent_performer",
+                "title": "الأداء المتسق",
+                "description": "7 أيام متتالية مع زيارات",
+                "icon": "🔥",
+                "category": "consistency",
+                "unlock_condition": "زيارات يومية لمدة 7 أيام",
+                "points_reward": 1000
+            }
+        ]
+        
+        return {
+            "achievements": achievements_catalog,
+            "categories": ["visits", "effectiveness", "orders", "clinics", "consistency"],
+            "total_achievements": len(achievements_catalog),
+            "total_possible_points": sum(a["points_reward"] for a in achievements_catalog)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Helper functions
 async def get_managed_users(manager_id: str):
     """Get list of user IDs managed by a manager"""
