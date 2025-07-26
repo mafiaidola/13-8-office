@@ -1242,39 +1242,48 @@ frontend:
 
   - task: "Google Maps Integration System"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js, /app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created comprehensive Google Maps management system with API key validation, service status monitoring, geocoding/directions/places integration, map customization options, Google Analytics integration, and Google Drive backup functionality. Added 4 new backend APIs for complete Google services control."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ROUTING ISSUE FOUND: Google Maps Integration System has a FastAPI routing conflict. The generic route @api_router.get('/admin/settings/{category}') is intercepting specific routes like '/admin/settings/google-maps' before they can be reached. ✅ WORKING COMPONENTS: 1) POST /api/admin/settings/google-maps - Successfully updates Google Maps settings 2) POST /api/admin/test-google-maps-api - API key validation working (correctly identifies invalid test key) 3) GET /api/admin/google-services-status - Returns proper service status for google_maps, google_analytics, google_drive. ❌ BROKEN COMPONENTS: GET /api/admin/settings/google-maps returns 400 'Invalid settings category' due to route ordering issue. SOLUTION NEEDED: Move specific routes before generic {category} route in server.py."
 
   - task: "Website Configuration Management"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js, /app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented comprehensive website configuration system including basic site info, SEO settings, social media links, performance optimization settings, and security configurations. Admin can now control all website aspects from a unified interface."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ROUTING ISSUE FOUND: Website Configuration Management has the same FastAPI routing conflict as Google Maps. ✅ WORKING COMPONENTS: POST /api/admin/settings/website-config - Successfully updates website configuration with comprehensive settings including site info, SEO, social media, performance, and security settings. ❌ BROKEN COMPONENTS: GET /api/admin/settings/website-config returns 400 'Invalid settings category' due to route ordering issue. SOLUTION NEEDED: Move specific routes before generic {category} route in server.py."
 
   - task: "Real-Time Performance Monitoring"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/App.js, /app/backend/server.py"
     stuck_count: 0
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created real-time system performance monitoring dashboard showing CPU, memory, disk usage, database statistics, and application metrics with color-coded indicators, auto-refresh functionality, and comprehensive system health overview."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ROUTING ISSUE FOUND: Performance Monitoring System has the same FastAPI routing conflict. The endpoint implementation exists and includes comprehensive system metrics (CPU, memory, disk, database stats, application metrics) with proper error handling for missing dependencies like psutil. ❌ BROKEN COMPONENTS: GET /api/admin/settings/performance-metrics returns 400 'Invalid settings category' due to route ordering issue. SOLUTION NEEDED: Move specific routes before generic {category} route in server.py."
 
   - task: "Admin Dashboard Enhancements"
     implemented: true
