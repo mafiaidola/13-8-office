@@ -3092,108 +3092,314 @@ async def review_visit(visit_id: str, is_effective: bool, current_user: User = D
 # Dashboard Routes
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    stats = {}
-    
-    if current_user.role == UserRole.ADMIN:
-        total_users = await db.users.count_documents({})
-        total_clinics = await db.clinics.count_documents({})
-        total_doctors = await db.doctors.count_documents({})
-        total_visits = await db.visits.count_documents({})
-        total_products = await db.products.count_documents({"is_active": True})
-        total_warehouses = await db.warehouses.count_documents({"is_active": True})
+    try:
+        stats = {}
         
-        # Low stock items
-        low_stock_count = 0
-        inventory_items = await db.inventory.find({}).to_list(1000)
-        for item in inventory_items:
-            if item["quantity"] <= item["minimum_stock"]:
-                low_stock_count += 1
+        if current_user.role == UserRole.ADMIN:
+            total_users = await db.users.count_documents({})
+            total_clinics = await db.clinics.count_documents({})
+            total_doctors = await db.doctors.count_documents({})
+            total_visits = await db.visits.count_documents({})
+            total_products = await db.products.count_documents({"is_active": True})
+            total_warehouses = await db.warehouses.count_documents({"is_active": True})
+            
+            # Low stock items
+            low_stock_count = 0
+            inventory_items = await db.inventory.find({}).to_list(1000)
+            for item in inventory_items:
+                if item["quantity"] <= item["minimum_stock"]:
+                    low_stock_count += 1
+            
+            stats = {
+                "total_users": total_users,
+                "total_clinics": total_clinics,
+                "total_doctors": total_doctors,
+                "total_visits": total_visits,
+                "total_products": total_products,
+                "total_warehouses": total_warehouses,
+                "low_stock_items": low_stock_count
+            }
         
-        stats = {
-            "total_users": total_users,
-            "total_clinics": total_clinics,
-            "total_doctors": total_doctors,
-            "total_visits": total_visits,
-            "total_products": total_products,
-            "total_warehouses": total_warehouses,
-            "low_stock_items": low_stock_count
+        elif current_user.role == UserRole.WAREHOUSE_MANAGER:
+            # Warehouse manager stats
+            my_warehouses = await db.warehouses.count_documents({"manager_id": current_user.id})
+            total_products = await db.products.count_documents({"is_active": True})
+            
+            # My warehouses inventory
+            my_inventory_count = await db.inventory.count_documents({"warehouse_id": {"$in": [w["id"] for w in await db.warehouses.find({"manager_id": current_user.id}).to_list(100)]}})
+            
+            # Low stock in my warehouses
+            low_stock_count = 0
+            my_warehouse_ids = [w["id"] for w in await db.warehouses.find({"manager_id": current_user.id}).to_list(100)]
+            inventory_items = await db.inventory.find({"warehouse_id": {"$in": my_warehouse_ids}}).to_list(1000)
+            for item in inventory_items:
+                if item["quantity"] <= item["minimum_stock"]:
+                    low_stock_count += 1
+            
+            stats = {
+                "my_warehouses": my_warehouses,
+                "total_products": total_products,
+                "inventory_items": my_inventory_count,
+                "low_stock_items": low_stock_count
+            }
+        
+        elif current_user.role == UserRole.MANAGER:
+            # Manager stats - focus on team performance
+            my_team = await db.users.count_documents({"managed_by": current_user.id})
+            pending_visits = await db.visits.count_documents({"is_effective": None})
+            total_visits = await db.visits.count_documents({})
+            
+            # Team visits today
+            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1)
+            
+            team_members = await db.users.find({"managed_by": current_user.id}).to_list(100)
+            team_ids = [member["id"] for member in team_members]
+            
+            today_team_visits = await db.visits.count_documents({
+                "sales_rep_id": {"$in": team_ids},
+                "visit_date": {"$gte": today_start, "$lt": today_end}
+            })
+            
+            stats = {
+                "team_members": my_team,
+                "pending_reviews": pending_visits,
+                "total_visits": total_visits,
+                "today_team_visits": today_team_visits
+            }
+        
+        elif current_user.role == UserRole.SALES_REP:
+            my_visits = await db.visits.count_documents({"sales_rep_id": current_user.id})
+            my_clinics = await db.clinics.count_documents({"added_by": current_user.id})
+            my_doctors = await db.doctors.count_documents({"added_by": current_user.id})
+            
+            # Today's visits
+            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = today_start + timedelta(days=1)
+            today_visits = await db.visits.count_documents({
+                "sales_rep_id": current_user.id,
+                "visit_date": {"$gte": today_start, "$lt": today_end}
+            })
+            
+            # Pending approvals
+            pending_clinics = await db.clinics.count_documents({"added_by": current_user.id, "approved_by": None})
+            pending_doctors = await db.doctors.count_documents({"added_by": current_user.id, "approved_by": None})
+            
+            stats = {
+                "total_visits": my_visits,
+                "total_clinics": my_clinics,
+                "total_doctors": my_doctors,
+                "today_visits": today_visits,
+                "pending_clinics": pending_clinics,
+                "pending_doctors": pending_doctors
+            }
+        
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Enhanced User Management APIs for last seen and activity tracking
+@api_router.post("/users/update-last-seen")
+async def update_last_seen(current_user: User = Depends(get_current_user)):
+    """Update user's last seen timestamp"""
+    try:
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": {"last_seen": datetime.utcnow()}}
+        )
+        return {"message": "Last seen updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/enhanced-list")
+async def get_enhanced_users_list(
+    page: int = 1,
+    limit: int = 20,
+    search: str = None,
+    role_filter: str = None,
+    status_filter: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get enhanced users list with photos, last seen, activity status, and KPIs"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Build query
+        query = {}
+        if role_filter:
+            query["role"] = role_filter
+        if status_filter:
+            if status_filter == "active":
+                query["is_active"] = True
+            elif status_filter == "inactive":
+                query["is_active"] = False
+        if search:
+            query["$or"] = [
+                {"username": {"$regex": search, "$options": "i"}},
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Get total count
+        total_count = await db.users.count_documents(query)
+        
+        # Get users with pagination
+        skip = (page - 1) * limit
+        users_cursor = db.users.find(query, {"_id": 0, "password_hash": 0}).skip(skip).limit(limit)
+        users = await users_cursor.to_list(length=None)
+        
+        # Enhance users with additional data
+        enhanced_users = []
+        for user in users:
+            # Check if user is online (last seen within 5 minutes)
+            is_online = False
+            if user.get("last_seen"):
+                last_seen = user["last_seen"]
+                if isinstance(last_seen, str):
+                    last_seen = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                time_diff = datetime.utcnow() - last_seen.replace(tzinfo=None)
+                is_online = time_diff.total_seconds() < 300  # 5 minutes
+            
+            # Get basic KPIs based on role
+            kpis = {}
+            if user["role"] == "sales_rep":
+                # Get today's visits and orders
+                today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                kpis = {
+                    "visits_today": await db.visits.count_documents({
+                        "sales_rep_id": user["id"],
+                        "created_at": {"$gte": today}
+                    }),
+                    "total_visits": await db.visits.count_documents({"sales_rep_id": user["id"]}),
+                    "pending_orders": await db.orders.count_documents({
+                        "sales_rep_id": user["id"],
+                        "status": "PENDING"
+                    }),
+                    "total_orders": await db.orders.count_documents({"sales_rep_id": user["id"]})
+                }
+            elif user["role"] == "manager":
+                # Get team statistics
+                kpis = {
+                    "team_members": await db.users.count_documents({
+                        "managed_by": user["id"]
+                    }),
+                    "pending_approvals": await db.orders.count_documents({
+                        "status": "PENDING"
+                    }) + await db.clinic_requests.count_documents({
+                        "status": "PENDING"
+                    }),
+                    "team_visits_today": await db.visits.count_documents({
+                        "created_at": {"$gte": today}
+                    })
+                }
+            elif user["role"] == "warehouse_manager":
+                # Get warehouse statistics
+                kpis = {
+                    "managed_warehouses": await db.warehouses.count_documents({
+                        "manager_id": user["id"]
+                    }),
+                    "low_stock_items": await db.products.count_documents({
+                        "stock_level": {"$lt": 10}
+                    }),
+                    "pending_shipments": await db.orders.count_documents({
+                        "status": "MANAGER_APPROVED"
+                    })
+                }
+            
+            enhanced_user = {
+                **user,
+                "is_online": is_online,
+                "kpis": kpis,
+                "last_seen_formatted": user.get("last_seen", "").split('.')[0] if user.get("last_seen") else None
+            }
+            
+            enhanced_users.append(enhanced_user)
+        
+        return {
+            "users": enhanced_users,
+            "total_count": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
         }
-    
-    elif current_user.role == UserRole.WAREHOUSE_MANAGER:
-        # Warehouse manager stats
-        my_warehouses = await db.warehouses.count_documents({"manager_id": current_user.id})
-        total_products = await db.products.count_documents({"is_active": True})
         
-        # My warehouses inventory
-        my_inventory_count = await db.inventory.count_documents({"warehouse_id": {"$in": [w["id"] for w in await db.warehouses.find({"manager_id": current_user.id}).to_list(100)]}})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/{user_id}/activity-summary") 
+async def get_user_activity_summary(
+    user_id: str,
+    days: int = 7,
+    current_user: User = Depends(get_current_user)
+):
+    """Get user activity summary for the last N days"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
         
-        # Low stock in my warehouses
-        low_stock_count = 0
-        my_warehouse_ids = [w["id"] for w in await db.warehouses.find({"manager_id": current_user.id}).to_list(100)]
-        inventory_items = await db.inventory.find({"warehouse_id": {"$in": my_warehouse_ids}}).to_list(1000)
-        for item in inventory_items:
-            if item["quantity"] <= item["minimum_stock"]:
-                low_stock_count += 1
+        # Get user info
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
         
-        stats = {
-            "my_warehouses": my_warehouses,
-            "total_products": total_products,
-            "inventory_items": my_inventory_count,
-            "low_stock_items": low_stock_count
+        # Calculate date range
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        # Get activities by day
+        daily_activities = []
+        for i in range(days):
+            current_date = start_date + timedelta(days=i)
+            next_date = current_date + timedelta(days=1)
+            
+            day_activities = {
+                "date": current_date.strftime("%Y-%m-%d"),
+                "day_name": current_date.strftime("%A"),
+                "visits": await db.visits.count_documents({
+                    "sales_rep_id": user_id,
+                    "created_at": {"$gte": current_date, "$lt": next_date}
+                }),
+                "orders": await db.orders.count_documents({
+                    "sales_rep_id": user_id,
+                    "created_at": {"$gte": current_date, "$lt": next_date}
+                }),
+                "clinic_requests": await db.clinic_requests.count_documents({
+                    "sales_rep_id": user_id,
+                    "created_at": {"$gte": current_date, "$lt": next_date}
+                })
+            }
+            
+            daily_activities.append(day_activities)
+        
+        # Calculate totals
+        totals = {
+            "visits": sum([day["visits"] for day in daily_activities]),
+            "orders": sum([day["orders"] for day in daily_activities]),
+            "clinic_requests": sum([day["clinic_requests"] for day in daily_activities])
         }
-    
-    elif current_user.role == UserRole.MANAGER:
-        # Manager stats - focus on team performance
-        my_team = await db.users.count_documents({"managed_by": current_user.id})
-        pending_visits = await db.visits.count_documents({"is_effective": None})
-        total_visits = await db.visits.count_documents({})
         
-        # Team visits today
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
-        
-        team_members = await db.users.find({"managed_by": current_user.id}).to_list(100)
-        team_ids = [member["id"] for member in team_members]
-        
-        today_team_visits = await db.visits.count_documents({
-            "sales_rep_id": {"$in": team_ids},
-            "visit_date": {"$gte": today_start, "$lt": today_end}
-        })
-        
-        stats = {
-            "team_members": my_team,
-            "pending_reviews": pending_visits,
-            "total_visits": total_visits,
-            "today_team_visits": today_team_visits
+        return {
+            "user_info": {
+                "id": user["id"],
+                "username": user["username"],
+                "full_name": user["full_name"],
+                "role": user["role"],
+                "photo": user.get("photo")
+            },
+            "period": {
+                "days": days,
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d")
+            },
+            "daily_activities": daily_activities,
+            "totals": totals
         }
-    
-    elif current_user.role == UserRole.SALES_REP:
-        my_visits = await db.visits.count_documents({"sales_rep_id": current_user.id})
-        my_clinics = await db.clinics.count_documents({"added_by": current_user.id})
-        my_doctors = await db.doctors.count_documents({"added_by": current_user.id})
         
-        # Today's visits
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
-        today_visits = await db.visits.count_documents({
-            "sales_rep_id": current_user.id,
-            "visit_date": {"$gte": today_start, "$lt": today_end}
-        })
-        
-        # Pending approvals
-        pending_clinics = await db.clinics.count_documents({"added_by": current_user.id, "approved_by": None})
-        pending_doctors = await db.doctors.count_documents({"added_by": current_user.id, "approved_by": None})
-        
-        stats = {
-            "total_visits": my_visits,
-            "total_clinics": my_clinics,
-            "total_doctors": my_doctors,
-            "today_visits": today_visits,
-            "pending_clinics": pending_clinics,
-            "pending_doctors": pending_doctors
-        }
-    
-    return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Create default admin user on startup
 @app.on_event("startup")
