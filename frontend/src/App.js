@@ -14380,7 +14380,7 @@ const ComprehensiveAdminSettings = () => {
                 : 'glass-effect hover:bg-white hover:bg-opacity-10'
             }`}
           >
-            <span>{tab.icon}</span>
+            <SVGIcon name={tab.icon} size={20} />
             <span>{tab.label}</span>
           </button>
         ))}
