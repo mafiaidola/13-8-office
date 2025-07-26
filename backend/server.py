@@ -3317,6 +3317,271 @@ async def get_secret_comprehensive_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced Secret Reports API (Password Protected)
+@api_router.post("/reports/secret/access")
+async def access_secret_reports(
+    credentials: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Access secret reports section with password protection"""
+    try:
+        password = credentials.get("password")
+        if password != "666888":
+            raise HTTPException(status_code=403, detail="كلمة المرور غير صحيحة")
+        
+        # Log access attempt
+        await db.system_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "SECRET_REPORTS_ACCESS",
+            "timestamp": datetime.utcnow(),
+            "ip_address": "unknown",
+            "user_agent": "unknown",
+            "details": {
+                "user_name": current_user.full_name,
+                "user_role": current_user.role
+            }
+        })
+        
+        return {"access_granted": True, "message": "تم السماح بالوصول للتقارير السرية"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/reports/secret/comprehensive")
+async def get_secret_comprehensive_report(
+    password: str,
+    filter_type: str = "all",
+    start_date: str = None,
+    end_date: str = None,
+    user_filter: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive secret report with all system activities"""
+    try:
+        if password != "666888":
+            raise HTTPException(status_code=403, detail="كلمة المرور غير صحيحة")
+        
+        # Date range filter
+        date_filter = {}
+        if start_date:
+            date_filter["$gte"] = datetime.fromisoformat(start_date)
+        if end_date:
+            date_filter["$lte"] = datetime.fromisoformat(end_date)
+        else:
+            date_filter["$lte"] = datetime.utcnow()
+        
+        # Default to last 30 days if no date specified
+        if not start_date:
+            date_filter["$gte"] = datetime.utcnow() - timedelta(days=30)
+        
+        match_filter = {}
+        if date_filter:
+            match_filter["created_at"] = date_filter
+        
+        # User filter
+        if user_filter:
+            match_filter["$or"] = [
+                {"user_id": user_filter},
+                {"sales_rep_id": user_filter},
+                {"created_by": user_filter}
+            ]
+        
+        # Comprehensive system activity log
+        activities = []
+        
+        # Get all user activities
+        if filter_type in ["all", "users"]:
+            users_cursor = db.users.find(match_filter, {"_id": 0})
+            async for user in users_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "user_activity",
+                    "action": "USER_REGISTRATION" if user.get("created_at") else "USER_UPDATED",
+                    "user_id": user["id"],
+                    "user_name": user["full_name"],
+                    "user_role": user["role"],
+                    "timestamp": user.get("created_at", datetime.utcnow()),
+                    "details": {
+                        "username": user["username"],
+                        "email": user.get("email", ""),
+                        "phone": user.get("phone", ""),
+                        "managed_by": user.get("managed_by", ""),
+                        "is_active": user.get("is_active", True)
+                    },
+                    "description": f"تم تسجيل المستخدم {user['full_name']} كـ {user['role']}",
+                    "category": "إدارة المستخدمين"
+                })
+        
+        # Get all visits
+        if filter_type in ["all", "visits"]:
+            visits_cursor = db.visits.find(match_filter, {"_id": 0})
+            async for visit in visits_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "visit_activity",
+                    "action": "VISIT_REGISTERED",
+                    "user_id": visit.get("sales_rep_id", ""),
+                    "user_name": visit.get("sales_rep_name", ""),
+                    "user_role": "sales_rep",
+                    "timestamp": visit["created_at"],
+                    "details": {
+                        "visit_id": visit["id"],
+                        "doctor_name": visit.get("doctor_name", ""),
+                        "clinic_name": visit.get("clinic_name", ""),
+                        "is_effective": visit.get("is_effective"),
+                        "notes": visit.get("notes", ""),
+                        "duration": visit.get("duration_minutes", 0)
+                    },
+                    "description": f"زيارة للدكتور {visit.get('doctor_name', '')} في عيادة {visit.get('clinic_name', '')}",
+                    "category": "الزيارات"
+                })
+        
+        # Get all orders
+        if filter_type in ["all", "orders"]:
+            orders_cursor = db.orders.find(match_filter, {"_id": 0})
+            async for order in orders_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "order_activity",
+                    "action": "ORDER_CREATED",
+                    "user_id": order.get("sales_rep_id", ""),
+                    "user_name": order.get("sales_rep_name", ""),
+                    "user_role": "sales_rep",
+                    "timestamp": order["created_at"],
+                    "details": {
+                        "order_id": order["id"],
+                        "doctor_name": order.get("doctor_name", ""),
+                        "clinic_name": order.get("clinic_name", ""),
+                        "total_amount": order["total_amount"],
+                        "status": order["status"],
+                        "items_count": len(order.get("items", [])),
+                        "notes": order.get("notes", "")
+                    },
+                    "description": f"طلبية بقيمة {order['total_amount']} ج.م للدكتور {order.get('doctor_name', '')}",
+                    "category": "الطلبات"
+                })
+        
+        # Get all clinic additions
+        if filter_type in ["all", "clinics"]:
+            clinics_cursor = db.clinics.find(match_filter, {"_id": 0})
+            async for clinic in clinics_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "clinic_activity",
+                    "action": "CLINIC_ADDED",
+                    "user_id": clinic.get("created_by", ""),
+                    "user_name": clinic.get("created_by_name", ""),
+                    "user_role": "sales_rep",
+                    "timestamp": clinic.get("created_at", datetime.utcnow()),
+                    "details": {
+                        "clinic_id": clinic["id"],
+                        "clinic_name": clinic["name"],
+                        "address": clinic.get("address", ""),
+                        "manager_name": clinic.get("manager_name", ""),
+                        "phone": clinic.get("phone", ""),
+                        "is_approved": clinic.get("is_approved", False)
+                    },
+                    "description": f"تم إضافة عيادة {clinic['name']} في {clinic.get('address', '')}",
+                    "category": "العيادات"
+                })
+        
+        # Get warehouse movements
+        if filter_type in ["all", "warehouse"]:
+            movements_cursor = db.stock_movements.find(match_filter, {"_id": 0})
+            async for movement in movements_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "warehouse_activity",
+                    "action": "STOCK_MOVEMENT",
+                    "user_id": movement.get("created_by", ""),
+                    "user_name": movement.get("created_by_name", ""),
+                    "user_role": "warehouse_manager",
+                    "timestamp": movement["created_at"],
+                    "details": {
+                        "movement_id": movement["id"],
+                        "product_name": movement.get("product_name", ""),
+                        "quantity": movement["quantity"],
+                        "movement_type": movement["movement_type"],
+                        "reason": movement.get("reason", ""),
+                        "warehouse_name": movement.get("warehouse_name", ""),
+                        "order_id": movement.get("order_id", "")
+                    },
+                    "description": f"حركة مخزن: {movement['movement_type']} - {movement['quantity']} {movement.get('product_name', '')}",
+                    "category": "المخازن"
+                })
+        
+        # Get system logs
+        if filter_type in ["all", "system"]:
+            logs_cursor = db.system_logs.find(match_filter, {"_id": 0})
+            async for log in logs_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "system_activity",
+                    "action": log["action"],
+                    "user_id": log["user_id"],
+                    "user_name": log.get("user_name", ""),
+                    "user_role": "system",
+                    "timestamp": log["timestamp"],
+                    "details": log.get("details", {}),
+                    "description": f"نشاط النظام: {log['action']}",
+                    "category": "النظام"
+                })
+        
+        # Get login activities
+        if filter_type in ["all", "login"]:
+            login_cursor = db.login_logs.find(match_filter, {"_id": 0})
+            async for login in login_cursor:
+                activities.append({
+                    "id": str(uuid.uuid4()),
+                    "type": "login_activity",
+                    "action": "USER_LOGIN",
+                    "user_id": login["user_id"],
+                    "user_name": login.get("user_name", ""),
+                    "user_role": login.get("user_role", ""),
+                    "timestamp": login["timestamp"],
+                    "details": {
+                        "ip_address": login.get("ip_address", ""),
+                        "user_agent": login.get("user_agent", ""),
+                        "success": login.get("success", True)
+                    },
+                    "description": f"تسجيل دخول المستخدم {login.get('user_name', '')}",
+                    "category": "تسجيل الدخول"
+                })
+        
+        # Sort activities by timestamp
+        activities.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        # Generate summary statistics
+        summary = {
+            "total_activities": len(activities),
+            "date_range": {
+                "start": start_date or (datetime.utcnow() - timedelta(days=30)).isoformat(),
+                "end": end_date or datetime.utcnow().isoformat()
+            },
+            "filter_type": filter_type,
+            "user_filter": user_filter,
+            "generated_at": datetime.utcnow().isoformat(),
+            "generated_by": current_user.full_name,
+            "categories": {
+                "users": len([a for a in activities if a["type"] == "user_activity"]),
+                "visits": len([a for a in activities if a["type"] == "visit_activity"]),
+                "orders": len([a for a in activities if a["type"] == "order_activity"]),
+                "clinics": len([a for a in activities if a["type"] == "clinic_activity"]),
+                "warehouse": len([a for a in activities if a["type"] == "warehouse_activity"]),
+                "system": len([a for a in activities if a["type"] == "system_activity"]),
+                "login": len([a for a in activities if a["type"] == "login_activity"])
+            }
+        }
+        
+        return {
+            "activities": activities,
+            "summary": summary,
+            "printable": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Enhanced Statistics API with Time Filtering
 @api_router.get("/dashboard/statistics/filtered")
 async def get_filtered_statistics(
