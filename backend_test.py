@@ -2558,6 +2558,505 @@ class BackendTester:
             self.log_test("Daily Plans API", False, f"Plan creation failed: {status_code}", response)
         return False
 
+    # NEW COMPREHENSIVE ADMIN SETTINGS AND PERMISSIONS TESTS
+    
+    def test_admin_permissions_get(self):
+        """Test GET /api/admin/permissions endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin Permissions GET", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/permissions", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check for required structure
+            required_sections = ["roles_config", "ui_controls", "feature_toggles", "system_limits"]
+            if all(section in response for section in required_sections):
+                # Check roles configuration
+                roles_config = response.get("roles_config", {})
+                expected_roles = ["admin", "manager", "sales_rep", "warehouse", "accounting"]
+                if all(role in roles_config for role in expected_roles):
+                    # Check admin role permissions
+                    admin_perms = roles_config.get("admin", {})
+                    admin_required = ["dashboard_access", "user_management", "warehouse_management", "visits_management", "reports_access", "chat_access", "settings_access", "secret_reports", "financial_reports", "system_logs"]
+                    if all(perm in admin_perms for perm in admin_required):
+                        # Check UI controls
+                        ui_controls = response.get("ui_controls", {})
+                        ui_required = ["show_statistics_cards", "show_charts", "show_recent_activities", "show_user_photos", "show_themes_selector", "show_language_selector", "enable_dark_mode", "enable_notifications", "enable_search"]
+                        if all(control in ui_controls for control in ui_required):
+                            # Check feature toggles
+                            feature_toggles = response.get("feature_toggles", {})
+                            feature_required = ["gamification_enabled", "gps_tracking_enabled", "voice_notes_enabled", "file_uploads_enabled", "print_reports_enabled", "export_data_enabled", "email_notifications_enabled", "sms_notifications_enabled"]
+                            if all(toggle in feature_toggles for toggle in feature_required):
+                                # Check system limits
+                                system_limits = response.get("system_limits", {})
+                                limits_required = ["max_users", "max_warehouses", "max_products", "max_file_size_mb", "session_timeout_minutes"]
+                                if all(limit in system_limits for limit in limits_required):
+                                    self.log_test("Admin Permissions GET", True, f"Complete permissions structure with {len(expected_roles)} roles configured")
+                                    return True
+                                else:
+                                    self.log_test("Admin Permissions GET", False, "Missing system limits fields")
+                            else:
+                                self.log_test("Admin Permissions GET", False, "Missing feature toggles fields")
+                        else:
+                            self.log_test("Admin Permissions GET", False, "Missing UI controls fields")
+                    else:
+                        self.log_test("Admin Permissions GET", False, "Missing admin permissions fields")
+                else:
+                    self.log_test("Admin Permissions GET", False, f"Missing roles: {expected_roles}")
+            else:
+                self.log_test("Admin Permissions GET", False, f"Missing required sections: {required_sections}")
+        else:
+            self.log_test("Admin Permissions GET", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_permissions_post(self):
+        """Test POST /api/admin/permissions endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin Permissions POST", False, "No admin token available")
+            return False
+        
+        # Test updating permissions
+        permissions_update = {
+            "roles_config": {
+                "sales_rep": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": False,
+                    "visits_management": True,
+                    "reports_access": True,  # Changed from False to True
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": False,
+                    "system_logs": False
+                }
+            },
+            "ui_controls": {
+                "show_statistics_cards": True,
+                "show_charts": False,  # Changed from True to False
+                "show_recent_activities": True,
+                "show_user_photos": True,
+                "show_themes_selector": True,
+                "show_language_selector": True,
+                "enable_dark_mode": True,
+                "enable_notifications": True,
+                "enable_search": True
+            },
+            "feature_toggles": {
+                "gamification_enabled": True,  # Changed from False to True
+                "gps_tracking_enabled": True,
+                "voice_notes_enabled": True,
+                "file_uploads_enabled": True,
+                "print_reports_enabled": True,
+                "export_data_enabled": True,
+                "email_notifications_enabled": False,
+                "sms_notifications_enabled": False
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/permissions", permissions_update, self.admin_token)
+        
+        if status_code == 200:
+            # Verify the update was successful
+            status_code, get_response = self.make_request("GET", "/admin/permissions", token=self.admin_token)
+            if status_code == 200:
+                # Check if our changes were applied
+                sales_rep_config = get_response.get("roles_config", {}).get("sales_rep", {})
+                ui_controls = get_response.get("ui_controls", {})
+                feature_toggles = get_response.get("feature_toggles", {})
+                
+                if (sales_rep_config.get("reports_access") == True and
+                    ui_controls.get("show_charts") == False and
+                    feature_toggles.get("gamification_enabled") == True):
+                    self.log_test("Admin Permissions POST", True, "Permissions updated successfully")
+                    return True
+                else:
+                    self.log_test("Admin Permissions POST", False, "Permissions not updated correctly")
+            else:
+                self.log_test("Admin Permissions POST", False, "Failed to retrieve updated permissions")
+        else:
+            self.log_test("Admin Permissions POST", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_permissions_access_control(self):
+        """Test that only admin can access permissions endpoints"""
+        if not self.sales_rep_token:
+            self.log_test("Admin Permissions Access Control", False, "No sales rep token available")
+            return False
+        
+        # Test GET with non-admin user
+        status_code, response = self.make_request("GET", "/admin/permissions", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            # Test POST with non-admin user
+            permissions_data = {"test": "data"}
+            status_code, response = self.make_request("POST", "/admin/permissions", permissions_data, self.sales_rep_token)
+            
+            if status_code == 403:
+                self.log_test("Admin Permissions Access Control", True, "Non-admin users correctly denied access")
+                return True
+            else:
+                self.log_test("Admin Permissions Access Control", False, f"POST not denied for non-admin: {status_code}")
+        else:
+            self.log_test("Admin Permissions Access Control", False, f"GET not denied for non-admin: {status_code}")
+        return False
+
+    def test_admin_dashboard_config_get(self):
+        """Test GET /api/admin/dashboard-config endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin Dashboard Config GET", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/dashboard-config", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check for required structure
+            required_sections = ["dashboard_sections", "ui_customization", "security_settings"]
+            if all(section in response for section in required_sections):
+                # Check dashboard sections
+                dashboard_sections = response.get("dashboard_sections", {})
+                section_types = ["statistics_cards", "charts_section", "recent_activities", "navigation_tabs"]
+                if all(section_type in dashboard_sections for section_type in section_types):
+                    # Check navigation tabs configuration
+                    nav_tabs = dashboard_sections.get("navigation_tabs", {})
+                    expected_tabs = ["statistics_tab", "users_tab", "warehouse_tab", "visits_tab", "reports_tab", "chat_tab", "settings_tab"]
+                    if all(tab in nav_tabs for tab in expected_tabs):
+                        # Check UI customization
+                        ui_customization = response.get("ui_customization", {})
+                        ui_sections = ["company_branding", "layout_options", "theme_options"]
+                        if all(ui_section in ui_customization for ui_section in ui_sections):
+                            # Check theme options
+                            theme_options = ui_customization.get("theme_options", {})
+                            if "available_themes" in theme_options:
+                                available_themes = theme_options.get("available_themes", [])
+                                expected_themes = ["light", "dark", "minimal", "modern", "fancy", "cyber", "sunset", "ocean", "forest"]
+                                if all(theme in available_themes for theme in expected_themes):
+                                    # Check security settings
+                                    security_settings = response.get("security_settings", {})
+                                    security_fields = ["force_password_change", "password_expiry_days", "max_login_attempts", "session_timeout_minutes", "require_2fa"]
+                                    if all(field in security_settings for field in security_fields):
+                                        self.log_test("Admin Dashboard Config GET", True, f"Complete dashboard configuration with {len(expected_themes)} themes")
+                                        return True
+                                    else:
+                                        self.log_test("Admin Dashboard Config GET", False, "Missing security settings fields")
+                                else:
+                                    self.log_test("Admin Dashboard Config GET", False, f"Missing themes: {expected_themes}")
+                            else:
+                                self.log_test("Admin Dashboard Config GET", False, "Missing available_themes field")
+                        else:
+                            self.log_test("Admin Dashboard Config GET", False, "Missing UI customization sections")
+                    else:
+                        self.log_test("Admin Dashboard Config GET", False, f"Missing navigation tabs: {expected_tabs}")
+                else:
+                    self.log_test("Admin Dashboard Config GET", False, f"Missing dashboard sections: {section_types}")
+            else:
+                self.log_test("Admin Dashboard Config GET", False, f"Missing required sections: {required_sections}")
+        else:
+            self.log_test("Admin Dashboard Config GET", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_dashboard_config_post(self):
+        """Test POST /api/admin/dashboard-config endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin Dashboard Config POST", False, "No admin token available")
+            return False
+        
+        # Test updating dashboard configuration
+        config_update = {
+            "dashboard_sections": {
+                "navigation_tabs": {
+                    "statistics_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "users_tab": {"enabled": True, "roles": ["admin"]},
+                    "warehouse_tab": {"enabled": False, "roles": ["admin", "warehouse"]},  # Changed to disabled
+                    "visits_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                    "reports_tab": {"enabled": True, "roles": ["admin", "manager", "accounting"]},
+                    "chat_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "settings_tab": {"enabled": True, "roles": ["admin"]}
+                }
+            },
+            "ui_customization": {
+                "theme_options": {
+                    "allow_theme_switching": True,
+                    "default_theme": "light",  # Changed from dark to light
+                    "available_themes": ["light", "dark", "minimal", "modern", "fancy"]  # Reduced themes
+                }
+            },
+            "security_settings": {
+                "force_password_change": True,  # Changed from False to True
+                "password_expiry_days": 60,  # Changed from 90 to 60
+                "max_login_attempts": 3,  # Changed from 5 to 3
+                "session_timeout_minutes": 240,  # Changed from 480 to 240
+                "require_2fa": True  # Changed from False to True
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/dashboard-config", config_update, self.admin_token)
+        
+        if status_code == 200:
+            # Verify the update was successful
+            status_code, get_response = self.make_request("GET", "/admin/dashboard-config", token=self.admin_token)
+            if status_code == 200:
+                # Check if our changes were applied
+                nav_tabs = get_response.get("dashboard_sections", {}).get("navigation_tabs", {})
+                theme_options = get_response.get("ui_customization", {}).get("theme_options", {})
+                security_settings = get_response.get("security_settings", {})
+                
+                if (nav_tabs.get("warehouse_tab", {}).get("enabled") == False and
+                    theme_options.get("default_theme") == "light" and
+                    security_settings.get("require_2fa") == True and
+                    security_settings.get("password_expiry_days") == 60):
+                    self.log_test("Admin Dashboard Config POST", True, "Dashboard configuration updated successfully")
+                    return True
+                else:
+                    self.log_test("Admin Dashboard Config POST", False, "Dashboard configuration not updated correctly")
+            else:
+                self.log_test("Admin Dashboard Config POST", False, "Failed to retrieve updated configuration")
+        else:
+            self.log_test("Admin Dashboard Config POST", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_dashboard_config_access_control(self):
+        """Test that only admin can access dashboard config endpoints"""
+        if not self.manager_token:
+            self.log_test("Admin Dashboard Config Access Control", False, "No manager token available")
+            return False
+        
+        # Test GET with non-admin user
+        status_code, response = self.make_request("GET", "/admin/dashboard-config", token=self.manager_token)
+        
+        if status_code == 403:
+            # Test POST with non-admin user
+            config_data = {"test": "data"}
+            status_code, response = self.make_request("POST", "/admin/dashboard-config", config_data, self.manager_token)
+            
+            if status_code == 403:
+                self.log_test("Admin Dashboard Config Access Control", True, "Non-admin users correctly denied access")
+                return True
+            else:
+                self.log_test("Admin Dashboard Config Access Control", False, f"POST not denied for non-admin: {status_code}")
+        else:
+            self.log_test("Admin Dashboard Config Access Control", False, f"GET not denied for non-admin: {status_code}")
+        return False
+
+    def test_admin_system_health(self):
+        """Test GET /api/admin/system-health endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin System Health", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/system-health", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check for required structure
+            required_fields = ["overall_status", "database_status", "users", "collections_health", "system_metrics", "checked_at"]
+            if all(field in response for field in required_fields):
+                # Check users section
+                users = response.get("users", {})
+                user_fields = ["total", "active", "inactive"]
+                if all(field in users for field in user_fields):
+                    # Check collections health
+                    collections_health = response.get("collections_health", {})
+                    expected_collections = ["users", "visits", "orders", "products", "warehouses", "clinics", "doctors"]
+                    if all(collection in collections_health for collection in expected_collections):
+                        # Check that each collection has status and count
+                        all_collections_healthy = True
+                        for collection, health in collections_health.items():
+                            if "status" not in health or "count" not in health:
+                                all_collections_healthy = False
+                                break
+                        
+                        if all_collections_healthy:
+                            # Check system metrics
+                            system_metrics = response.get("system_metrics", {})
+                            metrics_fields = ["total_visits", "total_orders", "total_products", "total_warehouses"]
+                            if all(field in system_metrics for field in metrics_fields):
+                                # Check status values
+                                if (response.get("overall_status") in ["healthy", "warning", "error"] and
+                                    response.get("database_status") in ["connected", "disconnected", "error"]):
+                                    self.log_test("Admin System Health", True, f"System health check complete - {response.get('overall_status')} status")
+                                    return True
+                                else:
+                                    self.log_test("Admin System Health", False, "Invalid status values")
+                            else:
+                                self.log_test("Admin System Health", False, "Missing system metrics fields")
+                        else:
+                            self.log_test("Admin System Health", False, "Collections health missing status/count")
+                    else:
+                        self.log_test("Admin System Health", False, f"Missing collections: {expected_collections}")
+                else:
+                    self.log_test("Admin System Health", False, "Missing users fields")
+            else:
+                self.log_test("Admin System Health", False, f"Missing required fields: {required_fields}")
+        else:
+            self.log_test("Admin System Health", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_system_health_access_control(self):
+        """Test that only admin can access system health endpoint"""
+        if not self.sales_rep_token:
+            self.log_test("Admin System Health Access Control", False, "No sales rep token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/system-health", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            self.log_test("Admin System Health Access Control", True, "Non-admin users correctly denied access")
+            return True
+        else:
+            self.log_test("Admin System Health Access Control", False, f"Expected 403, got {status_code}")
+        return False
+
+    def test_admin_activity_logs(self):
+        """Test GET /api/admin/activity-logs endpoint"""
+        if not self.admin_token:
+            self.log_test("Admin Activity Logs", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/activity-logs", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            if len(response) > 0:
+                # Check activity structure
+                activity = response[0]
+                required_fields = ["id", "type", "description", "user_id", "user_name", "timestamp", "category"]
+                if all(field in activity for field in required_fields):
+                    # Check for Arabic descriptions
+                    arabic_found = False
+                    activity_types = set()
+                    categories = set()
+                    
+                    for act in response:
+                        if any(ord(char) > 127 for char in act.get("description", "")):  # Check for Arabic characters
+                            arabic_found = True
+                        activity_types.add(act.get("type", ""))
+                        categories.add(act.get("category", ""))
+                    
+                    # Check for expected activity types
+                    expected_types = ["user_created", "visit_created", "order_created"]
+                    expected_categories = ["user_management", "visits", "orders"]
+                    
+                    if (arabic_found and
+                        any(act_type in activity_types for act_type in expected_types) and
+                        any(category in categories for category in expected_categories)):
+                        self.log_test("Admin Activity Logs", True, f"Retrieved {len(response)} activities with Arabic descriptions and proper categorization")
+                        return True
+                    else:
+                        self.log_test("Admin Activity Logs", False, f"Missing expected activity types or Arabic descriptions")
+                else:
+                    self.log_test("Admin Activity Logs", False, f"Missing required fields in activity: {activity}")
+            else:
+                self.log_test("Admin Activity Logs", True, "No activities found (expected for new system)")
+                return True
+        else:
+            self.log_test("Admin Activity Logs", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_activity_logs_access_control(self):
+        """Test that only admin can access activity logs endpoint"""
+        if not self.manager_token:
+            self.log_test("Admin Activity Logs Access Control", False, "No manager token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/activity-logs", token=self.manager_token)
+        
+        if status_code == 403:
+            self.log_test("Admin Activity Logs Access Control", True, "Non-admin users correctly denied access")
+            return True
+        else:
+            self.log_test("Admin Activity Logs Access Control", False, f"Expected 403, got {status_code}")
+        return False
+
+    def test_user_permissions_api(self):
+        """Test GET /api/user/permissions endpoint"""
+        if not self.admin_token:
+            self.log_test("User Permissions API", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/user/permissions", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check for required structure
+            required_fields = ["dashboard_access", "user_management", "warehouse_management", "visits_management", "reports_access", "chat_access", "settings_access", "navigation_tabs", "ui_controls", "feature_toggles"]
+            if all(field in response for field in required_fields):
+                # Check admin permissions
+                if (response.get("dashboard_access") == True and
+                    response.get("user_management") == True and
+                    response.get("settings_access") == True and
+                    response.get("secret_reports") == True):
+                    # Check navigation tabs
+                    nav_tabs = response.get("navigation_tabs", [])
+                    expected_admin_tabs = ["الإحصائيات", "إدارة المستخدمين", "إدارة المخازن", "سجل الزيارات", "التقارير", "المحادثات", "الإعدادات"]
+                    if all(tab in nav_tabs for tab in expected_admin_tabs):
+                        # Check UI controls and feature toggles are present
+                        ui_controls = response.get("ui_controls", {})
+                        feature_toggles = response.get("feature_toggles", {})
+                        if len(ui_controls) > 0 and len(feature_toggles) > 0:
+                            self.log_test("User Permissions API", True, f"Admin permissions retrieved with {len(nav_tabs)} navigation tabs")
+                            return True
+                        else:
+                            self.log_test("User Permissions API", False, "Missing UI controls or feature toggles")
+                    else:
+                        self.log_test("User Permissions API", False, f"Missing admin navigation tabs: {expected_admin_tabs}")
+                else:
+                    self.log_test("User Permissions API", False, "Incorrect admin permissions")
+            else:
+                self.log_test("User Permissions API", False, f"Missing required fields: {required_fields}")
+        else:
+            self.log_test("User Permissions API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_user_permissions_role_based(self):
+        """Test that user permissions API returns role-based permissions"""
+        if not self.sales_rep_token:
+            self.log_test("User Permissions Role Based", False, "No sales rep token available")
+            return False
+        
+        # Test sales rep permissions
+        status_code, response = self.make_request("GET", "/user/permissions", token=self.sales_rep_token)
+        
+        if status_code == 200:
+            # Check sales rep permissions (should be more limited than admin)
+            if (response.get("dashboard_access") == True and
+                response.get("user_management") == False and
+                response.get("settings_access") == False and
+                response.get("secret_reports") == False and
+                response.get("visits_management") == True):
+                # Check navigation tabs for sales rep
+                nav_tabs = response.get("navigation_tabs", [])
+                # Sales rep should have fewer tabs than admin
+                if len(nav_tabs) < 7 and "الإعدادات" not in nav_tabs and "إدارة المستخدمين" not in nav_tabs:
+                    # Test manager permissions if available
+                    if self.manager_token:
+                        status_code, manager_response = self.make_request("GET", "/user/permissions", token=self.manager_token)
+                        if status_code == 200:
+                            # Manager should have more permissions than sales rep but less than admin
+                            if (manager_response.get("dashboard_access") == True and
+                                manager_response.get("user_management") == False and
+                                manager_response.get("settings_access") == False and
+                                manager_response.get("warehouse_management") == True and
+                                manager_response.get("visits_management") == True):
+                                manager_nav_tabs = manager_response.get("navigation_tabs", [])
+                                if len(manager_nav_tabs) > len(nav_tabs) and len(manager_nav_tabs) < 7:
+                                    self.log_test("User Permissions Role Based", True, f"Role-based permissions working: Sales rep ({len(nav_tabs)} tabs), Manager ({len(manager_nav_tabs)} tabs)")
+                                    return True
+                                else:
+                                    self.log_test("User Permissions Role Based", False, "Manager navigation tabs not properly configured")
+                            else:
+                                self.log_test("User Permissions Role Based", False, "Manager permissions not properly configured")
+                        else:
+                            self.log_test("User Permissions Role Based", False, "Failed to get manager permissions")
+                    else:
+                        self.log_test("User Permissions Role Based", True, f"Sales rep permissions correctly limited ({len(nav_tabs)} tabs)")
+                        return True
+                else:
+                    self.log_test("User Permissions Role Based", False, f"Sales rep has too many navigation tabs: {nav_tabs}")
+            else:
+                self.log_test("User Permissions Role Based", False, "Sales rep permissions not properly configured")
+        else:
+            self.log_test("User Permissions Role Based", False, f"Status: {status_code}", response)
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing")
