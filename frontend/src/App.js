@@ -10106,7 +10106,7 @@ const Dashboard = () => {
               </button>
             )}
             
-            {/* Accounting tab for accounting role */}
+            {/* Accounting tab for admin, accounting, and manager roles */}
             {canAccessTab('accounting') && (
               <button
                 onClick={() => setActiveTab('accounting')}
