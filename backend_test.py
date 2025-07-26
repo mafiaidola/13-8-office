@@ -3959,6 +3959,18 @@ class BackendTester:
         self.test_accounting_role_based_access()
         self.test_accounting_user_access()
         
+        # INTEGRATED GAMIFICATION SYSTEM TESTS - As requested in Arabic review
+        print("🎮 INTEGRATED GAMIFICATION SYSTEM TESTS")
+        print("-" * 30)
+        self.test_gamification_user_profile_admin()
+        self.test_gamification_user_profile_sales_rep()
+        self.test_gamification_leaderboard_all_time()
+        self.test_gamification_leaderboard_monthly()
+        self.test_gamification_leaderboard_weekly()
+        self.test_gamification_achievements_catalog()
+        self.test_gamification_security_permissions()
+        self.test_gamification_integration_with_real_data()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
