@@ -14341,6 +14341,7 @@ const ComprehensiveAdminSettings = () => {
     { id: 'regions', label: 'المناطق والخطوط', icon: '🗺️' },
     { id: 'products', label: 'إدارة المنتجات', icon: '📦' },
     { id: 'gps', label: 'نظام GPS', icon: '📍' },
+    { id: 'maps', label: 'خرائط جوجل', icon: '🗺️' },
     { id: 'gamification', label: 'نظام الألعاب', icon: '🎮' },
     { id: 'accounting', label: 'نظام المحاسبة', icon: '💰' },
     { id: 'notifications', label: 'نظام الإشعارات', icon: '🔔' },
