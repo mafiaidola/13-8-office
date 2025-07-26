@@ -14441,4 +14441,483 @@ const ComprehensiveAdminSettings = () => {
   );
 };
 
+// Admin User Management Component
+const AdminUserManagement = () => {
+  const [settings, setSettings] = useState({
+    enableUserRegistration: true,
+    requireEmailVerification: false,
+    defaultUserRole: 'medical_rep',
+    maxUsersPerRole: {
+      gm: 1,
+      line_manager: 10,
+      area_manager: 50,
+      district_manager: 100,
+      key_account: 200,
+      medical_rep: 1000
+    },
+    userSessionTimeout: 24, // hours
+    allowMultipleLogins: false,
+    passwordExpiry: 90, // days
+    enableTwoFactor: false
+  });
+
+  const updateSettings = async (newSettings) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/settings/user-management`, newSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(newSettings);
+      alert('تم تحديث إعدادات إدارة المستخدمين');
+    } catch (error) {
+      console.error('Error updating user settings:', error);
+      alert('حدث خطأ في تحديث الإعدادات');
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات إدارة المستخدمين</h3>
+      
+      {/* General User Settings */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الإعدادات العامة</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">السماح بالتسجيل</div>
+              <div className="text-sm text-gray-400">السماح للمستخدمين الجدد بالتسجيل</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableUserRegistration}
+                onChange={(e) => setSettings({...settings, enableUserRegistration: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">التحقق من البريد الإلكتروني</div>
+              <div className="text-sm text-gray-400">طلب تأكيد البريد الإلكتروني</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.requireEmailVerification}
+                onChange={(e) => setSettings({...settings, requireEmailVerification: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">تسجيل دخول متعدد</div>
+              <div className="text-sm text-gray-400">السماح بتسجيل الدخول من أجهزة متعددة</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.allowMultipleLogins}
+                onChange={(e) => setSettings({...settings, allowMultipleLogins: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">المصادقة الثنائية</div>
+              <div className="text-sm text-gray-400">تفعيل المصادقة الثنائية للأمان</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableTwoFactor}
+                onChange={(e) => setSettings({...settings, enableTwoFactor: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Role Limits */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">حدود الأدوار</h4>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Object.entries(settings.maxUsersPerRole).map(([role, limit]) => (
+            <div key={role} className="p-4 border rounded-lg">
+              <label className="font-bold block mb-2">{role.replace('_', ' ')}</label>
+              <input
+                type="number"
+                value={limit}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  maxUsersPerRole: {
+                    ...settings.maxUsersPerRole,
+                    [role]: parseInt(e.target.value)
+                  }
+                })}
+                className="w-full p-2 border rounded-lg glass-effect"
+                min="1"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Session Settings */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">إعدادات الجلسة</h4>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="font-bold block mb-2">مهلة الجلسة (ساعات)</label>
+            <input
+              type="number"
+              value={settings.userSessionTimeout}
+              onChange={(e) => setSettings({...settings, userSessionTimeout: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="1"
+              max="168"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">انتهاء كلمة المرور (أيام)</label>
+            <input
+              type="number"
+              value={settings.passwordExpiry}
+              onChange={(e) => setSettings({...settings, passwordExpiry: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="30"
+              max="365"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">الدور الافتراضي</label>
+            <select
+              value={settings.defaultUserRole}
+              onChange={(e) => setSettings({...settings, defaultUserRole: e.target.value})}
+              className="w-full p-2 border rounded-lg glass-effect"
+            >
+              <option value="medical_rep">مندوب طبي</option>
+              <option value="key_account">حساب رئيسي</option>
+              <option value="district_manager">مدير مقاطعة</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => updateSettings(settings)}
+        className="w-full btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-lg"
+      >
+        💾 حفظ إعدادات المستخدمين
+      </button>
+    </div>
+  );
+};
+
+// Admin GPS Settings Component
+const AdminGPSSettings = () => {
+  const [settings, setSettings] = useState({
+    enableGPSTracking: true,
+    trackingInterval: 30, // seconds
+    geofenceRadius: 100, // meters
+    enableGeofencing: true,
+    enableRouteOptimization: true,
+    maxLocationHistory: 30, // days
+    enableOfflineMode: true,
+    accuracyThreshold: 10, // meters
+    batteryOptimization: true,
+    enableLocationSharing: true
+  });
+
+  const updateSettings = async (newSettings) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/settings/gps`, newSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(newSettings);
+      alert('تم تحديث إعدادات GPS');
+    } catch (error) {
+      console.error('Error updating GPS settings:', error);
+      alert('حدث خطأ في تحديث إعدادات GPS');
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات نظام GPS</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الإعدادات الأساسية</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">تفعيل تتبع GPS</div>
+              <div className="text-sm text-gray-400">السماح بتتبع مواقع المستخدمين</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableGPSTracking}
+                onChange={(e) => setSettings({...settings, enableGPSTracking: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">تفعيل السياج الجغرافي</div>
+              <div className="text-sm text-gray-400">إرسال تنبيهات عند دخول/خروج المناطق</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableGeofencing}
+                onChange={(e) => setSettings({...settings, enableGeofencing: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">تحسين المسارات</div>
+              <div className="text-sm text-gray-400">تحسين المسارات تلقائياً</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableRouteOptimization}
+                onChange={(e) => setSettings({...settings, enableRouteOptimization: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <div className="font-bold">الوضع غير المتصل</div>
+              <div className="text-sm text-gray-400">حفظ البيانات محلياً عند انقطاع الإنترنت</div>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={settings.enableOfflineMode}
+                onChange={(e) => setSettings({...settings, enableOfflineMode: e.target.checked})}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الإعدادات المتقدمة</h4>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="font-bold block mb-2">فترة التتبع (ثانية)</label>
+            <input
+              type="number"
+              value={settings.trackingInterval}
+              onChange={(e) => setSettings({...settings, trackingInterval: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="10"
+              max="300"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">نطاق السياج (متر)</label>
+            <input
+              type="number"
+              value={settings.geofenceRadius}
+              onChange={(e) => setSettings({...settings, geofenceRadius: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="50"
+              max="1000"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">حفظ المواقع (أيام)</label>
+            <input
+              type="number"
+              value={settings.maxLocationHistory}
+              onChange={(e) => setSettings({...settings, maxLocationHistory: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="7"
+              max="365"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">دقة الموقع (متر)</label>
+            <input
+              type="number"
+              value={settings.accuracyThreshold}
+              onChange={(e) => setSettings({...settings, accuracyThreshold: parseInt(e.target.value)})}
+              className="w-full p-2 border rounded-lg glass-effect"
+              min="5"
+              max="100"
+            />
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => updateSettings(settings)}
+        className="w-full btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-lg"
+      >
+        🗺️ حفظ إعدادات GPS
+      </button>
+    </div>
+  );
+};
+
+// Admin Theme Settings Component
+const AdminThemeSettings = () => {
+  const [settings, setSettings] = useState({
+    availableThemes: ['dark', 'light', 'modern', 'fancy', 'cyber', 'sunset', 'ocean', 'forest', 'minimal'],
+    defaultTheme: 'dark',
+    allowUserThemeChange: true,
+    customPrimaryColor: '#3b82f6',
+    customSecondaryColor: '#8b5cf6',
+    enableCustomColors: false,
+    companyLogo: '',
+    companyName: 'EP Group System',
+    enableAnimations: true,
+    enableGlassEffects: true
+  });
+
+  const updateSettings = async (newSettings) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/settings/theme`, newSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSettings(newSettings);
+      alert('تم تحديث إعدادات الثيمات');
+    } catch (error) {
+      console.error('Error updating theme settings:', error);
+      alert('حدث خطأ في تحديث إعدادات الثيمات');
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات الثيمات والألوان</h3>
+      
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الثيمات المتاحة</h4>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {settings.availableThemes.map((theme) => (
+            <div key={theme} className="p-4 border rounded-lg text-center">
+              <div className={`w-16 h-16 rounded-full mx-auto mb-2 theme-preview theme-${theme}`}></div>
+              <div className="font-bold">{theme}</div>
+              <label className="flex items-center justify-center mt-2">
+                <input
+                  type="radio"
+                  name="defaultTheme"
+                  checked={settings.defaultTheme === theme}
+                  onChange={() => setSettings({...settings, defaultTheme: theme})}
+                  className="mr-2"
+                />
+                افتراضي
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">إعدادات الشركة</h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="font-bold block mb-2">اسم الشركة</label>
+            <input
+              type="text"
+              value={settings.companyName}
+              onChange={(e) => setSettings({...settings, companyName: e.target.value})}
+              className="w-full p-2 border rounded-lg glass-effect"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold block mb-2">شعار الشركة</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => setSettings({...settings, companyLogo: e.target.result});
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full p-2 border rounded-lg glass-effect"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">الألوان المخصصة</h4>
+        <div className="flex items-center justify-between mb-4">
+          <span>تفعيل الألوان المخصصة</span>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={settings.enableCustomColors}
+              onChange={(e) => setSettings({...settings, enableCustomColors: e.target.checked})}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
+        
+        {settings.enableCustomColors && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="font-bold block mb-2">اللون الأساسي</label>
+              <input
+                type="color"
+                value={settings.customPrimaryColor}
+                onChange={(e) => setSettings({...settings, customPrimaryColor: e.target.value})}
+                className="w-full h-12 border rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="font-bold block mb-2">اللون الثانوي</label>
+              <input
+                type="color"
+                value={settings.customSecondaryColor}
+                onChange={(e) => setSettings({...settings, customSecondaryColor: e.target.value})}
+                className="w-full h-12 border rounded-lg"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => updateSettings(settings)}
+        className="w-full btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-lg"
+      >
+        🎨 حفظ إعدادات الثيمات
+      </button>
+    </div>
+  );
+};
+
 export default App;
