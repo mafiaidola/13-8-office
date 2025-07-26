@@ -1659,6 +1659,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [systemSettings, setSystemSettings] = useState(null);
   const { login } = useAuth();
+  const { language, changeLanguage, t, isRTL } = useLanguage();
 
   useEffect(() => {
     fetchSystemSettings();
@@ -1688,8 +1689,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+    <div className={`${isRTL ? 'rtl' : 'ltr'}`} 
+         style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      
+      {/* Language Toggle for Login */}
+      <div className={`login-language-toggle ${isRTL ? 'rtl' : ''}`}>
+        <LanguageToggle position="login" />
+      </div>
+      
       <ThemeToggle />
+      
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="floating">
           <div className="card-modern w-full max-w-md p-8 fade-in-up glass-effect">
@@ -1699,7 +1708,7 @@ const LoginPage = () => {
                 {systemSettings?.logo_image ? (
                   <img 
                     src={systemSettings.logo_image} 
-                    alt="شعار الشركة"
+                    alt={t('logo')}
                     className="w-24 h-24 mx-auto rounded-full object-cover glow-pulse"
                   />
                 ) : (
@@ -1710,44 +1719,55 @@ const LoginPage = () => {
               </div>
               
               {/* Company Name */}
-              <h1 className="text-4xl font-bold text-gradient mb-3">
-                {systemSettings?.company_name || 'نظام إدارة المناديب'}
+              <h1 className={`text-4xl font-bold text-gradient mb-3 system-brand ${isRTL ? 'arabic' : 'english'}`}>
+                {systemSettings?.company_name || t('systemName')}
               </h1>
-              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>منصة إدارة المناديب الطبية المتقدمة</p>
+              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                {t('footerDescription')}
+              </p>
+              <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+                {t('enterCredentials')}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8 form-modern">
               <div>
                 <label>
-                  <span className="text-shadow-glow">🧑‍💼 اسم المستخدم</span>
+                  <span className="text-shadow-glow">
+                    🧑‍💼 {t('username')}
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full focus-visible"
-                  placeholder="أدخل اسم المستخدم"
+                  placeholder={t('username')}
+                  style={{ textAlign: isRTL ? 'right' : 'left' }}
                   required
                 />
               </div>
 
               <div>
                 <label>
-                  <span className="text-shadow-glow">🔒 كلمة المرور</span>
+                  <span className="text-shadow-glow">
+                    🔒 {t('password')}
+                  </span>
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full focus-visible"
-                  placeholder="أدخل كلمة المرور"
+                  placeholder={t('password')}
+                  style={{ textAlign: isRTL ? 'right' : 'left' }}
                   required
                 />
               </div>
 
               {error && (
                 <div className="alert-modern alert-error scale-in">
-                  <span className="ml-2">⚠️</span>
+                  <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>⚠️</span>
                   {error}
                 </div>
               )}
@@ -1760,12 +1780,12 @@ const LoginPage = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-3">
                     <div className="loading-shimmer w-6 h-6 rounded-full"></div>
-                    <span>جاري التحقق...</span>
+                    <span>{t('loginLoading')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <span>🚀</span>
-                    <span>تسجيل الدخول</span>
+                    <span>{t('loginButton')}</span>
                   </div>
                 )}
               </button>
@@ -1775,19 +1795,34 @@ const LoginPage = () => {
               <div className="card-gradient-blue p-6 rounded-2xl text-center">
                 <h3 className="font-bold mb-3 flex items-center justify-center gap-2">
                   <span>💡</span>
-                  <span>بيانات التجربة</span>
+                  <span>
+                    {language === 'ar' ? 'بيانات التجربة' : 'Demo Credentials'}
+                  </span>
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold">أدمن:</span>
+                    <span className="font-bold">
+                      {language === 'ar' ? 'أدمن:' : 'Admin:'}
+                    </span>
                     <span>admin / admin123</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold">مندوب:</span>
-                    <span>أنشئ من لوحة الأدمن</span>
+                    <span className="font-bold">
+                      {language === 'ar' ? 'مندوب:' : 'Sales Rep:'}
+                    </span>
+                    <span>
+                      {language === 'ar' ? 'أنشئ من لوحة الأدمن' : 'Create from Admin Panel'}
+                    </span>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 text-center">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                © {new Date().getFullYear()} {t('systemName')} - {t('footerCopyright')}
+              </p>
             </div>
           </div>
         </div>
