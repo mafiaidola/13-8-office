@@ -1658,8 +1658,22 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [systemSettings, setSystemSettings] = useState(null);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const { login } = useAuth();
   const { language, changeLanguage, t, isRTL } = useLanguage();
+  const { theme, changeTheme } = useTheme();
+
+  const themes = [
+    { id: 'light', name: t('themeLight'), icon: '☀️' },
+    { id: 'dark', name: t('themeDark'), icon: '🌙' },
+    { id: 'minimal', name: t('themeMinimal'), icon: '⚪' },
+    { id: 'modern', name: t('themeModern'), icon: '🔮' },
+    { id: 'fancy', name: t('themeFancy'), icon: '✨' },
+    { id: 'cyber', name: t('themeCyber'), icon: '💚' },
+    { id: 'sunset', name: t('themeSunset'), icon: '🌅' },
+    { id: 'ocean', name: t('themeOcean'), icon: '🌊' },
+    { id: 'forest', name: t('themeForest'), icon: '🌲' }
+  ];
 
   useEffect(() => {
     fetchSystemSettings();
