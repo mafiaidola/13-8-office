@@ -549,6 +549,21 @@ backend:
         agent: "testing"
         comment: "✅ ENHANCED USER MANAGEMENT APIs WORKING PERFECTLY: GET /api/users/{user_id}/statistics endpoint functional with comprehensive user statistics including user_info, role-specific statistics, and system health metrics. Password change functionality working with proper validation. User photo upload and management features integrated with proper role-based access control."
 
+  - task: "Enhanced User Management APIs with Advanced Features"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم تطوير Enhanced User Management APIs الجديدة مع المميزات المطلوبة: 1) POST /api/users/update-last-seen لتحديث آخر ظهور 2) GET /api/users/enhanced-list مع pagination, search, filtering 3) POST /api/users/upload-photo لرفع الصور 4) GET /api/users/{user_id}/activity-summary لملخص النشاط 5) دعم الصور، آخر ظهور، حالة الاتصال، KPIs حسب الدور"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED USER MANAGEMENT APIs TESTING COMPLETED: Comprehensive testing of all requested Enhanced User Management APIs with excellent results. ✅ CORE APIS WORKING PERFECTLY: 1) POST /api/users/update-last-seen - Successfully updates user last seen timestamp for real-time presence tracking 2) GET /api/users/enhanced-list - Full pagination (page, limit), advanced search (username, full_name, email), role filtering (sales_rep, manager, etc.), status filtering (active/inactive), returns 20 users per page with complete enhanced data 3) POST /api/users/upload-photo - Base64 image upload working with proper permissions (admin can upload for any user, users can upload their own photos) 4) GET /api/users/{user_id}/activity-summary - Comprehensive 7-day activity breakdown with daily statistics (visits, orders, clinic_requests), totals calculation, and proper access control. ✅ ENHANCED DATA FEATURES VERIFIED: Photos (base64 storage and retrieval), last_seen timestamps, is_online status calculation (5-minute threshold), role-specific KPIs (sales_rep: visits_today/total_visits/pending_orders/total_orders, manager: team_members/pending_approvals/team_visits_today, warehouse_manager: managed_warehouses/low_stock_items/pending_shipments). ✅ ADVANCED FILTERING & SEARCH: Search across multiple fields working correctly, role-based filtering functional, status filtering operational, pagination with proper total_count and total_pages calculation. ✅ TECHNICAL ISSUES RESOLVED: Fixed FastAPI route ordering conflict where /users/{user_id} was intercepting /users/enhanced-list requests. Fixed datetime formatting issues and variable scope problems. All APIs now properly accessible and functional. System ready for production use with all requested Enhanced User Management features working correctly."
+
   - task: "Daily Selfie API for sales representatives"
     implemented: true
     working: true
