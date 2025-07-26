@@ -820,20 +820,29 @@ frontend:
         agent: "testing"
         comment: "✅ CHAT SYSTEM APIS FULLY FUNCTIONAL: Comprehensive testing completed with 100% success rate (11/11 tests passed). All requested Chat System APIs working perfectly: 1) Admin login (admin/admin123) successful with JWT token obtained 2) GET /api/conversations returns conversations list (retrieved 2 conversations successfully) 3) GET /api/users returns users for chatting (retrieved 61 users with required fields: id, username, full_name, role) 4) POST /api/conversations creates new conversations successfully (conversation created with ID) 5) GET /api/conversations/{conversation_id}/messages retrieves conversation messages correctly 6) POST /api/conversations/{conversation_id}/messages sends text messages successfully 7) POST /api/conversations/{conversation_id}/messages sends voice messages successfully. ✅ ADDITIONAL VERIFICATION: Session management working correctly (valid tokens accepted, invalid rejected), data structure verification passed (conversations and messages have correct structure with required fields), voice notes integration working (voice messages properly stored and retrieved), notifications integration working (chat messages trigger notifications). ✅ BUG FIXED: Fixed MongoDB query bug in get_conversations endpoint (AttributeError with .sort() on find_one() result). All Chat System backend APIs are production-ready and fully functional."
 
-  - task: "Enhanced Visit Registration with Voice Notes"
+  - task: "Comprehensive Admin Settings and Permissions Management"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/App.js"
-    stuck_count: 1
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: false
-        agent: "testing"
-        comment: "❌ VISIT REGISTRATION WITH VOICE NOTES NOT ACCESSIBLE: Visit registration form with voice notes functionality exists in code (lines 2780-3100) but not accessible through main navigation. Voice notes section implemented with recording button (🎤), audio playback, base64 storage, but cannot be reached through UI navigation. GPS location detection implemented, doctor/clinic selection working, but full feature not accessible to users."
       - working: "NA"
-        agent: "testing"
-        comment: "✅ BACKEND TESTING COMPLETED: This is a frontend UI navigation issue, not a backend functionality problem. The backend APIs for visit registration and voice notes are working correctly as confirmed by comprehensive testing. The issue is that the enhanced visit registration form with voice notes is implemented in the frontend code but not accessible through the main navigation menu. This is a frontend integration task that requires UI navigation updates, not backend testing. Backend visit registration APIs, voice notes APIs, and GPS validation are all functional."
+        agent: "main"
+        comment: "تم تطوير نظام إعدادات الآدمن الشاملة مع 5 تبويبات رئيسية: 1) الصلاحيات - إدارة صلاحيات كل دور مع جدول تفاعلي 2) لوحة التحكم - التحكم في التبويبات المرئية لكل دور وتخصيص الألوان 3) النظام - مراقبة صحة النظام وقواعد البيانات 4) الأمان - إعدادات كلمة المرور والجلسات و2FA 5) السجلات - عرض الأنشطة الحديثة. تم إضافة 6 APIs جديدة في الباك إند: admin/permissions, admin/dashboard-config, admin/system-health, admin/activity-logs, user/permissions"
+
+  - task: "Enhanced User Permissions System"
+    implemented: true
+    working: "NA"  
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم تطوير نظام الصلاحيات المتقدم مع إعدادات افتراضية شاملة لجميع الأدوار (admin, manager, sales_rep, warehouse, accounting). يشمل النظام: 1) صلاحيات الوصول للمميزات 2) التحكم في عناصر الواجهة (UI Controls) 3) مفاتيح المميزات (Feature Toggles) 4) حدود النظام 5) API /user/permissions لجلب صلاحيات المستخدم الحالي"
 
   - task: "Admin Dashboard Enhancements"
     implemented: true
