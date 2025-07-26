@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://9ba3212f-10fb-4b52-b158-c269856d0d5c.preview.emergentagent.com/api"
+BASE_URL = "https://a7c3a7ab-bd9d-460b-8626-bf8bd7edb5be.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 class ReviewRequestTester:
