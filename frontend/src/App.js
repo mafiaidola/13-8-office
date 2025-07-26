@@ -6411,10 +6411,16 @@ const EnhancedFooter = () => {
             <h3 className="text-lg font-bold text-gradient">EP Group System</h3>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               {language === 'ar' 
-                ? 'نظام إدارة شامل للمؤسسات والشركات مع أحدث التقنيات'
-                : 'Comprehensive enterprise management system with latest technologies'
+                ? 'نظام إدارة شامل للمؤسسات مع نظام محاسبة متكامل، إدارة المناديب، المخازن، والتقارير المالية'
+                : 'Comprehensive enterprise management system with integrated accounting, sales rep management, warehouses, and financial reporting'
               }
             </p>
+            <div className="flex items-center gap-2">
+              <span className="text-green-400">●</span>
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {language === 'ar' ? 'النظام متاح 24/7' : 'System Available 24/7'}
+              </span>
+            </div>
           </div>
 
           {/* Quick Links */}
