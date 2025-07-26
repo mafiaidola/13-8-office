@@ -6083,6 +6083,23 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId, userName) => {
+    const confirmed = window.confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟ هذا الإجراء لا يمكن التراجع عنه.`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess(`تم حذف المستخدم "${userName}" بنجاح`);
+      fetchUsers(); // Refresh the users list
+    } catch (error) {
+      setError('خطأ في حذف المستخدم');
+    }
+  };
+
   const UserCard = ({ user }) => (
     <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
       <div className="flex items-start gap-4">
