@@ -5425,6 +5425,557 @@ async def get_user_statistics(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Advanced GPS Tracking & Location Analytics System
+# Integrated with visits, route optimization, and geofencing
+
+@api_router.post("/gps/track-location")
+async def track_user_location(
+    location_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Track user's current location with comprehensive data"""
+    try:
+        # Validate location data
+        required_fields = ['latitude', 'longitude', 'timestamp']
+        if not all(field in location_data for field in required_fields):
+            raise HTTPException(status_code=400, detail="Missing required location fields")
+        
+        # Enhanced location entry
+        location_entry = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "user_name": current_user.full_name or current_user.username,
+            "latitude": float(location_data['latitude']),
+            "longitude": float(location_data['longitude']),
+            "accuracy": location_data.get('accuracy', 0),
+            "altitude": location_data.get('altitude'),
+            "speed": location_data.get('speed', 0),
+            "heading": location_data.get('heading'),
+            "timestamp": datetime.utcnow(),
+            "address": location_data.get('address', 'عنوان غير معروف'),
+            "activity_type": location_data.get('activity_type', 'general'),  # visit, travel, break, work
+            "battery_level": location_data.get('battery_level'),
+            "network_type": location_data.get('network_type', 'unknown'),
+            "is_mock_location": location_data.get('is_mock_location', False)
+        }
+        
+        # Calculate distance from last location
+        last_location = await db.location_tracking.find_one(
+            {"user_id": current_user.id},
+            sort=[("timestamp", -1)]
+        )
+        
+        if last_location:
+            # Calculate distance using Haversine formula
+            from math import radians, cos, sin, asin, sqrt
+            
+            lat1, lon1 = radians(last_location['latitude']), radians(last_location['longitude'])
+            lat2, lon2 = radians(location_entry['latitude']), radians(location_entry['longitude'])
+            
+            # Haversine formula
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * asin(sqrt(a))
+            distance_km = 6371 * c  # Earth's radius in kilometers
+            
+            location_entry["distance_from_last"] = round(distance_km, 3)
+            
+            # Calculate time difference
+            time_diff = (location_entry['timestamp'] - last_location['timestamp']).total_seconds() / 60  # minutes
+            location_entry["time_from_last"] = round(time_diff, 2)
+            
+            # Calculate average speed if moving
+            if distance_km > 0.01 and time_diff > 0:  # Minimum 10m movement
+                avg_speed_kmh = (distance_km / time_diff) * 60
+                location_entry["calculated_speed"] = round(avg_speed_kmh, 2)
+        else:
+            location_entry["distance_from_last"] = 0
+            location_entry["time_from_last"] = 0
+            location_entry["calculated_speed"] = 0
+        
+        # Store in database
+        await db.location_tracking.insert_one(location_entry)
+        
+        # Update user's current location
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": {
+                "current_location": {
+                    "latitude": location_entry['latitude'],
+                    "longitude": location_entry['longitude'],
+                    "address": location_entry['address'],
+                    "last_updated": location_entry['timestamp'],
+                    "accuracy": location_entry['accuracy']
+                },
+                "last_seen": datetime.utcnow()
+            }}
+        )
+        
+        # Check geofencing rules
+        geofencing_alerts = await check_geofencing_rules(current_user.id, location_entry)
+        
+        return {
+            "success": True,
+            "location_id": location_entry['id'],
+            "distance_traveled": location_entry.get("distance_from_last", 0),
+            "geofencing_alerts": geofencing_alerts,
+            "timestamp": location_entry['timestamp'].isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def check_geofencing_rules(user_id: str, location_entry: dict):
+    """Check if location violates any geofencing rules"""
+    try:
+        # Get user's assigned geofences
+        geofences = await db.geofences.find({"assigned_users": user_id}).to_list(100)
+        alerts = []
+        
+        for geofence in geofences:
+            # Calculate distance from geofence center
+            from math import radians, cos, sin, asin, sqrt
+            
+            lat1 = radians(geofence['center']['latitude'])
+            lon1 = radians(geofence['center']['longitude'])
+            lat2 = radians(location_entry['latitude'])
+            lon2 = radians(location_entry['longitude'])
+            
+            # Haversine formula
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * asin(sqrt(a))
+            distance_km = 6371 * c
+            distance_m = distance_km * 1000
+            
+            # Check geofence rules
+            if geofence['type'] == 'allowed_area' and distance_m > geofence['radius']:
+                alerts.append({
+                    "type": "exit_allowed_area",
+                    "geofence_name": geofence['name'],
+                    "message": f"خرج من المنطقة المسموحة: {geofence['name']}",
+                    "distance": round(distance_m, 2),
+                    "severity": "high"
+                })
+            elif geofence['type'] == 'restricted_area' and distance_m <= geofence['radius']:
+                alerts.append({
+                    "type": "enter_restricted_area", 
+                    "geofence_name": geofence['name'],
+                    "message": f"دخل منطقة محظورة: {geofence['name']}",
+                    "distance": round(distance_m, 2),
+                    "severity": "critical"
+                })
+        
+        # Store alerts in database if any
+        if alerts:
+            for alert in alerts:
+                await db.geofence_alerts.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "location": {
+                        "latitude": location_entry['latitude'],
+                        "longitude": location_entry['longitude']
+                    },
+                    "alert_type": alert['type'],
+                    "geofence_name": alert['geofence_name'],
+                    "message": alert['message'],
+                    "severity": alert['severity'],
+                    "timestamp": datetime.utcnow(),
+                    "acknowledged": False
+                })
+        
+        return alerts
+        
+    except Exception as e:
+        return []
+
+@api_router.get("/gps/location-history/{user_id}")
+async def get_location_history(
+    user_id: str,
+    hours: int = 24,
+    include_route: bool = True,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive location history with route analysis"""
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Calculate time range
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(hours=hours)
+        
+        # Get location history
+        locations_cursor = db.location_tracking.find({
+            "user_id": user_id,
+            "timestamp": {"$gte": start_time, "$lte": end_time}
+        }).sort("timestamp", 1)
+        
+        locations = await locations_cursor.to_list(length=None)
+        
+        # Get user info
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Calculate route statistics
+        route_stats = {
+            "total_points": len(locations),
+            "total_distance": 0,
+            "total_time": hours,
+            "average_speed": 0,
+            "max_speed": 0,
+            "stops": [],
+            "active_periods": []
+        }
+        
+        if locations:
+            # Calculate total distance and speeds
+            total_distance = sum(loc.get("distance_from_last", 0) for loc in locations[1:])
+            speeds = [loc.get("calculated_speed", 0) for loc in locations if loc.get("calculated_speed")]
+            
+            route_stats.update({
+                "total_distance": round(total_distance, 2),
+                "average_speed": round(sum(speeds) / len(speeds), 2) if speeds else 0,
+                "max_speed": max(speeds) if speeds else 0,
+                "start_time": locations[0]['timestamp'].isoformat(),
+                "end_time": locations[-1]['timestamp'].isoformat()
+            })
+            
+            # Identify stops (locations where user stayed for more than 10 minutes)
+            stops = []
+            current_stop = None
+            
+            for i, location in enumerate(locations):
+                if i == 0:
+                    current_stop = {
+                        "location": {
+                            "latitude": location['latitude'],
+                            "longitude": location['longitude'],
+                            "address": location.get('address', 'Unknown')
+                        },
+                        "start_time": location['timestamp'],
+                        "end_time": location['timestamp']
+                    }
+                    continue
+                
+                distance = location.get("distance_from_last", 0)
+                
+                # If moved less than 100m, consider it same location
+                if distance < 0.1:  # 100 meters
+                    current_stop["end_time"] = location['timestamp']
+                else:
+                    # Check if previous stop was long enough (>10 minutes)
+                    stop_duration = (current_stop["end_time"] - current_stop["start_time"]).total_seconds() / 60
+                    if stop_duration >= 10:
+                        current_stop["duration_minutes"] = round(stop_duration, 1)
+                        stops.append(current_stop)
+                    
+                    # Start new potential stop
+                    current_stop = {
+                        "location": {
+                            "latitude": location['latitude'],
+                            "longitude": location['longitude'], 
+                            "address": location.get('address', 'Unknown')
+                        },
+                        "start_time": location['timestamp'],
+                        "end_time": location['timestamp']
+                    }
+            
+            # Check final stop
+            if current_stop:
+                stop_duration = (current_stop["end_time"] - current_stop["start_time"]).total_seconds() / 60
+                if stop_duration >= 10:
+                    current_stop["duration_minutes"] = round(stop_duration, 1)
+                    stops.append(current_stop)
+            
+            route_stats["stops"] = stops
+        
+        # Get related visits in this time period
+        visits = await db.visits.find({
+            "sales_rep_id": user_id,
+            "created_at": {"$gte": start_time, "$lte": end_time}
+        }, {"_id": 0}).to_list(100)
+        
+        # Format response
+        response = {
+            "user_info": {
+                "id": user["id"],
+                "full_name": user["full_name"],
+                "role": user["role"]
+            },
+            "time_range": {
+                "start": start_time.isoformat(),
+                "end": end_time.isoformat(),
+                "hours": hours
+            },
+            "route_statistics": route_stats,
+            "locations": [
+                {
+                    "id": loc["id"],
+                    "latitude": loc["latitude"],
+                    "longitude": loc["longitude"],
+                    "timestamp": loc["timestamp"].isoformat(),
+                    "accuracy": loc.get("accuracy"),
+                    "speed": loc.get("speed", 0),
+                    "calculated_speed": loc.get("calculated_speed", 0),
+                    "distance_from_last": loc.get("distance_from_last", 0),
+                    "address": loc.get("address", "Unknown"),
+                    "activity_type": loc.get("activity_type", "general")
+                }
+                for loc in locations
+            ] if include_route else [],
+            "related_visits": len(visits),
+            "geofencing_alerts": await db.geofence_alerts.count_documents({
+                "user_id": user_id,
+                "timestamp": {"$gte": start_time, "$lte": end_time}
+            })
+        }
+        
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/gps/team-locations")
+async def get_team_current_locations(
+    include_history_hours: int = 2,
+    current_user: User = Depends(get_current_user)
+):
+    """Get real-time locations of all team members"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Get team members based on user role
+        team_query = {}
+        if current_user.role == "manager":
+            # Manager can see their team
+            team_query = {"managed_by": current_user.id}
+        # Admin can see everyone
+        
+        team_members = await db.users.find({
+            **team_query,
+            "role": "sales_rep",
+            "is_active": True
+        }, {"_id": 0}).to_list(100)
+        
+        team_locations = []
+        
+        for member in team_members:
+            # Get current location
+            current_location = member.get("current_location")
+            
+            if current_location:
+                # Get recent activity (last 2 hours)
+                recent_time = datetime.utcnow() - timedelta(hours=include_history_hours)
+                recent_locations = await db.location_tracking.count_documents({
+                    "user_id": member["id"],
+                    "timestamp": {"$gte": recent_time}
+                })
+                
+                # Get recent visits
+                recent_visits = await db.visits.count_documents({
+                    "sales_rep_id": member["id"],
+                    "created_at": {"$gte": recent_time}
+                })
+                
+                # Calculate time since last update
+                last_updated = current_location.get("last_updated")
+                if isinstance(last_updated, str):
+                    last_updated = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                
+                minutes_ago = (datetime.utcnow() - last_updated.replace(tzinfo=None)).total_seconds() / 60 if last_updated else 999
+                
+                # Determine status
+                status = "online" if minutes_ago < 15 else "offline" if minutes_ago > 60 else "inactive"
+                
+                team_locations.append({
+                    "user_id": member["id"],
+                    "full_name": member["full_name"],
+                    "username": member["username"],
+                    "photo": member.get("photo"),
+                    "current_location": {
+                        "latitude": current_location["latitude"],
+                        "longitude": current_location["longitude"],
+                        "address": current_location.get("address", "Unknown"),
+                        "accuracy": current_location.get("accuracy", 0),
+                        "last_updated": current_location["last_updated"].isoformat() if isinstance(current_location["last_updated"], datetime) else current_location["last_updated"]
+                    },
+                    "status": status,
+                    "minutes_since_update": round(minutes_ago, 1),
+                    "recent_activity": {
+                        "location_points": recent_locations,
+                        "visits_completed": recent_visits
+                    }
+                })
+            else:
+                # No location data
+                team_locations.append({
+                    "user_id": member["id"],
+                    "full_name": member["full_name"], 
+                    "username": member["username"],
+                    "photo": member.get("photo"),
+                    "current_location": None,
+                    "status": "no_data",
+                    "minutes_since_update": 0,
+                    "recent_activity": {
+                        "location_points": 0,
+                        "visits_completed": 0
+                    }
+                })
+        
+        return {
+            "team_size": len(team_locations),
+            "online_members": len([loc for loc in team_locations if loc["status"] == "online"]),
+            "offline_members": len([loc for loc in team_locations if loc["status"] == "offline"]),
+            "no_data_members": len([loc for loc in team_locations if loc["status"] == "no_data"]),
+            "locations": team_locations,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/gps/create-geofence")
+async def create_geofence(
+    geofence_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create geofencing rules for team management"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Validate required fields
+        required_fields = ['name', 'center', 'radius', 'type']
+        if not all(field in geofence_data for field in required_fields):
+            raise HTTPException(status_code=400, detail="Missing required geofence fields")
+        
+        geofence = {
+            "id": str(uuid.uuid4()),
+            "name": geofence_data['name'],
+            "description": geofence_data.get('description', ''),
+            "center": {
+                "latitude": float(geofence_data['center']['latitude']),
+                "longitude": float(geofence_data['center']['longitude'])
+            },
+            "radius": float(geofence_data['radius']),  # meters
+            "type": geofence_data['type'],  # allowed_area, restricted_area, notification_zone
+            "assigned_users": geofence_data.get('assigned_users', []),
+            "active": geofence_data.get('active', True),
+            "notification_settings": {
+                "send_alert": geofence_data.get('send_alert', True),
+                "alert_managers": geofence_data.get('alert_managers', True),
+                "email_notification": geofence_data.get('email_notification', False)
+            },
+            "schedule": geofence_data.get('schedule', {
+                "all_day": True,
+                "start_time": "00:00",
+                "end_time": "23:59",
+                "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            }),
+            "created_by": current_user.id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.geofences.insert_one(geofence)
+        
+        return {
+            "success": True,
+            "geofence_id": geofence['id'],
+            "message": "تم إنشاء المنطقة الجغرافية بنجاح"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/gps/route-optimization")
+async def optimize_routes(
+    user_ids: str = "",  # comma-separated user IDs
+    target_locations: str = "",  # comma-separated lat,lng pairs
+    current_user: User = Depends(get_current_user)
+):
+    """Suggest optimized routes for multiple users and locations"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Parse user IDs
+        user_list = [uid.strip() for uid in user_ids.split(",")] if user_ids else []
+        
+        # Parse target locations
+        target_coords = []
+        if target_locations:
+            coords_pairs = target_locations.split(",")
+            for i in range(0, len(coords_pairs), 2):
+                if i + 1 < len(coords_pairs):
+                    target_coords.append({
+                        "latitude": float(coords_pairs[i]),
+                        "longitude": float(coords_pairs[i + 1])
+                    })
+        
+        route_suggestions = []
+        
+        for user_id in user_list:
+            user = await db.users.find_one({"id": user_id}, {"_id": 0})
+            if not user:
+                continue
+            
+            current_location = user.get("current_location")
+            if not current_location:
+                continue
+            
+            # Calculate distances to all targets
+            distances = []
+            for i, target in enumerate(target_coords):
+                # Simple distance calculation (can be enhanced with actual routing API)
+                from math import radians, cos, sin, asin, sqrt
+                
+                lat1 = radians(current_location['latitude'])
+                lon1 = radians(current_location['longitude'])
+                lat2 = radians(target['latitude'])
+                lon2 = radians(target['longitude'])
+                
+                dlat = lat2 - lat1
+                dlon = lon2 - lon1
+                a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                c = 2 * asin(sqrt(a))
+                distance_km = 6371 * c
+                
+                distances.append({
+                    "target_index": i,
+                    "location": target,
+                    "distance_km": round(distance_km, 2),
+                    "estimated_time_minutes": round(distance_km * 2, 0)  # Rough estimate: 30 km/h average
+                })
+            
+            # Sort by distance (simple nearest-neighbor approach)
+            distances.sort(key=lambda x: x['distance_km'])
+            
+            route_suggestions.append({
+                "user_id": user_id,
+                "user_name": user["full_name"],
+                "current_location": current_location,
+                "optimized_route": distances,
+                "total_distance": sum(d['distance_km'] for d in distances),
+                "estimated_total_time": sum(d['estimated_time_minutes'] for d in distances)
+            })
+        
+        return {
+            "route_suggestions": route_suggestions,
+            "optimization_method": "nearest_neighbor",
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.patch("/users/{user_id}/password")
 async def change_user_password(
     user_id: str,
