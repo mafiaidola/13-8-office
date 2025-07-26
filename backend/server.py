@@ -5589,6 +5589,543 @@ async def create_daily_plan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Advanced Analytics & Performance Dashboard APIs
+@api_router.get("/analytics/performance-dashboard")
+async def get_performance_dashboard(
+    time_range: str = "week",  # today, week, month, quarter, year
+    user_filter: str = None,   # filter by specific user role
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive performance dashboard with advanced analytics"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Calculate date ranges
+        now = datetime.utcnow()
+        if time_range == "today":
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = start_date + timedelta(days=1)
+            comparison_start = start_date - timedelta(days=1)
+        elif time_range == "week":
+            start_date = now - timedelta(days=now.weekday())
+            start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = start_date + timedelta(days=7)
+            comparison_start = start_date - timedelta(days=7)
+        elif time_range == "month":
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            if start_date.month == 12:
+                end_date = start_date.replace(year=start_date.year + 1, month=1)
+            else:
+                end_date = start_date.replace(month=start_date.month + 1)
+            if start_date.month == 1:
+                comparison_start = start_date.replace(year=start_date.year - 1, month=12)
+            else:
+                comparison_start = start_date.replace(month=start_date.month - 1)
+        elif time_range == "quarter":
+            quarter = (now.month - 1) // 3 + 1
+            start_date = datetime(now.year, (quarter - 1) * 3 + 1, 1)
+            end_date = start_date + timedelta(days=90)  # Approximate quarter
+            comparison_start = start_date - timedelta(days=90)
+        else:  # year
+            start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = start_date.replace(year=start_date.year + 1)
+            comparison_start = start_date.replace(year=start_date.year - 1)
+        
+        comparison_end = start_date
+        
+        # Build user filter query
+        user_query = {}
+        if user_filter:
+            user_query["role"] = user_filter
+        
+        # Get all users matching filter
+        filtered_users = await db.users.find(user_query, {"id": 1}).to_list(1000)
+        filtered_user_ids = [user["id"] for user in filtered_users]
+        
+        # Core Performance Metrics
+        current_visits = await db.visits.count_documents({
+            "created_at": {"$gte": start_date, "$lt": end_date},
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        previous_visits = await db.visits.count_documents({
+            "created_at": {"$gte": comparison_start, "$lt": comparison_end},
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        current_effective_visits = await db.visits.count_documents({
+            "created_at": {"$gte": start_date, "$lt": end_date},
+            "is_effective": True,
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        previous_effective_visits = await db.visits.count_documents({
+            "created_at": {"$gte": comparison_start, "$lt": comparison_end},
+            "is_effective": True,
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        current_orders = await db.orders.count_documents({
+            "created_at": {"$gte": start_date, "$lt": end_date},
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        previous_orders = await db.orders.count_documents({
+            "created_at": {"$gte": comparison_start, "$lt": comparison_end},
+            **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+        })
+        
+        # Advanced Metrics
+        conversion_rate = (current_effective_visits / current_visits * 100) if current_visits > 0 else 0
+        previous_conversion_rate = (previous_effective_visits / previous_visits * 100) if previous_visits > 0 else 0
+        
+        # Top Performers Analysis
+        top_performers_pipeline = [
+            {
+                "$match": {
+                    "created_at": {"$gte": start_date, "$lt": end_date},
+                    **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$sales_rep_id",
+                    "total_visits": {"$sum": 1},
+                    "effective_visits": {
+                        "$sum": {"$cond": [{"$eq": ["$is_effective", True]}, 1, 0]}
+                    }
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "users",
+                    "let": {"user_id": "$_id"},
+                    "pipeline": [
+                        {"$match": {"$expr": {"$eq": ["$id", "$$user_id"]}}},
+                        {"$project": {"full_name": 1, "username": 1}}
+                    ],
+                    "as": "user_info"
+                }
+            },
+            {
+                "$unwind": "$user_info"
+            },
+            {
+                "$addFields": {
+                    "effectiveness_rate": {
+                        "$multiply": [
+                            {"$divide": ["$effective_visits", "$total_visits"]},
+                            100
+                        ]
+                    }
+                }
+            },
+            {
+                "$sort": {"effectiveness_rate": -1, "total_visits": -1}
+            },
+            {
+                "$limit": 10
+            }
+        ]
+        
+        top_performers_cursor = db.visits.aggregate(top_performers_pipeline)
+        top_performers = await top_performers_cursor.to_list(length=None)
+        
+        # Geographic Performance (if GPS data available)
+        geographic_performance = []
+        try:
+            geo_pipeline = [
+                {
+                    "$match": {
+                        "created_at": {"$gte": start_date, "$lt": end_date},
+                        "location": {"$exists": True, "$ne": None}
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "lat_rounded": {"$round": [{"$arrayElemAt": ["$location.coordinates", 1]}, 2]},
+                            "lng_rounded": {"$round": [{"$arrayElemAt": ["$location.coordinates", 0]}, 2]}
+                        },
+                        "visit_count": {"$sum": 1},
+                        "effective_count": {
+                            "$sum": {"$cond": [{"$eq": ["$is_effective", True]}, 1, 0]}
+                        }
+                    }
+                },
+                {
+                    "$addFields": {
+                        "effectiveness_rate": {
+                            "$multiply": [
+                                {"$divide": ["$effective_count", "$visit_count"]},
+                                100
+                            ]
+                        }
+                    }
+                },
+                {
+                    "$sort": {"visit_count": -1}
+                },
+                {
+                    "$limit": 20
+                }
+            ]
+            
+            geo_cursor = db.visits.aggregate(geo_pipeline)
+            geographic_performance = await geo_cursor.to_list(length=None)
+        except Exception as geo_error:
+            print(f"Geographic analysis error: {geo_error}")
+        
+        # Time-based Performance Trends
+        daily_performance = []
+        current_day = start_date
+        while current_day < end_date:
+            next_day = current_day + timedelta(days=1)
+            
+            day_visits = await db.visits.count_documents({
+                "created_at": {"$gte": current_day, "$lt": next_day},
+                **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+            })
+            
+            day_effective = await db.visits.count_documents({
+                "created_at": {"$gte": current_day, "$lt": next_day},
+                "is_effective": True,
+                **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+            })
+            
+            day_orders = await db.orders.count_documents({
+                "created_at": {"$gte": current_day, "$lt": next_day},
+                **({"sales_rep_id": {"$in": filtered_user_ids}} if user_filter else {})
+            })
+            
+            daily_performance.append({
+                "date": current_day.strftime("%Y-%m-%d"),
+                "visits": day_visits,
+                "effective_visits": day_effective,
+                "orders": day_orders,
+                "effectiveness_rate": (day_effective / day_visits * 100) if day_visits > 0 else 0
+            })
+            
+            current_day = next_day
+            if len(daily_performance) >= 31:  # Limit to 31 days max
+                break
+        
+        # Calculate growth percentages
+        def calculate_growth(current, previous):
+            if previous == 0:
+                return 100.0 if current > 0 else 0.0
+            return ((current - previous) / previous) * 100
+        
+        # Team Performance Summary
+        team_summary = []
+        if current_user.role == "admin":
+            managers = await db.users.find({"role": "manager"}).to_list(100)
+            for manager in managers:
+                team_members = await db.users.find({"managed_by": manager["id"]}).to_list(100)
+                team_ids = [member["id"] for member in team_members]
+                
+                team_visits = await db.visits.count_documents({
+                    "sales_rep_id": {"$in": team_ids},
+                    "created_at": {"$gte": start_date, "$lt": end_date}
+                })
+                
+                team_effective = await db.visits.count_documents({
+                    "sales_rep_id": {"$in": team_ids},
+                    "is_effective": True,
+                    "created_at": {"$gte": start_date, "$lt": end_date}
+                })
+                
+                team_summary.append({
+                    "manager_name": manager["full_name"],
+                    "manager_id": manager["id"],
+                    "team_size": len(team_members),
+                    "total_visits": team_visits,
+                    "effective_visits": team_effective,
+                    "effectiveness_rate": (team_effective / team_visits * 100) if team_visits > 0 else 0
+                })
+        
+        return {
+            "period": {
+                "range": time_range,
+                "start_date": start_date.strftime("%Y-%m-%d"),
+                "end_date": end_date.strftime("%Y-%m-%d"),
+                "comparison_period": f"{comparison_start.strftime('%Y-%m-%d')} to {comparison_end.strftime('%Y-%m-%d')}"
+            },
+            "core_metrics": {
+                "visits": {
+                    "current": current_visits,
+                    "previous": previous_visits,
+                    "growth": calculate_growth(current_visits, previous_visits)
+                },
+                "effective_visits": {
+                    "current": current_effective_visits,
+                    "previous": previous_effective_visits,
+                    "growth": calculate_growth(current_effective_visits, previous_effective_visits)
+                },
+                "orders": {
+                    "current": current_orders,
+                    "previous": previous_orders,
+                    "growth": calculate_growth(current_orders, previous_orders)
+                },
+                "conversion_rate": {
+                    "current": round(conversion_rate, 2),
+                    "previous": round(previous_conversion_rate, 2),
+                    "growth": calculate_growth(conversion_rate, previous_conversion_rate)
+                }
+            },
+            "top_performers": top_performers,
+            "geographic_performance": geographic_performance,
+            "daily_trends": daily_performance,
+            "team_summary": team_summary,
+            "insights": {
+                "best_performing_day": max(daily_performance, key=lambda x: x["effectiveness_rate"])["date"] if daily_performance else None,
+                "total_unique_performers": len(top_performers),
+                "average_effectiveness": round(sum([p["effectiveness_rate"] for p in daily_performance]) / len(daily_performance), 2) if daily_performance else 0
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/analytics/kpi-metrics")
+async def get_kpi_metrics(
+    kpi_type: str = "sales_performance",  # sales_performance, team_efficiency, customer_satisfaction
+    period: str = "month",
+    target_values: dict = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get advanced KPI metrics with targets and benchmarks"""
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Date calculation
+        now = datetime.utcnow()
+        if period == "week":
+            start_date = now - timedelta(days=7)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        elif period == "quarter":
+            start_date = now - timedelta(days=90)
+        else:  # year
+            start_date = now - timedelta(days=365)
+        
+        kpi_data = {}
+        
+        if kpi_type == "sales_performance":
+            # Sales Performance KPIs
+            total_visits = await db.visits.count_documents({
+                "created_at": {"$gte": start_date}
+            })
+            
+            effective_visits = await db.visits.count_documents({
+                "created_at": {"$gte": start_date},
+                "is_effective": True
+            })
+            
+            total_orders = await db.orders.count_documents({
+                "created_at": {"$gte": start_date}
+            })
+            
+            approved_orders = await db.orders.count_documents({
+                "created_at": {"$gte": start_date},
+                "status": {"$in": ["APPROVED", "MANAGER_APPROVED", "ACCOUNTING_APPROVED"]}
+            })
+            
+            # Calculate revenue (mock calculation - would need actual order values)
+            revenue_pipeline = [
+                {"$match": {"created_at": {"$gte": start_date}, "status": {"$in": ["APPROVED", "MANAGER_APPROVED"]}}},
+                {"$unwind": "$items"},
+                {"$group": {"_id": None, "total": {"$sum": {"$multiply": ["$items.quantity", "$items.unit_price"]}}}}
+            ]
+            
+            revenue_result = await db.orders.aggregate(revenue_pipeline).to_list(1)
+            total_revenue = revenue_result[0]["total"] if revenue_result else 0
+            
+            kpi_data = {
+                "visit_efficiency": {
+                    "value": round((effective_visits / total_visits * 100), 2) if total_visits > 0 else 0,
+                    "target": 75,  # 75% effectiveness target
+                    "unit": "%",
+                    "trend": "up",
+                    "description": "نسبة الزيارات الفعالة"
+                },
+                "order_conversion": {
+                    "value": round((total_orders / total_visits * 100), 2) if total_visits > 0 else 0,
+                    "target": 25,  # 25% visit to order conversion
+                    "unit": "%", 
+                    "trend": "up",
+                    "description": "معدل تحويل الزيارات إلى طلبات"
+                },
+                "order_approval_rate": {
+                    "value": round((approved_orders / total_orders * 100), 2) if total_orders > 0 else 0,
+                    "target": 80,  # 80% approval rate
+                    "unit": "%",
+                    "trend": "stable",
+                    "description": "معدل الموافقة على الطلبات"
+                },
+                "revenue_per_visit": {
+                    "value": round(total_revenue / total_visits, 2) if total_visits > 0 else 0,
+                    "target": 500,  # 500 EGP per visit target
+                    "unit": "EGP",
+                    "trend": "up",
+                    "description": "متوسط الإيراد لكل زيارة"
+                },
+                "total_revenue": {
+                    "value": total_revenue,
+                    "target": 100000,  # 100k EGP monthly target
+                    "unit": "EGP",
+                    "trend": "up",
+                    "description": "إجمالي الإيرادات"
+                }
+            }
+            
+        elif kpi_type == "team_efficiency":
+            # Team Efficiency KPIs
+            active_sales_reps = await db.users.count_documents({
+                "role": "sales_rep",
+                "is_active": True
+            })
+            
+            total_visits = await db.visits.count_documents({
+                "created_at": {"$gte": start_date}
+            })
+            
+            # Average visits per rep
+            avg_visits_per_rep = total_visits / active_sales_reps if active_sales_reps > 0 else 0
+            
+            # Response time for approvals (mock calculation)
+            pending_approvals = await db.orders.count_documents({
+                "status": "PENDING"
+            })
+            
+            # Manager response efficiency
+            total_orders = await db.orders.count_documents({
+                "created_at": {"$gte": start_date}
+            })
+            
+            kpi_data = {
+                "visits_per_rep": {
+                    "value": round(avg_visits_per_rep, 1),
+                    "target": 50,  # 50 visits per rep per period
+                    "unit": "visits",
+                    "trend": "stable",
+                    "description": "متوسط الزيارات لكل مندوب"
+                },
+                "approval_backlog": {
+                    "value": pending_approvals,
+                    "target": 10,  # Max 10 pending approvals
+                    "unit": "orders",
+                    "trend": "down" if pending_approvals <= 10 else "up",
+                    "description": "الطلبات المعلقة للموافقة"
+                },
+                "team_productivity": {
+                    "value": round((total_visits / active_sales_reps) if active_sales_reps > 0 else 0, 1),
+                    "target": 40,
+                    "unit": "visits/person",
+                    "trend": "up",
+                    "description": "إنتاجية الفريق"
+                }
+            }
+        
+        elif kpi_type == "customer_satisfaction":
+            # Customer Satisfaction KPIs (using doctor ratings as proxy)
+            total_ratings = await db.doctor_ratings.count_documents({
+                "created_at": {"$gte": start_date}
+            })
+            
+            if total_ratings > 0:
+                # Calculate average ratings
+                rating_pipeline = [
+                    {"$match": {"created_at": {"$gte": start_date}}},
+                    {"$group": {
+                        "_id": None,
+                        "avg_cooperation": {"$avg": "$cooperation"},
+                        "avg_interest": {"$avg": "$interest"},
+                        "avg_professionalism": {"$avg": "$professionalism"}
+                    }}
+                ]
+                
+                rating_result = await db.doctor_ratings.aggregate(rating_pipeline).to_list(1)
+                ratings = rating_result[0] if rating_result else {}
+                
+                overall_satisfaction = (
+                    ratings.get("avg_cooperation", 0) + 
+                    ratings.get("avg_interest", 0) + 
+                    ratings.get("avg_professionalism", 0)
+                ) / 3
+                
+                kpi_data = {
+                    "overall_satisfaction": {
+                        "value": round(overall_satisfaction, 2),
+                        "target": 4.0,  # 4.0/5.0 satisfaction target
+                        "unit": "/5.0",
+                        "trend": "stable",
+                        "description": "متوسط رضا العملاء العام"
+                    },
+                    "cooperation_rating": {
+                        "value": round(ratings.get("avg_cooperation", 0), 2),
+                        "target": 4.0,
+                        "unit": "/5.0",
+                        "trend": "up",
+                        "description": "تقييم التعاون"
+                    },
+                    "professionalism_rating": {
+                        "value": round(ratings.get("avg_professionalism", 0), 2),
+                        "target": 4.2,
+                        "unit": "/5.0", 
+                        "trend": "stable",
+                        "description": "تقييم المهنية"
+                    },
+                    "response_coverage": {
+                        "value": round((total_ratings / total_visits * 100), 2) if total_visits > 0 else 0,
+                        "target": 60,  # 60% response rate
+                        "unit": "%",
+                        "trend": "up",
+                        "description": "نسبة الاستجابة للتقييم"
+                    }
+                }
+            else:
+                kpi_data = {
+                    "overall_satisfaction": {"value": 0, "target": 4.0, "unit": "/5.0", "trend": "neutral", "description": "لا توجد بيانات تقييم"},
+                    "response_coverage": {"value": 0, "target": 60, "unit": "%", "trend": "neutral", "description": "لا توجد بيانات تقييم"}
+                }
+        
+        # Calculate achievement percentages and status
+        for kpi_key, kpi_data_item in kpi_data.items():
+            if "target" in kpi_data_item and kpi_data_item["target"] > 0:
+                achievement = (kpi_data_item["value"] / kpi_data_item["target"]) * 100
+                kpi_data_item["achievement"] = round(achievement, 1)
+                
+                if achievement >= 100:
+                    kpi_data_item["status"] = "excellent"
+                elif achievement >= 80:
+                    kpi_data_item["status"] = "good"
+                elif achievement >= 60:
+                    kpi_data_item["status"] = "average"
+                else:
+                    kpi_data_item["status"] = "needs_improvement"
+            else:
+                kpi_data_item["achievement"] = 0
+                kpi_data_item["status"] = "no_data"
+        
+        return {
+            "kpi_type": kpi_type,
+            "period": period,
+            "generated_at": now.isoformat(),
+            "metrics": kpi_data,
+            "summary": {
+                "total_kpis": len(kpi_data),
+                "excellent_kpis": len([k for k in kpi_data.values() if k.get("status") == "excellent"]),
+                "needs_improvement": len([k for k in kpi_data.values() if k.get("status") == "needs_improvement"]),
+                "overall_performance": "excellent" if len([k for k in kpi_data.values() if k.get("status") == "excellent"]) >= len(kpi_data) * 0.6 else "good"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Helper functions
 async def get_managed_users(manager_id: str):
     """Get list of user IDs managed by a manager"""
