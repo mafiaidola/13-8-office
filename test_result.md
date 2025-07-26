@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "نظام إدارة زيارات المناديب للعيادات الطبية مع GPS geofencing ونظام أدوار متعدد (أدمن، مدير، مندوب، مخزن، حسابات) مع تسجيل الزيارات والموافقات"
+user_problem_statement: "تبديل اللغة لا يعمل بشكل صحيح اريد العربي كل جزء فى الصفحه عربي ما عدى اسماء الاطباء او المخازن او المديرين او الاسماء عموما وكذالك الانجليزي. الاعدادات غير شامله اريد اتحكم فى الاعدادات من الادمن بطريقة شمولية اكثر. تقسم النظام لجزئين حيث انه يوجد عدد 2 لاين وكل لاين ليه المديرين ومدير لاين وErea manager ويوجد district manager ويوجد Key account. افصل بين منتجات لاين 1 ومنتجات لاين 2. فى اعدادات المدير ضيف Erea management لتحديد الاماكن والاينات والتيم الموجود بأى منطقه. تضيف المناطق فى الاعدادات .. يعني كل منطقه وليها مدير. واعد هيكلة الRoles لتكون على النحو التالى GM Line manager Erea manager District manager Key account Medical Rep"
 
 backend:
   - task: "Multi-role authentication system with JWT"
