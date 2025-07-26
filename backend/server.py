@@ -70,11 +70,46 @@ class User(BaseModel):
     role: str
     full_name: str
     phone: Optional[str] = None
+    photo: Optional[str] = None  # Base64 encoded image
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[str] = None  # who created this user
     managed_by: Optional[str] = None  # direct manager
     permissions: List[str] = []
+    region: Optional[str] = None  # User's assigned region
+    target_amount: Optional[float] = None  # Monthly target for sales reps
+    last_login: Optional[datetime] = None
+    login_count: int = 0
+
+class DailySelfie(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    user_name: str
+    selfie: str  # Base64 encoded image
+    date: datetime
+    location: Optional[Dict[str, Any]] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DailyPlan(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    date: datetime
+    visits: List[Dict[str, Any]] = []
+    orders: List[Dict[str, Any]] = []
+    targets: Dict[str, Any] = {}
+    notes: str = ""
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    status: str = "PENDING"  # PENDING, IN_PROGRESS, COMPLETED
+
+class SystemLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    action: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
 
 class Product(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
