@@ -3093,7 +3093,9 @@ const EnhancedRecentActivity = ({ language }) => {
       const response = await axios.get(`${API}/activities/recent`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setActivities(response.data);
+      // Ensure response.data is an array
+      const activitiesData = Array.isArray(response.data) ? response.data : [];
+      setActivities(activitiesData);
     } catch (error) {
       // Fallback to mock data if API not available
       setActivities([
