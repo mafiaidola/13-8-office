@@ -262,12 +262,35 @@ const translations = {
     save: 'Save',
     cancel: 'Cancel',
     
-    // Roles
+    // Roles - Enhanced with new hierarchy
+    gm: 'General Manager',
     admin: 'Admin',
-    manager: 'Manager',
-    salesRep: 'Sales Rep',
+    lineManager: 'Line Manager',
+    areaManager: 'Area Manager',
+    districtManager: 'District Manager',
+    keyAccount: 'Key Account',
+    medicalRep: 'Medical Rep',
+    manager: 'Manager', // Legacy
+    salesRep: 'Sales Rep', // Legacy
     warehouse: 'Warehouse',
     accounting: 'Accounting',
+    
+    // Lines and Regions
+    line1: 'Line 1',
+    line2: 'Line 2',
+    regions: 'Regions',
+    districts: 'Districts',
+    regionManagement: 'Region Management',
+    districtManagement: 'District Management',
+    lineManagement: 'Line Management',
+    areaManagement: 'Area Management',
+    
+    // Enhanced Admin Settings
+    comprehensiveSettings: 'Comprehensive Settings',
+    roleHierarchy: 'Role Hierarchy',
+    systemHealth: 'System Health',
+    lineStatistics: 'Line Statistics',
+    initializeSystem: 'Initialize System',
     
     // Warehouse
     warehouseName: 'Warehouse Name',
