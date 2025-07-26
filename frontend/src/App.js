@@ -10248,7 +10248,7 @@ const Dashboard = () => {
         )}
         
         {activeTab === 'accounting' && canAccessTab('accounting') && (
-          <AccountingDashboard />
+          <AccountingPage />
         )}
         
         {activeTab === 'chat' && (
