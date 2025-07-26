@@ -1720,7 +1720,7 @@ const LoginPage = () => {
               
               {/* Company Name */}
               <h1 className={`text-4xl font-bold text-gradient mb-3 system-brand ${isRTL ? 'arabic' : 'english'}`}>
-                {systemSettings?.company_name || t('systemName')}
+                {t('systemName')}
               </h1>
               <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
                 {t('footerDescription')}
