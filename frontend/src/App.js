@@ -8171,49 +8171,26 @@ const Dashboard = () => {
     return permissions[tabName]?.includes(user.role) || false;
   };
 
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  
   return (
     <>
       <ThemeToggle />
-      <div className="min-h-screen page-transition">
-        {/* Header */}
-        <header className="header-modern">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center">
-                <div className="w-16 h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
-                  <span className="text-3xl">🏥</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gradient">نظام إدارة المناديب</h1>
-                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    <div className="flex items-center gap-2">
-                      <span>👤</span>
-                      <span>مرحباً، {user.full_name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>🎭</span>
-                      <span className="badge-modern badge-info">{getRoleText(user.role)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <GlobalSearchButton />
-                <LanguageSelector />
-                <NotificationsCenter />
-                <button
-                  onClick={logout}
-                  className="btn-warning flex items-center gap-2"
-                >
-                  <span>🚪</span>
-                  <span>تسجيل الخروج</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+      <div className="min-h-screen page-transition flex flex-col">
+        {/* Enhanced Header */}
+        <EnhancedHeader 
+          user={user}
+          onLogout={logout}
+          onSearchOpen={() => setShowGlobalSearch(true)}
+        />
+        
+        {/* Global Search Modal */}
+        <GlobalSearch 
+          isOpen={showGlobalSearch}
+          onClose={() => setShowGlobalSearch(false)}
+        />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         {/* Navigation Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-4 overflow-x-auto bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-lg" aria-label="Tabs">
