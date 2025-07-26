@@ -2018,6 +2018,72 @@ async def get_user_permissions(current_user: User = Depends(get_current_user)):
     # Get permissions for user's role
     role_permissions = permissions_config["roles_config"].get(current_user.role.lower(), {})
     
+    # If role not found in config, use defaults
+    if not role_permissions:
+        default_permissions = {
+            "admin": {
+                "dashboard_access": True,
+                "user_management": True,
+                "warehouse_management": True,
+                "visits_management": True,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": True,
+                "secret_reports": True,
+                "financial_reports": True,
+                "system_logs": True
+            },
+            "manager": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": True,
+                "visits_management": True,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "financial_reports": True,
+                "system_logs": False
+            },
+            "sales_rep": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": False,
+                "visits_management": True,
+                "reports_access": False,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "financial_reports": False,
+                "system_logs": False
+            },
+            "warehouse": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": True,
+                "visits_management": False,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "financial_reports": False,
+                "system_logs": False
+            },
+            "accounting": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": False,
+                "visits_management": False,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "financial_reports": True,
+                "system_logs": False
+            }
+        }
+        role_permissions = default_permissions.get(current_user.role.lower(), default_permissions["sales_rep"])
+    
     # Get visible navigation tabs based on dashboard config
     visible_tabs = []
     nav_config = dashboard_config["dashboard_sections"]["navigation_tabs"]
