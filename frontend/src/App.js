@@ -14,7 +14,421 @@ const debounce = (func, delay) => {
   };
 };
 
-// Theme Context with Language Support
+// Enhanced Language Context and Translations System
+const LanguageContext = createContext();
+
+const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
+// Comprehensive Translation Object
+const translations = {
+  ar: {
+    // System Name
+    systemName: 'EP Group System',
+    
+    // Login Page
+    login: 'تسجيل الدخول',
+    username: 'اسم المستخدم',
+    password: 'كلمة المرور',
+    rememberMe: 'تذكرني',
+    forgotPassword: 'نسيت كلمة المرور؟',
+    loginButton: 'دخول',
+    loginLoading: 'جاري تسجيل الدخول...',
+    welcome: 'مرحباً بك في',
+    enterCredentials: 'أدخل بياناتك لتسجيل الدخول',
+    
+    // Navigation
+    dashboard: 'لوحة التحكم',
+    statistics: 'الإحصائيات',
+    users: 'المستخدمين',
+    userManagement: 'إدارة المستخدمين',
+    warehouse: 'المخازن',
+    warehouseManagement: 'إدارة المخازن',
+    visits: 'الزيارات',
+    visitsLog: 'سجل الزيارات',
+    reports: 'التقارير',
+    chat: 'المحادثات',
+    settings: 'الإعدادات',
+    secretReports: 'التقارير السرية',
+    logout: 'تسجيل الخروج',
+    
+    // Dashboard
+    totalUsers: 'إجمالي المستخدمين',
+    totalClinics: 'إجمالي العيادات',
+    totalDoctors: 'إجمالي الأطباء',
+    totalVisits: 'إجمالي الزيارات',
+    totalWarehouses: 'إجمالي المخازن',
+    totalProducts: 'إجمالي المنتجات',
+    totalOrders: 'إجمالي الطلبات',
+    recentActivity: 'النشاط الأخير',
+    viewAll: 'عرض الكل',
+    
+    // Users Page
+    addUser: 'إضافة مستخدم',
+    fullName: 'الاسم الكامل',
+    email: 'البريد الإلكتروني',
+    phone: 'رقم الهاتف',
+    role: 'الدور',
+    status: 'الحالة',
+    active: 'نشط',
+    inactive: 'غير نشط',
+    actions: 'الإجراءات',
+    edit: 'تعديل',
+    delete: 'حذف',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    
+    // Roles
+    admin: 'مدير',
+    manager: 'مدير فرع',
+    salesRep: 'مندوب مبيعات',
+    warehouse: 'مخزن',
+    accounting: 'محاسب',
+    
+    // Warehouse
+    warehouseName: 'اسم المخزن',
+    location: 'الموقع',
+    capacity: 'السعة',
+    currentStock: 'المخزون الحالي',
+    products: 'المنتجات',
+    orders: 'الطلبات',
+    movement: 'الحركة',
+    inventory: 'الجرد',
+    
+    // Orders
+    orderNumber: 'رقم الطلب',
+    orderDate: 'تاريخ الطلب',
+    orderType: 'نوع الطلب',
+    quantity: 'الكمية',
+    unitPrice: 'سعر الوحدة',
+    totalPrice: 'السعر الإجمالي',
+    approved: 'معتمد',
+    pending: 'في الانتظار',
+    rejected: 'مرفوض',
+    
+    // Visits
+    visitDate: 'تاريخ الزيارة',
+    doctor: 'الطبيب',
+    clinic: 'العيادة',
+    salesRep: 'المندوب',
+    notes: 'ملاحظات',
+    gpsLocation: 'موقع GPS',
+    visitType: 'نوع الزيارة',
+    
+    // Search
+    search: 'بحث',
+    searchPlaceholder: 'ابحث عن المستخدمين، الأطباء، العيادات، الفواتير...',
+    searchResults: 'نتائج البحث',
+    noResults: 'لا توجد نتائج',
+    
+    // Settings
+    systemSettings: 'إعدادات النظام',
+    companyInfo: 'معلومات الشركة',
+    companyName: 'اسم الشركة',
+    logo: 'الشعار',
+    primaryColor: 'اللون الأساسي',
+    secondaryColor: 'اللون الثانوي',
+    
+    // Admin Settings
+    adminSettings: 'إعدادات الإدارة',
+    permissions: 'الصلاحيات',
+    dashboardConfig: 'إعدادات لوحة التحكم',
+    systemHealth: 'صحة النظام',
+    security: 'الأمان',
+    activityLogs: 'سجلات الأنشطة',
+    
+    // Common
+    loading: 'جاري التحميل...',
+    error: 'خطأ',
+    success: 'نجح',
+    warning: 'تحذير',
+    info: 'معلومات',
+    confirm: 'تأكيد',
+    yes: 'نعم',
+    no: 'لا',
+    close: 'إغلاق',
+    back: 'رجوع',
+    next: 'التالي',
+    previous: 'السابق',
+    submit: 'إرسال',
+    
+    // Footer
+    footerAbout: 'عن الشركة',
+    footerServices: 'خدماتنا',
+    footerContact: 'اتصل بنا',
+    footerPrivacy: 'سياسة الخصوصية',
+    footerTerms: 'الشروط والأحكام',
+    footerSupport: 'الدعم الفني',
+    footerQuickLinks: 'روابط سريعة',
+    footerLegal: 'قانوني',
+    footerContactUs: 'تواصل معنا',
+    footerCopyright: 'جميع الحقوق محفوظة',
+    footerDescription: 'نظام إدارة شامل للمؤسسات والشركات مع أحدث التقنيات',
+    footerLocation: 'القاهرة، مصر',
+    
+    // Themes
+    themeLight: 'فاتح',
+    themeDark: 'غامق',
+    themeMinimal: 'بسيط',
+    themeModern: 'حديث',
+    themeFancy: 'فاخر',
+    themeCyber: 'سايبر',
+    themeSunset: 'غروب',
+    themeOcean: 'محيط',
+    themeForest: 'غابة'
+  },
+  
+  en: {
+    // System Name
+    systemName: 'EP Group System',
+    
+    // Login Page
+    login: 'Login',
+    username: 'Username',
+    password: 'Password',
+    rememberMe: 'Remember Me',
+    forgotPassword: 'Forgot Password?',
+    loginButton: 'Login',
+    loginLoading: 'Logging in...',
+    welcome: 'Welcome to',
+    enterCredentials: 'Enter your credentials to login',
+    
+    // Navigation
+    dashboard: 'Dashboard',
+    statistics: 'Statistics',
+    users: 'Users',
+    userManagement: 'User Management',
+    warehouse: 'Warehouse',
+    warehouseManagement: 'Warehouse Management',
+    visits: 'Visits',
+    visitsLog: 'Visits Log',
+    reports: 'Reports',
+    chat: 'Chat',
+    settings: 'Settings',
+    secretReports: 'Secret Reports',
+    logout: 'Logout',
+    
+    // Dashboard
+    totalUsers: 'Total Users',
+    totalClinics: 'Total Clinics',
+    totalDoctors: 'Total Doctors',
+    totalVisits: 'Total Visits',
+    totalWarehouses: 'Total Warehouses',
+    totalProducts: 'Total Products',
+    totalOrders: 'Total Orders',
+    recentActivity: 'Recent Activity',
+    viewAll: 'View All',
+    
+    // Users Page
+    addUser: 'Add User',
+    fullName: 'Full Name',
+    email: 'Email',
+    phone: 'Phone',
+    role: 'Role',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    actions: 'Actions',
+    edit: 'Edit',
+    delete: 'Delete',
+    save: 'Save',
+    cancel: 'Cancel',
+    
+    // Roles
+    admin: 'Admin',
+    manager: 'Manager',
+    salesRep: 'Sales Rep',
+    warehouse: 'Warehouse',
+    accounting: 'Accounting',
+    
+    // Warehouse
+    warehouseName: 'Warehouse Name',
+    location: 'Location',
+    capacity: 'Capacity',
+    currentStock: 'Current Stock',
+    products: 'Products',
+    orders: 'Orders',
+    movement: 'Movement',
+    inventory: 'Inventory',
+    
+    // Orders
+    orderNumber: 'Order Number',
+    orderDate: 'Order Date',
+    orderType: 'Order Type',
+    quantity: 'Quantity',
+    unitPrice: 'Unit Price',
+    totalPrice: 'Total Price',
+    approved: 'Approved',
+    pending: 'Pending',
+    rejected: 'Rejected',
+    
+    // Visits
+    visitDate: 'Visit Date',
+    doctor: 'Doctor',
+    clinic: 'Clinic',
+    salesRep: 'Sales Rep',
+    notes: 'Notes',
+    gpsLocation: 'GPS Location',
+    visitType: 'Visit Type',
+    
+    // Search
+    search: 'Search',
+    searchPlaceholder: 'Search users, doctors, clinics, invoices...',
+    searchResults: 'Search Results',
+    noResults: 'No Results',
+    
+    // Settings
+    systemSettings: 'System Settings',
+    companyInfo: 'Company Information',
+    companyName: 'Company Name',
+    logo: 'Logo',
+    primaryColor: 'Primary Color',
+    secondaryColor: 'Secondary Color',
+    
+    // Admin Settings
+    adminSettings: 'Admin Settings',
+    permissions: 'Permissions',
+    dashboardConfig: 'Dashboard Configuration',
+    systemHealth: 'System Health',
+    security: 'Security',
+    activityLogs: 'Activity Logs',
+    
+    // Common
+    loading: 'Loading...',
+    error: 'Error',
+    success: 'Success',
+    warning: 'Warning',
+    info: 'Information',
+    confirm: 'Confirm',
+    yes: 'Yes',
+    no: 'No',
+    close: 'Close',
+    back: 'Back',
+    next: 'Next',
+    previous: 'Previous',
+    submit: 'Submit',
+    
+    // Footer
+    footerAbout: 'About Us',
+    footerServices: 'Our Services',
+    footerContact: 'Contact Us',
+    footerPrivacy: 'Privacy Policy',
+    footerTerms: 'Terms & Conditions',
+    footerSupport: 'Technical Support',
+    footerQuickLinks: 'Quick Links',
+    footerLegal: 'Legal',
+    footerContactUs: 'Contact',
+    footerCopyright: 'All rights reserved',
+    footerDescription: 'Comprehensive enterprise management system with latest technologies',
+    footerLocation: 'Cairo, Egypt',
+    
+    // Themes
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeMinimal: 'Minimal',
+    themeModern: 'Modern',
+    themeFancy: 'Fancy',
+    themeCyber: 'Cyber',
+    themeSunset: 'Sunset',
+    themeOcean: 'Ocean',
+    themeForest: 'Forest'
+  }
+};
+
+const LanguageProvider = ({ children }) => {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('language') || 'ar';
+  });
+
+  const t = (key) => {
+    return translations[language]?.[key] || key;
+  };
+
+  const changeLanguage = (newLanguage) => {
+    setLanguage(newLanguage);
+    localStorage.setItem('language', newLanguage);
+    
+    // Update document direction
+    document.documentElement.dir = newLanguage === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLanguage;
+    
+    // Update body class for styling
+    document.body.className = document.body.className.replace(/\b(arabic|english)\b/g, '');
+    document.body.classList.add(newLanguage === 'ar' ? 'arabic' : 'english');
+  };
+
+  useEffect(() => {
+    // Set initial document attributes
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+    document.body.classList.add(language === 'ar' ? 'arabic' : 'english');
+  }, [language]);
+
+  return (
+    <LanguageContext.Provider value={{
+      language,
+      changeLanguage,
+      t,
+      isRTL: language === 'ar'
+    }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+// Enhanced Language Toggle Component
+const LanguageToggle = ({ className = "", position = "header" }) => {
+  const { language, changeLanguage, t } = useLanguage();
+  
+  const toggleLanguage = () => {
+    changeLanguage(language === 'ar' ? 'en' : 'ar');
+  };
+
+  if (position === "login") {
+    return (
+      <div className={`language-toggle ${className} ${language === 'ar' ? 'rtl' : ''}`}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className={`language-option ${language === 'ar' ? 'active' : ''}`}
+          >
+            العربية
+          </button>
+          <button
+            onClick={toggleLanguage}
+            className={`language-option ${language === 'en' ? 'active' : ''}`}
+          >
+            English
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="language-toggle">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={toggleLanguage}
+          className={`language-option ${language === 'ar' ? 'active' : ''}`}
+        >
+          ع
+        </button>
+        <button
+          onClick={toggleLanguage}
+          className={`language-option ${language === 'en' ? 'active' : ''}`}
+        >
+          EN
+        </button>
+      </div>
+    </div>
+  );
+};
 const ThemeContext = createContext();
 
 const useTheme = () => {
