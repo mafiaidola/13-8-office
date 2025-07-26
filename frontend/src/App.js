@@ -6100,6 +6100,27 @@ const EnhancedUserManagement = () => {
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/users`, newUser, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSuccess(`تم إنشاء المستخدم "${newUser.full_name}" بنجاح`);
+      setShowCreateUser(false);
+      setNewUser({
+        username: '', email: '', password: '', full_name: '', role: '', 
+        phone: '', manager_id: '', department: '', employee_id: ''
+      });
+      fetchUsers(); // Refresh the users list
+    } catch (error) {
+      setError('خطأ في إنشاء المستخدم');
+    }
+  };
+
   const UserCard = ({ user }) => (
     <div className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300">
       <div className="flex items-start gap-4">
