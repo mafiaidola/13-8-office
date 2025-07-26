@@ -437,6 +437,617 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+// Global Search Component
+const GlobalSearch = ({ isOpen, onClose }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('all');
+  const [searchResults, setSearchResults] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  const searchTypes = [
+    { value: 'all', label: 'البحث الشامل', icon: 'search' },
+    { value: 'representative', label: 'المناديب', icon: 'user' },
+    { value: 'doctor', label: 'الأطباء', icon: 'user' },
+    { value: 'clinic', label: 'العيادات', icon: 'warehouse' },
+    { value: 'invoice', label: 'الفواتير', icon: 'reports' },
+    { value: 'product', label: 'المنتجات', icon: 'warehouse' }
+  ];
+
+  const performSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/search/comprehensive`, {
+        params: {
+          q: searchQuery,
+          search_type: searchType
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSearchResults(response.data.results);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  };
+
+  const openInvoiceModal = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceModal(true);
+  };
+
+  const renderSearchResults = () => {
+    if (loading) {
+      return (
+        <div className="text-center py-8">
+          <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+          <p style={{ color: 'var(--text-secondary)' }}>جاري البحث...</p>
+        </div>
+      );
+    }
+
+    if (!searchResults || Object.keys(searchResults).length === 0) {
+      return (
+        <div className="text-center py-8">
+          <SVGIcon name="search" size={48} className="mx-auto mb-4 text-gray-400" />
+          <p style={{ color: 'var(--text-secondary)' }}>ابدأ البحث للحصول على النتائج</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Representatives Results */}
+        {searchResults.representatives && searchResults.representatives.length > 0 && (
+          <div className="search-section">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <SVGIcon name="user" size={24} />
+              <span>المناديب ({searchResults.representatives.length})</span>
+            </h3>
+            <div className="grid gap-4">
+              {searchResults.representatives.map((rep) => (
+                <div key={rep.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {rep.photo ? (
+                        <img src={rep.photo} alt={rep.name} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        rep.name.charAt(0)
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-lg">{rep.name}</h4>
+                        <span className="text-sm px-2 py-1 bg-blue-100 rounded-full">مندوب</span>
+                      </div>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        {rep.username} • {rep.email}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">الزيارات:</span> {rep.statistics?.visits?.total || 0}
+                        </div>
+                        <div>
+                          <span className="font-semibold">الطلبات:</span> {rep.statistics?.orders?.total || 0}
+                        </div>
+                        <div>
+                          <span className="font-semibold">التارجيت:</span> {rep.statistics?.target || 0} ج.م
+                        </div>
+                        <div>
+                          <span className="font-semibold">المديونية:</span> {rep.statistics?.pending_debt || 0} ج.م
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Doctors Results */}
+        {searchResults.doctors && searchResults.doctors.length > 0 && (
+          <div className="search-section">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <SVGIcon name="user" size={24} />
+              <span>الأطباء ({searchResults.doctors.length})</span>
+            </h3>
+            <div className="grid gap-4">
+              {searchResults.doctors.map((doctor) => (
+                <div key={doctor.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                      د.{doctor.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-lg">د. {doctor.name}</h4>
+                        <span className="text-sm px-2 py-1 bg-green-100 rounded-full">طبيب</span>
+                      </div>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        {doctor.specialty} • {doctor.phone}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">العيادة:</span> {doctor.clinic?.name || 'غير محدد'}
+                        </div>
+                        <div>
+                          <span className="font-semibold">الطلبات:</span> {doctor.total_orders || 0}
+                        </div>
+                        <div>
+                          <span className="font-semibold">المديونية:</span> {doctor.pending_debt || 0} ج.م
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Clinics Results */}
+        {searchResults.clinics && searchResults.clinics.length > 0 && (
+          <div className="search-section">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <SVGIcon name="warehouse" size={24} />
+              <span>العيادات ({searchResults.clinics.length})</span>
+            </h3>
+            <div className="grid gap-4">
+              {searchResults.clinics.map((clinic) => (
+                <div key={clinic.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {clinic.name.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-lg">{clinic.name}</h4>
+                        <span className="text-sm px-2 py-1 bg-purple-100 rounded-full">عيادة</span>
+                      </div>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        {clinic.address} • {clinic.phone}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">المدير:</span> {clinic.manager_name || 'غير محدد'}
+                        </div>
+                        <div>
+                          <span className="font-semibold">الأطباء:</span> {clinic.doctors?.length || 0}
+                        </div>
+                        <div>
+                          <span className="font-semibold">الطلبات:</span> {clinic.total_orders || 0}
+                        </div>
+                        <div>
+                          <span className="font-semibold">المديونية:</span> {clinic.pending_debt || 0} ج.م
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Invoices Results */}
+        {searchResults.invoices && searchResults.invoices.length > 0 && (
+          <div className="search-section">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <SVGIcon name="reports" size={24} />
+              <span>الفواتير ({searchResults.invoices.length})</span>
+            </h3>
+            <div className="grid gap-4">
+              {searchResults.invoices.map((invoice) => (
+                <div 
+                  key={invoice.id} 
+                  className="card-modern p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => openInvoiceModal(invoice)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                      #
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-lg">فاتورة #{invoice.id.slice(-8)}</h4>
+                        <span className={`text-sm px-2 py-1 rounded-full ${
+                          invoice.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                          invoice.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {invoice.status}
+                        </span>
+                      </div>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        {invoice.sales_rep_name} • {invoice.doctor_name} • {invoice.clinic_name}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">التاريخ:</span> {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                        </div>
+                        <div>
+                          <span className="font-semibold">القيمة:</span> {invoice.total_amount} ج.م
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Products Results */}
+        {searchResults.products && searchResults.products.length > 0 && (
+          <div className="search-section">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-3">
+              <SVGIcon name="warehouse" size={24} />
+              <span>المنتجات ({searchResults.products.length})</span>
+            </h3>
+            <div className="grid gap-4">
+              {searchResults.products.map((product) => (
+                <div key={product.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        product.name.charAt(0)
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-bold text-lg">{product.name}</h4>
+                        <span className="text-sm px-2 py-1 bg-indigo-100 rounded-full">منتج</span>
+                      </div>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        {product.description} • {product.category}
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold">السعر:</span> {product.price} ج.م
+                        </div>
+                        <div>
+                          <span className="font-semibold">الوحدة:</span> {product.unit}
+                        </div>
+                        <div>
+                          <span className="font-semibold">تم طلبه:</span> {product.total_ordered || 0} مرة
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+        {/* Header */}
+        <div className="p-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gradient">البحث الشامل</h2>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <SVGIcon name="close" size={24} />
+            </button>
+          </div>
+          
+          {/* Search Input */}
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="ابحث عن مندوب، طبيب، عيادة، رقم فاتورة، أو منتج..."
+                className="w-full p-3 pr-12 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  background: 'var(--secondary-bg)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)'
+                }}
+              />
+              <div className="absolute right-3 top-3">
+                <SVGIcon name="search" size={20} />
+              </div>
+            </div>
+            <button
+              onClick={performSearch}
+              className="btn-primary px-6 py-3 flex items-center gap-2"
+              disabled={loading}
+            >
+              <SVGIcon name="search" size={18} />
+              بحث
+            </button>
+          </div>
+
+          {/* Search Type Selector */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {searchTypes.map((type) => (
+              <button
+                key={type.value}
+                onClick={() => setSearchType(type.value)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  searchType === type.value 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                <SVGIcon name={type.icon} size={16} />
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
+          {renderSearchResults()}
+        </div>
+      </div>
+
+      {/* Invoice Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <InvoiceModal 
+          invoice={selectedInvoice} 
+          onClose={() => setShowInvoiceModal(false)} 
+        />
+      )}
+    </div>
+  );
+};
+
+// Invoice Modal Component
+const InvoiceModal = ({ invoice, onClose }) => {
+  const handlePrint = () => {
+    const printContent = document.getElementById('invoice-content');
+    const originalContent = document.body.innerHTML;
+    document.body.innerHTML = printContent.outerHTML;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
+          <h3 className="text-xl font-bold">فاتورة رقم #{invoice.id.slice(-8)}</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="btn-primary px-4 py-2 flex items-center gap-2"
+            >
+              <SVGIcon name="print" size={16} />
+              طباعة
+            </button>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <SVGIcon name="close" size={20} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto" id="invoice-content">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">تفاصيل الفاتورة</h4>
+                <p><strong>رقم الفاتورة:</strong> #{invoice.id.slice(-8)}</p>
+                <p><strong>التاريخ:</strong> {new Date(invoice.created_at).toLocaleDateString('ar-EG')}</p>
+                <p><strong>الحالة:</strong> {invoice.status}</p>
+                <p><strong>القيمة الإجمالية:</strong> {invoice.total_amount} ج.م</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">تفاصيل العميل</h4>
+                <p><strong>المندوب:</strong> {invoice.sales_rep_name}</p>
+                <p><strong>الطبيب:</strong> د. {invoice.doctor_name}</p>
+                <p><strong>العيادة:</strong> {invoice.clinic_name}</p>
+                <p><strong>المخزن:</strong> {invoice.warehouse_name}</p>
+              </div>
+            </div>
+
+            {invoice.items && invoice.items.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">تفاصيل المنتجات</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-2 text-right">المنتج</th>
+                        <th className="border border-gray-300 p-2 text-right">الكمية</th>
+                        <th className="border border-gray-300 p-2 text-right">السعر</th>
+                        <th className="border border-gray-300 p-2 text-right">الإجمالي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoice.items.map((item, index) => (
+                        <tr key={index}>
+                          <td className="border border-gray-300 p-2">{item.product_name}</td>
+                          <td className="border border-gray-300 p-2">{item.quantity}</td>
+                          <td className="border border-gray-300 p-2">{item.unit_price} ج.م</td>
+                          <td className="border border-gray-300 p-2">{item.quantity * item.unit_price} ج.م</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {invoice.notes && (
+              <div>
+                <h4 className="font-semibold mb-2">ملاحظات</h4>
+                <p>{invoice.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Theme Toggle Component (Updated)
+const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
+  const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
+  
+  const getThemeIcon = (themeName) => {
+    const icons = {
+      light: 'sun',
+      dark: 'moon',
+      minimal: 'theme',
+      modern: 'theme',
+      fancy: 'theme'
+    };
+    return icons[themeName] || 'theme';
+  };
+
+  const getThemeLabel = (themeName) => {
+    const labels = {
+      light: 'فاتح',
+      dark: 'داكن',
+      minimal: 'بسيط',
+      modern: 'عصري',
+      fancy: 'فاخر'
+    };
+    return labels[themeName] || themeName;
+  };
+
+  if (isDropdown) {
+    return (
+      <div className="relative group">
+        <button
+          className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+          title={`الثيم الحالي: ${getThemeLabel(theme)}`}
+        >
+          <SVGIcon name={getThemeIcon(theme)} size={20} />
+          {showLabel && <span>{getThemeLabel(theme)}</span>}
+        </button>
+        
+        <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+          {availableThemes.map((themeName) => (
+            <button
+              key={themeName}
+              onClick={() => setSpecificTheme(themeName)}
+              className={`w-full flex items-center gap-3 px-4 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors ${
+                theme === themeName ? 'bg-blue-500 bg-opacity-20' : ''
+              }`}
+            >
+              <SVGIcon name={getThemeIcon(themeName)} size={16} />
+              <span>{getThemeLabel(themeName)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={cycleTheme}
+      className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+      title={`الثيم الحالي: ${getThemeLabel(theme)} - اضغط للتبديل`}
+    >
+      <SVGIcon name={getThemeIcon(theme)} size={20} />
+      {showLabel && <span>{getThemeLabel(theme)}</span>}
+    </button>
+  );
+};
+
+// Enhanced Theme Toggle Component (Updated)
+const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
+  const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
+  
+  const getThemeIcon = (themeName) => {
+    const icons = {
+      light: 'sun',
+      dark: 'moon',
+      minimal: 'theme',
+      modern: 'theme',
+      fancy: 'theme'
+    };
+    return icons[themeName] || 'theme';
+  };
+
+  const getThemeLabel = (themeName) => {
+    const labels = {
+      light: 'فاتح',
+      dark: 'داكن',
+      minimal: 'بسيط',
+      modern: 'عصري',
+      fancy: 'فاخر'
+    };
+    return labels[themeName] || themeName;
+  };
+
+  if (isDropdown) {
+    return (
+      <div className="relative group">
+        <button
+          className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+          title={`الثيم الحالي: ${getThemeLabel(theme)}`}
+        >
+          <SVGIcon name={getThemeIcon(theme)} size={20} />
+          {showLabel && <span>{getThemeLabel(theme)}</span>}
+        </button>
+        
+        <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+          {availableThemes.map((themeName) => (
+            <button
+              key={themeName}
+              onClick={() => setSpecificTheme(themeName)}
+              className={`w-full flex items-center gap-3 px-4 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors ${
+                theme === themeName ? 'bg-blue-500 bg-opacity-20' : ''
+              }`}
+            >
+              <SVGIcon name={getThemeIcon(themeName)} size={16} />
+              <span>{getThemeLabel(themeName)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={cycleTheme}
+      className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
+      title={`الثيم الحالي: ${getThemeLabel(theme)} - اضغط للتبديل`}
+    >
+      <SVGIcon name={getThemeIcon(theme)} size={20} />
+      {showLabel && <span>{getThemeLabel(theme)}</span>}
+    </button>
+  );
+};
+
 // Login Component
 // Enhanced Login Page with Logo Support
 const LoginPage = () => {
