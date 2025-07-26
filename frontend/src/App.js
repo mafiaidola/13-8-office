@@ -8412,6 +8412,9 @@ const Dashboard = () => {
           <SystemSettings />
         )}
         </div>
+        
+        {/* Enhanced Footer */}
+        <EnhancedFooter />
       </div>
     </>
   );
