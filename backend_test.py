@@ -3184,6 +3184,18 @@ class BackendTester:
         self.test_user_permissions_api()
         self.test_user_permissions_role_based()
         
+        # NEW COMPREHENSIVE ACCOUNTING SYSTEM TESTS
+        print("🧮 COMPREHENSIVE ACCOUNTING SYSTEM TESTS")
+        print("-" * 30)
+        self.test_accounting_overview()
+        self.test_accounting_invoices()
+        self.test_accounting_expenses_get()
+        self.test_accounting_expenses_post()
+        self.test_accounting_profit_loss_report()
+        self.test_accounting_customers()
+        self.test_accounting_dashboard_stats()
+        self.test_accounting_role_based_access()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
