@@ -10960,6 +10960,17 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* GPS Tracking tab for managers and admin */}
+            {canAccessTab('reports') && (
+              <button
+                onClick={() => setActiveTab('gps')}
+                className={`nav-item ${activeTab === 'gps' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🗺️</span>
+                {language === 'ar' ? 'تتبع GPS' : 'GPS Tracking'}
+              </button>
+            )}
+            
             {/* Accounting tab for admin, accounting, and manager roles */}
             {canAccessTab('accounting') && (
               <button
