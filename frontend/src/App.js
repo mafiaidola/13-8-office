@@ -14416,6 +14416,10 @@ const ComprehensiveAdminSettings = () => {
           <AdminSecuritySettings />
         )}
 
+        {activeTab === 'features' && (
+          <AdminFeatureToggle />
+        )}
+
         {activeTab === 'initialize' && (
           <div className="card-glass p-8 text-center max-w-2xl mx-auto">
             <div className="text-6xl mb-4">🚀</div>
