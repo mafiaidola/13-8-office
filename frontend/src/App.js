@@ -1382,6 +1382,756 @@ const LoginPage = () => {
   );
 };
 
+// Comprehensive Admin Settings Page with permissions and controls
+const AdminSettingsPage = () => {
+  const [activeTab, setActiveTab] = useState('permissions');
+  const [permissions, setPermissions] = useState(null);
+  const [dashboardConfig, setDashboardConfig] = useState(null);
+  const [systemHealth, setSystemHealth] = useState(null);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  const tabs = [
+    { id: 'permissions', label: 'الصلاحيات', icon: 'user' },
+    { id: 'dashboard', label: 'لوحة التحكم', icon: 'dashboard' },
+    { id: 'system', label: 'النظام', icon: 'settings' },
+    { id: 'security', label: 'الأمان', icon: 'settings' },
+    { id: 'logs', label: 'السجلات', icon: 'reports' }
+  ];
+
+  useEffect(() => {
+    loadAdminData();
+  }, []);
+
+  const loadAdminData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Load permissions
+      const permissionsResponse = await axios.get(`${API}/admin/permissions`, { headers });
+      setPermissions(permissionsResponse.data);
+
+      // Load dashboard config
+      const dashboardResponse = await axios.get(`${API}/admin/dashboard-config`, { headers });
+      setDashboardConfig(dashboardResponse.data);
+
+      // Load system health
+      const healthResponse = await axios.get(`${API}/admin/system-health`, { headers });
+      setSystemHealth(healthResponse.data);
+
+      // Load activity logs
+      const logsResponse = await axios.get(`${API}/admin/activity-logs`, { headers });
+      setActivityLogs(logsResponse.data);
+
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePermissions = async (updatedPermissions) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/permissions`, updatedPermissions, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPermissions(updatedPermissions);
+      alert('تم تحديث الصلاحيات بنجاح');
+    } catch (error) {
+      console.error('Error updating permissions:', error);
+      alert('حدث خطأ في تحديث الصلاحيات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDashboardConfig = async (updatedConfig) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/dashboard-config`, updatedConfig, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDashboardConfig(updatedConfig);
+      alert('تم تحديث إعدادات لوحة التحكم بنجاح');
+    } catch (error) {
+      console.error('Error updating dashboard config:', error);
+      alert('حدث خطأ في تحديث إعدادات لوحة التحكم');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && !permissions) {
+    return (
+      <div className="glass-effect p-8 text-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p style={{ color: 'var(--text-secondary)' }}>جاري تحميل إعدادات الإدارة...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6">
+        <h2 className="text-3xl font-bold mb-4 text-gradient">إعدادات الإدارة الشاملة</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          التحكم الكامل في النظام، الصلاحيات، وإعدادات لوحة التحكم
+        </p>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="glass-effect p-2">
+        <div className="flex space-x-2 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                  : 'hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <SVGIcon name={tab.icon} size={20} />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="glass-effect p-8">
+        {activeTab === 'permissions' && (
+          <PermissionsTab 
+            permissions={permissions} 
+            onUpdate={updatePermissions} 
+            loading={loading}
+          />
+        )}
+        
+        {activeTab === 'dashboard' && (
+          <DashboardConfigTab 
+            config={dashboardConfig} 
+            onUpdate={updateDashboardConfig} 
+            loading={loading}
+          />
+        )}
+        
+        {activeTab === 'system' && (
+          <SystemHealthTab 
+            health={systemHealth} 
+            onRefresh={loadAdminData} 
+            loading={loading}
+          />
+        )}
+        
+        {activeTab === 'security' && (
+          <SecurityTab 
+            config={dashboardConfig} 
+            onUpdate={updateDashboardConfig} 
+            loading={loading}
+          />
+        )}
+        
+        {activeTab === 'logs' && (
+          <ActivityLogsTab 
+            logs={activityLogs} 
+            onRefresh={loadAdminData} 
+            loading={loading}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Permissions Management Tab
+const PermissionsTab = ({ permissions, onUpdate, loading }) => {
+  const [localPermissions, setLocalPermissions] = useState(permissions);
+
+  useEffect(() => {
+    setLocalPermissions(permissions);
+  }, [permissions]);
+
+  const updateRolePermission = (role, permission, value) => {
+    const updated = {
+      ...localPermissions,
+      roles_config: {
+        ...localPermissions.roles_config,
+        [role]: {
+          ...localPermissions.roles_config[role],
+          [permission]: value
+        }
+      }
+    };
+    setLocalPermissions(updated);
+  };
+
+  const updateUIControl = (control, value) => {
+    const updated = {
+      ...localPermissions,
+      ui_controls: {
+        ...localPermissions.ui_controls,
+        [control]: value
+      }
+    };
+    setLocalPermissions(updated);
+  };
+
+  const updateFeatureToggle = (feature, value) => {
+    const updated = {
+      ...localPermissions,
+      feature_toggles: {
+        ...localPermissions.feature_toggles,
+        [feature]: value
+      }
+    };
+    setLocalPermissions(updated);
+  };
+
+  if (!localPermissions) return null;
+
+  const roles = Object.keys(localPermissions.roles_config);
+  const permissionLabels = {
+    dashboard_access: 'الوصول للوحة التحكم',
+    user_management: 'إدارة المستخدمين',
+    warehouse_management: 'إدارة المخازن',
+    visits_management: 'إدارة الزيارات',
+    reports_access: 'الوصول للتقارير',
+    chat_access: 'الوصول للمحادثات',
+    settings_access: 'الوصول للإعدادات',
+    secret_reports: 'التقارير السرية',
+    financial_reports: 'التقارير المالية',
+    system_logs: 'سجلات النظام'
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إدارة الصلاحيات</h3>
+
+      {/* Role-based Permissions */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">صلاحيات الأدوار</h4>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white border-opacity-20">
+                <th className="text-right p-4">الصلاحية</th>
+                {roles.map(role => (
+                  <th key={role} className="text-center p-4 min-w-20">
+                    {role === 'admin' ? 'مدير' : 
+                     role === 'manager' ? 'مدير فرع' :
+                     role === 'sales_rep' ? 'مندوب' :
+                     role === 'warehouse' ? 'مخزن' : 'محاسب'}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(permissionLabels).map(([permission, label]) => (
+                <tr key={permission} className="border-b border-white border-opacity-10">
+                  <td className="p-4 font-medium">{label}</td>
+                  {roles.map(role => (
+                    <td key={role} className="p-4 text-center">
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={localPermissions.roles_config[role]?.[permission] || false}
+                          onChange={(e) => updateRolePermission(role, permission, e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`relative w-6 h-6 rounded border-2 transition-colors ${
+                          localPermissions.roles_config[role]?.[permission] 
+                            ? 'bg-blue-600 border-blue-600' 
+                            : 'border-gray-400'
+                        }`}>
+                          {localPermissions.roles_config[role]?.[permission] && (
+                            <div className="absolute inset-1 bg-white rounded-sm"></div>
+                          )}
+                        </div>
+                      </label>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* UI Controls */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">التحكم في الواجهة</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(localPermissions.ui_controls || {}).map(([control, value]) => (
+            <div key={control} className="flex items-center justify-between p-4 bg-white bg-opacity-5 rounded-lg">
+              <span className="text-sm">
+                {control === 'show_statistics_cards' ? 'عرض بطاقات الإحصائيات' :
+                 control === 'show_charts' ? 'عرض المخططات' :
+                 control === 'show_recent_activities' ? 'عرض الأنشطة الأخيرة' :
+                 control === 'show_user_photos' ? 'عرض صور المستخدمين' :
+                 control === 'show_themes_selector' ? 'عرض اختيار الثيم' :
+                 control === 'show_language_selector' ? 'عرض اختيار اللغة' :
+                 control === 'enable_dark_mode' ? 'تمكين الوضع الليلي' :
+                 control === 'enable_notifications' ? 'تمكين الإشعارات' :
+                 control === 'enable_search' ? 'تمكين البحث' : control}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => updateUIControl(control, e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feature Toggles */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">مفاتيح المميزات</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(localPermissions.feature_toggles || {}).map(([feature, value]) => (
+            <div key={feature} className="flex items-center justify-between p-4 bg-white bg-opacity-5 rounded-lg">
+              <span className="text-sm">
+                {feature === 'gamification_enabled' ? 'التحفيز والألعاب' :
+                 feature === 'gps_tracking_enabled' ? 'تتبع GPS' :
+                 feature === 'voice_notes_enabled' ? 'الملاحظات الصوتية' :
+                 feature === 'file_uploads_enabled' ? 'رفع الملفات' :
+                 feature === 'print_reports_enabled' ? 'طباعة التقارير' :
+                 feature === 'export_data_enabled' ? 'تصدير البيانات' :
+                 feature === 'email_notifications_enabled' ? 'إشعارات البريد' :
+                 feature === 'sms_notifications_enabled' ? 'إشعارات SMS' : feature}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => updateFeatureToggle(feature, e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button 
+        onClick={() => onUpdate(localPermissions)}
+        disabled={loading}
+        className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+      >
+        {loading ? 'جاري الحفظ...' : 'حفظ الصلاحيات'}
+      </button>
+    </div>
+  );
+};
+
+// Dashboard Configuration Tab
+const DashboardConfigTab = ({ config, onUpdate, loading }) => {
+  const [localConfig, setLocalConfig] = useState(config);
+
+  useEffect(() => {
+    setLocalConfig(config);
+  }, [config]);
+
+  const updateNavTabRole = (tabKey, role, enabled) => {
+    const updated = {
+      ...localConfig,
+      dashboard_sections: {
+        ...localConfig.dashboard_sections,
+        navigation_tabs: {
+          ...localConfig.dashboard_sections.navigation_tabs,
+          [tabKey]: {
+            ...localConfig.dashboard_sections.navigation_tabs[tabKey],
+            roles: enabled 
+              ? [...(localConfig.dashboard_sections.navigation_tabs[tabKey].roles || []), role]
+              : (localConfig.dashboard_sections.navigation_tabs[tabKey].roles || []).filter(r => r !== role)
+          }
+        }
+      }
+    };
+    setLocalConfig(updated);
+  };
+
+  if (!localConfig) return null;
+
+  const roles = ['admin', 'manager', 'sales_rep', 'warehouse', 'accounting'];
+  const tabLabels = {
+    statistics_tab: 'الإحصائيات',
+    users_tab: 'إدارة المستخدمين',
+    warehouse_tab: 'إدارة المخازن',
+    visits_tab: 'سجل الزيارات',
+    reports_tab: 'التقارير',
+    chat_tab: 'المحادثات',
+    settings_tab: 'الإعدادات'
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات لوحة التحكم</h3>
+
+      {/* Navigation Tabs Configuration */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">تبويبات التنقل</h4>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white border-opacity-20">
+                <th className="text-right p-4">التبويب</th>
+                {roles.map(role => (
+                  <th key={role} className="text-center p-4 min-w-20">
+                    {role === 'admin' ? 'مدير' : 
+                     role === 'manager' ? 'مدير فرع' :
+                     role === 'sales_rep' ? 'مندوب' :
+                     role === 'warehouse' ? 'مخزن' : 'محاسب'}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(tabLabels).map(([tabKey, label]) => (
+                <tr key={tabKey} className="border-b border-white border-opacity-10">
+                  <td className="p-4 font-medium">{label}</td>
+                  {roles.map(role => (
+                    <td key={role} className="p-4 text-center">
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={(localConfig.dashboard_sections?.navigation_tabs?.[tabKey]?.roles || []).includes(role)}
+                          onChange={(e) => updateNavTabRole(tabKey, role, e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`relative w-6 h-6 rounded border-2 transition-colors ${
+                          (localConfig.dashboard_sections?.navigation_tabs?.[tabKey]?.roles || []).includes(role)
+                            ? 'bg-blue-600 border-blue-600' 
+                            : 'border-gray-400'
+                        }`}>
+                          {(localConfig.dashboard_sections?.navigation_tabs?.[tabKey]?.roles || []).includes(role) && (
+                            <div className="absolute inset-1 bg-white rounded-sm"></div>
+                          )}
+                        </div>
+                      </label>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* UI Customization */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">تخصيص الواجهة</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-3">اللون الأساسي</label>
+            <input
+              type="color"
+              value={localConfig.ui_customization?.company_branding?.primary_color || '#3b82f6'}
+              onChange={(e) => setLocalConfig({
+                ...localConfig,
+                ui_customization: {
+                  ...localConfig.ui_customization,
+                  company_branding: {
+                    ...localConfig.ui_customization?.company_branding,
+                    primary_color: e.target.value
+                  }
+                }
+              })}
+              className="w-full h-12 glass-effect border border-white border-opacity-20 rounded-lg"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-3">اللون الثانوي</label>
+            <input
+              type="color"
+              value={localConfig.ui_customization?.company_branding?.secondary_color || '#1e293b'}
+              onChange={(e) => setLocalConfig({
+                ...localConfig,
+                ui_customization: {
+                  ...localConfig.ui_customization,
+                  company_branding: {
+                    ...localConfig.ui_customization?.company_branding,
+                    secondary_color: e.target.value
+                  }
+                }
+              })}
+              className="w-full h-12 glass-effect border border-white border-opacity-20 rounded-lg"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button 
+        onClick={() => onUpdate(localConfig)}
+        disabled={loading}
+        className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+      >
+        {loading ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+      </button>
+    </div>
+  );
+};
+
+// System Health Tab
+const SystemHealthTab = ({ health, onRefresh, loading }) => {
+  if (!health) return null;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient">صحة النظام</h3>
+        <button 
+          onClick={onRefresh}
+          disabled={loading}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300 disabled:opacity-50"
+        >
+          {loading ? 'تحديث...' : 'تحديث'}
+        </button>
+      </div>
+
+      {/* System Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-blue-400 mb-2">{health.users?.total || 0}</div>
+          <div className="text-sm text-gray-400">إجمالي المستخدمين</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-green-400 mb-2">{health.users?.active || 0}</div>
+          <div className="text-sm text-gray-400">المستخدمين النشطين</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-purple-400 mb-2">{health.system_metrics?.total_visits || 0}</div>
+          <div className="text-sm text-gray-400">إجمالي الزيارات</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-orange-400 mb-2">{health.system_metrics?.total_orders || 0}</div>
+          <div className="text-sm text-gray-400">إجمالي الطلبات</div>
+        </div>
+      </div>
+
+      {/* Collections Health */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">حالة قواعد البيانات</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(health.collections_health || {}).map(([collection, status]) => (
+            <div key={collection} className="flex items-center justify-between p-4 bg-white bg-opacity-5 rounded-lg">
+              <span className="font-medium capitalize">{collection}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">{status.count || 0}</span>
+                <div className={`w-3 h-3 rounded-full ${
+                  status.status === 'healthy' ? 'bg-green-400' : 'bg-red-400'
+                }`}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Database Status */}
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">حالة قاعدة البيانات</h4>
+        
+        <div className="flex items-center gap-4">
+          <div className={`w-4 h-4 rounded-full ${
+            health.database_status === 'connected' ? 'bg-green-400' : 'bg-red-400'
+          }`}></div>
+          <span className="font-medium">
+            {health.database_status === 'connected' ? 'متصل' : 'غير متصل'}
+          </span>
+          <span className="text-sm text-gray-400 mr-auto">
+            آخر فحص: {new Date(health.checked_at).toLocaleString('ar-EG')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Security Settings Tab
+const SecurityTab = ({ config, onUpdate, loading }) => {
+  const [localConfig, setLocalConfig] = useState(config);
+
+  useEffect(() => {
+    setLocalConfig(config);
+  }, [config]);
+
+  if (!localConfig) return null;
+
+  const updateSecuritySetting = (setting, value) => {
+    const updated = {
+      ...localConfig,
+      security_settings: {
+        ...localConfig.security_settings,
+        [setting]: value
+      }
+    };
+    setLocalConfig(updated);
+  };
+
+  return (
+    <div className="space-y-8">
+      <h3 className="text-2xl font-bold text-gradient">إعدادات الأمان</h3>
+
+      <div className="glass-effect p-6">
+        <h4 className="text-xl font-bold mb-6">إعدادات كلمة المرور</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-3">فترة انتهاء صلاحية كلمة المرور (أيام)</label>
+            <input
+              type="number"
+              value={localConfig.security_settings?.password_expiry_days || 90}
+              onChange={(e) => updateSecuritySetting('password_expiry_days', parseInt(e.target.value))}
+              className="w-full p-4 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+              min="1"
+              max="365"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-3">عدد محاولات تسجيل الدخول المسموح</label>
+            <input
+              type="number"
+              value={localConfig.security_settings?.max_login_attempts || 5}
+              onChange={(e) => updateSecuritySetting('max_login_attempts', parseInt(e.target.value))}
+              className="w-full p-4 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+              min="1"
+              max="10"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-3">مهلة انتهاء الجلسة (دقيقة)</label>
+            <input
+              type="number"
+              value={localConfig.security_settings?.session_timeout_minutes || 480}
+              onChange={(e) => updateSecuritySetting('session_timeout_minutes', parseInt(e.target.value))}
+              className="w-full p-4 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+              min="30"
+              max="1440"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-between p-4 bg-white bg-opacity-5 rounded-lg">
+            <div>
+              <div className="font-medium">إجبار تغيير كلمة المرور</div>
+              <div className="text-sm text-gray-400">إجبار المستخدمين على تغيير كلمة المرور عند تسجيل الدخول التالي</div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localConfig.security_settings?.force_password_change || false}
+                onChange={(e) => updateSecuritySetting('force_password_change', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-white bg-opacity-5 rounded-lg">
+            <div>
+              <div className="font-medium">التحقق بخطوتين (2FA)</div>
+              <div className="text-sm text-gray-400">تمكين التحقق بخطوتين لجميع المستخدمين</div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localConfig.security_settings?.require_2fa || false}
+                onChange={(e) => updateSecuritySetting('require_2fa', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <button 
+        onClick={() => onUpdate(localConfig)}
+        disabled={loading}
+        className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+      >
+        {loading ? 'جاري الحفظ...' : 'حفظ إعدادات الأمان'}
+      </button>
+    </div>
+  );
+};
+
+// Activity Logs Tab
+const ActivityLogsTab = ({ logs, onRefresh, loading }) => {
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient">سجلات الأنشطة</h3>
+        <button 
+          onClick={onRefresh}
+          disabled={loading}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300 disabled:opacity-50"
+        >
+          {loading ? 'تحديث...' : 'تحديث'}
+        </button>
+      </div>
+
+      <div className="glass-effect p-6">
+        <div className="space-y-4">
+          {logs && logs.length > 0 ? (
+            logs.map((log) => (
+              <div key={log.id} className="flex items-center gap-4 p-4 bg-white bg-opacity-5 rounded-lg">
+                <div className={`w-3 h-3 rounded-full ${
+                  log.category === 'user_management' ? 'bg-blue-400' :
+                  log.category === 'visits' ? 'bg-green-400' :
+                  log.category === 'orders' ? 'bg-orange-400' : 'bg-gray-400'
+                }`}></div>
+                <div className="flex-1">
+                  <div className="font-medium">{log.description}</div>
+                  <div className="text-sm text-gray-400">
+                    {log.user_name} • {new Date(log.timestamp).toLocaleString('ar-EG')}
+                  </div>
+                </div>
+                <div className="text-xs px-2 py-1 bg-white bg-opacity-10 rounded-full">
+                  {log.category === 'user_management' ? 'إدارة المستخدمين' :
+                   log.category === 'visits' ? 'زيارات' :
+                   log.category === 'orders' ? 'طلبات' : log.category}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <SVGIcon name="reports" size={64} className="mx-auto mb-4 text-gray-400" />
+              <p style={{ color: 'var(--text-secondary)' }}>لا توجد سجلات للأنشطة</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // System Settings Component for Admin
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
