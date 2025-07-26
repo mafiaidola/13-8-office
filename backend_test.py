@@ -41,8 +41,10 @@ class BackendTester:
         self.admin_token = None
         self.sales_rep_token = None
         self.manager_token = None
+        self.accounting_token = None
         self.sales_rep_id = None
         self.manager_id = None
+        self.accounting_id = None
         self.test_clinic_id = None
         self.test_doctor_id = None
         self.test_clinic_request_id = None
