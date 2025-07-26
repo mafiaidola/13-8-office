@@ -1177,6 +1177,30 @@ frontend:
         agent: "main"
         comment: "Enhanced EnhancedUserManagement component to display new roles with proper badge coloring (GM=red, Line Manager=orange, Area Manager=orange, District Manager=blue, Key Account=blue, Medical Rep=green). Updated role filtering and permissions throughout the user management interface."
 
+  - task: "Comprehensive Admin Control System"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created ultimate admin control system with 18 comprehensive settings tabs including: Overview, Users, Roles & Permissions, Regions & Lines, Products, GPS, Gamification, Accounting, Notifications, Chat, Scanner, Visits, Reports, Themes, Languages, System Health, Security, and Feature Toggle. Added 11 new backend APIs for complete system control. Every feature in the system now has admin control panel."
+
+  - task: "Feature Toggle System"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented complete feature toggle system allowing admin to enable/disable any system feature including GPS tracking, gamification, chat system, document scanner, visit management, accounting system, notifications, analytics, user registration, theme switching, and language switching. Real-time feature status display with visual indicators."
+
   - task: "Admin Dashboard Enhancements"
     implemented: true
     working: true
