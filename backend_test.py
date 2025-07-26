@@ -4744,6 +4744,22 @@ class BackendTester:
         self.test_manager_authorization_restrictions()
         self.test_comprehensive_admin_control_integration()
         
+        # ADVANCED ADMIN CONTROL SYSTEM TESTS - Priority testing as requested in review
+        print("🚀 ADVANCED ADMIN CONTROL SYSTEM TESTS - PRIORITY")
+        print("-" * 30)
+        self.test_google_maps_settings_management()
+        self.test_google_maps_settings_retrieval()
+        self.test_google_maps_api_validation()
+        self.test_google_services_status()
+        self.test_website_configuration_management()
+        self.test_website_configuration_retrieval()
+        self.test_performance_monitoring_system()
+        self.test_advanced_system_configuration()
+        self.test_admin_authorization_restrictions()
+        self.test_manager_authorization_restrictions()
+        self.test_gm_admin_credentials()
+        self.test_system_integration_workflow()
+        
         # NEW COMPREHENSIVE ADMIN SETTINGS AND PERMISSIONS TESTS
         print("🔧 COMPREHENSIVE ADMIN SETTINGS & PERMISSIONS TESTS")
         print("-" * 30)
