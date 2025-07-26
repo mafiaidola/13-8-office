@@ -10858,11 +10858,13 @@ const Dashboard = () => {
 
   const canAccessTab = (tabName) => {
     const permissions = {
-      users: ['admin', 'warehouse_manager', 'manager'],
-      warehouse: ['admin', 'warehouse_manager'],
-      visit: ['sales_rep'],
-      reports: ['admin', 'warehouse_manager', 'manager', 'accounting'],
-      accounting: ['admin', 'accounting']
+      users: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager'],
+      warehouse: ['admin', 'gm', 'warehouse_manager'],
+      visit: ['sales_rep', 'medical_rep'],
+      reports: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager', 'accounting'],
+      accounting: ['admin', 'gm', 'accounting', 'manager', 'line_manager'],
+      regions: ['admin', 'gm', 'line_manager', 'area_manager'],
+      comprehensive: ['admin', 'gm']
     };
     
     return permissions[tabName]?.includes(user.role) || false;
