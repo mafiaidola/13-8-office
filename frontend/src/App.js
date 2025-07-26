@@ -188,7 +188,10 @@ const ThemeProvider = ({ children }) => {
   return (
     <ThemeContext.Provider value={{ 
       theme, 
-      toggleTheme, 
+      toggleTheme,
+      cycleTheme,
+      setSpecificTheme,
+      availableThemes,
       language, 
       setLanguage 
     }}>
