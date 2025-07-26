@@ -1732,13 +1732,123 @@ async def update_permissions_settings(permissions_data: dict, current_user: User
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admin can update permissions settings")
     
-    # Update permissions
-    permissions_data["updated_at"] = datetime.utcnow()
-    permissions_data["updated_by"] = current_user.id
+    # Get existing permissions or create defaults
+    existing_permissions = await db.admin_permissions.find_one({}, {"_id": 0})
+    if not existing_permissions:
+        # Create default permissions first
+        default_permissions = {
+            "id": str(uuid.uuid4()),
+            "roles_config": {
+                "admin": {
+                    "dashboard_access": True,
+                    "user_management": True,
+                    "warehouse_management": True,
+                    "visits_management": True,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": True,
+                    "secret_reports": True,
+                    "financial_reports": True,
+                    "system_logs": True
+                },
+                "manager": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": True,
+                    "visits_management": True,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": True,
+                    "system_logs": False
+                },
+                "sales_rep": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": False,
+                    "visits_management": True,
+                    "reports_access": False,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": False,
+                    "system_logs": False
+                },
+                "warehouse": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": True,
+                    "visits_management": False,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": False,
+                    "system_logs": False
+                },
+                "accounting": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": False,
+                    "visits_management": False,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": True,
+                    "system_logs": False
+                }
+            },
+            "ui_controls": {
+                "show_statistics_cards": True,
+                "show_charts": True,
+                "show_recent_activities": True,
+                "show_user_photos": True,
+                "show_themes_selector": True,
+                "show_language_selector": True,
+                "enable_dark_mode": True,
+                "enable_notifications": True,
+                "enable_search": True
+            },
+            "feature_toggles": {
+                "gamification_enabled": False,
+                "gps_tracking_enabled": True,
+                "voice_notes_enabled": True,
+                "file_uploads_enabled": True,
+                "print_reports_enabled": True,
+                "export_data_enabled": True,
+                "email_notifications_enabled": False,
+                "sms_notifications_enabled": False
+            },
+            "system_limits": {
+                "max_users": 1000,
+                "max_warehouses": 50,
+                "max_products": 10000,
+                "max_file_size_mb": 50,
+                "session_timeout_minutes": 480
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        existing_permissions = default_permissions
+    
+    # Merge the updates with existing permissions
+    def deep_merge(base, updates):
+        for key, value in updates.items():
+            if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                deep_merge(base[key], value)
+            else:
+                base[key] = value
+    
+    deep_merge(existing_permissions, permissions_data)
+    existing_permissions["updated_at"] = datetime.utcnow()
+    existing_permissions["updated_by"] = current_user.id
     
     await db.admin_permissions.update_one(
         {},
-        {"$set": permissions_data},
+        {"$set": existing_permissions},
         upsert=True
     )
     
