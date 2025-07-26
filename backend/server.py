@@ -3249,6 +3249,7 @@ async def get_enhanced_users_list(
     current_user: User = Depends(get_current_user)
 ):
     """Get enhanced users list with photos, last seen, activity status, and KPIs"""
+    print(f"Enhanced list called by user: {current_user.username}")
     try:
         if current_user.role not in ["admin", "manager"]:
             raise HTTPException(status_code=403, detail="Not authorized")
@@ -3353,6 +3354,7 @@ async def get_enhanced_users_list(
         }
         
     except Exception as e:
+        print(f"Error in enhanced list: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/users/{user_id}/activity-summary") 
