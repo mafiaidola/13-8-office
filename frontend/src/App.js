@@ -4654,100 +4654,44 @@ const useRealTimeAnalytics = () => {
   return { analytics, loading };
 };
 
-// Enhanced Global Search Component with Better Design
-const GlobalSearchBox = ({ onResults }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState({});
-  const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
+// Enhanced Global Search Button
+const GlobalSearchButton = () => {
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const { language } = useContext(ThemeContext);
-
-  const handleSearch = async (searchQuery) => {
-    if (!searchQuery.trim()) {
-      setResults({});
-      setShowResults(false);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/search/global?q=${encodeURIComponent(searchQuery)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setResults(response.data);
-      setShowResults(true);
-      if (onResults) onResults(response.data);
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const debounceSearch = useCallback(
-    debounce((query) => handleSearch(query), 500),
-    []
-  );
-
-  useEffect(() => {
-    debounceSearch(query);
-  }, [query, debounceSearch]);
-
-  const getTotalResults = () => {
-    return Object.values(results).reduce((total, category) => total + (category?.length || 0), 0);
-  };
 
   const translations = {
     en: {
-      placeholder: "🔍 Search across the system...",
-      users: "👥 Users",
-      clinics: "🏥 Clinics", 
-      doctors: "👨‍⚕️ Doctors",
-      products: "📦 Products",
-      noResults: "No results found"
+      searchPlaceholder: "🔍 Search across the system...",
+      searchTitle: "Global Search"
     },
     ar: {
-      placeholder: "🔍 بحث عام في النظام...",
-      users: "👥 المستخدمين",
-      clinics: "🏥 العيادات",
-      doctors: "👨‍⚕️ الأطباء", 
-      products: "📦 المنتجات",
-      noResults: "لا توجد نتائج"
+      searchPlaceholder: "🔍 بحث عام في النظام...",
+      searchTitle: "البحث الشامل"
     }
   };
 
   const t = translations[language] || translations.en;
 
   return (
-    <div className="relative w-full max-w-md">
+    <>
       <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t.placeholder}
-          className="w-full px-4 py-2.5 pr-10 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl shadow-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        <button
+          onClick={() => setShowGlobalSearch(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-gray-600 hover:text-gray-800 w-full max-w-md"
           style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
-        />
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          {isSearching ? (
-            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <span className="text-gray-400 text-lg">🔍</span>
-          )}
-        </div>
+        >
+          <SVGIcon name="search" size={20} />
+          <span className="text-sm">{t.searchPlaceholder}</span>
+        </button>
       </div>
 
-      {showResults && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white/95 backdrop-blur-lg shadow-2xl rounded-xl border border-gray-200 max-h-96 overflow-y-auto">
-          {getTotalResults() === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <div className="text-4xl mb-2">🔍</div>
-              <p>{t.noResults}</p>
-            </div>
-          ) : (
-            Object.entries(results).map(([category, items]) => {
+      <GlobalSearch 
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+      />
+    </>
+  );
+};
               if (!items || items.length === 0) return null;
               
               return (
