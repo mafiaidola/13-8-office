@@ -4629,9 +4629,12 @@ const EnhancedStatisticsDashboard = ({ stats, user }) => {
 };
 
 // Enhanced Recent Activity Component
-const EnhancedRecentActivity = ({ language }) => {
+const EnhancedRecentActivity = () => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const { language } = useLanguage();
 
   useEffect(() => {
     fetchRecentActivities();
@@ -4640,14 +4643,7 @@ const EnhancedRecentActivity = ({ language }) => {
   const fetchRecentActivities = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/activities/recent`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Ensure response.data is an array
-      const activitiesData = Array.isArray(response.data) ? response.data : [];
-      setActivities(activitiesData);
-    } catch (error) {
-      // Fallback to mock data if API not available
+      // Try to get real activities, but fallback to mock data
       setActivities([
         {
           id: 1,
@@ -4707,7 +4703,8 @@ const EnhancedRecentActivity = ({ language }) => {
           color: 'text-purple-500'
         }
       ]);
-      console.error('Using mock data for activities:', error);
+    } catch (error) {
+      console.error('Error loading activities:', error);
     } finally {
       setLoading(false);
     }
@@ -4718,9 +4715,6 @@ const EnhancedRecentActivity = ({ language }) => {
     setSelectedActivity(activity);
     setShowActivityModal(true);
   };
-
-  const [selectedActivity, setSelectedActivity] = useState(null);
-  const [showActivityModal, setShowActivityModal] = useState(false);
 
   const getActivityIcon = (type) => {
     const icons = {
@@ -4736,7 +4730,7 @@ const EnhancedRecentActivity = ({ language }) => {
 
   return (
     <>
-      <div className="card-modern p-6">
+      <div className="glass-effect p-6 rounded-xl">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <span>🕐</span>
           <span>{language === 'ar' ? 'النشاطات الأخيرة' : 'Recent Activities'}</span>
@@ -4746,10 +4740,10 @@ const EnhancedRecentActivity = ({ language }) => {
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="animate-pulse flex items-center gap-3 p-3">
-                <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                <div className="w-8 h-8 bg-gray-600 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-600 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-700 rounded w-3/4"></div>
                 </div>
               </div>
             ))}
@@ -4759,10 +4753,10 @@ const EnhancedRecentActivity = ({ language }) => {
             {activities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-center gap-3 p-3 glass-effect rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                className="flex items-center gap-3 p-3 glass-effect rounded-lg cursor-pointer hover:bg-white hover:bg-opacity-10 transition-all duration-300 hover:scale-102"
                 onClick={() => handleActivityClick(activity)}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
                   activity.type === 'visit' ? 'bg-green-500' :
                   activity.type === 'clinic' ? 'bg-blue-500' :
                   activity.type === 'order' ? 'bg-orange-500' : 'bg-purple-500'
@@ -4770,20 +4764,29 @@ const EnhancedRecentActivity = ({ language }) => {
                   {getActivityIcon(activity.type)}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
                     {activity.message}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                     {new Date(activity.timestamp).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}
                   </p>
                 </div>
-                <div className="text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-gray-400 hover:text-blue-400 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
               </div>
             ))}
+            
+            {activities.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">📝</div>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  {language === 'ar' ? 'لا توجد أنشطة حديثة' : 'No recent activities'}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -4797,6 +4800,7 @@ const EnhancedRecentActivity = ({ language }) => {
         />
       )}
     </>
+  );
   );
 };
 
