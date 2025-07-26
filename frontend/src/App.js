@@ -11492,6 +11492,762 @@ const UserDetailsModal = ({ user, onClose }) => {
   }
 };
 
+// Integrated Gamification Dashboard Component
+const GamificationDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState('profile'); // profile, leaderboard, achievements
+  const [selectedPeriod, setSelectedPeriod] = useState('all_time');
+  
+  // Data states - all integrated with real performance
+  const [userProfile, setUserProfile] = useState(null);
+  const [leaderboard, setLeaderboard] = useState(null);
+  const [achievements, setAchievements] = useState(null);
+  
+  const { language, t } = useLanguage();
+
+  useEffect(() => {
+    loadGamificationData();
+  }, [activeView, selectedPeriod]);
+
+  const loadGamificationData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+      const headers = { Authorization: `Bearer ${token}` };
+
+      if (activeView === 'profile') {
+        const response = await axios.get(`${API}/gamification/user-profile/${user.id}`, { headers });
+        setUserProfile(response.data);
+      } else if (activeView === 'leaderboard') {
+        const response = await axios.get(`${API}/gamification/leaderboard?period=${selectedPeriod}&limit=20`, { headers });
+        setLeaderboard(response.data);
+      } else if (activeView === 'achievements') {
+        const response = await axios.get(`${API}/gamification/achievements`, { headers });
+        setAchievements(response.data);
+      }
+    } catch (error) {
+      setError('خطأ في تحميل بيانات التحفيز');
+      console.error('Gamification data error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getLevelColor = (level) => {
+    const colors = [
+      'text-gray-400',    // Level 1
+      'text-green-400',   // Level 2-3  
+      'text-blue-400',    // Level 4-5
+      'text-purple-400',  // Level 6-7
+      'text-yellow-400',  // Level 8-9
+      'text-red-400'      // Level 10
+    ];
+    return colors[Math.min(Math.floor((level - 1) / 2), colors.length - 1)];
+  };
+
+  const getLevelIcon = (level) => {
+    const icons = ['🥉', '🥈', '🥇', '💎', '👑'];
+    return icons[Math.min(Math.floor((level - 1) / 2), icons.length - 1)];
+  };
+
+  const getPositionIcon = (position) => {
+    if (position === 1) return '🥇';
+    if (position === 2) return '🥈';
+    if (position === 3) return '🥉';
+    return `#${position}`;
+  };
+
+  // User Profile View Component
+  const UserProfileView = () => {
+    if (!userProfile) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* User Header with Level */}
+        <div className="glass-effect p-6 rounded-xl">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                {userProfile.user_info.photo ? (
+                  <img 
+                    src={`data:image/jpeg;base64,${userProfile.user_info.photo}`}
+                    alt={userProfile.user_info.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white text-2xl font-bold">
+                    {userProfile.user_info.full_name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-red-500 flex items-center justify-center text-white font-bold text-sm ${getLevelColor(userProfile.gamification_stats.level)}`}>
+                {userProfile.gamification_stats.level}
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                {userProfile.user_info.full_name}
+              </h2>
+              <div className="flex items-center gap-4 mb-3">
+                <span className={`text-xl ${getLevelColor(userProfile.gamification_stats.level)}`}>
+                  {getLevelIcon(userProfile.gamification_stats.level)} المستوى {userProfile.gamification_stats.level}
+                </span>
+                <span className="text-yellow-400 text-xl font-bold">
+                  ⭐ {userProfile.gamification_stats.total_points.toLocaleString()} نقطة
+                </span>
+              </div>
+              
+              {/* Level Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    التقدم للمستوى التالي
+                  </span>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {userProfile.gamification_stats.points_to_next_level > 0 ? 
+                      `${userProfile.gamification_stats.points_to_next_level} نقطة متبقية` : 
+                      'المستوى الأقصى!'
+                    }
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-3">
+                  <div 
+                    className="h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                    style={{ width: `${userProfile.gamification_stats.level_progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Leaderboard Position */}
+            <div className="text-center p-4 bg-gradient-to-br from-blue-500 to-purple-500 bg-opacity-20 rounded-xl">
+              <div className="text-2xl mb-1">
+                {getPositionIcon(userProfile.leaderboard.position)}
+              </div>
+              <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                المركز الـ {userProfile.leaderboard.position}
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                من أصل {userProfile.leaderboard.total_participants}
+              </div>
+              <div className="text-xs mt-1 font-medium text-blue-400">
+                أفضل من {userProfile.leaderboard.percentile}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Points Breakdown */}
+        <div className="glass-effect p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>💰</span>
+            <span>تفصيل النقاط (من الأداء الحقيقي)</span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {userProfile.points_breakdown.visit_points}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                نقاط الزيارات
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.total_visits} × 10
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {userProfile.points_breakdown.effectiveness_bonus}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                مكافأة الفعالية
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.effective_visits} × 20
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-purple-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">
+                {userProfile.points_breakdown.order_points}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                نقاط الطلبات
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.total_orders} × 50
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-yellow-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">
+                {userProfile.points_breakdown.approval_bonus}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                مكافأة الموافقة
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.approved_orders} × 100
+              </div>
+            </div>
+            
+            <div className="text-center p-4 bg-red-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-red-400">
+                {userProfile.points_breakdown.clinic_points}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                نقاط العيادات
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.clinics_added} × 200
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Stats */}
+        <div className="glass-effect p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>📊</span>
+            <span>إحصائيات الأداء</span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-400 mb-2">
+                {userProfile.performance_stats.total_visits}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الزيارات</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.effectiveness_rate}% فعالية
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-400 mb-2">
+                {userProfile.performance_stats.total_orders}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الطلبات</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                {userProfile.performance_stats.approval_rate}% معدل الموافقة
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-400 mb-2">
+                {userProfile.performance_stats.clinics_added}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>عيادات مضافة</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-400 mb-2">
+                {userProfile.performance_stats.visit_streak}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>سلسلة أيام</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                أيام متتالية مع زيارات
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Achievements */}
+        {userProfile.achievements.length > 0 && (
+          <div className="glass-effect p-6 rounded-xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>🏆</span>
+              <span>الإنجازات المحققة</span>
+              <span className="bg-blue-500 bg-opacity-20 text-blue-400 px-2 py-1 rounded-full text-sm">
+                {userProfile.achievements.length}
+              </span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userProfile.achievements.map((achievement, index) => (
+                <div key={index} className="p-4 bg-gradient-to-br from-yellow-500 to-orange-500 bg-opacity-20 rounded-lg border border-yellow-500 border-opacity-30">
+                  <div className="text-3xl mb-2 text-center">{achievement.icon}</div>
+                  <div className="font-bold text-center mb-1" style={{ color: 'var(--text-primary)' }}>
+                    {achievement.title}
+                  </div>
+                  <div className="text-sm text-center" style={{ color: 'var(--text-secondary)' }}>
+                    {achievement.description}
+                  </div>
+                  <div className="text-xs text-center mt-2 text-yellow-400">
+                    ✨ مفتوح
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active Challenges */}
+        {userProfile.active_challenges.length > 0 && (
+          <div className="glass-effect p-6 rounded-xl">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span>🎯</span>
+              <span>التحديات النشطة</span>
+            </h3>
+            <div className="space-y-4">
+              {userProfile.active_challenges.map((challenge, index) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 rounded-lg border border-blue-500 border-opacity-30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{challenge.icon}</span>
+                      <div>
+                        <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                          {challenge.title}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {challenge.description}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-yellow-400">
+                        +{challenge.reward_points}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        نقطة
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        التقدم: {challenge.current} / {challenge.target}
+                      </span>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {challenge.progress.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, challenge.progress)}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                      الموعد النهائي: {new Date(challenge.deadline).toLocaleDateString('ar-EG')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Leaderboard View Component
+  const LeaderboardView = () => {
+    if (!leaderboard) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Leaderboard Header */}
+        <div className="glass-effect p-6 rounded-xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <span>🏅</span>
+              <span>لوحة المتصدرين - {leaderboard.statistics.period_label}</span>
+            </h3>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="px-4 py-2 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+            >
+              <option value="all_time">كل الأوقات</option>
+              <option value="monthly">هذا الشهر</option>
+              <option value="weekly">هذا الأسبوع</option>
+            </select>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {leaderboard.statistics.total_participants}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي المشاركين
+              </div>
+            </div>
+            <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {leaderboard.statistics.highest_score.toLocaleString()}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                أعلى نقاط
+              </div>
+            </div>
+            <div className="text-center p-4 bg-purple-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">
+                {leaderboard.statistics.average_points.toLocaleString()}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                متوسط النقاط
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top 3 Podium */}
+        {leaderboard.leaderboard.length >= 3 && (
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-end justify-center gap-4">
+              {/* Second Place */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center relative">
+                  {leaderboard.leaderboard[1].photo ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${leaderboard.leaderboard[1].photo}`}
+                      alt={leaderboard.leaderboard[1].full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-lg font-bold">
+                      {leaderboard.leaderboard[1].full_name.charAt(0)}
+                    </span>
+                  )}
+                  <div className="absolute -top-2 -right-2 text-2xl">🥈</div>
+                </div>
+                <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {leaderboard.leaderboard[1].full_name}
+                </div>
+                <div className="text-2xl font-bold text-gray-400">
+                  {leaderboard.leaderboard[1].total_points.toLocaleString()}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>نقطة</div>
+              </div>
+
+              {/* First Place */}
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center relative">
+                  {leaderboard.leaderboard[0].photo ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${leaderboard.leaderboard[0].photo}`}
+                      alt={leaderboard.leaderboard[0].full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-xl font-bold">
+                      {leaderboard.leaderboard[0].full_name.charAt(0)}
+                    </span>
+                  )}
+                  <div className="absolute -top-3 -right-3 text-3xl">🥇</div>
+                </div>
+                <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                  {leaderboard.leaderboard[0].full_name}
+                </div>
+                <div className="text-3xl font-bold text-yellow-400">
+                  {leaderboard.leaderboard[0].total_points.toLocaleString()}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>نقطة</div>
+              </div>
+
+              {/* Third Place */}
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center relative">
+                  {leaderboard.leaderboard[2].photo ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${leaderboard.leaderboard[2].photo}`}
+                      alt={leaderboard.leaderboard[2].full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-lg font-bold">
+                      {leaderboard.leaderboard[2].full_name.charAt(0)}
+                    </span>
+                  )}
+                  <div className="absolute -top-2 -right-2 text-2xl">🥉</div>
+                </div>
+                <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {leaderboard.leaderboard[2].full_name}
+                </div>
+                <div className="text-2xl font-bold text-amber-600">
+                  {leaderboard.leaderboard[2].total_points.toLocaleString()}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>نقطة</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Full Leaderboard */}
+        <div className="glass-effect rounded-xl overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-blue-600 to-purple-600">
+            <h3 className="text-xl font-bold text-white">
+              الترتيب الكامل
+            </h3>
+          </div>
+          <div className="divide-y divide-white divide-opacity-10">
+            {leaderboard.leaderboard.map((entry, index) => (
+              <div key={entry.user_id} className="p-4 hover:bg-white hover:bg-opacity-5 transition-colors">
+                <div className="flex items-center gap-4">
+                  {/* Position */}
+                  <div className="text-center min-w-[3rem]">
+                    <div className="text-2xl font-bold">
+                      {getPositionIcon(entry.position)}
+                    </div>
+                  </div>
+
+                  {/* User Photo */}
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    {entry.photo ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${entry.photo}`}
+                        alt={entry.full_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold">
+                        {entry.full_name.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* User Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {entry.full_name}
+                      </div>
+                      <div className={`text-sm ${getLevelColor(entry.level)}`}>
+                        {getLevelIcon(entry.level)} المستوى {entry.level}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-blue-400">
+                        🚗 {entry.performance.visits} زيارة
+                      </span>
+                      <span className="text-green-400">
+                        ✅ {entry.performance.effectiveness_rate}% فعالية
+                      </span>
+                      <span className="text-purple-400">
+                        📦 {entry.performance.orders} طلب
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Points */}
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-yellow-400">
+                      {entry.total_points.toLocaleString()}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      نقطة
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex gap-1">
+                    {entry.badges.map((badge, badgeIndex) => (
+                      <div key={badgeIndex} className="text-lg" title={badge.title}>
+                        {badge.icon}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Achievements Catalog View
+  const AchievementsView = () => {
+    if (!achievements) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Achievements Header */}
+        <div className="glass-effect p-6 rounded-xl">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>🏆</span>
+            <span>كتالوج الإنجازات</span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {achievements.total_achievements}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي الإنجازات
+              </div>
+            </div>
+            <div className="text-center p-4 bg-green-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {achievements.categories.length}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                الفئات
+              </div>
+            </div>
+            <div className="text-center p-4 bg-purple-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">
+                {achievements.total_possible_points.toLocaleString()}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                إجمالي النقاط الممكنة
+              </div>
+            </div>
+            <div className="text-center p-4 bg-yellow-500 bg-opacity-20 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">
+                100%
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                من الأداء الحقيقي
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Achievements Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {achievements.achievements.map((achievement, index) => (
+            <div key={achievement.id} className="glass-effect p-6 rounded-xl hover:bg-white hover:bg-opacity-10 transition-all duration-300 border border-white border-opacity-10">
+              <div className="text-center mb-4">
+                <div className="text-4xl mb-2">{achievement.icon}</div>
+                <div className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
+                  {achievement.title}
+                </div>
+                <div className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                  {achievement.description}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    شرط الفتح:
+                  </span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                    {achievement.unlock_condition}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    مكافأة النقاط:
+                  </span>
+                  <span className="text-lg font-bold text-yellow-400">
+                    +{achievement.points_reward}
+                  </span>
+                </div>
+
+                <div className="text-center">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    achievement.category === 'visits' ? 'bg-blue-500 bg-opacity-20 text-blue-400' :
+                    achievement.category === 'effectiveness' ? 'bg-green-500 bg-opacity-20 text-green-400' :
+                    achievement.category === 'orders' ? 'bg-purple-500 bg-opacity-20 text-purple-400' :
+                    achievement.category === 'clinics' ? 'bg-red-500 bg-opacity-20 text-red-400' :
+                    'bg-orange-500 bg-opacity-20 text-orange-400'
+                  }`}>
+                    {achievement.category}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-gradient">🎮 نظام التحفيز المتكامل</h2>
+        <div className="text-sm bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 px-4 py-2 rounded-lg">
+          <span style={{ color: 'var(--text-secondary)' }}>
+            مرتبط بالأداء الحقيقي 💯
+          </span>
+        </div>
+      </div>
+
+      {/* View Toggle */}
+      <div className="glass-effect p-2 rounded-xl inline-flex">
+        <button
+          onClick={() => setActiveView('profile')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'profile'
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          👤 ملفي الشخصي
+        </button>
+        <button
+          onClick={() => setActiveView('leaderboard')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'leaderboard'
+              ? 'bg-purple-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          🏅 لوحة المتصدرين
+        </button>
+        <button
+          onClick={() => setActiveView('achievements')}
+          className={`px-6 py-3 rounded-lg transition-all duration-300 ${
+            activeView === 'achievements'
+              ? 'bg-green-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white hover:bg-opacity-10'
+          }`}
+        >
+          🏆 الإنجازات
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="space-y-6">
+          {[1,2,3].map(i => (
+            <div key={i} className="glass-effect p-6 rounded-xl animate-pulse">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-600 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-6 bg-gray-600 rounded w-1/3 mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[1,2,3].map(j => (
+                    <div key={j} className="h-16 bg-gray-600 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {activeView === 'profile' && <UserProfileView />}
+          {activeView === 'leaderboard' && <LeaderboardView />}
+          {activeView === 'achievements' && <AchievementsView />}
+        </>
+      )}
+    </div>
+  );
+}
+
 // Main App Component
 const App = () => {
   return (
