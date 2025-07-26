@@ -10993,6 +10993,10 @@ const Dashboard = () => {
           <AdvancedAnalyticsDashboard />
         )}
         
+        {activeTab === 'gamification' && (user.role === 'sales_rep' || canAccessTab('reports')) && (
+          <GamificationDashboard />
+        )}
+        
         {activeTab === 'chat' && (
           <ChatSystem />
         )}
