@@ -385,7 +385,7 @@ const SVGIcon = ({ name, size = 24, className = "", animated = true }) => {
   return icons[name] || icons.theme;
 };
 
-// Global Search Component
+// Enhanced Global Search Component with Invoice Search
 const GlobalSearch = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('all');
@@ -409,15 +409,26 @@ const GlobalSearch = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Check if search query is a number (potential invoice number)
+      const isInvoiceNumber = /^\d+$/.test(searchQuery.trim());
+      
       const response = await axios.get(`${API}/search/comprehensive`, {
         params: {
           q: searchQuery,
-          search_type: searchType
+          search_type: isInvoiceNumber ? 'invoice' : searchType
         },
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setSearchResults(response.data.results);
+      
+      // If searching by invoice number and found results, automatically open first invoice
+      if (isInvoiceNumber && response.data.results.invoices && response.data.results.invoices.length > 0) {
+        const firstInvoice = response.data.results.invoices[0];
+        setSelectedInvoice(firstInvoice);
+        setShowInvoiceModal(true);
+      }
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -439,8 +450,8 @@ const GlobalSearch = ({ isOpen, onClose }) => {
   const renderSearchResults = () => {
     if (loading) {
       return (
-        <div className="text-center py-8">
-          <div className="loading-shimmer w-16 h-16 rounded-full mx-auto mb-4"></div>
+        <div className="text-center py-12">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p style={{ color: 'var(--text-secondary)' }}>جاري البحث...</p>
         </div>
       );
@@ -448,15 +459,18 @@ const GlobalSearch = ({ isOpen, onClose }) => {
 
     if (!searchResults || Object.keys(searchResults).length === 0) {
       return (
-        <div className="text-center py-8">
-          <SVGIcon name="search" size={48} className="mx-auto mb-4 text-gray-400" />
+        <div className="text-center py-12">
+          <SVGIcon name="search" size={64} className="mx-auto mb-4 text-gray-400" />
           <p style={{ color: 'var(--text-secondary)' }}>ابدأ البحث للحصول على النتائج</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+            يمكنك البحث باستخدام الأسماء أو أرقام الفواتير
+          </p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Representatives Results */}
         {searchResults.representatives && searchResults.representatives.length > 0 && (
           <div className="search-section">
@@ -466,9 +480,9 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </h3>
             <div className="grid gap-4">
               {searchResults.representatives.map((rep) => (
-                <div key={rep.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                <div key={rep.id} className="glass-effect p-4 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                       {rep.photo ? (
                         <img src={rep.photo} alt={rep.name} className="w-full h-full rounded-full object-cover" />
                       ) : (
@@ -478,23 +492,27 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-lg">{rep.name}</h4>
-                        <span className="text-sm px-2 py-1 bg-blue-100 rounded-full">مندوب</span>
+                        <span className="text-sm px-3 py-1 bg-blue-100 bg-opacity-20 rounded-full">مندوب</span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {rep.username} • {rep.email}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-semibold">الزيارات:</span> {rep.statistics?.visits?.total || 0}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>الزيارات: {rep.statistics?.visits?.total || 0}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">الطلبات:</span> {rep.statistics?.orders?.total || 0}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span>الطلبات: {rep.statistics?.orders?.total || 0}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">التارجيت:</span> {rep.statistics?.target || 0} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                          <span>التارجيت: {rep.statistics?.target || 0} ج.م</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">المديونية:</span> {rep.statistics?.pending_debt || 0} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          <span>المديونية: {rep.statistics?.pending_debt || 0} ج.م</span>
                         </div>
                       </div>
                     </div>
@@ -514,28 +532,31 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </h3>
             <div className="grid gap-4">
               {searchResults.doctors.map((doctor) => (
-                <div key={doctor.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                <div key={doctor.id} className="glass-effect p-4 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold">
                       د.{doctor.name.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-lg">د. {doctor.name}</h4>
-                        <span className="text-sm px-2 py-1 bg-green-100 rounded-full">طبيب</span>
+                        <span className="text-sm px-3 py-1 bg-green-100 bg-opacity-20 rounded-full">طبيب</span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {doctor.specialty} • {doctor.phone}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-semibold">العيادة:</span> {doctor.clinic?.name || 'غير محدد'}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                          <span>العيادة: {doctor.clinic?.name || 'غير محدد'}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">الطلبات:</span> {doctor.total_orders || 0}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>الطلبات: {doctor.total_orders || 0}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">المديونية:</span> {doctor.pending_debt || 0} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          <span>المديونية: {doctor.pending_debt || 0} ج.م</span>
                         </div>
                       </div>
                     </div>
@@ -555,31 +576,35 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </h3>
             <div className="grid gap-4">
               {searchResults.clinics.map((clinic) => (
-                <div key={clinic.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                <div key={clinic.id} className="glass-effect p-4 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
                       {clinic.name.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-lg">{clinic.name}</h4>
-                        <span className="text-sm px-2 py-1 bg-purple-100 rounded-full">عيادة</span>
+                        <span className="text-sm px-3 py-1 bg-purple-100 bg-opacity-20 rounded-full">عيادة</span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {clinic.address} • {clinic.phone}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-semibold">المدير:</span> {clinic.manager_name || 'غير محدد'}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                          <span>المدير: {clinic.manager_name || 'غير محدد'}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">الأطباء:</span> {clinic.doctors?.length || 0}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span>الأطباء: {clinic.doctors?.length || 0}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">الطلبات:</span> {clinic.total_orders || 0}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>الطلبات: {clinic.total_orders || 0}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">المديونية:</span> {clinic.pending_debt || 0} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          <span>المديونية: {clinic.pending_debt || 0} ج.م</span>
                         </div>
                       </div>
                     </div>
@@ -601,33 +626,35 @@ const GlobalSearch = ({ isOpen, onClose }) => {
               {searchResults.invoices.map((invoice) => (
                 <div 
                   key={invoice.id} 
-                  className="card-modern p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                  className="glass-effect p-4 hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => openInvoiceModal(invoice)}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
                       #
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-lg">فاتورة #{invoice.id.slice(-8)}</h4>
-                        <span className={`text-sm px-2 py-1 rounded-full ${
-                          invoice.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                          invoice.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                        <span className={`text-sm px-3 py-1 rounded-full ${
+                          invoice.status === 'APPROVED' ? 'bg-green-100 bg-opacity-20 text-green-300' :
+                          invoice.status === 'PENDING' ? 'bg-yellow-100 bg-opacity-20 text-yellow-300' :
+                          'bg-gray-100 bg-opacity-20 text-gray-300'
                         }`}>
                           {invoice.status}
                         </span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {invoice.sales_rep_name} • {invoice.doctor_name} • {invoice.clinic_name}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-semibold">التاريخ:</span> {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>التاريخ: {new Date(invoice.created_at).toLocaleDateString('ar-EG')}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">القيمة:</span> {invoice.total_amount} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span>القيمة: {invoice.total_amount} ج.م</span>
                         </div>
                       </div>
                     </div>
@@ -647,9 +674,9 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </h3>
             <div className="grid gap-4">
               {searchResults.products.map((product) => (
-                <div key={product.id} className="card-modern p-4 hover:shadow-lg transition-shadow">
+                <div key={product.id} className="glass-effect p-4 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                       {product.image ? (
                         <img src={product.image} alt={product.name} className="w-full h-full rounded-full object-cover" />
                       ) : (
@@ -659,20 +686,23 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-lg">{product.name}</h4>
-                        <span className="text-sm px-2 py-1 bg-indigo-100 rounded-full">منتج</span>
+                        <span className="text-sm px-3 py-1 bg-indigo-100 bg-opacity-20 rounded-full">منتج</span>
                       </div>
-                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                         {product.description} • {product.category}
                       </p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="font-semibold">السعر:</span> {product.price} ج.م
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          <span>السعر: {product.price} ج.م</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">الوحدة:</span> {product.unit}
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span>الوحدة: {product.unit}</span>
                         </div>
-                        <div>
-                          <span className="font-semibold">تم طلبه:</span> {product.total_ordered || 0} مرة
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                          <span>تم طلبه: {product.total_ordered || 0} مرة</span>
                         </div>
                       </div>
                     </div>
@@ -682,6 +712,19 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </div>
           </div>
         )}
+
+        {/* No Results Message */}
+        {searchQuery && Object.keys(searchResults).length === 0 && (
+          <div className="text-center py-12">
+            <SVGIcon name="search" size={64} className="mx-auto mb-4 text-gray-400" />
+            <p className="text-lg mb-2" style={{ color: 'var(--text-secondary)' }}>
+              لا توجد نتائج لـ "{searchQuery}"
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              جرب استخدام كلمات أخرى أو أرقام الفواتير
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -689,22 +732,22 @@ const GlobalSearch = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-10">
+      <div className="glass-effect w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
         {/* Header */}
-        <div className="p-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-6 border-b border-white border-opacity-20">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gradient">البحث الشامل</h2>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 hover:bg-opacity-10 rounded-full transition-colors"
             >
               <SVGIcon name="close" size={24} />
             </button>
           </div>
           
           {/* Search Input */}
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-6">
             <div className="flex-1 relative">
               <input
                 type="text"
@@ -712,20 +755,19 @@ const GlobalSearch = ({ isOpen, onClose }) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="ابحث عن مندوب، طبيب، عيادة، رقم فاتورة، أو منتج..."
-                className="w-full p-3 pr-12 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-4 pr-12 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 glass-effect"
                 style={{ 
-                  background: 'var(--secondary-bg)',
                   borderColor: 'var(--border-color)',
                   color: 'var(--text-primary)'
                 }}
               />
-              <div className="absolute right-3 top-3">
+              <div className="absolute right-4 top-4">
                 <SVGIcon name="search" size={20} />
               </div>
             </div>
             <button
               onClick={performSearch}
-              className="btn-primary px-6 py-3 flex items-center gap-2"
+              className="btn-modern px-8 py-4 flex items-center gap-2"
               disabled={loading}
             >
               <SVGIcon name="search" size={18} />
@@ -739,10 +781,10 @@ const GlobalSearch = ({ isOpen, onClose }) => {
               <button
                 key={type.value}
                 onClick={() => setSearchType(type.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap flex items-center gap-2 ${
                   searchType === type.value 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-blue-500 text-white shadow-lg' 
+                    : 'glass-effect hover:bg-gray-100 hover:bg-opacity-10'
                 }`}
               >
                 <SVGIcon name={type.icon} size={16} />
@@ -760,7 +802,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
 
       {/* Invoice Modal */}
       {showInvoiceModal && selectedInvoice && (
-        <InvoiceModal 
+        <EnhancedInvoiceModal 
           invoice={selectedInvoice} 
           onClose={() => setShowInvoiceModal(false)} 
         />
