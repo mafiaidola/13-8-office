@@ -6441,7 +6441,8 @@ const EnhancedFooter = () => {
         {/* Enhanced Animated Copyright Section */}
         <div className="mt-8 pt-8 border-t border-white border-opacity-20 flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            © {currentYear} {t('systemName')}. {t('footerCopyright')}.
+            © {currentYear} EP Group System. 
+            {language === 'ar' ? ' جميع الحقوق محفوظة.' : ' All rights reserved.'}
           </div>
           
           {/* Animated Intellectual Property Section */}
