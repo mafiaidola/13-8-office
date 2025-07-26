@@ -770,15 +770,18 @@ backend:
 
   - task: "Line-Based Product Separation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated Product model to include 'line' field (LINE_1 or LINE_2). Modified ProductCreate model to require line specification. Added API endpoint /api/products/by-line/{line} for line-specific product retrieval."
+      - working: true
+        agent: "testing"
+        comment: "✅ LINE-BASED PRODUCT SEPARATION WORKING CORRECTLY: Product separation by lines functioning perfectly. GET /api/products/by-line/line_1 returns 1 product for line_1, GET /api/products/by-line/line_2 returns 1 product for line_2. Products correctly include 'line' field with proper values (line_1/line_2). Product model successfully updated to support line-specific categorization. API endpoints responding correctly with proper filtering and data structure."
 
   - task: "Comprehensive Admin Settings API"
     implemented: true
