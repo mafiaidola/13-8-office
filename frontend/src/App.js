@@ -14264,9 +14264,22 @@ const ComprehensiveAdminSettings = () => {
 
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
-    { id: 'roles', label: 'الأدوار', icon: '👥' },
-    { id: 'lines', label: 'الخطوط', icon: '📈' },
+    { id: 'users', label: 'إدارة المستخدمين', icon: '👥' },
+    { id: 'roles', label: 'الأدوار والصلاحيات', icon: '🔐' },
+    { id: 'regions', label: 'المناطق والخطوط', icon: '🗺️' },
+    { id: 'products', label: 'إدارة المنتجات', icon: '📦' },
+    { id: 'gps', label: 'نظام GPS', icon: '📍' },
+    { id: 'gamification', label: 'نظام الألعاب', icon: '🎮' },
+    { id: 'accounting', label: 'نظام المحاسبة', icon: '💰' },
+    { id: 'notifications', label: 'نظام الإشعارات', icon: '🔔' },
+    { id: 'chat', label: 'نظام الدردشة', icon: '💬' },
+    { id: 'scanner', label: 'ماسح المستندات', icon: '📄' },
+    { id: 'visits', label: 'نظام الزيارات', icon: '🏥' },
+    { id: 'reports', label: 'التقارير', icon: '📋' },
+    { id: 'themes', label: 'الألوان والثيمات', icon: '🎨' },
+    { id: 'languages', label: 'إعدادات اللغة', icon: '🌐' },
     { id: 'system', label: 'صحة النظام', icon: '⚙️' },
+    { id: 'security', label: 'إعدادات الأمان', icon: '🛡️' },
     { id: 'initialize', label: 'تهيئة النظام', icon: '🚀' }
   ];
 
