@@ -824,6 +824,30 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "Added /api/admin/users/{user_id}/assignment endpoint for assigning users to regions, districts, and lines. Updated User model with region_id, district_id, and line fields for proper hierarchical assignments."
+
+  - task: "Comprehensive Admin Control APIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added 11 comprehensive admin control APIs: /admin/settings/user-management, /admin/settings/gps, /admin/settings/theme, /admin/settings/gamification, /admin/settings/notifications, /admin/settings/chat, /admin/settings/scanner, /admin/settings/visits, /admin/settings/security, /admin/settings/{category} (GET), and complete feature toggle system with /admin/features/toggle and /admin/features/status endpoints."
+
+  - task: "Feature Management System Backend"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented backend feature management system supporting 11 different system features (GPS tracking, gamification, chat system, document scanner, visit management, accounting system, notifications, analytics, user registration, theme switching, language switching) with proper validation, default status management, and GM/Admin-only access control."
       - working: true
         agent: "testing"
         comment: "✅ USER ASSIGNMENT MANAGEMENT WORKING PERFECTLY: PATCH /api/admin/users/{user_id}/assignment endpoint fully functional. Successfully assigned medical rep user to region (5d7fce01-4e08-43e9-afc0-cc589ca80b60), district (9aaea716-1a0d-4da2-a539-fee57b49f625), and line (line_1). User model properly updated with region_id, district_id, and line fields. Assignment API correctly validates and saves hierarchical user assignments for proper organizational structure management."
