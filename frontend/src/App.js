@@ -458,16 +458,6 @@ const ThemeProvider = ({ children }) => {
     updateThemeVariables(savedTheme);
   }, []);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    // Apply theme to document element and body
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.body.setAttribute('data-theme', savedTheme);
-    // Force theme variables update
-    updateThemeVariables(savedTheme);
-  }, []);
-
   const updateThemeVariables = (currentTheme) => {
     const root = document.documentElement;
     
