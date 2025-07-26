@@ -11029,14 +11029,36 @@ const Dashboard = () => {
               {t('chat')}
             </button>
             
-            {/* System Settings only for Admin */}
-            {user.role === 'admin' && (
+            {/* System Settings only for Admin and GM */}
+            {(user.role === 'admin' || user.role === 'gm') && (
               <button
                 onClick={() => setActiveTab('settings')}
                 className={`nav-item ${activeTab === 'settings' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
                 <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>⚙️</span>
                 {t('settings')}
+              </button>
+            )}
+
+            {/* Region Management for GM, Admin, Line Managers */}
+            {(user.role === 'admin' || user.role === 'gm' || user.role === 'line_manager') && (
+              <button
+                onClick={() => setActiveTab('regions')}
+                className={`nav-item ${activeTab === 'regions' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🗺️</span>
+                {t('regionManagement')}
+              </button>
+            )}
+
+            {/* Comprehensive Admin Settings for GM and Admin only */}
+            {(user.role === 'admin' || user.role === 'gm') && (
+              <button
+                onClick={() => setActiveTab('comprehensive')}
+                className={`nav-item ${activeTab === 'comprehensive' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🎛️</span>
+                {t('comprehensiveSettings')}
               </button>
             )}
 
