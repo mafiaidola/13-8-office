@@ -14335,28 +14335,28 @@ const ComprehensiveAdminSettings = () => {
   }
 
   const tabs = [
-    { id: 'overview', label: 'نظرة عامة', icon: '📊' },
-    { id: 'users', label: 'إدارة المستخدمين', icon: '👥' },
-    { id: 'roles', label: 'الأدوار والصلاحيات', icon: '🔐' },
-    { id: 'regions', label: 'المناطق والخطوط', icon: '🗺️' },
-    { id: 'products', label: 'إدارة المنتجات', icon: '📦' },
-    { id: 'gps', label: 'نظام GPS', icon: '📍' },
-    { id: 'maps', label: 'خرائط جوجل', icon: '🗺️' },
-    { id: 'gamification', label: 'نظام الألعاب', icon: '🎮' },
-    { id: 'accounting', label: 'نظام المحاسبة', icon: '💰' },
-    { id: 'notifications', label: 'نظام الإشعارات', icon: '🔔' },
-    { id: 'chat', label: 'نظام الدردشة', icon: '💬' },
-    { id: 'scanner', label: 'ماسح المستندات', icon: '📄' },
-    { id: 'visits', label: 'نظام الزيارات', icon: '🏥' },
-    { id: 'reports', label: 'التقارير', icon: '📋' },
-    { id: 'themes', label: 'الألوان والثيمات', icon: '🎨' },
-    { id: 'languages', label: 'إعدادات اللغة', icon: '🌐' },
-    { id: 'website', label: 'إعدادات الموقع', icon: '⚙️' },
-    { id: 'performance', label: 'مراقبة الأداء', icon: '📊' },
-    { id: 'system', label: 'صحة النظام', icon: '⚙️' },
-    { id: 'security', label: 'إعدادات الأمان', icon: '🛡️' },
-    { id: 'features', label: 'تحكم المميزات', icon: '🎛️' },
-    { id: 'initialize', label: 'تهيئة النظام', icon: '🚀' }
+    { id: 'overview', label: 'نظرة عامة', icon: 'analytics' },
+    { id: 'users', label: 'إدارة المستخدمين', icon: 'users' },
+    { id: 'roles', label: 'الأدوار والصلاحيات', icon: 'security' },
+    { id: 'regions', label: 'المناطق والخطوط', icon: 'regions' },
+    { id: 'products', label: 'إدارة المنتجات', icon: 'products' },
+    { id: 'gps', label: 'نظام GPS', icon: 'gps' },
+    { id: 'maps', label: 'خرائط جوجل', icon: 'maps' },
+    { id: 'gamification', label: 'نظام الألعاب', icon: 'gamification' },
+    { id: 'accounting', label: 'نظام المحاسبة', icon: 'accounting' },
+    { id: 'notifications', label: 'نظام الإشعارات', icon: 'notifications' },
+    { id: 'chat', label: 'نظام الدردشة', icon: 'chat' },
+    { id: 'scanner', label: 'ماسح المستندات', icon: 'scanner' },
+    { id: 'visits', label: 'نظام الزيارات', icon: 'visits' },
+    { id: 'reports', label: 'التقارير', icon: 'reports' },
+    { id: 'themes', label: 'الألوان والثيمات', icon: 'theme' },
+    { id: 'languages', label: 'إعدادات اللغة', icon: 'language' },
+    { id: 'website', label: 'إعدادات الموقع', icon: 'settings' },
+    { id: 'performance', label: 'مراقبة الأداء', icon: 'performance' },
+    { id: 'system', label: 'صحة النظام', icon: 'settings' },
+    { id: 'security', label: 'إعدادات الأمان', icon: 'security' },
+    { id: 'features', label: 'تحكم المميزات', icon: 'features' },
+    { id: 'initialize', label: 'تهيئة النظام', icon: 'settings' }
   ];
 
   return (
