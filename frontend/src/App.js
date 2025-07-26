@@ -6950,41 +6950,19 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
           {/* Language Toggle */}
           <LanguageToggle />
 
-          {/* Theme Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className="glass-effect p-3 rounded-full hover:scale-105 transition-transform"
-              title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
-            >
-              <SVGIcon name="theme" size={20} className="svg-icon-animated" />
-            </button>
-
-            {showThemeMenu && (
-              <div className="absolute top-full left-0 mt-2 glass-effect rounded-xl p-2 min-w-48 border border-white border-opacity-20">
-                <div className="grid grid-cols-3 gap-2">
-                  {themes.map((themeOption) => (
-                    <button
-                      key={themeOption.id}
-                      onClick={() => {
-                        changeTheme(themeOption.id);
-                        setShowThemeMenu(false);
-                      }}
-                      className={`theme-option ${themeOption.id} ${theme === themeOption.id ? 'active' : ''}`}
-                      title={themeOption.name}
-                    >
-                      <span className="text-lg">{themeOption.icon}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-2 pt-2 border-t border-white border-opacity-20">
-                  <div className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-                    {language === 'ar' ? 'الثيم الحالي:' : 'Current:'} <strong>{themes.find(t => t.id === theme)?.name}</strong>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Unified Theme Toggle - Single Button */}
+          <button
+            onClick={() => {
+              const currentIndex = themes.findIndex(t => t.id === theme);
+              const nextIndex = (currentIndex + 1) % themes.length;
+              changeTheme(themes[nextIndex].id);
+            }}
+            className="glass-effect p-3 rounded-full hover:scale-105 transition-transform flex items-center gap-2"
+            title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
+          >
+            <span className="text-lg">{themes.find(t => t.id === theme)?.icon}</span>
+            <SVGIcon name="theme" size={16} className="svg-icon-animated" />
+          </button>
 
           {/* User Menu */}
           <div className="relative">
