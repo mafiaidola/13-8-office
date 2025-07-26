@@ -88,6 +88,47 @@ class UserRole:
         return [r for r, level in cls.ROLE_HIERARCHY.items() if level < role_level]
 
 # Models
+class Region(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # Short code for region
+    description: Optional[str] = None
+    manager_id: Optional[str] = None  # Area Manager assigned to this region
+    coordinates: Optional[Dict[str, float]] = None  # GPS coordinates for region center
+    boundaries: Optional[List[Dict[str, float]]] = None  # GPS boundaries for region
+    line: str  # LINE_1 or LINE_2
+    districts: List[str] = []  # List of district IDs in this region
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class District(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str
+    region_id: str
+    manager_id: Optional[str] = None  # District Manager assigned
+    line: str  # LINE_1 or LINE_2
+    coordinates: Optional[Dict[str, float]] = None
+    boundaries: Optional[List[Dict[str, float]]] = None
+    key_accounts: List[str] = []  # List of key account IDs
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class LineManagement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    line: str  # LINE_1 or LINE_2
+    line_manager_id: str
+    name: str  # Display name for the line
+    description: Optional[str] = None
+    regions: List[str] = []  # List of region IDs
+    products: List[str] = []  # List of product IDs assigned to this line
+    targets: Dict[str, float] = {}  # Monthly/yearly targets
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
@@ -102,7 +143,9 @@ class User(BaseModel):
     created_by: Optional[str] = None  # who created this user
     managed_by: Optional[str] = None  # direct manager
     permissions: List[str] = []
-    region: Optional[str] = None  # User's assigned region
+    region_id: Optional[str] = None  # User's assigned region
+    district_id: Optional[str] = None  # User's assigned district (for district managers and below)
+    line: Optional[str] = None  # LINE_1 or LINE_2 (for line-specific roles)
     target_amount: Optional[float] = None  # Monthly target for sales reps
     last_login: Optional[datetime] = None
     login_count: int = 0
