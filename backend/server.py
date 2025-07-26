@@ -2510,7 +2510,7 @@ async def get_enhanced_users_list(
                 **user,
                 "is_online": is_online,
                 "kpis": kpis,
-                "last_seen_formatted": user.get("last_seen", "").split('.')[0] if user.get("last_seen") else None
+                "last_seen_formatted": str(user.get("last_seen", "")).split('.')[0] if user.get("last_seen") else None
             }
             
             enhanced_users.append(enhanced_user)
