@@ -1206,6 +1206,445 @@ class BackendTester:
             self.log_test("Role Access Restrictions", False, f"Sales rep not denied warehouse stats access: {status_code}")
         return False
 
+    # ADVANCED ADMIN CONTROL SYSTEM TESTS - Priority testing as requested in review
+    
+    def test_google_maps_settings_management(self):
+        """Test 36: POST /api/admin/settings/google-maps - Google Maps settings management"""
+        if not self.admin_token:
+            self.log_test("Google Maps Settings Management", False, "No admin token available")
+            return False
+        
+        google_maps_settings = {
+            "api_key": "AIzaSyBvOkBwGyOnqN-UtKuqGHlgJYQBtdQfyoA",  # Test API key format
+            "default_zoom": 15,
+            "map_type": "roadmap",
+            "enable_geolocation": True,
+            "enable_directions": True,
+            "enable_places": True,
+            "enable_geocoding": True,
+            "marker_color": "#ff6b35",
+            "geofence_radius": 20,
+            "enable_clustering": True,
+            "cluster_max_zoom": 15,
+            "enable_traffic": False,
+            "enable_transit": False,
+            "language": "ar",
+            "region": "SA"
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/google-maps", google_maps_settings, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Google Maps Settings Management", True, "Google Maps settings updated successfully")
+            return True
+        else:
+            self.log_test("Google Maps Settings Management", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_google_maps_settings_retrieval(self):
+        """Test 37: GET /api/admin/settings/google-maps - Settings retrieval (API key should be hidden)"""
+        if not self.admin_token:
+            self.log_test("Google Maps Settings Retrieval", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/settings/google-maps", token=self.admin_token)
+        
+        if status_code == 200:
+            # Verify API key is hidden for security
+            api_key = response.get("api_key", "")
+            if api_key and ("*" in api_key or api_key.startswith("AIza") and len(api_key) < 20):
+                # Check other settings are present
+                required_fields = ["default_zoom", "map_type", "enable_geolocation", "geofence_radius"]
+                if all(field in response for field in required_fields):
+                    self.log_test("Google Maps Settings Retrieval", True, f"Settings retrieved with hidden API key: {api_key}")
+                    return True
+                else:
+                    self.log_test("Google Maps Settings Retrieval", False, "Missing required settings fields")
+            else:
+                self.log_test("Google Maps Settings Retrieval", False, f"API key not properly hidden: {api_key}")
+        else:
+            self.log_test("Google Maps Settings Retrieval", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_google_maps_api_validation(self):
+        """Test 38: POST /api/admin/test-google-maps-api - API key validation"""
+        if not self.admin_token:
+            self.log_test("Google Maps API Validation", False, "No admin token available")
+            return False
+        
+        test_data = {
+            "api_key": "AIzaSyBvOkBwGyOnqN-UtKuqGHlgJYQBtdQfyoA",  # Test API key
+            "test_type": "geocoding",
+            "test_address": "King Fahd Road, Riyadh, Saudi Arabia"
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/test-google-maps-api", test_data, self.admin_token)
+        
+        if status_code == 200:
+            # Check validation response structure
+            required_fields = ["valid", "service", "test_result"]
+            if all(field in response for field in required_fields):
+                self.log_test("Google Maps API Validation", True, f"API validation working: {response.get('valid')}")
+                return True
+            else:
+                self.log_test("Google Maps API Validation", False, "Missing validation response fields")
+        else:
+            self.log_test("Google Maps API Validation", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_google_services_status(self):
+        """Test 39: GET /api/admin/google-services-status - Google services status"""
+        if not self.admin_token:
+            self.log_test("Google Services Status", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/google-services-status", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check services status structure
+            required_services = ["maps", "geocoding", "directions", "places", "analytics", "drive"]
+            if all(service in response for service in required_services):
+                # Check each service has status info
+                maps_status = response.get("maps", {})
+                if "enabled" in maps_status and "last_check" in maps_status:
+                    self.log_test("Google Services Status", True, f"All Google services status retrieved: {len(response)} services")
+                    return True
+                else:
+                    self.log_test("Google Services Status", False, "Missing service status details")
+            else:
+                self.log_test("Google Services Status", False, f"Missing required services: {response}")
+        else:
+            self.log_test("Google Services Status", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_website_configuration_management(self):
+        """Test 40: POST /api/admin/settings/website-config - Website configuration updates"""
+        if not self.admin_token:
+            self.log_test("Website Configuration Management", False, "No admin token available")
+            return False
+        
+        website_config = {
+            "site_name": "نظام إدارة المناديب المتقدم",
+            "site_description": "نظام شامل لإدارة مناديب المبيعات الطبية",
+            "site_keywords": "مناديب، مبيعات، طبية، إدارة، نظام",
+            "site_url": "https://medical-sales-system.com",
+            "admin_email": "admin@medical-sales-system.com",
+            "support_email": "support@medical-sales-system.com",
+            "phone": "+966112345678",
+            "address": "الرياض، المملكة العربية السعودية",
+            "logo_url": "/assets/logo.png",
+            "favicon_url": "/assets/favicon.ico",
+            "social_media": {
+                "facebook": "https://facebook.com/medical-sales-system",
+                "twitter": "https://twitter.com/medical_sales_sys",
+                "linkedin": "https://linkedin.com/company/medical-sales-system",
+                "instagram": "https://instagram.com/medical_sales_system"
+            },
+            "seo_settings": {
+                "meta_title": "نظام إدارة المناديب - الحل الشامل للمبيعات الطبية",
+                "meta_description": "نظام متكامل لإدارة مناديب المبيعات الطبية مع تتبع GPS والتقارير المتقدمة",
+                "og_title": "نظام إدارة المناديب المتقدم",
+                "og_description": "الحل الأمثل لإدارة فرق المبيعات الطبية",
+                "og_image": "/assets/og-image.jpg"
+            },
+            "performance_settings": {
+                "enable_caching": True,
+                "cache_duration": 3600,
+                "enable_compression": True,
+                "enable_minification": True,
+                "cdn_enabled": False,
+                "cdn_url": ""
+            },
+            "security_settings": {
+                "enable_https": True,
+                "enable_hsts": True,
+                "enable_csp": True,
+                "session_timeout": 1440,
+                "max_login_attempts": 5,
+                "lockout_duration": 300
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/website-config", website_config, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Website Configuration Management", True, "Website configuration updated successfully")
+            return True
+        else:
+            self.log_test("Website Configuration Management", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_website_configuration_retrieval(self):
+        """Test 41: GET /api/admin/settings/website-config - Configuration retrieval"""
+        if not self.admin_token:
+            self.log_test("Website Configuration Retrieval", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/settings/website-config", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check configuration sections
+            required_sections = ["site_name", "seo_settings", "social_media", "performance_settings", "security_settings"]
+            if all(section in response for section in required_sections):
+                # Check SEO settings structure
+                seo_settings = response.get("seo_settings", {})
+                if "meta_title" in seo_settings and "meta_description" in seo_settings:
+                    self.log_test("Website Configuration Retrieval", True, f"Complete website configuration retrieved with {len(response)} sections")
+                    return True
+                else:
+                    self.log_test("Website Configuration Retrieval", False, "Missing SEO settings details")
+            else:
+                self.log_test("Website Configuration Retrieval", False, f"Missing configuration sections: {response}")
+        else:
+            self.log_test("Website Configuration Retrieval", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_performance_monitoring_system(self):
+        """Test 42: GET /api/admin/settings/performance-metrics - Real-time system metrics"""
+        if not self.admin_token:
+            self.log_test("Performance Monitoring System", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/settings/performance-metrics", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check system metrics structure
+            required_metrics = ["cpu", "memory", "disk", "database", "application"]
+            if all(metric in response for metric in required_metrics):
+                # Check CPU metrics
+                cpu_metrics = response.get("cpu", {})
+                if "usage_percent" in cpu_metrics and "cores" in cpu_metrics:
+                    # Check memory metrics
+                    memory_metrics = response.get("memory", {})
+                    if "used_percent" in memory_metrics and "total_gb" in memory_metrics:
+                        # Check database metrics
+                        db_metrics = response.get("database", {})
+                        if "connections" in db_metrics and "response_time_ms" in db_metrics:
+                            # Check application metrics
+                            app_metrics = response.get("application", {})
+                            if "active_users" in app_metrics and "requests_per_minute" in app_metrics:
+                                self.log_test("Performance Monitoring System", True, f"Complete system metrics: CPU {cpu_metrics.get('usage_percent')}%, Memory {memory_metrics.get('used_percent')}%")
+                                return True
+                            else:
+                                self.log_test("Performance Monitoring System", False, "Missing application metrics")
+                        else:
+                            self.log_test("Performance Monitoring System", False, "Missing database metrics")
+                    else:
+                        self.log_test("Performance Monitoring System", False, "Missing memory metrics")
+                else:
+                    self.log_test("Performance Monitoring System", False, "Missing CPU metrics")
+            else:
+                self.log_test("Performance Monitoring System", False, f"Missing performance metrics: {response}")
+        else:
+            self.log_test("Performance Monitoring System", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_advanced_system_configuration(self):
+        """Test 43: POST /api/admin/settings/advanced-config - Advanced configuration management"""
+        if not self.admin_token:
+            self.log_test("Advanced System Configuration", False, "No admin token available")
+            return False
+        
+        advanced_config = {
+            "system_maintenance": {
+                "enabled": False,
+                "message": "النظام تحت الصيانة، يرجى المحاولة لاحقاً",
+                "allowed_ips": ["127.0.0.1", "192.168.1.1"],
+                "start_time": None,
+                "end_time": None
+            },
+            "api_settings": {
+                "rate_limiting": {
+                    "enabled": True,
+                    "requests_per_minute": 100,
+                    "burst_limit": 200
+                },
+                "cors_settings": {
+                    "enabled": True,
+                    "allowed_origins": ["*"],
+                    "allowed_methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+                    "allowed_headers": ["*"]
+                }
+            },
+            "logging_settings": {
+                "level": "INFO",
+                "max_file_size_mb": 100,
+                "max_files": 10,
+                "log_requests": True,
+                "log_responses": False,
+                "log_errors": True
+            },
+            "backup_settings": {
+                "enabled": True,
+                "frequency": "daily",
+                "retention_days": 30,
+                "backup_location": "/backups",
+                "include_files": True,
+                "include_database": True
+            },
+            "notification_settings": {
+                "email_enabled": True,
+                "sms_enabled": True,
+                "push_enabled": True,
+                "smtp_server": "smtp.gmail.com",
+                "smtp_port": 587,
+                "smtp_username": "system@medical-sales.com",
+                "sms_provider": "twilio",
+                "push_provider": "firebase"
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/advanced-config", advanced_config, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Advanced System Configuration", True, "Advanced system configuration updated successfully")
+            return True
+        else:
+            self.log_test("Advanced System Configuration", False, f"Status: {status_code}", response)
+        return False
+    
+    def test_admin_authorization_restrictions(self):
+        """Test 44: Verify only GM/Admin can access admin endpoints"""
+        if not self.sales_rep_token:
+            self.log_test("Admin Authorization Restrictions", False, "No sales rep token available")
+            return False
+        
+        # Test Google Maps settings access (should fail for sales rep)
+        status_code, response = self.make_request("GET", "/admin/settings/google-maps", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            # Test website configuration access (should fail for sales rep)
+            status_code, response = self.make_request("GET", "/admin/settings/website-config", token=self.sales_rep_token)
+            
+            if status_code == 403:
+                # Test performance metrics access (should fail for sales rep)
+                status_code, response = self.make_request("GET", "/admin/settings/performance-metrics", token=self.sales_rep_token)
+                
+                if status_code == 403:
+                    # Test Google services status access (should fail for sales rep)
+                    status_code, response = self.make_request("GET", "/admin/google-services-status", token=self.sales_rep_token)
+                    
+                    if status_code == 403:
+                        self.log_test("Admin Authorization Restrictions", True, "Sales rep correctly denied access to all admin endpoints")
+                        return True
+                    else:
+                        self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied Google services access: {status_code}")
+                else:
+                    self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied performance metrics access: {status_code}")
+            else:
+                self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied website config access: {status_code}")
+        else:
+            self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied Google Maps access: {status_code}")
+        return False
+    
+    def test_manager_authorization_restrictions(self):
+        """Test 45: Verify managers also cannot access admin endpoints"""
+        if not self.manager_token:
+            self.log_test("Manager Authorization Restrictions", False, "No manager token available")
+            return False
+        
+        # Test Google Maps API validation access (should fail for manager)
+        test_data = {"api_key": "test", "test_type": "geocoding"}
+        status_code, response = self.make_request("POST", "/admin/test-google-maps-api", test_data, self.manager_token)
+        
+        if status_code == 403:
+            # Test advanced configuration access (should fail for manager)
+            config_data = {"system_maintenance": {"enabled": False}}
+            status_code, response = self.make_request("POST", "/admin/settings/advanced-config", config_data, self.manager_token)
+            
+            if status_code == 403:
+                self.log_test("Manager Authorization Restrictions", True, "Manager correctly denied access to admin endpoints")
+                return True
+            else:
+                self.log_test("Manager Authorization Restrictions", False, f"Manager not denied advanced config access: {status_code}")
+        else:
+            self.log_test("Manager Authorization Restrictions", False, f"Manager not denied Google Maps API test access: {status_code}")
+        return False
+    
+    def test_gm_admin_credentials(self):
+        """Test 46: Test GM credentials (gm/gm123456) for admin access"""
+        gm_credentials = {"username": "gm", "password": "gm123456"}
+        status_code, response = self.make_request("POST", "/auth/login", gm_credentials)
+        
+        if status_code == 200 and "token" in response:
+            gm_token = response["token"]
+            user_info = response.get("user", {})
+            
+            if user_info.get("role") in ["gm", "admin"]:
+                # Test GM can access Google Maps settings
+                status_code, response = self.make_request("GET", "/admin/settings/google-maps", token=gm_token)
+                
+                if status_code == 200:
+                    self.log_test("GM Admin Credentials", True, f"GM login successful and can access admin endpoints")
+                    return True
+                else:
+                    self.log_test("GM Admin Credentials", False, f"GM cannot access admin endpoints: {status_code}")
+            else:
+                self.log_test("GM Admin Credentials", False, f"GM has wrong role: {user_info.get('role')}")
+        else:
+            self.log_test("GM Admin Credentials", False, f"GM login failed: {status_code}", response)
+        return False
+    
+    def test_system_integration_workflow(self):
+        """Test 47: Complete admin control system integration workflow"""
+        if not self.admin_token:
+            self.log_test("System Integration Workflow", False, "No admin token available")
+            return False
+        
+        # Step 1: Update Google Maps settings
+        maps_settings = {
+            "api_key": "AIzaSyBvOkBwGyOnqN-UtKuqGHlgJYQBtdQfyoA",
+            "geofence_radius": 25,
+            "enable_geolocation": True
+        }
+        status_code, response = self.make_request("POST", "/admin/settings/google-maps", maps_settings, self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("System Integration Workflow", False, "Step 1 failed: Google Maps settings update")
+            return False
+        
+        # Step 2: Update website configuration
+        website_config = {
+            "site_name": "نظام إدارة المناديب المحدث",
+            "seo_settings": {
+                "meta_title": "نظام محدث للمبيعات الطبية"
+            }
+        }
+        status_code, response = self.make_request("POST", "/admin/settings/website-config", website_config, self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("System Integration Workflow", False, "Step 2 failed: Website configuration update")
+            return False
+        
+        # Step 3: Check performance metrics
+        status_code, response = self.make_request("GET", "/admin/settings/performance-metrics", token=self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("System Integration Workflow", False, "Step 3 failed: Performance metrics retrieval")
+            return False
+        
+        # Step 4: Verify Google Maps settings persistence
+        status_code, response = self.make_request("GET", "/admin/settings/google-maps", token=self.admin_token)
+        
+        if status_code == 200:
+            if response.get("geofence_radius") == 25:
+                # Step 5: Verify website configuration persistence
+                status_code, response = self.make_request("GET", "/admin/settings/website-config", token=self.admin_token)
+                
+                if status_code == 200:
+                    if response.get("site_name") == "نظام إدارة المناديب المحدث":
+                        self.log_test("System Integration Workflow", True, "Complete workflow successful - all settings persist correctly")
+                        return True
+                    else:
+                        self.log_test("System Integration Workflow", False, "Step 5 failed: Website config not persisted")
+                else:
+                    self.log_test("System Integration Workflow", False, "Step 5 failed: Website config retrieval")
+            else:
+                self.log_test("System Integration Workflow", False, "Step 4 failed: Google Maps settings not persisted")
+        else:
+            self.log_test("System Integration Workflow", False, "Step 4 failed: Google Maps settings retrieval")
+        return False
+
     # INTEGRATED GAMIFICATION SYSTEM TESTS - As requested in Arabic review
     
     def test_gamification_user_profile_admin(self):
