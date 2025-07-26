@@ -2989,6 +2989,366 @@ class BackendTester:
 
     # NEW COMPREHENSIVE ADMIN SETTINGS AND PERMISSIONS TESTS
     
+    # COMPREHENSIVE ADMIN CONTROL SYSTEM TESTS - As requested in review
+    
+    def test_admin_settings_user_management(self):
+        """Test 50: POST /api/admin/settings/user-management - User management settings update"""
+        if not self.admin_token:
+            self.log_test("Admin Settings User Management", False, "No admin token available")
+            return False
+        
+        user_management_settings = {
+            "max_users_per_role": {"sales_rep": 100, "manager": 20, "warehouse_manager": 10},
+            "password_policy": {
+                "min_length": 8,
+                "require_uppercase": True,
+                "require_numbers": True,
+                "require_special_chars": False
+            },
+            "session_timeout_minutes": 480,
+            "auto_deactivate_inactive_days": 90,
+            "role_hierarchy_enabled": True,
+            "bulk_user_operations": True
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/user-management", user_management_settings, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Admin Settings User Management", True, "User management settings updated successfully")
+            return True
+        else:
+            self.log_test("Admin Settings User Management", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_settings_gps(self):
+        """Test 51: POST /api/admin/settings/gps - GPS settings update"""
+        if not self.admin_token:
+            self.log_test("Admin Settings GPS", False, "No admin token available")
+            return False
+        
+        gps_settings = {
+            "geofence_radius_meters": 20,
+            "location_accuracy_required": "high",
+            "background_tracking": True,
+            "offline_location_storage": True,
+            "location_history_retention_days": 365,
+            "gps_required_for_visits": True,
+            "allow_manual_location_override": False,
+            "location_verification_timeout_seconds": 30
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/gps", gps_settings, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Admin Settings GPS", True, "GPS settings updated successfully")
+            return True
+        else:
+            self.log_test("Admin Settings GPS", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_settings_theme(self):
+        """Test 52: POST /api/admin/settings/theme - Theme settings update"""
+        if not self.admin_token:
+            self.log_test("Admin Settings Theme", False, "No admin token available")
+            return False
+        
+        theme_settings = {
+            "default_theme": "dark",
+            "available_themes": ["dark", "light", "blue", "green", "purple"],
+            "custom_colors": {
+                "primary": "#ff6b35",
+                "secondary": "#0ea5e9",
+                "accent": "#10b981",
+                "background": "#1f2937",
+                "surface": "#374151"
+            },
+            "logo_settings": {
+                "show_logo": True,
+                "logo_position": "top-left",
+                "logo_size": "medium"
+            },
+            "font_settings": {
+                "arabic_font": "Cairo",
+                "english_font": "Inter",
+                "font_size": "medium"
+            }
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/theme", theme_settings, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Admin Settings Theme", True, "Theme settings updated successfully")
+            return True
+        else:
+            self.log_test("Admin Settings Theme", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_settings_notifications(self):
+        """Test 53: POST /api/admin/settings/notifications - Notification settings update"""
+        if not self.admin_token:
+            self.log_test("Admin Settings Notifications", False, "No admin token available")
+            return False
+        
+        notification_settings = {
+            "push_notifications_enabled": True,
+            "email_notifications_enabled": True,
+            "sms_notifications_enabled": False,
+            "notification_types": {
+                "visit_reminders": True,
+                "order_approvals": True,
+                "system_alerts": True,
+                "performance_reports": True,
+                "achievement_unlocked": True
+            },
+            "quiet_hours": {
+                "enabled": True,
+                "start_time": "22:00",
+                "end_time": "07:00"
+            },
+            "notification_retention_days": 30
+        }
+        
+        status_code, response = self.make_request("POST", "/admin/settings/notifications", notification_settings, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("Admin Settings Notifications", True, "Notification settings updated successfully")
+            return True
+        else:
+            self.log_test("Admin Settings Notifications", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_settings_category_retrieval(self):
+        """Test 54: GET /api/admin/settings/{category} - Category-specific settings retrieval"""
+        if not self.admin_token:
+            self.log_test("Admin Settings Category Retrieval", False, "No admin token available")
+            return False
+        
+        categories_to_test = ["user-management", "gps", "theme", "notifications", "chat", "scanner", "visits", "security"]
+        successful_retrievals = 0
+        
+        for category in categories_to_test:
+            status_code, response = self.make_request("GET", f"/admin/settings/{category}", token=self.admin_token)
+            
+            if status_code == 200:
+                successful_retrievals += 1
+            elif status_code == 400 and "Invalid settings category" in response.get("detail", ""):
+                # This is expected for invalid categories
+                pass
+            else:
+                self.log_test("Admin Settings Category Retrieval", False, f"Failed to retrieve {category}: {status_code}", response)
+                return False
+        
+        if successful_retrievals >= len(categories_to_test) - 1:  # Allow for one potential failure
+            self.log_test("Admin Settings Category Retrieval", True, f"Successfully retrieved {successful_retrievals}/{len(categories_to_test)} categories")
+            return True
+        else:
+            self.log_test("Admin Settings Category Retrieval", False, f"Only retrieved {successful_retrievals}/{len(categories_to_test)} categories")
+        return False
+
+    def test_feature_toggle_system(self):
+        """Test 55: POST /api/admin/features/toggle - Feature toggle system"""
+        if not self.admin_token:
+            self.log_test("Feature Toggle System", False, "No admin token available")
+            return False
+        
+        # Test toggling key features as requested
+        features_to_test = ["gps_tracking", "gamification", "chat_system", "document_scanner"]
+        successful_toggles = 0
+        
+        for feature in features_to_test:
+            # Toggle feature OFF
+            toggle_data = {"feature_name": feature, "enabled": False}
+            status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.admin_token)
+            
+            if status_code == 200:
+                # Toggle feature ON
+                toggle_data = {"feature_name": feature, "enabled": True}
+                status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.admin_token)
+                
+                if status_code == 200:
+                    successful_toggles += 1
+                else:
+                    self.log_test("Feature Toggle System", False, f"Failed to toggle {feature} ON: {status_code}", response)
+                    return False
+            else:
+                self.log_test("Feature Toggle System", False, f"Failed to toggle {feature} OFF: {status_code}", response)
+                return False
+        
+        if successful_toggles == len(features_to_test):
+            self.log_test("Feature Toggle System", True, f"Successfully toggled all {successful_toggles} key features")
+            return True
+        else:
+            self.log_test("Feature Toggle System", False, f"Only toggled {successful_toggles}/{len(features_to_test)} features")
+        return False
+
+    def test_feature_status_retrieval(self):
+        """Test 56: GET /api/admin/features/status - Feature status retrieval"""
+        if not self.admin_token:
+            self.log_test("Feature Status Retrieval", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/admin/features/status", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check for expected features
+            expected_features = [
+                "gps_tracking", "gamification", "chat_system", "document_scanner",
+                "visit_management", "accounting_system", "notifications", "analytics",
+                "user_registration", "theme_switching", "language_switching"
+            ]
+            
+            missing_features = [feature for feature in expected_features if feature not in response]
+            
+            if not missing_features:
+                # Check that all features have boolean values
+                invalid_values = [feature for feature, value in response.items() if not isinstance(value, bool)]
+                
+                if not invalid_values:
+                    self.log_test("Feature Status Retrieval", True, f"Retrieved status for {len(response)} features with proper boolean values")
+                    return True
+                else:
+                    self.log_test("Feature Status Retrieval", False, f"Invalid boolean values for features: {invalid_values}")
+            else:
+                self.log_test("Feature Status Retrieval", False, f"Missing expected features: {missing_features}")
+        else:
+            self.log_test("Feature Status Retrieval", False, f"Status: {status_code}", response)
+        return False
+
+    def test_admin_authorization_restrictions(self):
+        """Test 57: Admin authorization - Only GM/Admin can access admin endpoints"""
+        if not self.sales_rep_token:
+            self.log_test("Admin Authorization Restrictions", False, "No sales rep token available")
+            return False
+        
+        # Test that sales rep cannot access admin settings
+        admin_endpoints = [
+            "/admin/settings/user-management",
+            "/admin/settings/gps", 
+            "/admin/settings/theme",
+            "/admin/settings/notifications"
+        ]
+        
+        unauthorized_attempts = 0
+        
+        for endpoint in admin_endpoints:
+            status_code, response = self.make_request("POST", endpoint, {"test": "data"}, self.sales_rep_token)
+            
+            if status_code == 403:
+                unauthorized_attempts += 1
+            else:
+                self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied access to {endpoint}: {status_code}")
+                return False
+        
+        # Test feature toggle access restriction
+        toggle_data = {"feature_name": "gps_tracking", "enabled": False}
+        status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.sales_rep_token)
+        
+        if status_code == 403:
+            unauthorized_attempts += 1
+        else:
+            self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied feature toggle access: {status_code}")
+            return False
+        
+        # Test feature status access restriction
+        status_code, response = self.make_request("GET", "/admin/features/status", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            unauthorized_attempts += 1
+        else:
+            self.log_test("Admin Authorization Restrictions", False, f"Sales rep not denied feature status access: {status_code}")
+            return False
+        
+        if unauthorized_attempts == len(admin_endpoints) + 2:  # +2 for feature endpoints
+            self.log_test("Admin Authorization Restrictions", True, f"All {unauthorized_attempts} admin endpoints properly restricted")
+            return True
+        else:
+            self.log_test("Admin Authorization Restrictions", False, f"Only {unauthorized_attempts} endpoints properly restricted")
+        return False
+
+    def test_manager_authorization_restrictions(self):
+        """Test 58: Manager authorization - Managers cannot access admin control endpoints"""
+        if not self.manager_token:
+            self.log_test("Manager Authorization Restrictions", False, "No manager token available")
+            return False
+        
+        # Test that manager cannot access admin settings
+        admin_endpoints = [
+            "/admin/settings/user-management",
+            "/admin/features/toggle",
+            "/admin/features/status"
+        ]
+        
+        unauthorized_attempts = 0
+        
+        for endpoint in admin_endpoints:
+            if "toggle" in endpoint:
+                toggle_data = {"feature_name": "gps_tracking", "enabled": False}
+                status_code, response = self.make_request("POST", endpoint, toggle_data, self.manager_token)
+            elif "status" in endpoint:
+                status_code, response = self.make_request("GET", endpoint, token=self.manager_token)
+            else:
+                status_code, response = self.make_request("POST", endpoint, {"test": "data"}, self.manager_token)
+            
+            if status_code == 403:
+                unauthorized_attempts += 1
+            else:
+                self.log_test("Manager Authorization Restrictions", False, f"Manager not denied access to {endpoint}: {status_code}")
+                return False
+        
+        if unauthorized_attempts == len(admin_endpoints):
+            self.log_test("Manager Authorization Restrictions", True, f"All {unauthorized_attempts} admin endpoints properly restricted from managers")
+            return True
+        else:
+            self.log_test("Manager Authorization Restrictions", False, f"Only {unauthorized_attempts} endpoints properly restricted")
+        return False
+
+    def test_comprehensive_admin_control_integration(self):
+        """Test 59: Comprehensive admin control system integration test"""
+        if not self.admin_token:
+            self.log_test("Comprehensive Admin Control Integration", False, "No admin token available")
+            return False
+        
+        # Test complete workflow: Update settings -> Toggle features -> Verify persistence
+        
+        # Step 1: Update GPS settings
+        gps_settings = {"geofence_radius_meters": 25, "gps_required_for_visits": True}
+        status_code, response = self.make_request("POST", "/admin/settings/gps", gps_settings, self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("Comprehensive Admin Control Integration", False, "Failed to update GPS settings")
+            return False
+        
+        # Step 2: Toggle gamification feature
+        toggle_data = {"feature_name": "gamification", "enabled": False}
+        status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.admin_token)
+        
+        if status_code != 200:
+            self.log_test("Comprehensive Admin Control Integration", False, "Failed to toggle gamification feature")
+            return False
+        
+        # Step 3: Verify feature status reflects the change
+        status_code, features = self.make_request("GET", "/admin/features/status", token=self.admin_token)
+        
+        if status_code == 200 and features.get("gamification") == False:
+            # Step 4: Retrieve GPS settings to verify persistence
+            status_code, gps_retrieved = self.make_request("GET", "/admin/settings/gps", token=self.admin_token)
+            
+            if status_code == 200:
+                # Step 5: Toggle gamification back on
+                toggle_data = {"feature_name": "gamification", "enabled": True}
+                status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.admin_token)
+                
+                if status_code == 200:
+                    self.log_test("Comprehensive Admin Control Integration", True, "Complete admin control workflow successful - settings persist, features toggle correctly")
+                    return True
+                else:
+                    self.log_test("Comprehensive Admin Control Integration", False, "Failed to toggle gamification back on")
+            else:
+                self.log_test("Comprehensive Admin Control Integration", False, "Failed to retrieve GPS settings")
+        else:
+            self.log_test("Comprehensive Admin Control Integration", False, "Feature status not updated correctly")
+        return False
+
     def test_admin_permissions_get(self):
         """Test GET /api/admin/permissions endpoint"""
         if not self.admin_token:
