@@ -2657,6 +2657,18 @@ class BackendTester:
         self.test_enhanced_visit_model_voice_notes_support()
         self.test_base64_audio_storage_retrieval()
         
+        # NEW REVIEW REQUEST TESTS - Testing the specific APIs mentioned in the review
+        print("🔥 NEW REVIEW REQUEST TESTS")
+        print("-" * 30)
+        self.test_enhanced_search_api()
+        self.test_filtered_statistics_api()
+        self.test_performance_charts_api()
+        self.test_recent_activities_api()
+        self.test_enhanced_user_management_apis()
+        self.test_daily_selfie_api()
+        self.test_secret_reports_api()
+        self.test_daily_plans_api()
+        
         # Summary
         print("=" * 60)
         print("📋 TEST SUMMARY")
