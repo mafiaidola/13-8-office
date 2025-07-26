@@ -3384,6 +3384,46 @@ class BackendTester:
             self.log_test("Accounting Role Based Access", False, f"Sales rep not denied overview access: {status_code}")
         return False
 
+    def test_accounting_user_access(self):
+        """Test 9: Verify accounting user can access accounting APIs"""
+        if not self.accounting_token:
+            self.log_test("Accounting User Access", False, "No accounting token available")
+            return False
+        
+        # Test that accounting user can access overview
+        status_code, response = self.make_request("GET", "/accounting/overview", token=self.accounting_token)
+        
+        if status_code == 200:
+            # Test that accounting user can access invoices
+            status_code, response = self.make_request("GET", "/accounting/invoices", token=self.accounting_token)
+            
+            if status_code == 200:
+                # Test that accounting user can create expenses
+                expense_data = {
+                    "description": "مصروف من المحاسب",
+                    "amount": 75.50,
+                    "category": "مصاريف متنوعة",
+                    "vendor": "مورد تجريبي"
+                }
+                status_code, response = self.make_request("POST", "/accounting/expenses", expense_data, self.accounting_token)
+                
+                if status_code == 200:
+                    # Test that accounting user can access dashboard stats
+                    status_code, response = self.make_request("GET", "/accounting/dashboard-stats", token=self.accounting_token)
+                    
+                    if status_code == 200:
+                        self.log_test("Accounting User Access", True, "Accounting user can access all accounting APIs correctly")
+                        return True
+                    else:
+                        self.log_test("Accounting User Access", False, f"Accounting user denied dashboard stats: {status_code}")
+                else:
+                    self.log_test("Accounting User Access", False, f"Accounting user denied expense creation: {status_code}")
+            else:
+                self.log_test("Accounting User Access", False, f"Accounting user denied invoices access: {status_code}")
+        else:
+            self.log_test("Accounting User Access", False, f"Accounting user denied overview access: {status_code}")
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing")
