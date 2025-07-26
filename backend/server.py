@@ -191,6 +191,7 @@ class Product(BaseModel):
     unit: str  # piece, box, bottle, etc.
     image: Optional[str] = None  # base64 image
     currency: str = "EGP"  # Egyptian Pounds only
+    line: str  # LINE_1 or LINE_2 - products are now line-specific
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: str
@@ -204,6 +205,7 @@ class ProductCreate(BaseModel):
     category: str
     unit: str
     image: Optional[str] = None
+    line: str  # Required field - must specify line
 
 class Warehouse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
