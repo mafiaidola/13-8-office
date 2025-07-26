@@ -10580,6 +10580,339 @@ const AccountingPage = () => {
   );
 };
 
+// Photo Upload Modal Component
+const PhotoUploadModal = ({ user, onClose, onUpload }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      alert('يرجى اختيار ملف صورة صالح');
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    
+    setLoading(true);
+    try {
+      await onUpload(user.id, selectedFile);
+      onClose();
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">📷 تحديث صورة المستخدم</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Current Photo */}
+          <div className="text-center">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              {user.photo ? (
+                <img 
+                  src={`data:image/jpeg;base64,${user.photo}`}
+                  alt={user.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white text-2xl font-bold">
+                  {user.full_name.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.full_name}</h4>
+          </div>
+
+          {/* File Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+              اختر صورة جديدة
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="w-full p-3 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+            />
+          </div>
+
+          {/* Preview */}
+          {previewUrl && (
+            <div className="text-center">
+              <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>معاينة الصورة الجديدة:</p>
+              <div className="w-24 h-24 mx-auto rounded-full overflow-hidden">
+                <img 
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 px-4 glass-effect border border-white border-opacity-20 rounded-lg hover:bg-white hover:bg-opacity-10"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={!selectedFile || loading}
+              className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors"
+            >
+              {loading ? 'جاري الرفع...' : 'رفع الصورة'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// User Details Modal Component
+const UserDetailsModal = ({ user, onClose }) => {
+  const [activitySummary, setActivitySummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActivitySummary();
+  }, [user.id]);
+
+  const fetchActivitySummary = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${user.id}/activity-summary?days=7`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActivitySummary(response.data);
+    } catch (error) {
+      console.error('Failed to fetch activity summary:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('ar-EG', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">👤 تفاصيل المستخدم</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* User Info */}
+          <div className="lg:col-span-1">
+            <div className="glass-effect p-6 rounded-xl">
+              {/* Photo */}
+              <div className="text-center mb-6">
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center relative">
+                  {user.photo ? (
+                    <img 
+                      src={`data:image/jpeg;base64,${user.photo}`}
+                      alt={user.full_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white text-4xl font-bold">
+                      {user.full_name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-white ${
+                    user.is_online ? 'bg-green-500' : 'bg-gray-500'
+                  }`}></div>
+                </div>
+                <h4 className="text-xl font-bold mt-4" style={{ color: 'var(--text-primary)' }}>
+                  {user.full_name}
+                </h4>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  @{user.username}
+                </p>
+              </div>
+
+              {/* Basic Info */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>الدور</label>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {getRoleText(user.role)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>البريد الإلكتروني</label>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {user.email || 'غير محدد'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>رقم الهاتف</label>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {user.phone || 'غير محدد'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>آخر ظهور</label>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {formatLastSeen(user.last_seen_formatted)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>الحالة</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    user.is_active ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-red-500 bg-opacity-20 text-red-400'
+                  }`}>
+                    {user.is_active ? 'نشط' : 'غير نشط'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* KPIs and Activity */}
+          <div className="lg:col-span-2">
+            {/* Current KPIs */}
+            {user.kpis && Object.keys(user.kpis).length > 0 && (
+              <div className="glass-effect p-6 rounded-xl mb-6">
+                <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                  📊 مؤشرات الأداء الحالية
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Object.entries(user.kpis).map(([key, value]) => (
+                    <div key={key} className="text-center p-4 bg-blue-500 bg-opacity-20 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-400">{value}</div>
+                      <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {key.replace(/_/g, ' ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Activity Summary */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                📈 ملخص النشاط (آخر 7 أيام)
+              </h4>
+              
+              {loading ? (
+                <div className="space-y-4">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="animate-pulse flex items-center gap-4 p-4">
+                      <div className="w-16 h-4 bg-gray-600 rounded"></div>
+                      <div className="flex-1 flex gap-4">
+                        <div className="w-12 h-4 bg-gray-600 rounded"></div>
+                        <div className="w-12 h-4 bg-gray-600 rounded"></div>
+                        <div className="w-12 h-4 bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : activitySummary ? (
+                <div className="space-y-4">
+                  {/* Totals */}
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-opacity-20 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">{activitySummary.totals.visits}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>إجمالي الزيارات</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">{activitySummary.totals.orders}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>إجمالي الطلبات</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{activitySummary.totals.clinic_requests}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>طلبات العيادات</div>
+                    </div>
+                  </div>
+
+                  {/* Daily Breakdown */}
+                  <div className="space-y-2">
+                    <h5 className="font-medium" style={{ color: 'var(--text-secondary)' }}>تفصيل يومي:</h5>
+                    {activitySummary.daily_activities.map((day, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+                        <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                          {formatDate(day.date)}
+                        </div>
+                        <div className="flex gap-4 text-sm">
+                          <span className="text-blue-400">🚗 {day.visits}</span>
+                          <span className="text-green-400">📦 {day.orders}</span>
+                          <span className="text-purple-400">🏥 {day.clinic_requests}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-secondary)' }}>لا توجد بيانات نشاط متاحة</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  function getRoleText(role) {
+    const roleMap = {
+      'admin': 'مدير',
+      'manager': 'مدير فرع',
+      'sales_rep': 'مندوب مبيعات',
+      'warehouse_manager': 'مدير مخزن',
+      'accounting': 'محاسب'
+    };
+    return roleMap[role] || role;
+  }
+
+  function formatLastSeen(lastSeen) {
+    if (!lastSeen) return 'غير متاح';
+    
+    const now = new Date();
+    const lastSeenDate = new Date(lastSeen);
+    const diffInMinutes = Math.floor((now - lastSeenDate) / 60000);
+    
+    if (diffInMinutes < 5) return 'متصل الآن';
+    if (diffInMinutes < 60) return `منذ ${diffInMinutes} دقيقة`;
+    if (diffInMinutes < 1440) return `منذ ${Math.floor(diffInMinutes / 60)} ساعة`;
+    return `منذ ${Math.floor(diffInMinutes / 1440)} يوم`;
+  }
+};
+
 // Main App Component
 const App = () => {
   return (
