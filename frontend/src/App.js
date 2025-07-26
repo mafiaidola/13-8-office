@@ -6438,36 +6438,46 @@ const EnhancedFooter = () => {
           </div>
         </div>
 
-        {/* Animated Copyright Section */}
+        {/* Enhanced Animated Copyright Section */}
         <div className="mt-8 pt-8 border-t border-white border-opacity-20 flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            © {currentYear} EP Group System. 
-            {language === 'ar' ? ' جميع الحقوق محفوظة.' : ' All rights reserved.'}
+            © {currentYear} {t('systemName')}. {t('footerCopyright')}.
           </div>
           
           {/* Animated Intellectual Property Section */}
-          <div className="mt-4 md:mt-0 text-center md:text-right">
+          <div className="mt-6 md:mt-0 text-center md:text-right">
             <div 
-              className="animated-copyright-section"
+              className="animated-copyright-section p-6 rounded-xl"
               style={{
-                background: 'linear-gradient(45deg, #ff6b35, #f7931e, #ffd23f, #06d6a0, #118ab2, #073b4c)',
+                background: 'linear-gradient(45deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1), rgba(255,210,63,0.1), rgba(6,214,160,0.1), rgba(17,138,178,0.1), rgba(7,59,76,0.1))',
                 backgroundSize: '300% 300%',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'gradientShift 3s ease infinite, pulse 2s ease-in-out infinite alternate'
+                animation: 'gradientShift 4s ease infinite',
+                border: '2px solid transparent',
+                borderImage: 'linear-gradient(45deg, #ff6b35, #f7931e, #ffd23f, #06d6a0, #118ab2, #073b4c) 1',
+                borderImageSlice: 1
               }}
             >
-              <div className="text-xs mb-1" style={{ fontWeight: '500' }}>
+              <div 
+                className="text-sm mb-3 font-semibold"
+                style={{ 
+                  color: 'var(--text-primary)',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
                 جميع حقوق الملكيه الفكريه محفوظه
               </div>
               <div 
-                className="text-sm font-bold mb-2"
+                className="text-xl font-bold mb-4"
                 style={{
                   fontFamily: '"Roboto", "Tajawal", sans-serif',
-                  letterSpacing: '1px',
-                  textShadow: '0 0 10px rgba(255, 107, 53, 0.5)',
-                  animation: 'bounce 2s infinite'
+                  letterSpacing: '2px',
+                  background: 'linear-gradient(45deg, #ff6b35, #f7931e, #ffd23f, #06d6a0, #118ab2, #073b4c)',
+                  backgroundSize: '300% 300%',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  animation: 'gradientShift 3s ease infinite, bounce 3s infinite',
+                  textShadow: 'none'
                 }}
               >
                 Mahmoud Elmnakhli
@@ -6476,19 +6486,25 @@ const EnhancedFooter = () => {
                 href="https://facebook.com/mafiaidola" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center gap-3 text-sm px-4 py-2 rounded-full transition-all duration-500 hover:scale-110 hover:rotate-3"
                 style={{
-                  background: 'linear-gradient(45deg, #1877f2, #42a5f5)',
+                  background: 'linear-gradient(135deg, #1877f2, #42a5f5, #64b5f6)',
                   color: 'white',
                   textDecoration: 'none',
-                  boxShadow: '0 4px 15px rgba(24, 119, 242, 0.3)',
-                  animation: 'socialPulse 3s ease-in-out infinite'
+                  boxShadow: '0 6px 20px rgba(24, 119, 242, 0.4)',
+                  animation: 'socialPulse 4s ease-in-out infinite',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  backdropFilter: 'blur(10px)'
                 }}
               >
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
-                Facebook
+                <span style={{ fontWeight: '600' }}>Facebook Profile</span>
+                <div 
+                  className="w-2 h-2 rounded-full bg-white opacity-70"
+                  style={{ animation: 'pulse 2s infinite' }}
+                ></div>
               </a>
             </div>
           </div>
