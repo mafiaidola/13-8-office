@@ -10010,44 +10010,44 @@ const Dashboard = () => {
         />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs with comprehensive translation */}
         <div className="mb-8">
-          <nav className="flex space-x-4 overflow-x-auto bg-white/80 backdrop-blur-lg rounded-2xl p-2 shadow-lg" aria-label="Tabs">
+          <nav className={`flex space-x-4 overflow-x-auto nav-menu rounded-2xl p-2 shadow-lg ${isRTL ? 'space-x-reverse' : ''}`} aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
-              <span className="ml-2">📊</span>
-              {user.role === 'admin' ? 'الإحصائيات' : 'لوحة التحكم'}
+              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📊</span>
+              {user.role === 'admin' ? t('statistics') : t('dashboard')}
             </button>
             
             {canAccessTab('users') && (
               <button
                 onClick={() => setActiveTab('users')}
-                className={`nav-tab ${activeTab === 'users' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'users' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">👥</span>
-                إدارة المستخدمين
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>👥</span>
+                {t('userManagement')}
               </button>
             )}
             
             {canAccessTab('warehouse') && (
               <button
                 onClick={() => setActiveTab('warehouse')}
-                className={`nav-tab ${activeTab === 'warehouse' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'warehouse' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">🏭</span>
-                إدارة المخازن
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🏭</span>
+                {t('warehouseManagement')}
               </button>
             )}
             
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('clinic-registration')}
-                className={`nav-tab ${activeTab === 'clinic-registration' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'clinic-registration' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">🏥</span>
-                تسجيل عيادة
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🏥</span>
+                {language === 'ar' ? 'تسجيل عيادة' : 'Clinic Registration'}
               </button>
             )}
             
