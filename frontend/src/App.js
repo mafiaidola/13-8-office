@@ -6486,7 +6486,7 @@ const EnhancedFooter = () => {
           {/* Contact Info */}
           <div className="space-y-4">
             <h4 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-              {language === 'ar' ? 'تواصل معنا' : 'Contact'}
+              {language === 'ar' ? 'معلومات التواصل' : 'Contact Info'}
             </h4>
             <div className="space-y-2">
               <p className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
@@ -6494,7 +6494,13 @@ const EnhancedFooter = () => {
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-                info@epgroup.com
+                support@epgroup.com
+              </p>
+              <p className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                </svg>
+                +20 100 123 4567
               </p>
               <p className="text-sm flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -6502,6 +6508,12 @@ const EnhancedFooter = () => {
                 </svg>
                 {language === 'ar' ? 'القاهرة، مصر' : 'Cairo, Egypt'}
               </p>
+              <div className="flex items-center gap-2 pt-2">
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {language === 'ar' ? 'ساعات العمل:' : 'Working Hours:'}
+                </span>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>24/7</span>
+              </div>
             </div>
           </div>
         </div>
