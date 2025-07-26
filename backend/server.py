@@ -524,10 +524,14 @@ def decode_jwt_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    print(f"get_current_user called with token: {credentials.credentials[:20]}...")
     token = credentials.credentials
     payload = decode_jwt_token(token)
+    print(f"JWT payload: {payload}")
     user = await db.users.find_one({"id": payload["user_id"]})
+    print(f"User found: {user is not None}")
     if not user:
+        print("User not found in database")
         raise HTTPException(status_code=401, detail="User not found")
     
     # Ensure all required fields are present for User model
@@ -551,7 +555,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             user[key] = default_value
     
     try:
-        return User(**user)
+        user_obj = User(**user)
+        print(f"User object created successfully for: {user_obj.username}")
+        return user_obj
     except Exception as e:
         # Log the error for debugging
         print(f"Error creating User model: {e}")
