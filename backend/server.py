@@ -8586,6 +8586,238 @@ async def initialize_system():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error initializing system: {str(e)}")
 
+# Comprehensive Admin Control APIs
+@api_router.post("/admin/settings/user-management")
+async def update_user_management_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update user management settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "user_management_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "User management settings updated successfully"}
+
+@api_router.post("/admin/settings/gps")
+async def update_gps_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update GPS settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "gps_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "GPS settings updated successfully"}
+
+@api_router.post("/admin/settings/theme")
+async def update_theme_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update theme settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "theme_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Theme settings updated successfully"}
+
+@api_router.post("/admin/settings/gamification")
+async def update_gamification_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update gamification settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "gamification_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Gamification settings updated successfully"}
+
+@api_router.post("/admin/settings/notifications")
+async def update_notification_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update notification settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "notification_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Notification settings updated successfully"}
+
+@api_router.post("/admin/settings/chat")
+async def update_chat_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update chat settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "chat_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Chat settings updated successfully"}
+
+@api_router.post("/admin/settings/scanner")
+async def update_scanner_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update scanner settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "scanner_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Scanner settings updated successfully"}
+
+@api_router.post("/admin/settings/visits")
+async def update_visit_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update visit settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "visit_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Visit settings updated successfully"}
+
+@api_router.post("/admin/settings/security")
+async def update_security_settings(settings_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update security settings")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            "security_settings": settings_data,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Security settings updated successfully"}
+
+@api_router.get("/admin/settings/{category}")
+async def get_category_settings(category: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access admin settings")
+    
+    valid_categories = [
+        "user-management", "gps", "theme", "gamification", 
+        "notifications", "chat", "scanner", "visits", "security"
+    ]
+    
+    if category not in valid_categories:
+        raise HTTPException(status_code=400, detail="Invalid settings category")
+    
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    category_key = f"{category.replace('-', '_')}_settings"
+    
+    return settings.get(category_key, {}) if settings else {}
+
+# Enhanced Feature Control API
+@api_router.post("/admin/features/toggle")
+async def toggle_system_feature(feature_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can toggle system features")
+    
+    feature_name = feature_data.get("feature_name")
+    enabled = feature_data.get("enabled", False)
+    
+    valid_features = [
+        "gps_tracking", "gamification", "chat_system", "document_scanner",
+        "visit_management", "accounting_system", "notifications", "analytics",
+        "user_registration", "theme_switching", "language_switching"
+    ]
+    
+    if feature_name not in valid_features:
+        raise HTTPException(status_code=400, detail="Invalid feature name")
+    
+    await db.system_settings.update_one(
+        {},
+        {"$set": {
+            f"features.{feature_name}": enabled,
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": f"Feature {feature_name} {'enabled' if enabled else 'disabled'} successfully"}
+
+@api_router.get("/admin/features/status")
+async def get_features_status(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access features status")
+    
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    features = settings.get("features", {}) if settings else {}
+    
+    # Default feature statuses
+    default_features = {
+        "gps_tracking": True,
+        "gamification": True,
+        "chat_system": True,
+        "document_scanner": True,
+        "visit_management": True,
+        "accounting_system": True,
+        "notifications": True,
+        "analytics": True,
+        "user_registration": True,
+        "theme_switching": True,
+        "language_switching": True
+    }
+    
+    # Merge with defaults
+    for feature, default_status in default_features.items():
+        if feature not in features:
+            features[feature] = default_status
+    
+    return features
+
 app.include_router(api_router)
 
 app.add_middleware(
