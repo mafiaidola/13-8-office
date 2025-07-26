@@ -6150,6 +6150,47 @@ const EnhancedUserManagement = () => {
             </div>
           )}
 
+          {/* Gamification Info for Sales Reps - Integrated with Real Data */}
+          {user.role === 'sales_rep' && (
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 bg-opacity-20 p-3 rounded-lg mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-400">⭐</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                    نظام التحفيز
+                  </span>
+                </div>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('openGamification', { detail: user.id }))}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  عرض التفاصيل →
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-sm font-bold text-yellow-400">
+                    {((user.kpis?.total_visits || 0) * 10) + ((user.kpis?.visits_today || 0) * 20)}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>نقاط</div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-purple-400">
+                    المستوى {Math.floor(((user.kpis?.total_visits || 0) * 10 + (user.kpis?.visits_today || 0) * 20) / 1000) + 1}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>مستوى</div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-green-400">
+                    {user.kpis?.total_orders || 0 > 5 ? '🏆' : user.kpis?.visits_today > 3 ? '⚡' : '🎯'}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>إنجاز</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-2">
             <button
