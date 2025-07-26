@@ -5361,6 +5361,286 @@ async def get_managed_warehouses(manager_id: str):
 # Chart data endpoints
 
 # Include the router in the main app
+# Comprehensive Accounting System APIs
+@api_router.get("/accounting/overview", response_model=Dict[str, Any])
+async def get_accounting_overview(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    try:
+        # Get current date for filtering
+        today = datetime.utcnow()
+        start_of_month = datetime(today.year, today.month, 1)
+        
+        # Total Invoices
+        total_invoices = await db.invoices.count_documents({})
+        
+        # Revenue calculations (using orders as invoices for now)
+        paid_orders = await db.orders.find({"status": "APPROVED", "order_type": "SALE"}).to_list(None)
+        total_revenue = sum(float(order.get("total_amount", 0)) for order in paid_orders)
+        
+        # Monthly revenue
+        monthly_orders = await db.orders.find({
+            "status": "APPROVED",
+            "order_type": "SALE", 
+            "created_at": {"$gte": start_of_month}
+        }).to_list(None)
+        monthly_revenue = sum(float(order.get("total_amount", 0)) for order in monthly_orders)
+        
+        # Outstanding amounts (pending orders)
+        pending_orders = await db.orders.find({"status": "PENDING", "order_type": "SALE"}).to_list(None)
+        outstanding_amount = sum(float(order.get("total_amount", 0)) for order in pending_orders)
+        
+        # Expense calculations
+        expenses = await db.expenses.find({
+            "date": {"$gte": start_of_month}
+        }).to_list(None)
+        monthly_expenses = sum(float(expense.get("amount", 0)) for expense in expenses)
+        
+        return {
+            "overview": {
+                "total_invoices": len(paid_orders),
+                "total_revenue": total_revenue,
+                "monthly_revenue": monthly_revenue,
+                "outstanding_amount": outstanding_amount,
+                "monthly_expenses": monthly_expenses,
+                "net_profit": monthly_revenue - monthly_expenses
+            },
+            "recent_transactions": []  # Will be filled in future iterations
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching accounting overview: {str(e)}")
+
+# Invoice Management
+@api_router.get("/accounting/invoices", response_model=List[Dict[str, Any]])
+async def get_accounting_invoices(
+    current_user: User = Depends(get_current_user),
+    status: Optional[str] = None
+):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Use orders as invoices for now
+    query = {"order_type": "SALE"}
+    if status:
+        query["status"] = status
+    
+    invoices = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Enrich with customer and product info
+    for invoice in invoices:
+        # Get customer (doctor) info
+        doctor = await db.doctors.find_one({"id": invoice["doctor_id"]}, {"_id": 0})
+        if doctor:
+            invoice["customer_name"] = doctor["name"]
+            invoice["customer_specialty"] = doctor["specialty"]
+        
+        # Get clinic info  
+        clinic = await db.clinics.find_one({"id": invoice["clinic_id"]}, {"_id": 0})
+        if clinic:
+            invoice["customer_address"] = clinic["address"]
+            invoice["customer_phone"] = clinic.get("phone", "")
+        
+        # Get sales rep info
+        sales_rep = await db.users.find_one({"id": invoice["sales_rep_id"]}, {"_id": 0})
+        if sales_rep:
+            invoice["sales_rep_name"] = sales_rep["full_name"]
+        
+        # Get order items
+        items = await db.order_items.find({"order_id": invoice["id"]}, {"_id": 0}).to_list(100)
+        for item in items:
+            product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+            if product:
+                item["product_name"] = product["name"]
+                item["product_unit"] = product["unit"]
+        invoice["items"] = items
+        
+        # Set invoice-like fields
+        invoice["invoice_number"] = f"INV-{invoice['id'][:8]}"
+        invoice["invoice_date"] = invoice["created_at"]
+        invoice["due_date"] = invoice.get("created_at")  # Same day for now
+        invoice["subtotal"] = invoice["total_amount"]
+        invoice["tax_amount"] = 0
+        invoice["discount_amount"] = 0
+    
+    return invoices
+
+# Expense Management
+@api_router.get("/accounting/expenses", response_model=List[Dict[str, Any]])
+async def get_expenses(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    expenses = await db.expenses.find({}, {"_id": 0}).sort("date", -1).to_list(100)
+    return expenses
+
+@api_router.post("/accounting/expenses")
+async def create_expense(expense_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    expense = {
+        "id": str(uuid.uuid4()),
+        "description": expense_data.get("description"),
+        "amount": float(expense_data.get("amount", 0)),
+        "category": expense_data.get("category", "Other"),
+        "vendor": expense_data.get("vendor", ""),
+        "date": datetime.fromisoformat(expense_data.get("date")) if expense_data.get("date") else datetime.utcnow(),
+        "status": "approved",
+        "created_at": datetime.utcnow(),
+        "created_by": current_user.id
+    }
+    
+    await db.expenses.insert_one(expense)
+    return {"message": "Expense created successfully", "expense_id": expense["id"]}
+
+# Financial Reports
+@api_router.get("/accounting/reports/profit-loss", response_model=Dict[str, Any])
+async def get_profit_loss_report(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Calculate for current month
+    today = datetime.utcnow()
+    start_of_month = datetime(today.year, today.month, 1)
+    
+    # Revenue from approved sales orders
+    revenue_orders = await db.orders.find({
+        "status": "APPROVED",
+        "order_type": "SALE",
+        "created_at": {"$gte": start_of_month}
+    }).to_list(None)
+    total_revenue = sum(float(order.get("total_amount", 0)) for order in revenue_orders)
+    
+    # Expenses
+    expenses = await db.expenses.find({
+        "date": {"$gte": start_of_month}
+    }).to_list(None)
+    
+    # Group expenses by category
+    expense_categories = {}
+    total_expenses = 0
+    for exp in expenses:
+        category = exp.get("category", "Other")
+        amount = float(exp.get("amount", 0))
+        expense_categories[category] = expense_categories.get(category, 0) + amount
+        total_expenses += amount
+    
+    # Calculate profit
+    gross_profit = total_revenue - total_expenses
+    profit_margin = (gross_profit / total_revenue * 100) if total_revenue > 0 else 0
+    
+    return {
+        "period": {
+            "year": start_of_month.year,
+            "month": start_of_month.month,
+            "start_date": start_of_month.isoformat(),
+            "end_date": today.isoformat()
+        },
+        "revenue": {
+            "total": total_revenue,
+            "orders_count": len(revenue_orders)
+        },
+        "expenses": {
+            "total": total_expenses,
+            "by_category": expense_categories
+        },
+        "profit": {
+            "gross": gross_profit,
+            "margin": profit_margin
+        }
+    }
+
+# Customer Financial Summary
+@api_router.get("/accounting/customers", response_model=List[Dict[str, Any]])
+async def get_customer_financial_summary(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get all sales orders grouped by customer (doctor)
+    sales_orders = await db.orders.find({"order_type": "SALE"}, {"_id": 0}).to_list(None)
+    
+    customer_summary = {}
+    for order in sales_orders:
+        doctor_id = order["doctor_id"]
+        
+        if doctor_id not in customer_summary:
+            # Get doctor and clinic info
+            doctor = await db.doctors.find_one({"id": doctor_id}, {"_id": 0})
+            clinic = await db.clinics.find_one({"id": order["clinic_id"]}, {"_id": 0})
+            
+            customer_summary[doctor_id] = {
+                "id": doctor_id,
+                "name": doctor["name"] if doctor else "Unknown",
+                "specialty": doctor["specialty"] if doctor else "",
+                "clinic_name": clinic["name"] if clinic else "",
+                "total_orders": 0,
+                "total_amount": 0.0,
+                "paid_amount": 0.0,
+                "pending_amount": 0.0
+            }
+        
+        customer = customer_summary[doctor_id]
+        customer["total_orders"] += 1
+        customer["total_amount"] += float(order.get("total_amount", 0))
+        
+        if order["status"] == "APPROVED":
+            customer["paid_amount"] += float(order.get("total_amount", 0))
+        elif order["status"] == "PENDING":
+            customer["pending_amount"] += float(order.get("total_amount", 0))
+    
+    return list(customer_summary.values())
+
+# Accounting Dashboard Stats
+@api_router.get("/accounting/dashboard-stats", response_model=Dict[str, Any])
+async def get_accounting_dashboard_stats(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "accounting", "manager"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    today = datetime.utcnow()
+    start_of_month = datetime(today.year, today.month, 1)
+    start_of_year = datetime(today.year, 1, 1)
+    
+    # Revenue statistics
+    monthly_sales = await db.orders.find({
+        "status": "APPROVED",
+        "order_type": "SALE",
+        "created_at": {"$gte": start_of_month}
+    }).to_list(None)
+    monthly_revenue = sum(float(order.get("total_amount", 0)) for order in monthly_sales)
+    
+    yearly_sales = await db.orders.find({
+        "status": "APPROVED", 
+        "order_type": "SALE",
+        "created_at": {"$gte": start_of_year}
+    }).to_list(None)
+    yearly_revenue = sum(float(order.get("total_amount", 0)) for order in yearly_sales)
+    
+    # Pending orders value
+    pending_orders = await db.orders.find({
+        "status": "PENDING",
+        "order_type": "SALE"
+    }).to_list(None)
+    pending_revenue = sum(float(order.get("total_amount", 0)) for order in pending_orders)
+    
+    # Expenses
+    monthly_expenses = await db.expenses.find({
+        "date": {"$gte": start_of_month}
+    }).to_list(None)
+    monthly_expense_total = sum(float(exp.get("amount", 0)) for exp in monthly_expenses)
+    
+    return {
+        "monthly_revenue": monthly_revenue,
+        "yearly_revenue": yearly_revenue,
+        "pending_revenue": pending_revenue,
+        "monthly_expenses": monthly_expense_total,
+        "net_profit": monthly_revenue - monthly_expense_total,
+        "total_customers": len(set(order["doctor_id"] for order in yearly_sales)),
+        "total_invoices": len(yearly_sales),
+        "pending_invoices": len(pending_orders)
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
