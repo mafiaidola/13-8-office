@@ -10054,38 +10054,38 @@ const Dashboard = () => {
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('order-creation')}
-                className={`nav-tab ${activeTab === 'order-creation' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'order-creation' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">📦</span>
-                عمل طلبية
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📦</span>
+                {language === 'ar' ? 'عمل طلبية' : 'Create Order'}
               </button>
             )}
             
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('visit')}
-                className={`nav-tab ${activeTab === 'visit' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'visit' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">📝</span>
-                تسجيل زيارة
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📝</span>
+                {language === 'ar' ? 'تسجيل زيارة' : 'Register Visit'}
               </button>
             )}
             
             <button
               onClick={() => setActiveTab('visits')}
-              className={`nav-tab ${activeTab === 'visits' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              className={`nav-item ${activeTab === 'visits' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
-              <span className="ml-2">📋</span>
-              سجل الزيارات
+              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📋</span>
+              {t('visitsLog')}
             </button>
 
             {canAccessTab('reports') && (
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`nav-tab ${activeTab === 'reports' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'reports' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">📈</span>
-                التقارير
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📈</span>
+                {t('reports')}
               </button>
             )}
             
@@ -10093,10 +10093,10 @@ const Dashboard = () => {
             {canAccessTab('accounting') && (
               <button
                 onClick={() => setActiveTab('accounting')}
-                className={`nav-tab ${activeTab === 'accounting' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'accounting' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">💰</span>
-                المحاسبة
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>💰</span>
+                {language === 'ar' ? 'المحاسبة' : 'Accounting'}
               </button>
             )}
             
