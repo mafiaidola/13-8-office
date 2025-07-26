@@ -365,6 +365,11 @@ const SVGIcon = ({ name, size = 24, className = "", animated = true }) => {
         <path d="M6.72 13.829c-.24.03-.48.062-.72.096m-.72-.096A42.415 42.415 0 0112 13.5c2.04 0 4.068.069 6.08.205m-6.08-.205A23.383 23.383 0 005.5 15.5c-.068 2.845-.052 5.703.032 8.55a.75.75 0 001.232.336L8.5 22.5l1.736 1.886a.75.75 0 001.232-.336C11.552 21.203 11.568 18.345 11.5 15.5A23.383 23.383 0 0018 13.829c.24.03.48.062.72.096m-.72-.096c1.902.03 3.804.069 5.706.096" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
+    download: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={baseClass}>
+        <path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
     notification: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={baseClass}>
         <path d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
