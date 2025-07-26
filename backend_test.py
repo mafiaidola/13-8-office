@@ -190,6 +190,39 @@ class BackendTester:
         else:
             self.log_test("Create Manager User", False, f"Status: {status_code}", response)
         return False
+
+    def test_create_accounting_user(self):
+        """Test 4.5: Create accounting user (admin only)"""
+        if not self.admin_token:
+            self.log_test("Create Accounting User", False, "No admin token available")
+            return False
+        
+        import time
+        timestamp = str(int(time.time()))
+        accounting_data = {
+            "username": f"accounting_{timestamp}",
+            "email": f"accounting_{timestamp}@test.com",
+            "password": "accounting123",
+            "role": "accounting",
+            "full_name": "محاسب التجريبي",
+            "phone": "+966503333333"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", accounting_data, self.admin_token)
+        
+        if status_code == 200:
+            self.accounting_id = response.get('user_id')
+            self.log_test("Create Accounting User", True, f"Accounting user created with ID: {self.accounting_id}")
+            
+            # Login as accounting user
+            login_data = {"username": f"accounting_{timestamp}", "password": "accounting123"}
+            status_code, login_response = self.make_request("POST", "/auth/login", login_data)
+            if status_code == 200:
+                self.accounting_token = login_response["token"]
+            return True
+        else:
+            self.log_test("Create Accounting User", False, f"Status: {status_code}", response)
+        return False
     
     def test_role_based_access(self):
         """Test 5: Role-based access control"""
