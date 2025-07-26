@@ -3282,6 +3282,414 @@ async def get_secret_comprehensive_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced Statistics API with Time Filtering
+@api_router.get("/dashboard/statistics/filtered")
+async def get_filtered_statistics(
+    time_period: str = "today",  # today, week, month, quarter, year
+    current_user: User = Depends(get_current_user)
+):
+    """Get statistics filtered by time period"""
+    try:
+        # Calculate date ranges
+        now = datetime.utcnow()
+        
+        date_ranges = {
+            "today": {
+                "start": now.replace(hour=0, minute=0, second=0, microsecond=0),
+                "end": now
+            },
+            "week": {
+                "start": now - timedelta(days=7),
+                "end": now
+            },
+            "month": {
+                "start": now - timedelta(days=30),
+                "end": now
+            },
+            "quarter": {
+                "start": now - timedelta(days=90),
+                "end": now
+            },
+            "year": {
+                "start": now - timedelta(days=365),
+                "end": now
+            }
+        }
+        
+        date_filter = date_ranges.get(time_period, date_ranges["today"])
+        
+        # Build MongoDB date filter
+        mongo_filter = {
+            "created_at": {
+                "$gte": date_filter["start"],
+                "$lte": date_filter["end"]
+            }
+        }
+        
+        # Get filtered statistics
+        stats = {
+            "visits": {
+                "total": await db.visits.count_documents(mongo_filter),
+                "effective": await db.visits.count_documents({
+                    **mongo_filter,
+                    "is_effective": True
+                }),
+                "pending_review": await db.visits.count_documents({
+                    **mongo_filter,
+                    "is_effective": None
+                })
+            },
+            "orders": {
+                "total": await db.orders.count_documents(mongo_filter),
+                "pending": await db.orders.count_documents({
+                    **mongo_filter,
+                    "status": "PENDING"
+                }),
+                "approved": await db.orders.count_documents({
+                    **mongo_filter,
+                    "status": "APPROVED"
+                })
+            },
+            "users": {
+                "new_users": await db.users.count_documents(mongo_filter),
+                "active_reps": await db.users.count_documents({
+                    **mongo_filter,
+                    "role": "sales_rep",
+                    "is_active": True
+                })
+            },
+            "clinics": {
+                "new_clinics": await db.clinics.count_documents(mongo_filter),
+                "pending_approval": await db.clinics.count_documents({
+                    **mongo_filter,
+                    "is_approved": False
+                })
+            }
+        }
+        
+        # Calculate totals for comparison
+        total_stats = {
+            "visits": await db.visits.count_documents({}),
+            "orders": await db.orders.count_documents({}),
+            "users": await db.users.count_documents({}),
+            "clinics": await db.clinics.count_documents({})
+        }
+        
+        return {
+            "period": time_period,
+            "date_range": date_filter,
+            "filtered_stats": stats,
+            "total_stats": total_stats
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Interactive Charts Data API
+@api_router.get("/charts/performance")
+async def get_performance_charts(
+    chart_type: str = "visits",  # visits, orders, revenue, representatives
+    time_period: str = "week",
+    current_user: User = Depends(get_current_user)
+):
+    """Get interactive chart data for performance metrics"""
+    try:
+        now = datetime.utcnow()
+        
+        # Calculate date range based on period
+        if time_period == "week":
+            start_date = now - timedelta(days=7)
+            date_format = "%Y-%m-%d"
+        elif time_period == "month":
+            start_date = now - timedelta(days=30)
+            date_format = "%Y-%m-%d"
+        elif time_period == "quarter":
+            start_date = now - timedelta(days=90)
+            date_format = "%Y-%m-%d"
+        else:  # year
+            start_date = now - timedelta(days=365)
+            date_format = "%Y-%m"
+        
+        chart_data = []
+        
+        if chart_type == "visits":
+            # Visits performance over time
+            pipeline = [
+                {"$match": {"created_at": {"$gte": start_date}}},
+                {"$group": {
+                    "_id": {"$dateToString": {"format": date_format, "date": "$created_at"}},
+                    "total_visits": {"$sum": 1},
+                    "effective_visits": {"$sum": {"$cond": [{"$eq": ["$is_effective", True]}, 1, 0]}},
+                    "ineffective_visits": {"$sum": {"$cond": [{"$eq": ["$is_effective", False]}, 1, 0]}}
+                }},
+                {"$sort": {"_id": 1}}
+            ]
+            
+            async for doc in db.visits.aggregate(pipeline):
+                chart_data.append({
+                    "date": doc["_id"],
+                    "total_visits": doc["total_visits"],
+                    "effective_visits": doc["effective_visits"],
+                    "ineffective_visits": doc["ineffective_visits"],
+                    "effectiveness_rate": (doc["effective_visits"] / doc["total_visits"] * 100) if doc["total_visits"] > 0 else 0
+                })
+        
+        elif chart_type == "orders":
+            # Orders performance over time
+            pipeline = [
+                {"$match": {"created_at": {"$gte": start_date}}},
+                {"$group": {
+                    "_id": {"$dateToString": {"format": date_format, "date": "$created_at"}},
+                    "total_orders": {"$sum": 1},
+                    "total_value": {"$sum": "$total_amount"},
+                    "pending_orders": {"$sum": {"$cond": [{"$eq": ["$status", "PENDING"]}, 1, 0]}},
+                    "approved_orders": {"$sum": {"$cond": [{"$eq": ["$status", "APPROVED"]}, 1, 0]}}
+                }},
+                {"$sort": {"_id": 1}}
+            ]
+            
+            async for doc in db.orders.aggregate(pipeline):
+                chart_data.append({
+                    "date": doc["_id"],
+                    "total_orders": doc["total_orders"],
+                    "total_value": doc["total_value"],
+                    "pending_orders": doc["pending_orders"],
+                    "approved_orders": doc["approved_orders"],
+                    "approval_rate": (doc["approved_orders"] / doc["total_orders"] * 100) if doc["total_orders"] > 0 else 0
+                })
+        
+        elif chart_type == "revenue":
+            # Revenue performance over time
+            pipeline = [
+                {"$match": {
+                    "created_at": {"$gte": start_date},
+                    "status": "APPROVED"
+                }},
+                {"$group": {
+                    "_id": {"$dateToString": {"format": date_format, "date": "$created_at"}},
+                    "total_revenue": {"$sum": "$total_amount"},
+                    "orders_count": {"$sum": 1},
+                    "average_order_value": {"$avg": "$total_amount"}
+                }},
+                {"$sort": {"_id": 1}}
+            ]
+            
+            async for doc in db.orders.aggregate(pipeline):
+                chart_data.append({
+                    "date": doc["_id"],
+                    "total_revenue": doc["total_revenue"],
+                    "orders_count": doc["orders_count"],
+                    "average_order_value": doc["average_order_value"]
+                })
+        
+        elif chart_type == "representatives":
+            # Representatives performance over time
+            pipeline = [
+                {"$match": {"created_at": {"$gte": start_date}}},
+                {"$group": {
+                    "_id": {
+                        "date": {"$dateToString": {"format": date_format, "date": "$created_at"}},
+                        "sales_rep_id": "$sales_rep_id"
+                    },
+                    "visits_count": {"$sum": 1},
+                    "sales_rep_name": {"$first": "$sales_rep_name"}
+                }},
+                {"$group": {
+                    "_id": "$_id.date",
+                    "active_representatives": {"$sum": 1},
+                    "total_visits": {"$sum": "$visits_count"},
+                    "top_performers": {"$push": {
+                        "name": "$sales_rep_name",
+                        "visits": "$visits_count"
+                    }}
+                }},
+                {"$sort": {"_id": 1}}
+            ]
+            
+            async for doc in db.visits.aggregate(pipeline):
+                # Sort top performers for this date
+                top_performers = sorted(doc["top_performers"], key=lambda x: x["visits"], reverse=True)[:3]
+                
+                chart_data.append({
+                    "date": doc["_id"],
+                    "active_representatives": doc["active_representatives"],
+                    "total_visits": doc["total_visits"],
+                    "average_visits_per_rep": doc["total_visits"] / doc["active_representatives"] if doc["active_representatives"] > 0 else 0,
+                    "top_performers": top_performers
+                })
+        
+        return {
+            "chart_type": chart_type,
+            "time_period": time_period,
+            "data": chart_data,
+            "title": f"أداء {chart_type} - {time_period}",
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Recent Activities API Enhanced
+@api_router.get("/activities/recent")
+async def get_recent_activities(
+    days: int = 7,
+    limit: int = 50,
+    activity_type: str = "all",  # all, visits, orders, clinics, users, warehouse
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive recent activities"""
+    try:
+        start_date = datetime.utcnow() - timedelta(days=days)
+        activities = []
+        
+        # Visit activities
+        if activity_type in ["all", "visits"]:
+            visits_cursor = db.visits.find({
+                "created_at": {"$gte": start_date}
+            }, {"_id": 0}).sort("created_at", -1).limit(limit)
+            
+            async for visit in visits_cursor:
+                activities.append({
+                    "type": "visit",
+                    "action": "زيارة جديدة",
+                    "title": f"زيارة للدكتور {visit.get('doctor_name', '')}",
+                    "description": f"من المندوب {visit.get('sales_rep_name', '')} في {visit.get('clinic_name', '')}",
+                    "user": visit.get("sales_rep_name", ""),
+                    "timestamp": visit["created_at"],
+                    "details": {
+                        "visit_id": visit["id"],
+                        "doctor_name": visit.get("doctor_name", ""),
+                        "clinic_name": visit.get("clinic_name", ""),
+                        "is_effective": visit.get("is_effective"),
+                        "has_order": visit.get("orders_count", 0) > 0
+                    },
+                    "icon": "🏥",
+                    "color": "blue"
+                })
+        
+        # Order activities
+        if activity_type in ["all", "orders"]:
+            orders_cursor = db.orders.find({
+                "created_at": {"$gte": start_date}
+            }, {"_id": 0}).sort("created_at", -1).limit(limit)
+            
+            async for order in orders_cursor:
+                activities.append({
+                    "type": "order",
+                    "action": "طلبية جديدة",
+                    "title": f"طلبية رقم #{order['id'][:8]}",
+                    "description": f"من المندوب {order.get('sales_rep_name', '')} بقيمة {order['total_amount']} ج.م",
+                    "user": order.get("sales_rep_name", ""),
+                    "timestamp": order["created_at"],
+                    "details": {
+                        "order_id": order["id"],
+                        "status": order["status"],
+                        "total_amount": order["total_amount"],
+                        "doctor_name": order.get("doctor_name", ""),
+                        "clinic_name": order.get("clinic_name", ""),
+                        "requires_approval": order["status"] == "PENDING"
+                    },
+                    "icon": "📦",
+                    "color": "green" if order["status"] == "APPROVED" else "yellow"
+                })
+        
+        # Clinic activities
+        if activity_type in ["all", "clinics"]:
+            clinics_cursor = db.clinics.find({
+                "created_at": {"$gte": start_date}
+            }, {"_id": 0}).sort("created_at", -1).limit(limit)
+            
+            async for clinic in clinics_cursor:
+                activities.append({
+                    "type": "clinic",
+                    "action": "عيادة جديدة",
+                    "title": f"تم إضافة عيادة {clinic['name']}",
+                    "description": f"من المندوب {clinic.get('created_by_name', '')} في {clinic.get('address', '')}",
+                    "user": clinic.get("created_by_name", ""),
+                    "timestamp": clinic.get("created_at", datetime.utcnow()),
+                    "details": {
+                        "clinic_id": clinic["id"],
+                        "name": clinic["name"],
+                        "address": clinic.get("address", ""),
+                        "manager_name": clinic.get("manager_name", ""),
+                        "is_approved": clinic.get("is_approved", False),
+                        "location": {
+                            "latitude": clinic.get("latitude"),
+                            "longitude": clinic.get("longitude")
+                        }
+                    },
+                    "icon": "🏢",
+                    "color": "purple"
+                })
+        
+        # User activities
+        if activity_type in ["all", "users"]:
+            users_cursor = db.users.find({
+                "created_at": {"$gte": start_date}
+            }, {"_id": 0}).sort("created_at", -1).limit(limit)
+            
+            async for user in users_cursor:
+                activities.append({
+                    "type": "user",
+                    "action": "مستخدم جديد",
+                    "title": f"تم إضافة مستخدم جديد {user['full_name']}",
+                    "description": f"دور المستخدم: {user['role']} - من المدير {user.get('created_by_name', '')}",
+                    "user": user.get("created_by_name", ""),
+                    "timestamp": user.get("created_at", datetime.utcnow()),
+                    "details": {
+                        "user_id": user["id"],
+                        "username": user["username"],
+                        "full_name": user["full_name"],
+                        "role": user["role"],
+                        "managed_by": user.get("managed_by", ""),
+                        "is_active": user.get("is_active", True)
+                    },
+                    "icon": "👤",
+                    "color": "indigo"
+                })
+        
+        # Warehouse activities
+        if activity_type in ["all", "warehouse"]:
+            movements_cursor = db.stock_movements.find({
+                "created_at": {"$gte": start_date}
+            }, {"_id": 0}).sort("created_at", -1).limit(limit)
+            
+            async for movement in movements_cursor:
+                activities.append({
+                    "type": "warehouse",
+                    "action": "حركة مخزن",
+                    "title": f"تم {movement['movement_type']} - {movement['quantity']} {movement.get('product_name', '')}",
+                    "description": f"من المستخدم {movement.get('created_by_name', '')} - السبب: {movement.get('reason', '')}",
+                    "user": movement.get("created_by_name", ""),
+                    "timestamp": movement["created_at"],
+                    "details": {
+                        "movement_id": movement["id"],
+                        "product_name": movement.get("product_name", ""),
+                        "quantity": movement["quantity"],
+                        "movement_type": movement["movement_type"],
+                        "reason": movement.get("reason", ""),
+                        "warehouse_name": movement.get("warehouse_name", "")
+                    },
+                    "icon": "📋",
+                    "color": "orange"
+                })
+        
+        # Sort all activities by timestamp
+        activities.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        # Limit results
+        activities = activities[:limit]
+        
+        return {
+            "activities": activities,
+            "total_count": len(activities),
+            "days": days,
+            "activity_type": activity_type
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Chart data endpoints
 
 # Include the router in the main app
