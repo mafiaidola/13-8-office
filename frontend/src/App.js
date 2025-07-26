@@ -1692,9 +1692,45 @@ const LoginPage = () => {
     <div className={`${isRTL ? 'rtl' : 'ltr'}`} 
          style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       
-      {/* Language Toggle for Login */}
+      {/* Language & Theme Toggle for Login */}
       <div className={`login-language-toggle ${isRTL ? 'rtl' : ''}`}>
-        <LanguageToggle position="login" />
+        <div className="flex items-center gap-4">
+          <LanguageToggle position="login" />
+          <div className="relative">
+            <button
+              onClick={() => setShowThemeMenu(!showThemeMenu)}
+              className="glass-effect p-3 rounded-full hover:scale-105 transition-transform"
+              title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
+            >
+              <SVGIcon name="theme" size={20} className="svg-icon-animated" />
+            </button>
+
+            {showThemeMenu && (
+              <div className="absolute top-full right-0 mt-2 glass-effect rounded-xl p-2 min-w-48 border border-white border-opacity-20 z-50">
+                <div className="grid grid-cols-3 gap-2">
+                  {themes.map((themeOption) => (
+                    <button
+                      key={themeOption.id}
+                      onClick={() => {
+                        changeTheme(themeOption.id);
+                        setShowThemeMenu(false);
+                      }}
+                      className={`theme-option ${themeOption.id} ${theme === themeOption.id ? 'active' : ''}`}
+                      title={themeOption.name}
+                    >
+                      <span className="text-lg">{themeOption.icon}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 pt-2 border-t border-white border-opacity-20">
+                  <div className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+                    {language === 'ar' ? 'الثيم الحالي:' : 'Current:'} <strong>{themes.find(t => t.id === theme)?.name}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       
       <div className="min-h-screen flex items-center justify-center p-4">
