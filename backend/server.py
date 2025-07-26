@@ -1827,7 +1827,8 @@ async def get_dashboard_config(current_user: User = Depends(get_current_user)):
             "updated_by": current_user.id
         }
         await db.dashboard_config.insert_one(default_config)
-        return default_config
+        # Return without MongoDB ObjectId
+        return {k: v for k, v in default_config.items() if k != "_id"}
     
     return config
 
