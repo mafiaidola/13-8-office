@@ -8030,13 +8030,7 @@ const LanguageSelector = () => {
   ];
 
   const handleLanguageChange = (lang) => {
-    setLanguage(lang);
-    localStorage.setItem('app_language', lang);
-    
-    // Apply RTL/LTR direction
-    const selectedLang = languages.find(l => l.code === lang);
-    document.dir = selectedLang?.dir || 'ltr';
-    document.documentElement.lang = lang;
+    changeLanguage(lang);
   };
 
   return (
