@@ -8022,7 +8022,7 @@ const QRCodeScanner = ({ onScan, onClose }) => {
 
 // Enhanced Language Selector with English as Primary
 const LanguageSelector = () => {
-  const { language, setLanguage } = useContext(ThemeContext);
+  const { language, changeLanguage } = useLanguage();
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸', dir: 'ltr' },
