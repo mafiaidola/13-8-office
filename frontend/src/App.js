@@ -459,15 +459,14 @@ const ThemeProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('app_language', language);
-    // Apply direction based on language
-    document.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-    // Apply fonts based on language
-    document.body.style.fontFamily = language === 'ar' ? 
-      "'Tajawal', 'Cairo', 'Amiri', 'Segoe UI', 'Tahoma', Arial, sans-serif" : 
-      "'Roboto', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
-  }, [language]);
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    // Apply theme to document element and body
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.body.setAttribute('data-theme', savedTheme);
+    // Force theme variables update
+    updateThemeVariables(savedTheme);
+  }, []);
 
   const updateThemeVariables = (currentTheme) => {
     const root = document.documentElement;
