@@ -1782,3 +1782,65 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Switch Component Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Theme preview styles */
+.theme-preview {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.theme-dark { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+.theme-light { background: linear-gradient(135deg, #f8f9fa, #e9ecef); }
+.theme-modern { background: linear-gradient(135deg, #667eea, #764ba2); }
+.theme-fancy { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+.theme-cyber { background: linear-gradient(135deg, #0f3460, #e94560); }
+.theme-sunset { background: linear-gradient(135deg, #fa709a, #fee140); }
+.theme-ocean { background: linear-gradient(135deg, #2196f3, #21cbf3); }
+.theme-forest { background: linear-gradient(135deg, #11998e, #38ef7d); }
+.theme-minimal { background: linear-gradient(135deg, #434343, #000000); }
