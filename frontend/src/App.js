@@ -5375,30 +5375,31 @@ const handleSystemSettings = () => {
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showEditUser, setShowEditUser] = useState(false);
-  const [showUserDetails, setShowUserDetails] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    email: '',
-    password: '',
-    full_name: '',
-    role: '',
-    phone: '',
-    manager_id: '',
-    department: '',
-    employee_id: ''
-  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  
+  // Enhanced states for new features
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [bulkAction, setBulkAction] = useState('');
-  const [selectedUsers, setSelectedUsers] = useState(new Set());
-  const [userStats, setUserStats] = useState({});
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  
+  // Modal states
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  
+  // Form states
+  const [newUser, setNewUser] = useState({
+    username: '', email: '', password: '', full_name: '', role: '', 
+    phone: '', manager_id: '', department: '', employee_id: ''
+  });
+  
+  const { language } = useLanguage();
 
   useEffect(() => {
     fetchUsers();
