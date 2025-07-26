@@ -3057,6 +3057,298 @@ class BackendTester:
             self.log_test("User Permissions Role Based", False, f"Status: {status_code}", response)
         return False
 
+    # NEW COMPREHENSIVE ACCOUNTING SYSTEM TESTS
+    
+    def test_accounting_overview(self):
+        """Test 1: GET /api/accounting/overview - Accounting overview with revenue, expenses, and profit calculations"""
+        if not self.admin_token:
+            self.log_test("Accounting Overview", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/overview", token=self.admin_token)
+        
+        if status_code == 200:
+            # Check required structure
+            if "overview" in response:
+                overview = response["overview"]
+                required_fields = [
+                    "total_invoices", "total_revenue", "monthly_revenue", 
+                    "outstanding_amount", "monthly_expenses", "net_profit"
+                ]
+                
+                if all(field in overview for field in required_fields):
+                    # Verify calculations make sense
+                    net_profit = overview.get("net_profit", 0)
+                    monthly_revenue = overview.get("monthly_revenue", 0)
+                    monthly_expenses = overview.get("monthly_expenses", 0)
+                    
+                    if abs(net_profit - (monthly_revenue - monthly_expenses)) < 0.01:
+                        self.log_test("Accounting Overview", True, f"Complete overview with correct calculations: Revenue={monthly_revenue}, Expenses={monthly_expenses}, Profit={net_profit}")
+                        return True
+                    else:
+                        self.log_test("Accounting Overview", False, "Net profit calculation incorrect")
+                else:
+                    self.log_test("Accounting Overview", False, f"Missing required fields: {overview}")
+            else:
+                self.log_test("Accounting Overview", False, "Missing overview section")
+        else:
+            self.log_test("Accounting Overview", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_invoices(self):
+        """Test 2: GET /api/accounting/invoices - List of invoices (using sales orders as invoices) with customer details"""
+        if not self.admin_token:
+            self.log_test("Accounting Invoices", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/invoices", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            if len(response) > 0:
+                invoice = response[0]
+                required_fields = [
+                    "invoice_number", "invoice_date", "customer_name", 
+                    "total_amount", "items", "sales_rep_name"
+                ]
+                
+                if all(field in invoice for field in required_fields):
+                    # Check invoice number format
+                    if invoice.get("invoice_number", "").startswith("INV-"):
+                        # Check items structure
+                        items = invoice.get("items", [])
+                        if len(items) > 0:
+                            item = items[0]
+                            item_fields = ["product_name", "quantity", "unit_price", "total_price"]
+                            if all(field in item for field in item_fields):
+                                self.log_test("Accounting Invoices", True, f"Found {len(response)} invoices with complete customer and product details")
+                                return True
+                            else:
+                                self.log_test("Accounting Invoices", False, "Missing item details")
+                        else:
+                            self.log_test("Accounting Invoices", True, "No items in invoices (expected if no orders)")
+                            return True
+                    else:
+                        self.log_test("Accounting Invoices", False, "Invalid invoice number format")
+                else:
+                    self.log_test("Accounting Invoices", False, f"Missing required fields: {invoice}")
+            else:
+                self.log_test("Accounting Invoices", True, "No invoices found (expected if no sales orders)")
+                return True
+        else:
+            self.log_test("Accounting Invoices", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_expenses_get(self):
+        """Test 3: GET /api/accounting/expenses - Get expense list with categories and vendors"""
+        if not self.admin_token:
+            self.log_test("Accounting Expenses GET", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/expenses", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Accounting Expenses GET", True, f"Retrieved {len(response)} expenses")
+            return True
+        else:
+            self.log_test("Accounting Expenses GET", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_expenses_post(self):
+        """Test 4: POST /api/accounting/expenses - Create new expense with categories and vendors"""
+        if not self.admin_token:
+            self.log_test("Accounting Expenses POST", False, "No admin token available")
+            return False
+        
+        expense_data = {
+            "description": "مصاريف مكتبية - أقلام وأوراق",
+            "amount": 150.75,
+            "category": "مصاريف إدارية",
+            "vendor": "مكتبة الرياض",
+            "date": datetime.utcnow().isoformat()
+        }
+        
+        status_code, response = self.make_request("POST", "/accounting/expenses", expense_data, self.admin_token)
+        
+        if status_code == 200:
+            if "expense_id" in response:
+                # Verify expense was created by getting expenses list
+                status_code, expenses = self.make_request("GET", "/accounting/expenses", token=self.admin_token)
+                if status_code == 200:
+                    created_expense = next((exp for exp in expenses if exp.get("id") == response["expense_id"]), None)
+                    if created_expense:
+                        # Check Arabic description and proper formatting
+                        if (created_expense.get("description") == expense_data["description"] and
+                            created_expense.get("amount") == expense_data["amount"] and
+                            created_expense.get("category") == expense_data["category"] and
+                            created_expense.get("vendor") == expense_data["vendor"]):
+                            self.log_test("Accounting Expenses POST", True, f"Expense created with Arabic description and proper categorization")
+                            return True
+                        else:
+                            self.log_test("Accounting Expenses POST", False, "Expense data not saved correctly")
+                    else:
+                        self.log_test("Accounting Expenses POST", False, "Created expense not found")
+                else:
+                    self.log_test("Accounting Expenses POST", False, "Failed to retrieve expenses after creation")
+            else:
+                self.log_test("Accounting Expenses POST", False, "No expense_id returned")
+        else:
+            self.log_test("Accounting Expenses POST", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_profit_loss_report(self):
+        """Test 5: GET /api/accounting/reports/profit-loss - Profit & loss report with revenue vs expenses"""
+        if not self.admin_token:
+            self.log_test("Accounting Profit Loss Report", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/reports/profit-loss", token=self.admin_token)
+        
+        if status_code == 200:
+            required_sections = ["period", "revenue", "expenses", "profit"]
+            if all(section in response for section in required_sections):
+                # Check period information
+                period = response.get("period", {})
+                if "year" in period and "month" in period:
+                    # Check revenue section
+                    revenue = response.get("revenue", {})
+                    if "total" in revenue and "orders_count" in revenue:
+                        # Check expenses section
+                        expenses = response.get("expenses", {})
+                        if "total" in expenses and "by_category" in expenses:
+                            # Check profit calculations
+                            profit = response.get("profit", {})
+                            if "gross" in profit and "margin" in profit:
+                                # Verify calculation accuracy
+                                expected_gross = revenue["total"] - expenses["total"]
+                                actual_gross = profit["gross"]
+                                
+                                if abs(expected_gross - actual_gross) < 0.01:
+                                    self.log_test("Accounting Profit Loss Report", True, f"Complete P&L report with accurate calculations: Revenue={revenue['total']}, Expenses={expenses['total']}, Profit={actual_gross}")
+                                    return True
+                                else:
+                                    self.log_test("Accounting Profit Loss Report", False, "Profit calculation incorrect")
+                            else:
+                                self.log_test("Accounting Profit Loss Report", False, "Missing profit fields")
+                        else:
+                            self.log_test("Accounting Profit Loss Report", False, "Missing expenses fields")
+                    else:
+                        self.log_test("Accounting Profit Loss Report", False, "Missing revenue fields")
+                else:
+                    self.log_test("Accounting Profit Loss Report", False, "Missing period information")
+            else:
+                self.log_test("Accounting Profit Loss Report", False, f"Missing required sections: {response}")
+        else:
+            self.log_test("Accounting Profit Loss Report", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_customers(self):
+        """Test 6: GET /api/accounting/customers - Customer financial summary with total orders and amounts"""
+        if not self.admin_token:
+            self.log_test("Accounting Customers", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/customers", token=self.admin_token)
+        
+        if status_code == 200 and isinstance(response, list):
+            if len(response) > 0:
+                customer = response[0]
+                required_fields = [
+                    "id", "name", "specialty", "clinic_name", 
+                    "total_orders", "total_amount", "paid_amount", "pending_amount"
+                ]
+                
+                if all(field in customer for field in required_fields):
+                    # Verify financial calculations
+                    total_amount = customer.get("total_amount", 0)
+                    paid_amount = customer.get("paid_amount", 0)
+                    pending_amount = customer.get("pending_amount", 0)
+                    
+                    # Check that paid + pending <= total (allowing for rounding)
+                    if (paid_amount + pending_amount) <= (total_amount + 0.01):
+                        self.log_test("Accounting Customers", True, f"Found {len(response)} customers with complete financial summaries")
+                        return True
+                    else:
+                        self.log_test("Accounting Customers", False, "Customer financial calculations incorrect")
+                else:
+                    self.log_test("Accounting Customers", False, f"Missing required fields: {customer}")
+            else:
+                self.log_test("Accounting Customers", True, "No customers found (expected if no sales orders)")
+                return True
+        else:
+            self.log_test("Accounting Customers", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_dashboard_stats(self):
+        """Test 7: GET /api/accounting/dashboard-stats - Accounting dashboard statistics"""
+        if not self.admin_token:
+            self.log_test("Accounting Dashboard Stats", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/accounting/dashboard-stats", token=self.admin_token)
+        
+        if status_code == 200:
+            required_fields = [
+                "monthly_revenue", "yearly_revenue", "pending_revenue",
+                "monthly_expenses", "net_profit", "total_customers",
+                "total_invoices", "pending_invoices"
+            ]
+            
+            if all(field in response for field in required_fields):
+                # Verify net profit calculation
+                monthly_revenue = response.get("monthly_revenue", 0)
+                monthly_expenses = response.get("monthly_expenses", 0)
+                net_profit = response.get("net_profit", 0)
+                
+                if abs(net_profit - (monthly_revenue - monthly_expenses)) < 0.01:
+                    self.log_test("Accounting Dashboard Stats", True, f"Complete dashboard stats with accurate calculations: {response}")
+                    return True
+                else:
+                    self.log_test("Accounting Dashboard Stats", False, "Net profit calculation incorrect")
+            else:
+                self.log_test("Accounting Dashboard Stats", False, f"Missing required fields: {response}")
+        else:
+            self.log_test("Accounting Dashboard Stats", False, f"Status: {status_code}", response)
+        return False
+
+    def test_accounting_role_based_access(self):
+        """Test 8: Role-based access control for accounting APIs (admin, accounting, manager roles only)"""
+        if not self.sales_rep_token:
+            self.log_test("Accounting Role Based Access", False, "No sales rep token available")
+            return False
+        
+        # Test that sales rep cannot access accounting overview
+        status_code, response = self.make_request("GET", "/accounting/overview", token=self.sales_rep_token)
+        
+        if status_code == 403:
+            # Test that sales rep cannot access invoices
+            status_code, response = self.make_request("GET", "/accounting/invoices", token=self.sales_rep_token)
+            
+            if status_code == 403:
+                # Test that sales rep cannot create expenses
+                expense_data = {
+                    "description": "محاولة غير مسموحة",
+                    "amount": 100.0,
+                    "category": "اختبار"
+                }
+                status_code, response = self.make_request("POST", "/accounting/expenses", expense_data, self.sales_rep_token)
+                
+                if status_code == 403:
+                    # Test that sales rep cannot access profit-loss report
+                    status_code, response = self.make_request("GET", "/accounting/reports/profit-loss", token=self.sales_rep_token)
+                    
+                    if status_code == 403:
+                        self.log_test("Accounting Role Based Access", True, "Sales rep correctly denied access to all accounting APIs")
+                        return True
+                    else:
+                        self.log_test("Accounting Role Based Access", False, f"Sales rep not denied profit-loss access: {status_code}")
+                else:
+                    self.log_test("Accounting Role Based Access", False, f"Sales rep not denied expense creation: {status_code}")
+            else:
+                self.log_test("Accounting Role Based Access", False, f"Sales rep not denied invoices access: {status_code}")
+        else:
+            self.log_test("Accounting Role Based Access", False, f"Sales rep not denied overview access: {status_code}")
+        return False
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing")
