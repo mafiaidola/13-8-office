@@ -2104,6 +2104,17 @@ async def get_user_permissions(current_user: User = Depends(get_current_user)):
             current_user.role.lower() in tab_config.get("roles", [])):
             visible_tabs.append(tab_name)
     
+    # If no tabs configured, use defaults based on role
+    if not visible_tabs:
+        default_tabs = {
+            "admin": ["الإحصائيات", "إدارة المستخدمين", "إدارة المخازن", "سجل الزيارات", "التقارير", "المحادثات", "الإعدادات"],
+            "manager": ["الإحصائيات", "إدارة المخازن", "سجل الزيارات", "التقارير", "المحادثات"],
+            "sales_rep": ["الإحصائيات", "سجل الزيارات", "المحادثات"],
+            "warehouse": ["الإحصائيات", "إدارة المخازن", "التقارير", "المحادثات"],
+            "accounting": ["الإحصائيات", "التقارير", "المحادثات"]
+        }
+        visible_tabs = default_tabs.get(current_user.role.lower(), default_tabs["sales_rep"])
+    
     # Combine permissions with UI configuration
     user_permissions = {
         **role_permissions,
