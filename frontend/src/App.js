@@ -5912,6 +5912,7 @@ const EnhancedUserManagement = () => {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
   
   // Form states
   const [newUser, setNewUser] = useState({
