@@ -996,6 +996,14 @@ test_plan:
     - "Enhanced Visit Registration with Voice Notes"
   stuck_tasks:
     - "Enhanced Visit Registration with Voice Notes"
+  completed_tasks:
+    - "Comprehensive Accounting System - Overview API"
+    - "Comprehensive Accounting System - Invoices API"
+    - "Comprehensive Accounting System - Expenses API"
+    - "Comprehensive Accounting System - Profit & Loss Report API"
+    - "Comprehensive Accounting System - Customers API"
+    - "Comprehensive Accounting System - Dashboard Stats API"
+    - "Comprehensive Accounting System - Role-Based Access Control"
   test_all: false
   test_priority: "stuck_first"
 
