@@ -562,6 +562,32 @@ class ClinicRequestCreate(BaseModel):
     clinic_image: Optional[str] = None
     notes: str
 
+class RegionCreate(BaseModel):
+    name: str
+    code: str
+    description: Optional[str] = None
+    manager_id: Optional[str] = None
+    coordinates: Optional[Dict[str, float]] = None
+    boundaries: Optional[List[Dict[str, float]]] = None
+    line: str
+
+class DistrictCreate(BaseModel):
+    name: str
+    code: str
+    region_id: str
+    manager_id: Optional[str] = None
+    coordinates: Optional[Dict[str, float]] = None
+    boundaries: Optional[List[Dict[str, float]]] = None
+
+class LineManagementCreate(BaseModel):
+    line: str
+    line_manager_id: str
+    name: str
+    description: Optional[str] = None
+    regions: List[str] = []
+    products: List[str] = []
+    targets: Dict[str, float] = {}
+
 class VisitCreate(BaseModel):
     doctor_id: str
     clinic_id: str
