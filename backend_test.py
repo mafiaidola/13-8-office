@@ -3523,6 +3523,7 @@ class BackendTester:
         self.test_accounting_customers()
         self.test_accounting_dashboard_stats()
         self.test_accounting_role_based_access()
+        self.test_accounting_user_access()
         
         # Summary
         print("=" * 60)
