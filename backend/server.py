@@ -1722,7 +1722,8 @@ async def get_permissions_settings(current_user: User = Depends(get_current_user
             "updated_by": current_user.id
         }
         await db.admin_permissions.insert_one(default_permissions)
-        return default_permissions
+        # Return without MongoDB ObjectId
+        return {k: v for k, v in default_permissions.items() if k != "_id"}
     
     return permissions
 
