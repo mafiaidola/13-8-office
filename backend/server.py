@@ -530,11 +530,33 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     
-    # Ensure password_hash is included for User model
-    if "password_hash" not in user:
-        user["password_hash"] = ""  # Set empty string as default
+    # Ensure all required fields are present for User model
+    user_defaults = {
+        "password_hash": "",
+        "hire_date": None,
+        "department": None,
+        "employee_id": None,
+        "profile_image": None,
+        "permissions": [],
+        "last_login": None,
+        "login_attempts": 0,
+        "is_locked": False,
+        "created_at": user.get("created_at", datetime.utcnow()),
+        "updated_at": user.get("updated_at", datetime.utcnow())
+    }
     
-    return User(**user)
+    # Add missing fields with defaults
+    for key, default_value in user_defaults.items():
+        if key not in user:
+            user[key] = default_value
+    
+    try:
+        return User(**user)
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error creating User model: {e}")
+        print(f"User data keys: {list(user.keys())}")
+        raise HTTPException(status_code=401, detail=f"User model error: {str(e)}")
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two coordinates in meters"""
