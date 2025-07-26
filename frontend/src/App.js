@@ -14449,6 +14449,18 @@ const ComprehensiveAdminSettings = () => {
           <AdminGPSSettings />
         )}
 
+        {activeTab === 'maps' && (
+          <AdminGoogleMapsSettings />
+        )}
+
+        {activeTab === 'website' && (
+          <AdminWebsiteSettings />
+        )}
+
+        {activeTab === 'performance' && (
+          <AdminPerformanceMonitor />
+        )}
+
         {activeTab === 'gamification' && (
           <AdminGamificationSettings />
         )}
