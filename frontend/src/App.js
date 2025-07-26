@@ -11124,6 +11124,10 @@ const Dashboard = () => {
           <GamificationDashboard />
         )}
         
+        {activeTab === 'gps' && canAccessTab('reports') && (
+          <GPSTrackingDashboard />
+        )}
+        
         {activeTab === 'chat' && (
           <ChatSystem />
         )}
