@@ -1843,4 +1843,79 @@ input:checked + .slider:before {
 .theme-sunset { background: linear-gradient(135deg, #fa709a, #fee140); }
 .theme-ocean { background: linear-gradient(135deg, #2196f3, #21cbf3); }
 .theme-forest { background: linear-gradient(135deg, #11998e, #38ef7d); }
-.theme-minimal { background: linear-gradient(135deg, #434343, #000000); }
+/* SVG Icon System - Dynamic Theming */
+.icon-svg {
+  color: var(--icon-color, currentColor);
+  transition: all 0.3s ease;
+}
+
+.icon-svg:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+}
+
+/* Tab Icon Theming */
+.nav-item.active .icon-svg {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.nav-item:not(.active) .icon-svg {
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.nav-item:not(.active):hover .icon-svg {
+  opacity: 1;
+  color: var(--text-accent);
+}
+
+/* Performance Icon Colors */
+.performance-good { color: #10b981; }
+.performance-warning { color: #f59e0b; }
+.performance-critical { color: #ef4444; }
+
+/* Status Indicators */
+.status-online { color: #10b981; }
+.status-offline { color: #6b7280; }
+.status-error { color: #ef4444; }
+
+/* Theme-specific icon overrides */
+[data-theme="dark"] .icon-svg {
+  --icon-color: #e5e7eb;
+}
+
+[data-theme="light"] .icon-svg {
+  --icon-color: #374151;
+}
+
+[data-theme="modern"] .icon-svg {
+  --icon-color: #667eea;
+}
+
+[data-theme="cyber"] .icon-svg {
+  --icon-color: #00ff88;
+}
+
+[data-theme="sunset"] .icon-svg {
+  --icon-color: #fa709a;
+}
+
+/* Icon animations for loading states */
+@keyframes icon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.icon-loading {
+  animation: icon-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes icon-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.icon-spinning {
+  animation: icon-rotate 1s linear infinite;
+}
