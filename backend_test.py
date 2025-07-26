@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Medical Sales Rep Visit Management System
-Tests all backend APIs including authentication, GPS geofencing, and role-based access
+Advanced Analytics APIs Testing for Medical Sales Rep Visit Management System
+Tests the new Advanced Analytics APIs with comprehensive validation
 """
 
 import requests
