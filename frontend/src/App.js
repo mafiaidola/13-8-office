@@ -441,10 +441,6 @@ const useTheme = () => {
 
 const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('dark');
-  
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('app_language') || 'ar'; // Arabic as default
-  });
 
   // Enhanced themes with modern, youthful designs
   const availableThemes = [
