@@ -6513,7 +6513,10 @@ const EnhancedUserManagement = () => {
                             👁️
                           </button>
                           <button
-                            onClick={() => openEditModal(user)}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowEditUser(true);
+                            }}
                             className="btn-primary text-xs px-3 py-1"
                             title="تعديل"
                           >
