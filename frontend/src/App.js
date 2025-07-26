@@ -15740,4 +15740,490 @@ const AdminGoogleMapsSettings = () => {
   );
 };
 
+// Website Configuration Management Component
+const AdminWebsiteSettings = () => {
+  const [config, setConfig] = useState({
+    site_name: 'EP Group System',
+    site_description: 'نظام إدارة شامل للمؤسسات',
+    site_keywords: 'إدارة, مؤسسات, نظام, EP Group',
+    favicon_url: '',
+    logo_url: '',
+    contact_email: 'info@epgroup.com',
+    contact_phone: '+20123456789',
+    address: 'القاهرة، مصر',
+    social_links: {
+      facebook: '',
+      twitter: '',
+      linkedin: '',
+      instagram: '',
+      youtube: ''
+    },
+    seo_settings: {
+      enable_seo: true,
+      meta_robots: 'index,follow',
+      canonical_url: '',
+      og_image: '',
+      twitter_card: 'summary_large_image'
+    },
+    performance_settings: {
+      enable_caching: true,
+      cache_duration: 3600,
+      enable_compression: true,
+      lazy_loading: true,
+      minify_assets: true
+    },
+    security_settings: {
+      enable_https_redirect: true,
+      enable_csp: true,
+      enable_hsts: true,
+      session_timeout: 1440
+    }
+  });
+
+  const updateConfig = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/settings/website-config`, config, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('تم تحديث إعدادات الموقع بنجاح');
+    } catch (error) {
+      console.error('Error updating website config:', error);
+      alert('حدث خطأ في تحديث إعدادات الموقع');
+    }
+  };
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API}/admin/settings/website-config`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setConfig({ ...config, ...response.data });
+      } catch (error) {
+        console.error('Error fetching website config:', error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient flex items-center gap-3">
+          <SVGIcon name="settings" size={32} />
+          إعدادات الموقع الشاملة
+        </h3>
+        <button
+          onClick={updateConfig}
+          className="btn-modern bg-green-500 text-white px-6 py-2 rounded-lg"
+        >
+          💾 حفظ التكوين
+        </button>
+      </div>
+
+      {/* Basic Site Information */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="language" size={24} />
+          المعلومات الأساسية للموقع
+        </h4>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block font-bold mb-2">اسم الموقع</label>
+            <input
+              type="text"
+              value={config.site_name}
+              onChange={(e) => setConfig({...config, site_name: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">البريد الإلكتروني للتواصل</label>
+            <input
+              type="email"
+              value={config.contact_email}
+              onChange={(e) => setConfig({...config, contact_email: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-bold mb-2">وصف الموقع</label>
+            <textarea
+              value={config.site_description}
+              onChange={(e) => setConfig({...config, site_description: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect h-24"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">رقم الهاتف</label>
+            <input
+              type="tel"
+              value={config.contact_phone}
+              onChange={(e) => setConfig({...config, contact_phone: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold mb-2">العنوان</label>
+            <input
+              type="text"
+              value={config.address}
+              onChange={(e) => setConfig({...config, address: e.target.value})}
+              className="w-full p-3 border rounded-lg glass-effect"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SEO Settings */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="analytics" size={24} />
+          إعدادات تحسين محركات البحث (SEO)
+        </h4>
+        
+        <div className="flex items-center justify-between mb-4">
+          <span>تفعيل تحسين محركات البحث</span>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={config.seo_settings.enable_seo}
+              onChange={(e) => setConfig({
+                ...config,
+                seo_settings: { ...config.seo_settings, enable_seo: e.target.checked }
+              })}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
+
+        {config.seo_settings.enable_seo && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block font-bold mb-2">الكلمات المفتاحية</label>
+              <input
+                type="text"
+                value={config.site_keywords}
+                onChange={(e) => setConfig({...config, site_keywords: e.target.value})}
+                className="w-full p-3 border rounded-lg glass-effect"
+                placeholder="كلمة1, كلمة2, كلمة3"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold mb-2">إعدادات الروبوتات</label>
+              <select
+                value={config.seo_settings.meta_robots}
+                onChange={(e) => setConfig({
+                  ...config,
+                  seo_settings: { ...config.seo_settings, meta_robots: e.target.value }
+                })}
+                className="w-full p-3 border rounded-lg glass-effect"
+              >
+                <option value="index,follow">فهرسة وتتبع</option>
+                <option value="index,nofollow">فهرسة بدون تتبع</option>
+                <option value="noindex,follow">بدون فهرسة مع تتبع</option>
+                <option value="noindex,nofollow">بدون فهرسة أو تتبع</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-bold mb-2">رابط canonical</label>
+              <input
+                type="url"
+                value={config.seo_settings.canonical_url}
+                onChange={(e) => setConfig({
+                  ...config,
+                  seo_settings: { ...config.seo_settings, canonical_url: e.target.value }
+                })}
+                className="w-full p-3 border rounded-lg glass-effect"
+                placeholder="https://example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold mb-2">صورة Open Graph</label>
+              <input
+                type="url"
+                value={config.seo_settings.og_image}
+                onChange={(e) => setConfig({
+                  ...config,
+                  seo_settings: { ...config.seo_settings, og_image: e.target.value }
+                })}
+                className="w-full p-3 border rounded-lg glass-effect"
+                placeholder="رابط الصورة"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Social Media Links */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="chat" size={24} />
+          روابط وسائل التواصل الاجتماعي
+        </h4>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          {Object.entries(config.social_links).map(([platform, url]) => (
+            <div key={platform}>
+              <label className="block font-bold mb-2 capitalize">{platform}</label>
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setConfig({
+                  ...config,
+                  social_links: { ...config.social_links, [platform]: e.target.value }
+                })}
+                className="w-full p-3 border rounded-lg glass-effect"
+                placeholder={`رابط ${platform}`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Performance Settings */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <SVGIcon name="performance" size={24} />
+          إعدادات الأداء
+        </h4>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[
+            ['enable_caching', 'تفعيل التخزين المؤقت'],
+            ['enable_compression', 'ضغط الملفات'],
+            ['lazy_loading', 'التحميل المتأخر'],
+            ['minify_assets', 'تصغير الملفات']
+          ].map(([key, label]) => (
+            <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+              <span>{label}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={config.performance_settings[key]}
+                  onChange={(e) => setConfig({
+                    ...config,
+                    performance_settings: {
+                      ...config.performance_settings,
+                      [key]: e.target.checked
+                    }
+                  })}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <label className="block font-bold mb-2">مدة التخزين المؤقت (ثانية)</label>
+          <input
+            type="number"
+            value={config.performance_settings.cache_duration}
+            onChange={(e) => setConfig({
+              ...config,
+              performance_settings: {
+                ...config.performance_settings,
+                cache_duration: parseInt(e.target.value)
+              }
+            })}
+            className="w-full p-3 border rounded-lg glass-effect"
+            min="300"
+            max="86400"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// System Performance Monitoring Component
+const AdminPerformanceMonitor = () => {
+  const [metrics, setMetrics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMetrics = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/settings/performance-metrics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMetrics(response.data);
+    } catch (error) {
+      console.error('Error fetching performance metrics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p>جاري تحميل مقاييس الأداء...</p>
+      </div>
+    );
+  }
+
+  if (!metrics || metrics.error) {
+    return (
+      <div className="text-center py-8">
+        <SVGIcon name="error" size={48} className="mx-auto mb-4 text-red-500" />
+        <p>خطأ في تحميل مقاييس الأداء</p>
+        <button onClick={fetchMetrics} className="btn-modern mt-4">إعادة المحاولة</button>
+      </div>
+    );
+  }
+
+  const getPerformanceColor = (percentage) => {
+    if (percentage < 50) return 'text-green-400';
+    if (percentage < 80) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient flex items-center gap-3">
+          <SVGIcon name="performance" size={32} />
+          مراقبة أداء النظام
+        </h3>
+        <button
+          onClick={fetchMetrics}
+          className="btn-modern bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
+          🔄 تحديث
+        </button>
+      </div>
+
+      {/* System Performance */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">أداء النظام</h4>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="text-center">
+            <div className={`text-3xl font-bold ${getPerformanceColor(metrics.system_performance.cpu_usage_percent)}`}>
+              {metrics.system_performance.cpu_usage_percent}%
+            </div>
+            <div className="text-sm text-gray-400">استخدام المعالج</div>
+          </div>
+
+          <div className="text-center">
+            <div className={`text-3xl font-bold ${getPerformanceColor(metrics.system_performance.memory_usage_percent)}`}>
+              {metrics.system_performance.memory_usage_percent}%
+            </div>
+            <div className="text-sm text-gray-400">استخدام الذاكرة</div>
+            <div className="text-xs text-gray-500">
+              {metrics.system_performance.memory_used_gb}GB / {metrics.system_performance.memory_total_gb}GB
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className={`text-3xl font-bold ${getPerformanceColor(metrics.system_performance.disk_usage_percent)}`}>
+              {metrics.system_performance.disk_usage_percent}%
+            </div>
+            <div className="text-sm text-gray-400">استخدام القرص</div>
+            <div className="text-xs text-gray-500">
+              متاح: {metrics.system_performance.disk_free_gb}GB
+            </div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-400">
+              {Math.round(metrics.application_metrics.uptime_hours)}h
+            </div>
+            <div className="text-sm text-gray-400">وقت التشغيل</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Database Performance */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">أداء قاعدة البيانات</h4>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.database_performance.collections_count}
+            </div>
+            <div className="text-sm text-gray-400">المجموعات</div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.database_performance.data_size_mb}MB
+            </div>
+            <div className="text-sm text-gray-400">حجم البيانات</div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.database_performance.index_size_mb}MB
+            </div>
+            <div className="text-sm text-gray-400">حجم الفهارس</div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.database_performance.storage_size_mb}MB
+            </div>
+            <div className="text-sm text-gray-400">التخزين الكلي</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Application Metrics */}
+      <div className="card-glass p-6">
+        <h4 className="text-lg font-bold mb-4">مقاييس التطبيق</h4>
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.application_metrics.active_users}
+            </div>
+            <div className="text-sm text-gray-400">المستخدمون النشطون</div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-gradient">
+              {metrics.application_metrics.visits_today}
+            </div>
+            <div className="text-sm text-gray-400">زيارات اليوم</div>
+          </div>
+
+          <div className="text-center">
+            <div className="text-3xl font-bold text-green-400">
+              99.9%
+            </div>
+            <div className="text-sm text-gray-400">معدل التوفر</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Placeholder components for remaining admin settings
+const AdminRegionManagement = () => <RegionManagement />;
+const AdminProductManagement = () => <div>إدارة المنتجات - قيد التطوير</div>;
+const AdminGamificationSettings = () => <div>إعدادات نظام الألعاب - قيد التطوير</div>;
+const AdminAccountingSettings = () => <div>إعدادات نظام المحاسبة - قيد التطوير</div>;
+const AdminChatSettings = () => <div>إعدادات نظام الدردشة - قيد التطوير</div>;
+const AdminScannerSettings = () => <div>إعدادات ماسح المستندات - قيد التطوير</div>;
+const AdminVisitSettings = () => <div>إعدادات نظام الزيارات - قيد التطوير</div>;
+const AdminReportSettings = () => <div>إعدادات التقارير - قيد التطوير</div>;
+
 export default App;
