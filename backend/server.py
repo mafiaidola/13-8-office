@@ -3690,6 +3690,369 @@ async def get_recent_activities(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced User Management APIs
+@api_router.post("/users/upload-photo")
+async def upload_user_photo(
+    user_id: str,
+    photo_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Upload user photo"""
+    try:
+        # Check permissions
+        if current_user.role != "admin":
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Validate photo data
+        if "photo" not in photo_data:
+            raise HTTPException(status_code=400, detail="Photo data required")
+        
+        photo_base64 = photo_data["photo"]
+        
+        # Update user with photo
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"photo": photo_base64, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "تم تحديث الصورة بنجاح"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/{user_id}/statistics")
+async def get_user_statistics(
+    user_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive user statistics"""
+    try:
+        # Get user info
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check permissions
+        if current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        stats = {}
+        
+        if user["role"] == "sales_rep":
+            # Sales rep statistics
+            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            week_ago = today - timedelta(days=7)
+            month_ago = today - timedelta(days=30)
+            
+            stats = {
+                "role": "sales_rep",
+                "visits": {
+                    "total": await db.visits.count_documents({"sales_rep_id": user_id}),
+                    "today": await db.visits.count_documents({
+                        "sales_rep_id": user_id,
+                        "created_at": {"$gte": today}
+                    }),
+                    "week": await db.visits.count_documents({
+                        "sales_rep_id": user_id,
+                        "created_at": {"$gte": week_ago}
+                    }),
+                    "month": await db.visits.count_documents({
+                        "sales_rep_id": user_id,
+                        "created_at": {"$gte": month_ago}
+                    }),
+                    "effective": await db.visits.count_documents({
+                        "sales_rep_id": user_id,
+                        "is_effective": True
+                    })
+                },
+                "orders": {
+                    "total": await db.orders.count_documents({"sales_rep_id": user_id}),
+                    "pending": await db.orders.count_documents({
+                        "sales_rep_id": user_id,
+                        "status": "PENDING"
+                    }),
+                    "approved": await db.orders.count_documents({
+                        "sales_rep_id": user_id,
+                        "status": "APPROVED"
+                    })
+                },
+                "clinics_added": await db.clinics.count_documents({"created_by": user_id}),
+                "doctors_added": await db.doctors.count_documents({"created_by": user_id}),
+                "target_progress": {
+                    "target": 50000.0,  # This should come from targets table
+                    "achieved": 0.0,  # Calculate from approved orders
+                    "percentage": 0.0
+                }
+            }
+            
+            # Calculate achieved target
+            pipeline = [
+                {"$match": {"sales_rep_id": user_id, "status": "APPROVED"}},
+                {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+            ]
+            result = await db.orders.aggregate(pipeline).to_list(1)
+            achieved = result[0]["total"] if result else 0.0
+            stats["target_progress"]["achieved"] = achieved
+            stats["target_progress"]["percentage"] = (achieved / stats["target_progress"]["target"] * 100) if stats["target_progress"]["target"] > 0 else 0
+            
+        elif user["role"] == "manager":
+            # Manager statistics
+            stats = {
+                "role": "manager",
+                "managed_users": await db.users.count_documents({"managed_by": user_id}),
+                "pending_approvals": {
+                    "visits": await db.visits.count_documents({
+                        "sales_rep_id": {"$in": await get_managed_users(user_id)},
+                        "is_effective": None
+                    }),
+                    "orders": await db.orders.count_documents({
+                        "sales_rep_id": {"$in": await get_managed_users(user_id)},
+                        "status": "PENDING"
+                    }),
+                    "clinic_requests": await db.clinic_requests.count_documents({
+                        "sales_rep_id": {"$in": await get_managed_users(user_id)},
+                        "status": "PENDING"
+                    })
+                },
+                "team_performance": {
+                    "total_visits": await db.visits.count_documents({
+                        "sales_rep_id": {"$in": await get_managed_users(user_id)}
+                    }),
+                    "total_orders": await db.orders.count_documents({
+                        "sales_rep_id": {"$in": await get_managed_users(user_id)}
+                    })
+                }
+            }
+            
+        elif user["role"] == "warehouse_manager":
+            # Warehouse manager statistics
+            managed_warehouses = await get_managed_warehouses(user_id)
+            stats = {
+                "role": "warehouse_manager",
+                "managed_warehouses": len(managed_warehouses),
+                "pending_orders": await db.orders.count_documents({
+                    "warehouse_id": {"$in": managed_warehouses},
+                    "status": "MANAGER_APPROVED"
+                }),
+                "stock_movements": await db.stock_movements.count_documents({
+                    "warehouse_id": {"$in": managed_warehouses}
+                }),
+                "low_stock_items": await db.products.count_documents({
+                    "warehouse_id": {"$in": managed_warehouses},
+                    "stock_quantity": {"$lt": 10}
+                })
+            }
+            
+        elif user["role"] == "admin":
+            # Admin statistics
+            stats = {
+                "role": "admin",
+                "total_users": await db.users.count_documents({}),
+                "total_visits": await db.visits.count_documents({}),
+                "total_orders": await db.orders.count_documents({}),
+                "total_clinics": await db.clinics.count_documents({}),
+                "system_health": {
+                    "active_users": await db.users.count_documents({"is_active": True}),
+                    "pending_approvals": await db.orders.count_documents({"status": "PENDING"}),
+                    "recent_logins": 0  # This would need login tracking
+                }
+            }
+        
+        return {
+            "user_info": {
+                "id": user["id"],
+                "username": user["username"],
+                "full_name": user["full_name"],
+                "role": user["role"],
+                "photo": user.get("photo", ""),
+                "created_at": user.get("created_at", datetime.utcnow()).isoformat()
+            },
+            "statistics": stats
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.patch("/users/{user_id}/password")
+async def change_user_password(
+    user_id: str,
+    password_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Change user password"""
+    try:
+        # Check permissions
+        if current_user.role != "admin":
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        new_password = password_data.get("new_password")
+        if not new_password or len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+        
+        # Hash new password
+        hashed_password = pwd_context.hash(new_password)
+        
+        # Update password
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"password_hash": hashed_password, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "تم تغيير كلمة المرور بنجاح"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/users/selfie")
+async def upload_daily_selfie(
+    selfie_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Upload daily selfie for sales reps"""
+    try:
+        if current_user.role != "sales_rep":
+            raise HTTPException(status_code=403, detail="Only sales reps can upload selfies")
+        
+        selfie_base64 = selfie_data.get("selfie")
+        if not selfie_base64:
+            raise HTTPException(status_code=400, detail="Selfie data required")
+        
+        # Check if selfie already uploaded today
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        existing_selfie = await db.daily_selfies.find_one({
+            "user_id": current_user.id,
+            "date": {"$gte": today}
+        })
+        
+        if existing_selfie:
+            raise HTTPException(status_code=400, detail="Selfie already uploaded today")
+        
+        # Save selfie
+        selfie_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "user_name": current_user.full_name,
+            "selfie": selfie_base64,
+            "date": datetime.utcnow(),
+            "location": selfie_data.get("location", {}),
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.daily_selfies.insert_one(selfie_record)
+        
+        return {"message": "تم تسجيل السيلفي بنجاح", "selfie_id": selfie_record["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/{user_id}/daily-plan")
+async def get_user_daily_plan(
+    user_id: str,
+    date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's daily plan"""
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "manager"]:
+            if current_user.id != user_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        plan_date = datetime.fromisoformat(date) if date else datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Get daily plan
+        plan = await db.daily_plans.find_one({
+            "user_id": user_id,
+            "date": plan_date
+        }, {"_id": 0})
+        
+        if not plan:
+            # Create empty plan for today if not exists
+            plan = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "date": plan_date,
+                "visits": [],
+                "orders": [],
+                "targets": {},
+                "notes": "",
+                "created_by": current_user.id,
+                "created_at": datetime.utcnow()
+            }
+            await db.daily_plans.insert_one(plan)
+        
+        return plan
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/users/{user_id}/daily-plan")
+async def create_daily_plan(
+    user_id: str,
+    plan_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create or update daily plan for user"""
+    try:
+        # Check permissions - only managers can create plans for their subordinates
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Validate user exists and is managed by current user
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if current_user.role == "manager" and user.get("managed_by") != current_user.id:
+            raise HTTPException(status_code=403, detail="Can only create plans for managed users")
+        
+        plan_date = datetime.fromisoformat(plan_data["date"]) if "date" in plan_data else datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Create or update plan
+        plan = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "date": plan_date,
+            "visits": plan_data.get("visits", []),
+            "orders": plan_data.get("orders", []),
+            "targets": plan_data.get("targets", {}),
+            "notes": plan_data.get("notes", ""),
+            "created_by": current_user.id,
+            "created_at": datetime.utcnow()
+        }
+        
+        # Upsert plan
+        await db.daily_plans.update_one(
+            {"user_id": user_id, "date": plan_date},
+            {"$set": plan},
+            upsert=True
+        )
+        
+        return {"message": "تم إنشاء خطة اليوم بنجاح", "plan_id": plan["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Helper functions
+async def get_managed_users(manager_id: str):
+    """Get list of user IDs managed by a manager"""
+    cursor = db.users.find({"managed_by": manager_id}, {"id": 1, "_id": 0})
+    return [user["id"] async for user in cursor]
+
+async def get_managed_warehouses(manager_id: str):
+    """Get list of warehouse IDs managed by a warehouse manager"""
+    cursor = db.warehouses.find({"manager_id": manager_id}, {"id": 1, "_id": 0})
+    return [warehouse["id"] async for warehouse in cursor]
+
 # Chart data endpoints
 
 # Include the router in the main app
