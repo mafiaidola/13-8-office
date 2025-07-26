@@ -32,8 +32,11 @@ const ThemeProvider = ({ children }) => {
     return localStorage.getItem('app_language') || 'ar'; // Arabic as default
   });
 
-  // Available themes
-  const availableThemes = ['light', 'dark', 'minimal', 'modern', 'fancy'];
+  // Enhanced themes with modern, youthful designs
+  const availableThemes = [
+    'light', 'dark', 'minimal', 'modern', 'fancy',
+    'cyber', 'sunset', 'ocean', 'forest'
+  ];
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -50,12 +53,16 @@ const ThemeProvider = ({ children }) => {
     // Apply direction based on language
     document.dir = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
+    // Apply fonts based on language
+    document.body.style.fontFamily = language === 'ar' ? 
+      "'Tajawal', 'Cairo', 'Amiri', 'Segoe UI', 'Tahoma', Arial, sans-serif" : 
+      "'Roboto', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
   }, [language]);
 
   const updateThemeVariables = (currentTheme) => {
     const root = document.documentElement;
     
-    // Base colors for all themes
+    // Enhanced theme configurations with better contrast and modern designs
     const themeConfigs = {
       light: {
         '--primary-bg': '#ffffff',
@@ -73,7 +80,9 @@ const ThemeProvider = ({ children }) => {
         '--primary-color': '#3b82f6',
         '--success-color': '#10b981',
         '--warning-color': '#f59e0b',
-        '--error-color': '#ef4444'
+        '--error-color': '#ef4444',
+        '--glow-primary': 'none',
+        '--glow-secondary': 'none'
       },
       dark: {
         '--primary-bg': '#0f172a',
@@ -91,7 +100,9 @@ const ThemeProvider = ({ children }) => {
         '--primary-color': '#60a5fa',
         '--success-color': '#34d399',
         '--warning-color': '#fbbf24',
-        '--error-color': '#f87171'
+        '--error-color': '#f87171',
+        '--glow-primary': 'none',
+        '--glow-secondary': 'none'
       },
       minimal: {
         '--primary-bg': '#fefefe',
@@ -99,17 +110,19 @@ const ThemeProvider = ({ children }) => {
         '--accent-bg': '#f0f0f0',
         '--card-bg': 'rgba(255, 255, 255, 0.98)',
         '--glass-bg': 'rgba(249, 249, 249, 0.95)',
-        '--text-primary': '#333333',
-        '--text-secondary': '#666666',
-        '--text-muted': '#999999',
+        '--text-primary': '#2d3748',
+        '--text-secondary': '#4a5568',
+        '--text-muted': '#718096',
         '--gradient-dark': 'linear-gradient(135deg, #fefefe 0%, #f9f9f9 100%)',
-        '--border-color': '#e0e0e0',
+        '--border-color': '#e2e8f0',
         '--hover-bg': 'rgba(0, 0, 0, 0.03)',
         '--shadow': '0 1px 3px rgba(0, 0, 0, 0.1)',
         '--primary-color': '#4a5568',
         '--success-color': '#48bb78',
         '--warning-color': '#ed8936',
-        '--error-color': '#e53e3e'
+        '--error-color': '#e53e3e',
+        '--glow-primary': 'none',
+        '--glow-secondary': 'none'
       },
       modern: {
         '--primary-bg': '#0a0a0a',
@@ -118,8 +131,8 @@ const ThemeProvider = ({ children }) => {
         '--card-bg': 'rgba(26, 26, 26, 0.95)',
         '--glass-bg': 'rgba(10, 10, 10, 0.8)',
         '--text-primary': '#ffffff',
-        '--text-secondary': '#a0a0a0',
-        '--text-muted': '#707070',
+        '--text-secondary': '#d1d5db',
+        '--text-muted': '#9ca3af',
         '--gradient-dark': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)',
         '--border-color': '#404040',
         '--hover-bg': 'rgba(255, 255, 255, 0.08)',
@@ -127,7 +140,9 @@ const ThemeProvider = ({ children }) => {
         '--primary-color': '#00d4ff',
         '--success-color': '#00ff88',
         '--warning-color': '#ffaa00',
-        '--error-color': '#ff4757'
+        '--error-color': '#ff4757',
+        '--glow-primary': '0 0 20px rgba(0, 212, 255, 0.3)',
+        '--glow-secondary': '0 0 10px rgba(0, 255, 136, 0.2)'
       },
       fancy: {
         '--primary-bg': '#1a1a2e',
@@ -145,7 +160,89 @@ const ThemeProvider = ({ children }) => {
         '--primary-color': '#bb86fc',
         '--success-color': '#4ade80',
         '--warning-color': '#fbbf24',
-        '--error-color': '#f87171'
+        '--error-color': '#f87171',
+        '--glow-primary': '0 0 20px rgba(187, 134, 252, 0.5)',
+        '--glow-secondary': '0 0 10px rgba(184, 181, 255, 0.3)'
+      },
+      cyber: {
+        '--primary-bg': '#0d1117',
+        '--secondary-bg': '#161b22',
+        '--accent-bg': '#21262d',
+        '--card-bg': 'rgba(22, 27, 34, 0.95)',
+        '--glass-bg': 'rgba(13, 17, 23, 0.8)',
+        '--text-primary': '#00ff41',
+        '--text-secondary': '#58a6ff',
+        '--text-muted': '#7d8590',
+        '--gradient-dark': 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%)',
+        '--border-color': '#30363d',
+        '--hover-bg': 'rgba(0, 255, 65, 0.1)',
+        '--shadow': '0 8px 32px rgba(0, 255, 65, 0.2)',
+        '--primary-color': '#00ff41',
+        '--success-color': '#00ff41',
+        '--warning-color': '#ffab00',
+        '--error-color': '#ff4757',
+        '--glow-primary': '0 0 20px rgba(0, 255, 65, 0.4)',
+        '--glow-secondary': '0 0 10px rgba(88, 166, 255, 0.3)'
+      },
+      sunset: {
+        '--primary-bg': '#2d1b3d',
+        '--secondary-bg': '#3d2858',
+        '--accent-bg': '#4a3566',
+        '--card-bg': 'rgba(61, 40, 88, 0.95)',
+        '--glass-bg': 'rgba(45, 27, 61, 0.8)',
+        '--text-primary': '#fff4e6',
+        '--text-secondary': '#ffd6a5',
+        '--text-muted': '#ffab76',
+        '--gradient-dark': 'linear-gradient(135deg, #2d1b3d 0%, #3d2858 50%, #ff6b6b 100%)',
+        '--border-color': '#ff8a80',
+        '--hover-bg': 'rgba(255, 116, 116, 0.1)',
+        '--shadow': '0 8px 32px rgba(255, 107, 107, 0.3)',
+        '--primary-color': '#ff6b6b',
+        '--success-color': '#51cf66',
+        '--warning-color': '#ffd43b',
+        '--error-color': '#ff6b6b',
+        '--glow-primary': '0 0 20px rgba(255, 107, 107, 0.4)',
+        '--glow-secondary': '0 0 10px rgba(255, 214, 165, 0.3)'
+      },
+      ocean: {
+        '--primary-bg': '#0f2027',
+        '--secondary-bg': '#203a43',
+        '--accent-bg': '#2c5364',
+        '--card-bg': 'rgba(32, 58, 67, 0.95)',
+        '--glass-bg': 'rgba(15, 32, 39, 0.8)',
+        '--text-primary': '#e6fffa',
+        '--text-secondary': '#9decf9',
+        '--text-muted': '#4dd0e1',
+        '--gradient-dark': 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+        '--border-color': '#26a69a',
+        '--hover-bg': 'rgba(38, 166, 154, 0.1)',
+        '--shadow': '0 8px 32px rgba(0, 188, 212, 0.3)',
+        '--primary-color': '#00bcd4',
+        '--success-color': '#26a69a',
+        '--warning-color': '#ffa726',
+        '--error-color': '#ef5350',
+        '--glow-primary': '0 0 20px rgba(0, 188, 212, 0.4)',
+        '--glow-secondary': '0 0 10px rgba(157, 236, 249, 0.3)'
+      },
+      forest: {
+        '--primary-bg': '#1b2f1e',
+        '--secondary-bg': '#2d4a32',
+        '--accent-bg': '#3e5c42',
+        '--card-bg': 'rgba(45, 74, 50, 0.95)',
+        '--glass-bg': 'rgba(27, 47, 30, 0.8)',
+        '--text-primary': '#f1f8e9',
+        '--text-secondary': '#c8e6c9',
+        '--text-muted': '#a5d6a7',
+        '--gradient-dark': 'linear-gradient(135deg, #1b2f1e 0%, #2d4a32 50%, #3e5c42 100%)',
+        '--border-color': '#4caf50',
+        '--hover-bg': 'rgba(76, 175, 80, 0.1)',
+        '--shadow': '0 8px 32px rgba(76, 175, 80, 0.3)',
+        '--primary-color': '#4caf50',
+        '--success-color': '#66bb6a',
+        '--warning-color': '#ffb74d',
+        '--error-color': '#ef5350',
+        '--glow-primary': '0 0 20px rgba(76, 175, 80, 0.4)',
+        '--glow-secondary': '0 0 10px rgba(200, 230, 201, 0.3)'
       }
     };
 
@@ -155,15 +252,6 @@ const ThemeProvider = ({ children }) => {
     Object.entries(config).forEach(([property, value]) => {
       root.style.setProperty(property, value);
     });
-
-    // Add special effects for fancy theme
-    if (currentTheme === 'fancy') {
-      root.style.setProperty('--glow-primary', '0 0 20px rgba(187, 134, 252, 0.5)');
-      root.style.setProperty('--glow-secondary', '0 0 10px rgba(184, 181, 255, 0.3)');
-    } else {
-      root.style.setProperty('--glow-primary', 'none');
-      root.style.setProperty('--glow-secondary', 'none');
-    }
   };
 
   const cycleTheme = () => {
