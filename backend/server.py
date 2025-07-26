@@ -1615,6 +1615,437 @@ async def send_message(conversation_id: str, message_data: dict, current_user: U
     
     return {"message": "Message sent successfully"}
 
+# Admin Settings and Permissions APIs
+@api_router.get("/admin/permissions", response_model=Dict[str, Any])
+async def get_permissions_settings(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access permissions settings")
+    
+    # Get existing permissions settings or return defaults
+    permissions = await db.admin_permissions.find_one({}, {"_id": 0})
+    if not permissions:
+        # Create default permissions
+        default_permissions = {
+            "id": str(uuid.uuid4()),
+            "roles_config": {
+                "admin": {
+                    "dashboard_access": True,
+                    "user_management": True,
+                    "warehouse_management": True,
+                    "visits_management": True,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": True,
+                    "secret_reports": True,
+                    "financial_reports": True,
+                    "system_logs": True
+                },
+                "manager": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": True,
+                    "visits_management": True,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": True,
+                    "system_logs": False
+                },
+                "sales_rep": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": False,
+                    "visits_management": True,
+                    "reports_access": False,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": False,
+                    "system_logs": False
+                },
+                "warehouse": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": True,
+                    "visits_management": False,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": False,
+                    "system_logs": False
+                },
+                "accounting": {
+                    "dashboard_access": True,
+                    "user_management": False,
+                    "warehouse_management": False,
+                    "visits_management": False,
+                    "reports_access": True,
+                    "chat_access": True,
+                    "settings_access": False,
+                    "secret_reports": False,
+                    "financial_reports": True,
+                    "system_logs": False
+                }
+            },
+            "ui_controls": {
+                "show_statistics_cards": True,
+                "show_charts": True,
+                "show_recent_activities": True,
+                "show_user_photos": True,
+                "show_themes_selector": True,
+                "show_language_selector": True,
+                "enable_dark_mode": True,
+                "enable_notifications": True,
+                "enable_search": True
+            },
+            "feature_toggles": {
+                "gamification_enabled": False,
+                "gps_tracking_enabled": True,
+                "voice_notes_enabled": True,
+                "file_uploads_enabled": True,
+                "print_reports_enabled": True,
+                "export_data_enabled": True,
+                "email_notifications_enabled": False,
+                "sms_notifications_enabled": False
+            },
+            "system_limits": {
+                "max_users": 1000,
+                "max_warehouses": 50,
+                "max_products": 10000,
+                "max_file_size_mb": 50,
+                "session_timeout_minutes": 480
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        await db.admin_permissions.insert_one(default_permissions)
+        return default_permissions
+    
+    return permissions
+
+@api_router.post("/admin/permissions")
+async def update_permissions_settings(permissions_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update permissions settings")
+    
+    # Update permissions
+    permissions_data["updated_at"] = datetime.utcnow()
+    permissions_data["updated_by"] = current_user.id
+    
+    await db.admin_permissions.update_one(
+        {},
+        {"$set": permissions_data},
+        upsert=True
+    )
+    
+    return {"message": "Permissions updated successfully"}
+
+@api_router.get("/admin/dashboard-config", response_model=Dict[str, Any])
+async def get_dashboard_config(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access dashboard configuration")
+    
+    config = await db.dashboard_config.find_one({}, {"_id": 0})
+    if not config:
+        # Create default dashboard configuration
+        default_config = {
+            "id": str(uuid.uuid4()),
+            "dashboard_sections": {
+                "statistics_cards": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"],
+                    "cards_config": {
+                        "users_card": {"enabled": True, "roles": ["admin", "manager"]},
+                        "clinics_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "doctors_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "visits_card": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "warehouses_card": {"enabled": True, "roles": ["admin", "warehouse"]},
+                        "products_card": {"enabled": True, "roles": ["admin", "warehouse"]},
+                        "orders_card": {"enabled": True, "roles": ["admin", "manager", "warehouse"]}
+                    }
+                },
+                "charts_section": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager"],
+                    "chart_types": {
+                        "visits_chart": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                        "orders_chart": {"enabled": True, "roles": ["admin", "manager", "warehouse"]},
+                        "revenue_chart": {"enabled": True, "roles": ["admin", "manager", "accounting"]},
+                        "performance_chart": {"enabled": True, "roles": ["admin", "manager"]}
+                    }
+                },
+                "recent_activities": {
+                    "enabled": True,
+                    "visible_to_roles": ["admin", "manager"],
+                    "activities_count": 10,
+                    "show_user_activities": True,
+                    "show_system_activities": True
+                },
+                "navigation_tabs": {
+                    "statistics_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "users_tab": {"enabled": True, "roles": ["admin"]},
+                    "warehouse_tab": {"enabled": True, "roles": ["admin", "warehouse"]},
+                    "visits_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep"]},
+                    "reports_tab": {"enabled": True, "roles": ["admin", "manager", "accounting"]},
+                    "chat_tab": {"enabled": True, "roles": ["admin", "manager", "sales_rep", "warehouse", "accounting"]},
+                    "settings_tab": {"enabled": True, "roles": ["admin"]}
+                }
+            },
+            "ui_customization": {
+                "company_branding": {
+                    "show_logo": True,
+                    "show_company_name": True,
+                    "custom_colors": False,
+                    "primary_color": "#3b82f6",
+                    "secondary_color": "#1e293b"
+                },
+                "layout_options": {
+                    "sidebar_collapsed": False,
+                    "show_breadcrumbs": True,
+                    "show_page_titles": True,
+                    "compact_mode": False
+                },
+                "theme_options": {
+                    "allow_theme_switching": True,
+                    "default_theme": "dark",
+                    "available_themes": ["light", "dark", "minimal", "modern", "fancy", "cyber", "sunset", "ocean", "forest"]
+                }
+            },
+            "security_settings": {
+                "force_password_change": False,
+                "password_expiry_days": 90,
+                "max_login_attempts": 5,
+                "session_timeout_minutes": 480,
+                "require_2fa": False
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        await db.dashboard_config.insert_one(default_config)
+        return default_config
+    
+    return config
+
+@api_router.post("/admin/dashboard-config")
+async def update_dashboard_config(config_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update dashboard configuration")
+    
+    config_data["updated_at"] = datetime.utcnow()
+    config_data["updated_by"] = current_user.id
+    
+    await db.dashboard_config.update_one(
+        {},
+        {"$set": config_data},
+        upsert=True
+    )
+    
+    return {"message": "Dashboard configuration updated successfully"}
+
+@api_router.get("/admin/system-health", response_model=Dict[str, Any])
+async def get_system_health(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access system health")
+    
+    # Get system statistics
+    total_users = await db.users.count_documents({})
+    active_users = await db.users.count_documents({"is_active": True})
+    total_visits = await db.visits.count_documents({})
+    total_orders = await db.orders.count_documents({})
+    total_products = await db.products.count_documents({})
+    total_warehouses = await db.warehouses.count_documents({})
+    
+    # Check database collections health
+    collections_health = {}
+    collections = ["users", "visits", "orders", "products", "warehouses", "clinics", "doctors"]
+    for collection in collections:
+        try:
+            count = await getattr(db, collection).count_documents({})
+            collections_health[collection] = {"status": "healthy", "count": count}
+        except Exception as e:
+            collections_health[collection] = {"status": "error", "error": str(e)}
+    
+    # System performance metrics (simplified)
+    system_health = {
+        "overall_status": "healthy",
+        "database_status": "connected",
+        "users": {
+            "total": total_users,
+            "active": active_users,
+            "inactive": total_users - active_users
+        },
+        "collections_health": collections_health,
+        "system_metrics": {
+            "total_visits": total_visits,
+            "total_orders": total_orders,
+            "total_products": total_products,
+            "total_warehouses": total_warehouses
+        },
+        "checked_at": datetime.utcnow()
+    }
+    
+    return system_health
+
+@api_router.get("/admin/activity-logs", response_model=List[Dict[str, Any]])
+async def get_activity_logs(current_user: User = Depends(get_current_user), limit: int = 100):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access activity logs")
+    
+    # Get recent activities from various collections
+    activities = []
+    
+    # User activities
+    recent_users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).limit(20).to_list(20)
+    for user in recent_users:
+        activities.append({
+            "id": str(uuid.uuid4()),
+            "type": "user_created",
+            "description": f"تم إنشاء مستخدم جديد: {user['full_name']}",
+            "user_id": user["id"],
+            "user_name": user["full_name"],
+            "timestamp": user["created_at"],
+            "category": "user_management"
+        })
+    
+    # Visit activities
+    recent_visits = await db.visits.find({}, {"_id": 0}).sort("created_at", -1).limit(20).to_list(20)
+    for visit in recent_visits:
+        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
+        activities.append({
+            "id": str(uuid.uuid4()),
+            "type": "visit_created",
+            "description": f"زيارة جديدة بواسطة {sales_rep['full_name'] if sales_rep else 'Unknown'}",
+            "user_id": visit["sales_rep_id"],
+            "user_name": sales_rep["full_name"] if sales_rep else "Unknown",
+            "timestamp": visit["created_at"],
+            "category": "visits"
+        })
+    
+    # Order activities
+    recent_orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).limit(20).to_list(20)
+    for order in recent_orders:
+        sales_rep = await db.users.find_one({"id": order["sales_rep_id"]}, {"_id": 0})
+        activities.append({
+            "id": str(uuid.uuid4()),
+            "type": "order_created",
+            "description": f"طلبية جديدة ({order['order_type']}) بواسطة {sales_rep['full_name'] if sales_rep else 'Unknown'}",
+            "user_id": order["sales_rep_id"],
+            "user_name": sales_rep["full_name"] if sales_rep else "Unknown",
+            "timestamp": order["created_at"],
+            "category": "orders"
+        })
+    
+    # Sort all activities by timestamp
+    activities.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    return activities[:limit]
+
+@api_router.get("/user/permissions", response_model=Dict[str, Any])
+async def get_user_permissions(current_user: User = Depends(get_current_user)):
+    """Get current user's permissions based on their role"""
+    
+    # Get admin permissions settings
+    permissions_config = await db.admin_permissions.find_one({}, {"_id": 0})
+    dashboard_config = await db.dashboard_config.find_one({}, {"_id": 0})
+    
+    if not permissions_config or not dashboard_config:
+        # Return default permissions for the role
+        default_permissions = {
+            "admin": {
+                "dashboard_access": True,
+                "user_management": True,
+                "warehouse_management": True,
+                "visits_management": True,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": True,
+                "secret_reports": True,
+                "navigation_tabs": ["الإحصائيات", "إدارة المستخدمين", "إدارة المخازن", "سجل الزيارات", "التقارير", "المحادثات", "الإعدادات"]
+            },
+            "manager": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": True,
+                "visits_management": True,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "navigation_tabs": ["الإحصائيات", "إدارة المخازن", "سجل الزيارات", "التقارير", "المحادثات"]
+            },
+            "sales_rep": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": False,
+                "visits_management": True,
+                "reports_access": False,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "navigation_tabs": ["الإحصائيات", "سجل الزيارات", "المحادثات"]
+            },
+            "warehouse": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": True,
+                "visits_management": False,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "navigation_tabs": ["الإحصائيات", "إدارة المخازن", "التقارير", "المحادثات"]
+            },
+            "accounting": {
+                "dashboard_access": True,
+                "user_management": False,
+                "warehouse_management": False,
+                "visits_management": False,
+                "reports_access": True,
+                "chat_access": True,
+                "settings_access": False,
+                "secret_reports": False,
+                "navigation_tabs": ["الإحصائيات", "التقارير", "المحادثات"]
+            }
+        }
+        return default_permissions.get(current_user.role.lower(), default_permissions["sales_rep"])
+    
+    # Get permissions for user's role
+    role_permissions = permissions_config["roles_config"].get(current_user.role.lower(), {})
+    
+    # Get visible navigation tabs based on dashboard config
+    visible_tabs = []
+    nav_config = dashboard_config["dashboard_sections"]["navigation_tabs"]
+    
+    tab_mapping = {
+        "statistics_tab": "الإحصائيات",
+        "users_tab": "إدارة المستخدمين",
+        "warehouse_tab": "إدارة المخازن",
+        "visits_tab": "سجل الزيارات",
+        "reports_tab": "التقارير",
+        "chat_tab": "المحادثات",
+        "settings_tab": "الإعدادات"
+    }
+    
+    for tab_key, tab_name in tab_mapping.items():
+        tab_config = nav_config.get(tab_key, {})
+        if (tab_config.get("enabled", False) and 
+            current_user.role.lower() in tab_config.get("roles", [])):
+            visible_tabs.append(tab_name)
+    
+    # Combine permissions with UI configuration
+    user_permissions = {
+        **role_permissions,
+        "navigation_tabs": visible_tabs,
+        "ui_controls": permissions_config["ui_controls"],
+        "feature_toggles": permissions_config["feature_toggles"]
+    }
+    
+    return user_permissions
+
 # Voice Notes APIs
 @api_router.post("/visits/{visit_id}/voice-notes")
 async def add_voice_note(visit_id: str, voice_data: dict, current_user: User = Depends(get_current_user)):
