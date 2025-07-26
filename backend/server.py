@@ -2409,6 +2409,124 @@ async def get_visit_voice_notes(visit_id: str, current_user: User = Depends(get_
     return voice_notes
 
 # Enhanced User Management APIs
+@api_router.get("/users/enhanced-list")
+async def get_enhanced_users_list(
+    page: int = 1,
+    limit: int = 20,
+    search: str = None,
+    role_filter: str = None,
+    status_filter: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get enhanced users list with photos, last seen, activity status, and KPIs"""
+    print(f"Enhanced list called by user: {current_user.username}")
+    try:
+        if current_user.role not in ["admin", "manager"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Build query
+        query = {}
+        if role_filter:
+            query["role"] = role_filter
+        if status_filter:
+            if status_filter == "active":
+                query["is_active"] = True
+            elif status_filter == "inactive":
+                query["is_active"] = False
+        if search:
+            query["$or"] = [
+                {"username": {"$regex": search, "$options": "i"}},
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}}
+            ]
+        
+        # Get total count
+        total_count = await db.users.count_documents(query)
+        
+        # Get users with pagination
+        skip = (page - 1) * limit
+        users_cursor = db.users.find(query, {"_id": 0, "password_hash": 0}).skip(skip).limit(limit)
+        users = await users_cursor.to_list(length=None)
+        
+        # Enhance users with additional data
+        enhanced_users = []
+        for user in users:
+            # Check if user is online (last seen within 5 minutes)
+            is_online = False
+            if user.get("last_seen"):
+                last_seen = user["last_seen"]
+                if isinstance(last_seen, str):
+                    last_seen = datetime.fromisoformat(last_seen.replace('Z', '+00:00'))
+                time_diff = datetime.utcnow() - last_seen.replace(tzinfo=None)
+                is_online = time_diff.total_seconds() < 300  # 5 minutes
+            
+            # Get basic KPIs based on role
+            kpis = {}
+            if user["role"] == "sales_rep":
+                # Get today's visits and orders
+                today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                kpis = {
+                    "visits_today": await db.visits.count_documents({
+                        "sales_rep_id": user["id"],
+                        "created_at": {"$gte": today}
+                    }),
+                    "total_visits": await db.visits.count_documents({"sales_rep_id": user["id"]}),
+                    "pending_orders": await db.orders.count_documents({
+                        "sales_rep_id": user["id"],
+                        "status": "PENDING"
+                    }),
+                    "total_orders": await db.orders.count_documents({"sales_rep_id": user["id"]})
+                }
+            elif user["role"] == "manager":
+                # Get team statistics
+                kpis = {
+                    "team_members": await db.users.count_documents({
+                        "managed_by": user["id"]
+                    }),
+                    "pending_approvals": await db.orders.count_documents({
+                        "status": "PENDING"
+                    }) + await db.clinic_requests.count_documents({
+                        "status": "PENDING"
+                    }),
+                    "team_visits_today": await db.visits.count_documents({
+                        "created_at": {"$gte": today}
+                    })
+                }
+            elif user["role"] == "warehouse_manager":
+                # Get warehouse statistics
+                kpis = {
+                    "managed_warehouses": await db.warehouses.count_documents({
+                        "manager_id": user["id"]
+                    }),
+                    "low_stock_items": await db.products.count_documents({
+                        "stock_level": {"$lt": 10}
+                    }),
+                    "pending_shipments": await db.orders.count_documents({
+                        "status": "MANAGER_APPROVED"
+                    })
+                }
+            
+            enhanced_user = {
+                **user,
+                "is_online": is_online,
+                "kpis": kpis,
+                "last_seen_formatted": user.get("last_seen", "").split('.')[0] if user.get("last_seen") else None
+            }
+            
+            enhanced_users.append(enhanced_user)
+        
+        return {
+            "users": enhanced_users,
+            "total_count": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+        
+    except Exception as e:
+        print(f"Error in enhanced list: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/users/{user_id}", response_model=Dict[str, Any])
 async def get_user_details(user_id: str, current_user: User = Depends(get_current_user)):
     if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
