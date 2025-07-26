@@ -5372,7 +5372,7 @@ const handleSystemSettings = () => {
 };
 
 // Enhanced User Management Component
-// Enhanced User Management Component
+// Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showCreateUser, setShowCreateUser] = useState(false);
