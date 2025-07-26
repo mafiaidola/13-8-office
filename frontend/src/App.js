@@ -10103,20 +10103,20 @@ const Dashboard = () => {
             {/* Chat System for all users */}
             <button
               onClick={() => setActiveTab('chat')}
-              className={`nav-tab ${activeTab === 'chat' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              className={`nav-item ${activeTab === 'chat' ? 'active' : ''} flex items-center whitespace-nowrap`}
             >
-              <span className="ml-2">💬</span>
-              المحادثات
+              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>💬</span>
+              {t('chat')}
             </button>
             
             {/* System Settings only for Admin */}
             {user.role === 'admin' && (
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`nav-tab ${activeTab === 'settings' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'settings' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">⚙️</span>
-                إعدادات النظام
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>⚙️</span>
+                {t('settings')}
               </button>
             )}
 
@@ -10124,10 +10124,10 @@ const Dashboard = () => {
             {user.role === 'admin' && (
               <button
                 onClick={() => setActiveTab('secret')}
-                className={`nav-tab ${activeTab === 'secret' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'secret' ? 'active' : ''} flex items-center whitespace-nowrap`}
               >
-                <span className="ml-2">🔒</span>
-                التقرير السري
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🔒</span>
+                {t('secretReports')}
               </button>
             )}
           </nav>
