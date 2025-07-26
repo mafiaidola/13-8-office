@@ -5402,34 +5402,72 @@ const EnhancedUserManagement = () => {
   const { language } = useLanguage();
 
   useEffect(() => {
-    fetchUsers();
-    fetchUserStats();
-  }, []);
+    fetchEnhancedUsers();
+    // Update last seen every 30 seconds
+    const interval = setInterval(updateLastSeen, 30000);
+    return () => clearInterval(interval);
+  }, [currentPage, searchTerm, roleFilter, statusFilter]);
 
-  const fetchUsers = async () => {
+  const updateLastSeen = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/users/update-last-seen`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.log('Failed to update last seen:', error);
+    }
+  };
+
+  const fetchEnhancedUsers = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/users`, {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 10,
+        ...(searchTerm && { search: searchTerm }),
+        ...(roleFilter && { role_filter: roleFilter }),
+        ...(statusFilter && { status_filter: statusFilter })
+      });
+      
+      const response = await axios.get(`${API}/users/enhanced-list?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(response.data);
+      
+      setUsers(response.data.users);
+      setTotalPages(response.data.total_pages);
     } catch (error) {
-      setError('خطأ في جلب المستخدمين');
+      setError('خطأ في تحميل المستخدمين');
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUserStats = async () => {
+  const handlePhotoUpload = async (userId, photoFile) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/reports/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUserStats(response.data);
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        
+        await axios.post(`${API}/users/upload-photo`, {
+          user_id: userId,
+          photo: base64
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setSuccess('تم تحديث الصورة بنجاح');
+        fetchEnhancedUsers();
+      };
+      reader.readAsDataURL(photoFile);
+      
     } catch (error) {
-      console.error('Error fetching user stats:', error);
+      setError('خطأ في رفع الصورة');
     }
   };
 
