@@ -1697,8 +1697,6 @@ const LoginPage = () => {
         <LanguageToggle position="login" />
       </div>
       
-      <ThemeToggle />
-      
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="floating">
           <div className="card-modern w-full max-w-md p-8 fade-in-up glass-effect">
