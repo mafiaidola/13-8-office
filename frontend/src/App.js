@@ -278,165 +278,6 @@ const SVGIcon = ({ name, size = 24, className = "", animated = true }) => {
   return icons[name] || icons.theme;
 };
 
-// Enhanced Theme Toggle Component
-const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
-  const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
-  
-  const getThemeIcon = (themeName) => {
-    const icons = {
-      light: 'sun',
-      dark: 'moon',
-      minimal: 'theme',
-      modern: 'theme',
-      fancy: 'theme'
-    };
-    return icons[themeName] || 'theme';
-  };
-
-  const getThemeLabel = (themeName) => {
-    const labels = {
-      light: 'فاتح',
-      dark: 'داكن',
-      minimal: 'بسيط',
-      modern: 'عصري',
-      fancy: 'فاخر'
-    };
-    return labels[themeName] || themeName;
-  };
-
-  if (isDropdown) {
-    return (
-      <div className="relative group">
-        <button
-          className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
-          title={`الثيم الحالي: ${getThemeLabel(theme)}`}
-        >
-          <SVGIcon name={getThemeIcon(theme)} size={20} />
-          {showLabel && <span>{getThemeLabel(theme)}</span>}
-        </button>
-        
-        <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-          {availableThemes.map((themeName) => (
-            <button
-              key={themeName}
-              onClick={() => setSpecificTheme(themeName)}
-              className={`w-full flex items-center gap-3 px-4 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors ${
-                theme === themeName ? 'bg-blue-500 bg-opacity-20' : ''
-              }`}
-            >
-              <SVGIcon name={getThemeIcon(themeName)} size={16} />
-              <span>{getThemeLabel(themeName)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={cycleTheme}
-      className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
-      title={`الثيم الحالي: ${getThemeLabel(theme)} - اضغط للتبديل`}
-    >
-      <SVGIcon name={getThemeIcon(theme)} size={20} />
-      {showLabel && <span>{getThemeLabel(theme)}</span>}
-    </button>
-  );
-};
-
-// Theme Toggle Component (Legacy)
-const ThemeToggleOld = () => {
-  const { theme, toggleTheme } = useTheme();
-  
-  return (
-    <button
-      onClick={toggleTheme}
-      className="theme-toggle"
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-    >
-      {theme === 'dark' ? '🌙' : '☀️'}
-      {theme === 'dark' ? 'داكن' : 'فاتح'}
-    </button>
-  );
-};
-
-// Auth Context
-const AuthContext = createContext();
-
-const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Verify token and get user info
-      fetchUserInfo(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchUserInfo = async (token) => {
-    try {
-      const response = await axios.get(`${API}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
-    } catch (error) {
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (username, password) => {
-    try {
-      const response = await axios.post(`${API}/auth/login`, {
-        username,
-        password
-      });
-      
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
-      setUser(userData);
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.detail || 'حدث خطأ في تسجيل الدخول'
-      };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
 // Global Search Component
 const GlobalSearch = ({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -914,7 +755,7 @@ const InvoiceModal = ({ invoice, onClose }) => {
   );
 };
 
-// Enhanced Theme Toggle Component (Updated)
+// Enhanced Theme Toggle Component
 const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
   const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
   
@@ -981,70 +822,95 @@ const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
   );
 };
 
-// Enhanced Theme Toggle Component (Updated)
-const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
-  const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
+// Theme Toggle Component (Legacy)
+const ThemeToggleOld = () => {
+  const { theme, toggleTheme } = useTheme();
   
-  const getThemeIcon = (themeName) => {
-    const icons = {
-      light: 'sun',
-      dark: 'moon',
-      minimal: 'theme',
-      modern: 'theme',
-      fancy: 'theme'
-    };
-    return icons[themeName] || 'theme';
-  };
-
-  const getThemeLabel = (themeName) => {
-    const labels = {
-      light: 'فاتح',
-      dark: 'داكن',
-      minimal: 'بسيط',
-      modern: 'عصري',
-      fancy: 'فاخر'
-    };
-    return labels[themeName] || themeName;
-  };
-
-  if (isDropdown) {
-    return (
-      <div className="relative group">
-        <button
-          className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
-          title={`الثيم الحالي: ${getThemeLabel(theme)}`}
-        >
-          <SVGIcon name={getThemeIcon(theme)} size={20} />
-          {showLabel && <span>{getThemeLabel(theme)}</span>}
-        </button>
-        
-        <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-          {availableThemes.map((themeName) => (
-            <button
-              key={themeName}
-              onClick={() => setSpecificTheme(themeName)}
-              className={`w-full flex items-center gap-3 px-4 py-2 text-right hover:bg-gray-100 hover:bg-opacity-20 transition-colors ${
-                theme === themeName ? 'bg-blue-500 bg-opacity-20' : ''
-              }`}
-            >
-              <SVGIcon name={getThemeIcon(themeName)} size={16} />
-              <span>{getThemeLabel(themeName)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <button
-      onClick={cycleTheme}
-      className="theme-toggle flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 hover:bg-opacity-10 transition-all duration-200"
-      title={`الثيم الحالي: ${getThemeLabel(theme)} - اضغط للتبديل`}
+      onClick={toggleTheme}
+      className="theme-toggle"
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      <SVGIcon name={getThemeIcon(theme)} size={20} />
-      {showLabel && <span>{getThemeLabel(theme)}</span>}
+      {theme === 'dark' ? '🌙' : '☀️'}
+      {theme === 'dark' ? 'داكن' : 'فاتح'}
     </button>
+  );
+};
+
+// Auth Context
+const AuthContext = createContext();
+
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token and get user info
+      fetchUserInfo(token);
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchUserInfo = async (token) => {
+    try {
+      const response = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (error) {
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (username, password) => {
+    try {
+      const response = await axios.post(`${API}/auth/login`, {
+        username,
+        password
+      });
+      
+      const { token, user: userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'حدث خطأ في تسجيل الدخول'
+      };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  const value = {
+    user,
+    login,
+    logout,
+    loading
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
   );
 };
 
