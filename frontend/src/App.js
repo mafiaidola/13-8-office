@@ -1982,8 +1982,6 @@ const VisitDetailsModal = ({ visit, language, onClose }) => {
     </div>
   );
 };
-};
-
 
 // Enhanced Statistics Dashboard Component
 const EnhancedStatisticsDashboard = ({ stats, user }) => {
