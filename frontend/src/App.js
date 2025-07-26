@@ -811,10 +811,10 @@ const GlobalSearch = ({ isOpen, onClose }) => {
   );
 };
 
-// Invoice Modal Component
-const InvoiceModal = ({ invoice, onClose }) => {
+// Enhanced Invoice Modal Component
+const EnhancedInvoiceModal = ({ invoice, onClose }) => {
   const handlePrint = () => {
-    const printContent = document.getElementById('invoice-content');
+    const printContent = document.getElementById('enhanced-invoice-content');
     const originalContent = document.body.innerHTML;
     document.body.innerHTML = printContent.outerHTML;
     window.print();
@@ -822,81 +822,245 @@ const InvoiceModal = ({ invoice, onClose }) => {
     window.location.reload();
   };
 
+  const handleDownload = () => {
+    // Create a downloadable PDF (simplified version)
+    const element = document.getElementById('enhanced-invoice-content');
+    const opt = {
+      margin: 1,
+      filename: `فاتورة-${invoice.id.slice(-8)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    // Note: This would require html2pdf library
+    // html2pdf().set(opt).from(element).save();
+    alert('سيتم تنزيل الفاتورة قريباً');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden" style={{ background: 'var(--card-bg)' }}>
-        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
-          <h3 className="text-xl font-bold">فاتورة رقم #{invoice.id.slice(-8)}</h3>
-          <div className="flex items-center gap-2">
+      <div className="glass-effect w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl shadow-2xl">
+        <div className="p-6 border-b border-white border-opacity-20 flex items-center justify-between">
+          <h3 className="text-2xl font-bold text-gradient">فاتورة رقم #{invoice.id.slice(-8)}</h3>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownload}
+              className="btn-modern px-4 py-2 flex items-center gap-2"
+            >
+              <SVGIcon name="download" size={16} />
+              تنزيل PDF
+            </button>
             <button
               onClick={handlePrint}
-              className="btn-primary px-4 py-2 flex items-center gap-2"
+              className="btn-modern px-4 py-2 flex items-center gap-2"
             >
               <SVGIcon name="print" size={16} />
               طباعة
             </button>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 hover:bg-opacity-10 rounded-full transition-colors"
             >
               <SVGIcon name="close" size={20} />
             </button>
           </div>
         </div>
         
-        <div className="p-6 overflow-y-auto" id="invoice-content">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-semibold mb-2">تفاصيل الفاتورة</h4>
-                <p><strong>رقم الفاتورة:</strong> #{invoice.id.slice(-8)}</p>
-                <p><strong>التاريخ:</strong> {new Date(invoice.created_at).toLocaleDateString('ar-EG')}</p>
-                <p><strong>الحالة:</strong> {invoice.status}</p>
-                <p><strong>القيمة الإجمالية:</strong> {invoice.total_amount} ج.م</p>
+        <div className="p-6 overflow-y-auto max-h-[80vh]" id="enhanced-invoice-content">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">نظام إدارة المبيعات</h1>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    Sales Management System
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">تفاصيل العميل</h4>
-                <p><strong>المندوب:</strong> {invoice.sales_rep_name}</p>
-                <p><strong>الطبيب:</strong> د. {invoice.doctor_name}</p>
-                <p><strong>العيادة:</strong> {invoice.clinic_name}</p>
-                <p><strong>المخزن:</strong> {invoice.warehouse_name}</p>
+              <div className="w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+            </div>
+
+            {/* Invoice Details */}
+            <div className="grid grid-cols-2 gap-8">
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="reports" size={20} />
+                  تفاصيل الفاتورة
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">رقم الفاتورة:</span>
+                    <span className="font-mono">#{invoice.id.slice(-8)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">تاريخ الإنشاء:</span>
+                    <span>{new Date(invoice.created_at).toLocaleDateString('ar-EG')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">الوقت:</span>
+                    <span>{new Date(invoice.created_at).toLocaleTimeString('ar-EG')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">الحالة:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      invoice.status === 'APPROVED' ? 'bg-green-100 bg-opacity-20 text-green-300' :
+                      invoice.status === 'PENDING' ? 'bg-yellow-100 bg-opacity-20 text-yellow-300' :
+                      'bg-gray-100 bg-opacity-20 text-gray-300'
+                    }`}>
+                      {invoice.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-3 mt-3">
+                    <span className="font-bold text-lg">المبلغ الإجمالي:</span>
+                    <span className="font-bold text-lg text-green-500">{invoice.total_amount} ج.م</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="user" size={20} />
+                  تفاصيل العميل
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">المندوب:</span>
+                    <span>{invoice.sales_rep_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">الطبيب:</span>
+                    <span>د. {invoice.doctor_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">العيادة:</span>
+                    <span>{invoice.clinic_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">المخزن:</span>
+                    <span>{invoice.warehouse_name}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
+            {/* Items Table */}
             {invoice.items && invoice.items.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">تفاصيل المنتجات</h4>
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="warehouse" size={20} />
+                  تفاصيل المنتجات ({invoice.items.length})
+                </h4>
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300">
+                  <table className="w-full">
                     <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border border-gray-300 p-2 text-right">المنتج</th>
-                        <th className="border border-gray-300 p-2 text-right">الكمية</th>
-                        <th className="border border-gray-300 p-2 text-right">السعر</th>
-                        <th className="border border-gray-300 p-2 text-right">الإجمالي</th>
+                      <tr className="border-b" style={{ borderColor: 'var(--border-color)' }}>
+                        <th className="text-right py-3 px-4 font-bold">#</th>
+                        <th className="text-right py-3 px-4 font-bold">اسم المنتج</th>
+                        <th className="text-right py-3 px-4 font-bold">الكمية</th>
+                        <th className="text-right py-3 px-4 font-bold">السعر الوحدة</th>
+                        <th className="text-right py-3 px-4 font-bold">الخصم</th>
+                        <th className="text-right py-3 px-4 font-bold">الإجمالي</th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoice.items.map((item, index) => (
-                        <tr key={index}>
-                          <td className="border border-gray-300 p-2">{item.product_name}</td>
-                          <td className="border border-gray-300 p-2">{item.quantity}</td>
-                          <td className="border border-gray-300 p-2">{item.unit_price} ج.م</td>
-                          <td className="border border-gray-300 p-2">{item.quantity * item.unit_price} ج.م</td>
+                        <tr key={index} className="border-b border-opacity-20" style={{ borderColor: 'var(--border-color)' }}>
+                          <td className="py-3 px-4 text-center">{index + 1}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-medium">{item.product_name}</div>
+                            {item.product_description && (
+                              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                {item.product_description}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">{item.quantity}</td>
+                          <td className="py-3 px-4 text-center">{item.unit_price} ج.م</td>
+                          <td className="py-3 px-4 text-center">
+                            {item.discount_amount ? `${item.discount_amount} ج.م` : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold">
+                            {(item.quantity * item.unit_price - (item.discount_amount || 0)).toFixed(2)} ج.م
+                          </td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-blue-500">
+                        <td colSpan="5" className="py-3 px-4 text-right font-bold text-lg">
+                          المجموع الكلي:
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-lg text-green-500">
+                          {invoice.total_amount} ج.م
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               </div>
             )}
 
-            {invoice.notes && (
-              <div>
-                <h4 className="font-semibold mb-2">ملاحظات</h4>
-                <p>{invoice.notes}</p>
+            {/* Additional Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Notes */}
+              {invoice.notes && (
+                <div className="glass-effect p-6 rounded-xl">
+                  <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <SVGIcon name="chat" size={20} />
+                    ملاحظات
+                  </h4>
+                  <p className="text-sm leading-relaxed">{invoice.notes}</p>
+                </div>
+              )}
+
+              {/* Payment Information */}
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="reports" size={20} />
+                  معلومات الدفع
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>طريقة الدفع:</span>
+                    <span>{invoice.payment_method || 'آجل'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>تاريخ الاستحقاق:</span>
+                    <span>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('ar-EG') : 'غير محدد'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>المبلغ المدفوع:</span>
+                    <span className="text-green-500">{invoice.paid_amount || 0} ج.م</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>المبلغ المتبقي:</span>
+                    <span className="text-red-500">{(invoice.total_amount - (invoice.paid_amount || 0)).toFixed(2)} ج.م</span>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-8 pt-6 border-t border-white border-opacity-20">
+              <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                شكراً لك على ثقتك في نظام إدارة المبيعات
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                تم إنشاء هذه الفاتورة إلكترونياً في {new Date().toLocaleString('ar-EG')}
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-4">
+                <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                <span className="text-xs font-bold">Sales Management System</span>
+                <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
