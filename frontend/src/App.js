@@ -6503,7 +6503,10 @@ const EnhancedUserManagement = () => {
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => openDetailsModal(user)}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowUserDetails(true);
+                            }}
                             className="btn-info text-xs px-3 py-1"
                             title="التفاصيل"
                           >
