@@ -9680,6 +9680,430 @@ class DoctorEnhanced(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: str
 
+# Enhanced Invoice System APIs
+@api_router.post("/admin/clinics")
+async def create_clinic_enhanced(clinic_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Generate unique clinic code
+    clinic_count = await db.clinics.count_documents({})
+    clinic_code = f"CLI{str(clinic_count + 1).zfill(4)}"
+    
+    # Ensure code uniqueness
+    while await db.clinics.find_one({"code": clinic_code}):
+        clinic_count += 1
+        clinic_code = f"CLI{str(clinic_count).zfill(4)}"
+    
+    clinic = ClinicEnhanced(
+        **clinic_data,
+        code=clinic_code,
+        created_by=current_user.id
+    )
+    
+    await db.clinics.insert_one(clinic.dict())
+    return {"message": "Clinic created successfully", "clinic_id": clinic.id, "clinic_code": clinic_code}
+
+@api_router.post("/admin/doctors")
+async def create_doctor_enhanced(doctor_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Verify clinic exists
+    clinic = await db.clinics.find_one({"id": doctor_data["clinic_id"]})
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    
+    # Generate unique doctor code
+    doctor_count = await db.doctors.count_documents({})
+    doctor_code = f"DOC{str(doctor_count + 1).zfill(4)}"
+    
+    # Ensure code uniqueness
+    while await db.doctors.find_one({"code": doctor_code}):
+        doctor_count += 1
+        doctor_code = f"DOC{str(doctor_count).zfill(4)}"
+    
+    doctor = DoctorEnhanced(
+        **doctor_data,
+        code=doctor_code,
+        created_by=current_user.id
+    )
+    
+    await db.doctors.insert_one(doctor.dict())
+    return {"message": "Doctor created successfully", "doctor_id": doctor.id, "doctor_code": doctor_code}
+
+@api_router.post("/admin/invoices")
+async def create_invoice(invoice_data: InvoiceCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get clinic and doctor information
+    clinic = await db.clinics.find_one({"id": invoice_data.clinic_id})
+    doctor = await db.doctors.find_one({"id": invoice_data.doctor_id})
+    
+    if not clinic or not doctor:
+        raise HTTPException(status_code=404, detail="Clinic or doctor not found")
+    
+    # Generate invoice number
+    today = datetime.utcnow()
+    date_prefix = today.strftime("%Y%m")
+    invoice_count = await db.invoices.count_documents({
+        "invoice_number": {"$regex": f"^INV{date_prefix}"}
+    })
+    invoice_number = f"INV{date_prefix}{str(invoice_count + 1).zfill(4)}"
+    
+    # Process invoice items
+    processed_items = []
+    subtotal = 0.0
+    
+    for item_data in invoice_data.items:
+        # Get product information
+        product = await db.products.find_one({"id": item_data["product_id"]})
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product {item_data['product_id']} not found")
+        
+        quantity = float(item_data["quantity"])
+        unit_price = float(item_data.get("unit_price", product["price"]))
+        discount_percentage = float(item_data.get("discount_percentage", 0))
+        
+        item_subtotal = quantity * unit_price
+        discount_amount = item_subtotal * (discount_percentage / 100)
+        item_total = item_subtotal - discount_amount
+        
+        invoice_item = InvoiceItem(
+            product_id=product["id"],
+            product_name=product["name"],
+            quantity=quantity,
+            unit_price=unit_price,
+            discount_percentage=discount_percentage,
+            discount_amount=discount_amount,
+            subtotal=item_subtotal,
+            total=item_total
+        )
+        
+        processed_items.append(invoice_item)
+        subtotal += item_subtotal
+    
+    # Calculate totals
+    total_discount_amount = subtotal * (invoice_data.discount_percentage / 100)
+    after_discount = subtotal - total_discount_amount
+    tax_amount = after_discount * 0.14  # 14% VAT
+    total_amount = after_discount + tax_amount
+    
+    # Set due date for credit invoices
+    due_date = None
+    if invoice_data.invoice_type == "CREDIT" and invoice_data.due_days:
+        due_date = today + timedelta(days=invoice_data.due_days)
+    
+    # Get company settings
+    company_settings = await db.system_settings.find_one({})
+    company_info = company_settings.get("website_config", {}) if company_settings else {}
+    
+    # Create invoice
+    invoice = Invoice(
+        invoice_number=invoice_number,
+        clinic_id=clinic["id"],
+        clinic_name=clinic["name"],
+        clinic_code=clinic["code"],
+        doctor_id=doctor["id"],
+        doctor_name=doctor["name"],
+        doctor_specialty=doctor["specialty"],
+        invoice_type=invoice_data.invoice_type,
+        payment_terms=invoice_data.payment_terms,
+        due_date=due_date,
+        items=processed_items,
+        subtotal=subtotal,
+        discount_percentage=invoice_data.discount_percentage,
+        discount_amount=total_discount_amount,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        remaining_amount=total_amount,
+        status="DRAFT",
+        notes=invoice_data.notes,
+        terms_and_conditions=invoice_data.terms_and_conditions,
+        company_name=company_info.get("site_name", "EP Group System"),
+        company_address=company_info.get("address", ""),
+        company_phone=company_info.get("contact_phone", ""),
+        company_email=company_info.get("contact_email", ""),
+        created_by=current_user.id
+    )
+    
+    await db.invoices.insert_one(invoice.dict())
+    return {"message": "Invoice created successfully", "invoice_id": invoice.id, "invoice_number": invoice_number}
+
+@api_router.get("/admin/invoices")
+async def get_invoices(
+    status: Optional[str] = None,
+    invoice_type: Optional[str] = None,
+    clinic_id: Optional[str] = None,
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Build query
+    query = {}
+    if status:
+        query["status"] = status
+    if invoice_type:
+        query["invoice_type"] = invoice_type
+    if clinic_id:
+        query["clinic_id"] = clinic_id
+    
+    # Get invoices with sorting
+    invoices = await db.invoices.find(
+        query, 
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return invoices
+
+@api_router.get("/admin/invoices/{invoice_id}")
+async def get_invoice(invoice_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    return invoice
+
+@api_router.patch("/admin/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Find invoice
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Prevent modification of paid invoices
+    if invoice["status"] == "PAID" and "status" not in update_data:
+        raise HTTPException(status_code=400, detail="Cannot modify paid invoice")
+    
+    # Update fields
+    update_fields = {k: v for k, v in update_data.items() if v is not None}
+    update_fields["updated_at"] = datetime.utcnow()
+    update_fields["updated_by"] = current_user.id
+    
+    await db.invoices.update_one({"id": invoice_id}, {"$set": update_fields})
+    return {"message": "Invoice updated successfully"}
+
+@api_router.post("/admin/invoices/{invoice_id}/send")
+async def send_invoice(invoice_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Update invoice status
+    await db.invoices.update_one(
+        {"id": invoice_id},
+        {"$set": {
+            "status": "SENT",
+            "sent_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }}
+    )
+    
+    return {"message": "Invoice sent successfully"}
+
+@api_router.post("/admin/invoices/{invoice_id}/payments")
+async def add_payment(invoice_id: str, payment_data: InvoicePaymentCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get invoice
+    invoice = await db.invoices.find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Validate payment amount
+    if payment_data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Payment amount must be positive")
+    
+    if payment_data.amount > invoice["remaining_amount"]:
+        raise HTTPException(status_code=400, detail="Payment amount exceeds remaining balance")
+    
+    # Create payment record
+    payment = InvoicePayment(
+        invoice_id=invoice_id,
+        **payment_data.dict(),
+        created_by=current_user.id
+    )
+    
+    await db.invoice_payments.insert_one(payment.dict())
+    
+    # Update invoice payment status
+    new_paid_amount = invoice["paid_amount"] + payment_data.amount
+    new_remaining_amount = invoice["total_amount"] - new_paid_amount
+    
+    # Determine new status
+    if new_remaining_amount <= 0:
+        new_status = "PAID"
+        paid_at = datetime.utcnow()
+    elif new_paid_amount > 0:
+        new_status = "PARTIALLY_PAID"
+        paid_at = None
+    else:
+        new_status = invoice["status"]
+        paid_at = None
+    
+    # Update invoice
+    update_fields = {
+        "paid_amount": new_paid_amount,
+        "remaining_amount": new_remaining_amount,
+        "status": new_status,
+        "updated_at": datetime.utcnow(),
+        "updated_by": current_user.id
+    }
+    
+    if paid_at:
+        update_fields["paid_at"] = paid_at
+    
+    await db.invoices.update_one({"id": invoice_id}, {"$set": update_fields})
+    
+    return {"message": "Payment added successfully", "payment_id": payment.id}
+
+@api_router.get("/admin/invoices/{invoice_id}/payments")
+async def get_invoice_payments(invoice_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get payments with user information
+    pipeline = [
+        {"$match": {"invoice_id": invoice_id}},
+        {"$lookup": {
+            "from": "users",
+            "localField": "created_by",
+            "foreignField": "id",
+            "as": "user"
+        }},
+        {"$unwind": "$user"},
+        {"$sort": {"created_at": -1}},
+        {"$project": {
+            "_id": 0,
+            "id": 1,
+            "amount": 1,
+            "payment_method": 1,
+            "payment_date": 1,
+            "reference_number": 1,
+            "notes": 1,
+            "created_at": 1,
+            "created_by_name": "$user.full_name"
+        }}
+    ]
+    
+    payments = await db.invoice_payments.aggregate(pipeline).to_list(100)
+    return payments
+
+# Invoice PDF Generation (placeholder - would use reportlab or similar)
+@api_router.get("/admin/invoices/{invoice_id}/pdf")
+async def generate_invoice_pdf(invoice_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get invoice with full details
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # This would generate PDF using reportlab or similar library
+    # For now, return invoice data for frontend PDF generation
+    return {
+        "message": "PDF generation endpoint ready",
+        "invoice": invoice,
+        "pdf_url": f"/api/invoices/{invoice_id}/download"
+    }
+
+# Invoice Analytics
+@api_router.get("/admin/invoices/analytics")
+async def get_invoice_analytics(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin/Accounting can access invoice analytics")
+    
+    # Total invoices and amounts
+    total_pipeline = [
+        {"$group": {
+            "_id": None,
+            "total_invoices": {"$sum": 1},
+            "total_amount": {"$sum": "$total_amount"},
+            "total_paid": {"$sum": "$paid_amount"},
+            "total_outstanding": {"$sum": "$remaining_amount"}
+        }}
+    ]
+    total_result = await db.invoices.aggregate(total_pipeline).to_list(1)
+    totals = total_result[0] if total_result else {
+        "total_invoices": 0, "total_amount": 0, "total_paid": 0, "total_outstanding": 0
+    }
+    
+    # Status breakdown
+    status_pipeline = [
+        {"$group": {
+            "_id": "$status",
+            "count": {"$sum": 1},
+            "amount": {"$sum": "$total_amount"}
+        }}
+    ]
+    status_breakdown = await db.invoices.aggregate(status_pipeline).to_list(10)
+    
+    # Monthly revenue (last 12 months)
+    twelve_months_ago = datetime.utcnow() - timedelta(days=365)
+    monthly_pipeline = [
+        {"$match": {"created_at": {"$gte": twelve_months_ago}}},
+        {"$group": {
+            "_id": {
+                "year": {"$year": "$created_at"},
+                "month": {"$month": "$created_at"}
+            },
+            "revenue": {"$sum": "$total_amount"},
+            "paid_revenue": {"$sum": "$paid_amount"},
+            "invoice_count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    monthly_revenue = await db.invoices.aggregate(monthly_pipeline).to_list(12)
+    
+    # Top clients
+    client_pipeline = [
+        {"$group": {
+            "_id": "$clinic_id",
+            "clinic_name": {"$first": "$clinic_name"},
+            "total_amount": {"$sum": "$total_amount"},
+            "invoice_count": {"$sum": 1}
+        }},
+        {"$sort": {"total_amount": -1}},
+        {"$limit": 10}
+    ]
+    top_clients = await db.invoices.aggregate(client_pipeline).to_list(10)
+    
+    return {
+        "totals": totals,
+        "status_breakdown": status_breakdown,
+        "monthly_revenue": monthly_revenue,
+        "top_clients": top_clients
+    }
+
+@api_router.get("/admin/settings/{category}")
+async def get_category_settings(category: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access admin settings")
+    
+    valid_categories = [
+        "user-management", "gps", "theme", "gamification", 
+        "notifications", "chat", "scanner", "visits", "security"
+    ]
+    
+    if category not in valid_categories:
+        raise HTTPException(status_code=400, detail="Invalid settings category")
+    
+    settings = await db.system_settings.find_one({}, {"_id": 0})
+    category_key = f"{category.replace('-', '_')}_settings"
+    
+    return settings.get(category_key, {}) if settings else {}
+
 app.include_router(api_router)
 
 app.add_middleware(
