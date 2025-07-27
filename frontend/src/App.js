@@ -6599,6 +6599,108 @@ const handleSystemSettings = () => {
   window.dispatchEvent(event);
 };
 
+// Admin Feature Control Component
+const AdminFeatureControl = () => {
+  const [features, setFeatures] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeatures();
+  }, []);
+
+  const fetchFeatures = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/features/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFeatures(response.data);
+    } catch (error) {
+      console.error('Error fetching features:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleFeature = async (featureName, enabled) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/features/toggle`, {
+        feature_name: featureName,
+        enabled: enabled
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setFeatures(prev => ({
+        ...prev,
+        [featureName]: enabled
+      }));
+    } catch (error) {
+      console.error('Error toggling feature:', error);
+    }
+  };
+
+  const featureLabels = {
+    gps_tracking: 'تتبع GPS',
+    gamification: 'نظام الألعاب',
+    chat_system: 'نظام المحادثة',
+    document_scanner: 'ماسح المستندات',
+    notifications: 'نظام الإشعارات',
+    advanced_reports: 'التقارير المتقدمة',
+    voice_notes: 'الملاحظات الصوتية',
+    offline_sync: 'المزامنة غير المتصلة',
+    qr_codes: 'أكواد QR',
+    multi_language: 'متعدد اللغات',
+    accounting_system: 'نظام المحاسبة'
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p>جاري تحميل إعدادات المميزات...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🎛️</span>
+          <span>تحكم المميزات</span>
+        </h3>
+        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+          تحكم في جميع مميزات النظام وقم بتمكين أو إلغاء تمكين أي ميزة
+        </p>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Object.entries(features).map(([feature, enabled]) => (
+            <div key={feature} className="p-4 bg-white bg-opacity-5 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium">{featureLabels[feature] || feature}</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(e) => toggleFeature(feature, e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {enabled ? '✅ مفعل' : '❌ غير مفعل'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced User Management Component
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
