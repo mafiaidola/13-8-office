@@ -11889,7 +11889,9 @@ const Dashboard = () => {
         </div>
         
         {/* Enhanced Footer */}
-        <EnhancedFooter />
+        <div className="mt-6">
+          <EnhancedFooter />
+        </div>
       </div>
     </>
   );
