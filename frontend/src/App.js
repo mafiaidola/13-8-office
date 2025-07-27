@@ -4755,48 +4755,48 @@ const ApprovalsDashboard = ({ user }) => {
 
       {/* Approval History Tab */}
       {activeTab === 'approval_history' && ['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'key_account'].includes(user.role) && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {approvalHistory.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📜</div>
-              <p>لا يوجد سجل موافقات للفريق الخاص بك</p>
-              <p className="text-sm mt-2">سيظهر هنا سجل الموافقات للمستخدمين التابعين لك فقط</p>
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-3">📜</div>
+              <p className="text-sm">لا يوجد سجل موافقات للفريق الخاص بك</p>
+              <p className="text-xs mt-2">سيظهر هنا سجل الموافقات للمستخدمين التابعين لك فقط</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {approvalHistory.map((request) => (
-                <div key={request.id} className="glass-effect p-6 rounded-xl">
-                  <div className="flex items-center justify-between mb-4">
+                <div key={request.id} className="glass-effect p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="text-2xl">
+                      <div className="text-xl">
                         {request.type === 'order' ? '🛒' : 
                          request.type === 'clinic' ? '🏥' : 
                          request.type === 'doctor' ? '👨‍⚕️' : '📋'}
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
-                        <p className="text-sm text-gray-600">بواسطة: {request.requester_name}</p>
+                        <h3 className="font-bold text-base">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-xs text-gray-600">بواسطة: {request.requester_name}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                         {getStatusText(request.status)}
                       </span>
                     </div>
                   </div>
 
                   {request.approvals && request.approvals.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <h4 className="text-sm font-medium text-gray-700">سجل الموافقات:</h4>
+                    <div className="mt-3 space-y-2">
+                      <h4 className="text-xs font-medium text-gray-700">سجل الموافقات:</h4>
                       {request.approvals.map((approval, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm">{approval.approver_name}</span>
-                          <span className={`text-xs px-2 py-1 rounded ${
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                          <span>{approval.approver_name}</span>
+                          <span className={`px-2 py-1 rounded ${
                             approval.action === 'approve' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
                             {approval.action === 'approve' ? 'وافق' : 'رفض'}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-gray-500">
                             {new Date(approval.timestamp).toLocaleDateString('ar-EG')}
                           </span>
                         </div>
@@ -4813,19 +4813,19 @@ const ApprovalsDashboard = ({ user }) => {
       {/* Request Details Modal */}
       {showRequestDetails && selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">تفاصيل الطلب</h3>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold">تفاصيل الطلب</h3>
                 <button 
                   onClick={() => setShowRequestDetails(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 text-lg"
                 >
                   ✕
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">نوع الطلب</label>
                   <p className="text-sm text-gray-900">{getRequestTypeText(selectedRequest.type)}</p>
@@ -4833,7 +4833,7 @@ const ApprovalsDashboard = ({ user }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">الحالة</label>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedRequest.status)}`}>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
                     {getStatusText(selectedRequest.status)}
                   </span>
                 </div>
