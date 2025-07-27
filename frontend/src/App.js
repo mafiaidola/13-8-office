@@ -4550,37 +4550,37 @@ const ApprovalsDashboard = ({ user }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gradient">الموافقات</h1>
-          <p className="text-gray-600">إدارة شاملة للموافقات والطلبات</p>
+          <h1 className="text-2xl font-bold text-gradient">الموافقات</h1>
+          <p className="text-sm text-gray-600">إدارة شاملة للموافقات والطلبات</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{myRequests.length}</div>
-            <div className="text-sm text-gray-500">طلباتي</div>
+            <div className="text-xl font-bold text-blue-600">{myRequests.length}</div>
+            <div className="text-xs text-gray-500">طلباتي</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600">{pendingApprovals.length}</div>
-            <div className="text-sm text-gray-500">في انتظار موافقتي</div>
+            <div className="text-xl font-bold text-yellow-600">{pendingApprovals.length}</div>
+            <div className="text-xs text-gray-500">في انتظار موافقتي</div>
           </div>
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
           {error}
         </div>
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex space-x-4 border-b border-gray-200">
+      <div className="flex space-x-3 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('my_requests')}
-          className={`pb-2 px-4 ${activeTab === 'my_requests' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+          className={`pb-2 px-3 text-sm ${activeTab === 'my_requests' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
         >
           طلباتي ({myRequests.length})
         </button>
@@ -4588,7 +4588,7 @@ const ApprovalsDashboard = ({ user }) => {
         {['district_manager', 'area_manager', 'line_manager', 'key_account', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role) && (
           <button
             onClick={() => setActiveTab('pending_approvals')}
-            className={`pb-2 px-4 ${activeTab === 'pending_approvals' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+            className={`pb-2 px-3 text-sm ${activeTab === 'pending_approvals' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
           >
             في انتظار موافقتي ({pendingApprovals.length})
           </button>
@@ -4598,7 +4598,7 @@ const ApprovalsDashboard = ({ user }) => {
         {['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'key_account'].includes(user.role) && (
           <button
             onClick={() => setActiveTab('approval_history')}
-            className={`pb-2 px-4 ${activeTab === 'approval_history' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+            className={`pb-2 px-3 text-sm ${activeTab === 'approval_history' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
           >
             سجل الموافقات ({approvalHistory.length})
           </button>
