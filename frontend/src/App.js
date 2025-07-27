@@ -16231,14 +16231,364 @@ const AdminPerformanceMonitor = () => {
   );
 };
 
-// Placeholder components for remaining admin settings
-const AdminRegionManagement = () => <RegionManagement />;
-const AdminProductManagement = () => <div>إدارة المنتجات - قيد التطوير</div>;
-const AdminGamificationSettings = () => <div>إعدادات نظام الألعاب - قيد التطوير</div>;
-const AdminAccountingSettings = () => <div>إعدادات نظام المحاسبة - قيد التطوير</div>;
-const AdminChatSettings = () => <div>إعدادات نظام الدردشة - قيد التطوير</div>;
-const AdminScannerSettings = () => <div>إعدادات ماسح المستندات - قيد التطوير</div>;
-const AdminVisitSettings = () => <div>إعدادات نظام الزيارات - قيد التطوير</div>;
-const AdminReportSettings = () => <div>إعدادات التقارير - قيد التطوير</div>;
+// Enhanced Warehouse Management Component
+const EnhancedWarehouseManagement = () => {
+  const { t } = useLanguage();
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [editingWarehouse, setEditingWarehouse] = useState(null);
+  const [warehouseStock, setWarehouseStock] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    fetchWarehouses();
+    fetchProducts();
+    fetchUsers();
+    fetchAnalytics();
+  }, []);
+
+  const fetchWarehouses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/warehouses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouses(response.data);
+    } catch (error) {
+      console.error('Error fetching warehouses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data.filter(user => user.role === 'warehouse_manager'));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/warehouses/analytics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAnalytics(response.data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
+  };
+
+  const handleCreateWarehouse = async (warehouseData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/warehouses`, warehouseData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchWarehouses();
+      await fetchAnalytics();
+      setShowCreateModal(false);
+      alert('تم إنشاء المخزن بنجاح');
+    } catch (error) {
+      console.error('Error creating warehouse:', error);
+      alert('حدث خطأ في إنشاء المخزن');
+    }
+  };
+
+  const handleEditWarehouse = async (warehouseId, warehouseData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/admin/warehouses/${warehouseId}`, warehouseData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchWarehouses();
+      setEditingWarehouse(null);
+      alert('تم تحديث المخزن بنجاح');
+    } catch (error) {
+      console.error('Error updating warehouse:', error);
+      alert('حدث خطأ في تحديث المخزن');
+    }
+  };
+
+  const handleDeleteWarehouse = async (warehouseId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المخزن؟')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/warehouses/${warehouseId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchWarehouses();
+      await fetchAnalytics();
+      alert('تم حذف المخزن بنجاح');
+    } catch (error) {
+      console.error('Error deleting warehouse:', error);
+      alert(error.response?.data?.detail || 'حدث خطأ في حذف المخزن');
+    }
+  };
+
+  const fetchWarehouseStock = async (warehouseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/warehouses/${warehouseId}/stock`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouseStock(response.data);
+    } catch (error) {
+      console.error('Error fetching warehouse stock:', error);
+    }
+  };
+
+  const handleAddStock = async (warehouseId, stockData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/warehouses/${warehouseId}/stock`, stockData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchWarehouseStock(warehouseId);
+      await fetchWarehouses();
+      setShowStockModal(false);
+      alert('تم إضافة المخزون بنجاح');
+    } catch (error) {
+      console.error('Error adding stock:', error);
+      alert('حدث خطأ في إضافة المخزون');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p style={{ color: 'var(--text-secondary)' }}>جاري تحميل المخازن...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gradient flex items-center gap-3">
+          <SVGIcon name="warehouse" size={32} />
+          إدارة المخازن الشاملة
+        </h2>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="btn-modern bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-2 rounded-lg"
+        >
+          + إضافة مخزن جديد
+        </button>
+      </div>
+
+      {/* Analytics Dashboard */}
+      {analytics && (
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
+          <div className="card-glass p-6 text-center">
+            <SVGIcon name="warehouse" size={32} className="mx-auto mb-2 text-blue-400" />
+            <div className="text-2xl font-bold text-gradient mb-1">
+              {analytics.summary.total_warehouses}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              إجمالي المخازن
+            </div>
+          </div>
+
+          <div className="card-glass p-6 text-center">
+            <SVGIcon name="accounting" size={32} className="mx-auto mb-2 text-green-400" />
+            <div className="text-2xl font-bold text-gradient mb-1">
+              {analytics.summary.total_stock_value?.toFixed(2)} ج.م
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              قيمة المخزون الإجمالية
+            </div>
+          </div>
+
+          <div className="card-glass p-6 text-center">
+            <SVGIcon name="products" size={32} className="mx-auto mb-2 text-purple-400" />
+            <div className="text-2xl font-bold text-gradient mb-1">
+              {analytics.summary.total_products_stocked}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              أصناف المنتجات
+            </div>
+          </div>
+
+          <div className="card-glass p-6 text-center">
+            <SVGIcon name="warning" size={32} className="mx-auto mb-2 text-red-400" />
+            <div className="text-2xl font-bold text-gradient mb-1">
+              {analytics.summary.low_stock_alerts}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              تحذيرات نفاد المخزون
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warehouses Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {warehouses.map((warehouse) => (
+          <div key={warehouse.id} className="card-glass p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {warehouse.name}
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className={`badge-modern ${warehouse.warehouse_type === 'main' ? 'badge-success' : 'badge-info'}`}>
+                  {warehouse.warehouse_type === 'main' ? 'رئيسي' : 'فرعي'}
+                </span>
+                <div className={`w-3 h-3 rounded-full ${warehouse.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-2 text-sm">
+                <SVGIcon name="regions" size={16} />
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  {warehouse.code} • {warehouse.city}, {warehouse.region}
+                </span>
+              </div>
+
+              {warehouse.manager_name && (
+                <div className="flex items-center gap-2 text-sm">
+                  <SVGIcon name="users" size={16} />
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    المدير: {warehouse.manager_name}
+                  </span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-gradient">
+                    {warehouse.total_products || 0}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    المنتجات
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-gradient">
+                    {warehouse.total_stock_value?.toFixed(0) || 0} ج.م
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    قيمة المخزون
+                  </div>
+                </div>
+              </div>
+
+              {warehouse.temperature_controlled && (
+                <div className="flex items-center gap-2 text-sm text-blue-400">
+                  <SVGIcon name="warning" size={16} />
+                  <span>مخزن مبرد</span>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setSelectedWarehouse(warehouse);
+                  fetchWarehouseStock(warehouse.id);
+                }}
+                className="px-4 py-2 bg-blue-500 bg-opacity-20 text-blue-400 rounded-lg hover:bg-opacity-30 transition-colors"
+              >
+                عرض المخزون
+              </button>
+              <button
+                onClick={() => setEditingWarehouse(warehouse)}
+                className="px-4 py-2 bg-green-500 bg-opacity-20 text-green-400 rounded-lg hover:bg-opacity-30 transition-colors"
+              >
+                تعديل
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <button
+                onClick={() => {
+                  setSelectedWarehouse(warehouse);
+                  setShowStockModal(true);
+                }}
+                className="px-4 py-2 bg-purple-500 bg-opacity-20 text-purple-400 rounded-lg hover:bg-opacity-30 transition-colors"
+              >
+                إضافة مخزون
+              </button>
+              <button
+                onClick={() => handleDeleteWarehouse(warehouse.id)}
+                className="px-4 py-2 bg-red-500 bg-opacity-20 text-red-400 rounded-lg hover:bg-opacity-30 transition-colors"
+              >
+                حذف
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create/Edit Warehouse Modal */}
+      {(showCreateModal || editingWarehouse) && (
+        <WarehouseModal
+          warehouse={editingWarehouse}
+          users={users}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingWarehouse(null);
+          }}
+          onSave={(data) => {
+            if (editingWarehouse) {
+              handleEditWarehouse(editingWarehouse.id, data);
+            } else {
+              handleCreateWarehouse(data);
+            }
+          }}
+        />
+      )}
+
+      {/* Stock Management Modal */}
+      {selectedWarehouse && !showStockModal && (
+        <StockViewModal
+          warehouse={selectedWarehouse}
+          stock={warehouseStock}
+          onClose={() => setSelectedWarehouse(null)}
+          onAddStock={() => setShowStockModal(true)}
+        />
+      )}
+
+      {/* Add Stock Modal */}
+      {showStockModal && selectedWarehouse && (
+        <AddStockModal
+          warehouse={selectedWarehouse}
+          products={products}
+          onClose={() => {
+            setShowStockModal(false);
+            setSelectedWarehouse(null);
+          }}
+          onSave={(data) => handleAddStock(selectedWarehouse.id, data)}
+        />
+      )}
+    </div>
+  );
+};
 
 export default App;
