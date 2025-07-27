@@ -41,6 +41,7 @@ class BackendTester:
     def __init__(self):
         self.session = requests.Session()
         self.admin_token = None
+        self.gm_token = None
         self.sales_rep_token = None
         self.manager_token = None
         self.accounting_token = None
