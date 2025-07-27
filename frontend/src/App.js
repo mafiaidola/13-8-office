@@ -11519,6 +11519,10 @@ const Dashboard = () => {
           <WarehouseManagement />
         )}
 
+        {activeTab === 'invoices' && canAccessTab('warehouse') && (
+          <InvoiceManagement />
+        )}
+
         {activeTab === 'visit' && user.role === 'sales_rep' && (
           <VisitRegistration />
         )}
