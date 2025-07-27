@@ -13527,6 +13527,18 @@ const AppContent = () => {
           <span className="text-xl">📱</span>
         </button>
       )}
+
+      {/* Order Details Modal */}
+      {showDetailsModal && selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedOrder(null);
+          }}
+          language={language}
+        />
+      )}
     </div>
   );
 };
