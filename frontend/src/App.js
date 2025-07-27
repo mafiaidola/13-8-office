@@ -17998,4 +17998,453 @@ const OrderApprovalModal = ({ order, onClose, onApprove, onReject, canApprove, u
   );
 };
 
+// Enhanced User Management with Region and Manager Assignment
+const EnhancedUserManagementV2 = () => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filterRegion, setFilterRegion] = useState('all');
+  const [filterRole, setFilterRole] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Load users with enhanced data
+      const usersResponse = await axios.get(`${API}/users/enhanced`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(usersResponse.data);
+      
+      // Load regions
+      const regionsResponse = await axios.get(`${API}/regions/list`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRegions(regionsResponse.data);
+      
+      // Load managers (users who can be managers)
+      const managersResponse = await axios.get(`${API}/users/managers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setManagers(managersResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Mock data for development
+      setUsers([
+        {
+          id: 'user-001',
+          username: 'ahmed.mohamed',
+          full_name: 'أحمد محمد علي',
+          email: 'ahmed@company.com',
+          phone: '01234567890',
+          role: 'medical_rep',
+          region_id: 'region-001',
+          region_name: 'القاهرة',
+          direct_manager_id: 'manager-001',
+          direct_manager_name: 'محمد السيد',
+          profile_photo: null,
+          address: 'مدينة نصر، القاهرة',
+          national_id: '12345678901234',
+          hire_date: '2023-01-15',
+          is_active: true,
+          performance_score: 85,
+          total_visits: 156,
+          total_orders: 89
+        },
+        {
+          id: 'user-002',
+          username: 'fatma.ahmed',
+          full_name: 'فاطمة أحمد حسن',
+          email: 'fatma@company.com',
+          phone: '01098765432',
+          role: 'warehouse_keeper',
+          region_id: 'region-002',
+          region_name: 'الجيزة',
+          direct_manager_id: 'manager-002',
+          direct_manager_name: 'أمينة المخزن',
+          profile_photo: null,
+          address: 'المهندسين، الجيزة',
+          national_id: '98765432109876',
+          hire_date: '2023-03-20',
+          is_active: true,
+          performance_score: 92,
+          total_visits: 0,
+          total_orders: 0
+        }
+      ]);
+      
+      setRegions([
+        { id: 'region-001', name: 'القاهرة', manager_id: 'manager-001' },
+        { id: 'region-002', name: 'الجيزة', manager_id: 'manager-002' },
+        { id: 'region-003', name: 'الإسكندرية', manager_id: 'manager-003' }
+      ]);
+      
+      setManagers([
+        { id: 'manager-001', name: 'محمد السيد', role: 'area_manager' },
+        { id: 'manager-002', name: 'أمينة المخزن', role: 'warehouse_manager' },
+        { id: 'manager-003', name: 'سعد أحمد', role: 'district_manager' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddUser = async (userData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/users/create`, userData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadUserData();
+      setShowAddUserModal(false);
+    } catch (error) {
+      console.error('Error adding user:', error);
+    }
+  };
+
+  const handleEditUser = async (userData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${selectedUser.id}`, userData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadUserData();
+      setShowEditUserModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/users/${userId}/status`, {
+        is_active: !currentStatus
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadUserData();
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesRegion = filterRegion === 'all' || user.region_id === filterRegion;
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    const matchesSearch = searchTerm === '' || 
+      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesRegion && matchesRole && matchesSearch;
+  });
+
+  const getRoleText = (role) => {
+    const roles = {
+      admin: 'مدير النظام',
+      gm: 'المدير العام',
+      line_manager: 'مدير الخط',
+      area_manager: 'مدير المنطقة',
+      district_manager: 'مدير المنطقة المحلية',
+      key_account: 'حسابات رئيسية',
+      medical_rep: 'مندوب طبي',
+      warehouse_keeper: 'أمين المخزن',
+      sales_rep: 'مندوب مبيعات',
+      accounting: 'محاسب'
+    };
+    return roles[role] || role;
+  };
+
+  const getRegionUsers = (regionId) => {
+    return users.filter(user => user.region_id === regionId);
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <SVGIcon name="users" size={32} />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">
+                إدارة المستخدمين المتقدمة
+              </h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة شاملة للمستخدمين مع ربط المناطق والمديرين
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setShowAddUserModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <SVGIcon name="add" size={20} />
+            <span>إضافة مستخدم جديد</span>
+          </button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">{users.length}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي المستخدمين</div>
+              </div>
+              <div className="text-3xl">👥</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">{users.filter(u => u.is_active).length}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>نشط</div>
+              </div>
+              <div className="text-3xl">✅</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">{regions.length}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>المناطق</div>
+              </div>
+              <div className="text-3xl">🗺️</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">
+                  {Math.round(users.reduce((sum, u) => sum + (u.performance_score || 0), 0) / users.length) || 0}%
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>متوسط الأداء</div>
+              </div>
+              <div className="text-3xl">📊</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="glass-effect p-6 rounded-xl mb-8">
+          <h3 className="text-lg font-bold mb-4">فلاتر البحث:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="البحث بالإسم أو الإيميل..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-modern w-full"
+              />
+            </div>
+            <div>
+              <select
+                value={filterRegion}
+                onChange={(e) => setFilterRegion(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع المناطق</option>
+                {regions.map(region => (
+                  <option key={region.id} value={region.id}>{region.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="form-modern w-full"
+              >
+                <option value="all">جميع الأدوار</option>
+                <option value="admin">مدير النظام</option>
+                <option value="area_manager">مدير المنطقة</option>
+                <option value="medical_rep">مندوب طبي</option>
+                <option value="warehouse_keeper">أمين المخزن</option>
+                <option value="accounting">محاسب</option>
+              </select>
+            </div>
+            <div>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterRegion('all');
+                  setFilterRole('all');
+                }}
+                className="btn-secondary w-full"
+              >
+                مسح الفلاتر
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Users Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredUsers.map((user) => (
+            <div key={user.id} className="glass-effect p-6 rounded-xl hover:scale-105 transition-transform">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                    {user.profile_photo ? (
+                      <img src={user.profile_photo} alt={user.full_name} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      user.full_name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg">{user.full_name}</h4>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      @{user.username}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                    user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user.is_active ? 'نشط' : 'غير نشط'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الدور:</span>
+                  <span className="text-sm font-bold">{getRoleText(user.role)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المنطقة:</span>
+                  <span className="text-sm">{user.region_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المدير المباشر:</span>
+                  <span className="text-sm">{user.direct_manager_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الإيميل:</span>
+                  <span className="text-sm">{user.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الهاتف:</span>
+                  <span className="text-sm">{user.phone}</span>
+                </div>
+                {user.performance_score && (
+                  <div className="flex justify-between">
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>نقاط الأداء:</span>
+                    <span className={`text-sm font-bold ${
+                      user.performance_score >= 80 ? 'text-green-600' :
+                      user.performance_score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {user.performance_score}%
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Performance Bar */}
+              {user.performance_score && (
+                <div className="mb-4">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>الأداء</span>
+                    <span>{user.performance_score}%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        user.performance_score >= 80 ? 'bg-green-500' :
+                        user.performance_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${user.performance_score}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedUser(user);
+                    setShowEditUserModal(true);
+                  }}
+                  className="btn-primary flex-1 text-xs py-2"
+                >
+                  تعديل
+                </button>
+                <button
+                  onClick={() => handleToggleUserStatus(user.id, user.is_active)}
+                  className={`flex-1 text-xs py-2 ${
+                    user.is_active ? 'btn-danger' : 'btn-success'
+                  }`}
+                >
+                  {user.is_active ? 'إيقاف' : 'تفعيل'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredUsers.length === 0 && (
+          <div className="glass-effect p-12 rounded-xl text-center">
+            <div className="text-4xl mb-4">👤</div>
+            <h3 className="text-xl font-bold mb-2">لا توجد مستخدمين</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {searchTerm || filterRegion !== 'all' || filterRole !== 'all' 
+                ? 'لا توجد مستخدمين تطابق معايير البحث'
+                : 'ابدأ بإضافة مستخدم جديد'}
+            </p>
+          </div>
+        )}
+
+        {/* Add User Modal */}
+        {showAddUserModal && (
+          <UserManagementModal
+            mode="add"
+            regions={regions}
+            managers={managers}
+            onClose={() => setShowAddUserModal(false)}
+            onSave={handleAddUser}
+          />
+        )}
+
+        {/* Edit User Modal */}
+        {showEditUserModal && selectedUser && (
+          <UserManagementModal
+            mode="edit"
+            user={selectedUser}
+            regions={regions}
+            managers={managers}
+            onClose={() => {
+              setShowEditUserModal(false);
+              setSelectedUser(null);
+            }}
+            onSave={handleEditUser}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
