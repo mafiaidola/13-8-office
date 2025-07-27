@@ -11019,6 +11019,17 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Monthly Planning for managers */}
+            {(['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role)) && (
+              <button
+                onClick={() => setActiveTab('monthly-planning')}
+                className={`nav-item ${activeTab === 'monthly-planning' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📅</span>
+                التخطيط الشهري
+              </button>
+            )}
+            
             {/* Approvals System for accounting and warehouse_keeper */}
             {(user.role === 'accounting' || user.role === 'warehouse_keeper' || user.role === 'admin') && (
               <button
