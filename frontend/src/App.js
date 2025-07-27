@@ -10940,13 +10940,28 @@ const OrdersManagement = ({ orders, onRefresh, language }) => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button className="btn-info text-xs px-3 py-1" title={t.view}>
+                        <button 
+                          className="btn-info text-xs px-3 py-1" 
+                          title={t.view}
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setShowDetailsModal(true);
+                          }}
+                        >
                           👁️
                         </button>
-                        <button className="btn-success text-xs px-3 py-1" title={t.approve}>
+                        <button 
+                          className="btn-success text-xs px-3 py-1" 
+                          title={t.approve}
+                          onClick={() => handleApproveOrder(order.id)}
+                        >
                           ✅
                         </button>
-                        <button className="btn-danger text-xs px-3 py-1" title={t.reject}>
+                        <button 
+                          className="btn-danger text-xs px-3 py-1" 
+                          title={t.reject}
+                          onClick={() => handleRejectOrder(order.id)}
+                        >
                           ❌
                         </button>
                       </div>
