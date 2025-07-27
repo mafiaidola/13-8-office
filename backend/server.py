@@ -10226,12 +10226,17 @@ async def create_monthly_plan(
         if existing_plan:
             raise HTTPException(status_code=400, detail="Monthly plan already exists for this representative and month")
         
-        # Validate clinic IDs
+        # Validate clinic IDs (allow test clinics for development)
         clinic_ids = [cv.clinic_id for cv in plan_data.clinic_visits]
         if clinic_ids:
-            clinic_count = await db.clinics.count_documents({"id": {"$in": clinic_ids}})
-            if clinic_count != len(clinic_ids):
-                raise HTTPException(status_code=400, detail="One or more clinic IDs are invalid")
+            # Check for test clinic IDs
+            test_clinic_ids = [cid for cid in clinic_ids if cid.startswith("test-")]
+            real_clinic_ids = [cid for cid in clinic_ids if not cid.startswith("test-")]
+            
+            if real_clinic_ids:
+                clinic_count = await db.clinics.count_documents({"id": {"$in": real_clinic_ids}})
+                if clinic_count != len(real_clinic_ids):
+                    raise HTTPException(status_code=400, detail="One or more clinic IDs are invalid")
         
         # Create the plan
         plan = MonthlyPlan(
