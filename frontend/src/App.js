@@ -10648,6 +10648,16 @@ const Dashboard = () => {
               </button>
             )}
             
+            {user.role === 'warehouse_keeper' && (
+              <button
+                onClick={() => setActiveTab('warehouse-keeper')}
+                className={`nav-item ${activeTab === 'warehouse-keeper' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📦</span>
+                لوحة أمين المخزن
+              </button>
+            )}
+            
             {canAccessTab('warehouse') && (
               <button
                 onClick={() => setActiveTab('invoices')}
