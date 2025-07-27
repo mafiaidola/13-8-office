@@ -16678,7 +16678,7 @@ const WarehouseKeeperDashboard = () => {
 
         {/* Add Product Modal */}
         {showAddProductModal && (
-          <AddProductModal
+          <WarehouseKeeperAddProductModal
             onClose={() => setShowAddProductModal(false)}
             onSave={handleAddProduct}
             warehouseId={selectedWarehouse?.id}
@@ -16687,7 +16687,7 @@ const WarehouseKeeperDashboard = () => {
 
         {/* Stock Adjustment Modal */}
         {showStockAdjustmentModal && selectedProduct && (
-          <StockAdjustmentModal
+          <WarehouseKeeperStockAdjustmentModal
             product={selectedProduct}
             onClose={() => {
               setShowStockAdjustmentModal(false);
