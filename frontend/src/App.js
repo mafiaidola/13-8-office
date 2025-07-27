@@ -14892,31 +14892,6 @@ const ComprehensiveAdminSettings = () => {
         {activeTab === 'system' && (
           <AdminSystemControl />
         )}
-              <div className="text-2xl font-bold text-gradient mb-1">
-                {settings?.total_users || 0}
-              </div>
-              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                إجمالي المستخدمين
-              </div>
-            </div>
-
-            <div className="card-glass p-6 text-center">
-              <div className="text-3xl mb-2">🗺️</div>
-              <div className="text-2xl font-bold text-gradient mb-1">
-                {(settings?.line_statistics?.line_1?.regions || 0) + (settings?.line_statistics?.line_2?.regions || 0)}
-              </div>
-              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                إجمالي المناطق
-              </div>
-            </div>
-
-            <div className="card-glass p-6 text-center">
-              <div className="text-3xl mb-2">📦</div>
-              <div className="text-2xl font-bold text-gradient mb-1">
-                {(settings?.line_statistics?.line_1?.products || 0) + (settings?.line_statistics?.line_2?.products || 0)}
-              </div>
-              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                إجمالي المنتجات
               </div>
             </div>
 
