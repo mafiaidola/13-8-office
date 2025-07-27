@@ -7314,31 +7314,12 @@ class BackendTester:
 if __name__ == "__main__":
     tester = BackendTester()
     
-    # Run focused tests as requested in the review
-    print("🎯 RUNNING FOCUSED MONTHLY PLANNING SYSTEM TESTS")
+    # Run Enhanced User Management System Tests as requested in the review
+    print("🎯 RUNNING ENHANCED USER MANAGEMENT SYSTEM TESTS")
     print("=" * 80)
-    focused_results = tester.run_focused_monthly_planning_tests()
+    success = tester.run_enhanced_user_management_tests()
     
-    # Print focused test summary
-    print("\n📊 FOCUSED TEST RESULTS SUMMARY")
-    print("=" * 50)
-    passed = 0
-    total = len(focused_results)
-    
-    for test_name, result in focused_results:
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status} {test_name}")
-        if result:
-            passed += 1
-    
-    print(f"\nFocused Tests Result: {passed}/{total} tests passed")
-    
-    if passed >= total * 0.8:
-        print("🎉 FOCUSED TESTS MOSTLY SUCCESSFUL!")
-    else:
-        print("🚨 FOCUSED TESTS NEED ATTENTION")
-    
-    # Print test results for main agent
+    # Print detailed test results for main agent
     print("\n" + "=" * 80)
     print("📋 DETAILED TEST RESULTS FOR MAIN AGENT")
     print("=" * 80)
@@ -7353,3 +7334,11 @@ if __name__ == "__main__":
     
     success_rate = (sum(1 for r in tester.test_results if r['success']) / len(tester.test_results)) * 100 if tester.test_results else 0
     print(f"Success Rate: {success_rate:.1f}%")
+    
+    # Final result
+    if success:
+        print("\n🎉 ENHANCED USER MANAGEMENT SYSTEM: FUNCTIONAL")
+        exit(0)
+    else:
+        print("\n🚨 ENHANCED USER MANAGEMENT SYSTEM: NEEDS ATTENTION")
+        exit(1)
