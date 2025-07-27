@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Medical Sales Rep Visit Management System
-Focus on Enhanced User Management System APIs as requested in the review
-Testing the new user creation and management features with enhanced fields
+Enhanced User Management System Testing - Focus on Fixed Issues
+Testing the Enhanced User Management System with region validation fix and user update permissions
+Based on review request for testing:
+1. POST /api/auth/register - Test user creation with region validation fix
+2. PATCH /api/users/{user_id} - Test user update with fixed permissions
+3. GET /api/users/managers - Confirm managers API working
+4. GET /api/regions/list - Confirm regions API working
 """
 
 import requests
@@ -15,6 +19,22 @@ from typing import Dict, Any, Optional
 BASE_URL = "https://d3e37f5d-d88d-4215-b21c-f8e57e4d5486.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 DEFAULT_GM = {"username": "gm", "password": "gm123456"}
+
+# Test data from review request
+ENHANCED_USER_TEST_DATA = {
+    "username": "test_user_fixed",
+    "email": "testfixed@company.com",
+    "password": "testpass123",
+    "full_name": "مستخدم تجريبي محسن",
+    "phone": "01234567890",
+    "role": "medical_rep",
+    "region_id": "region-001",
+    "direct_manager_id": "test-manager-id",
+    "address": "القاهرة، مصر",
+    "national_id": "12345678901234",
+    "hire_date": "2024-01-15",
+    "is_active": True
+}
 
 # Test data
 TEST_CLINIC_DATA = {
