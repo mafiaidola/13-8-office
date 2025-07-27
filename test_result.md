@@ -1380,9 +1380,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Visit Registration with Voice Notes"
+    - "Monthly Planning System Integration"
+    - "Comprehensive Admin Settings API"
+    - "Enhanced User Management APIs with Advanced Features"
   stuck_tasks:
-    - "Enhanced Visit Registration with Voice Notes"
+    - "None"
   completed_tasks:
     - "Comprehensive Accounting System - Overview API"
     - "Comprehensive Accounting System - Invoices API"
