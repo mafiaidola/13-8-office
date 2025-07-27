@@ -1919,3 +1919,280 @@ input:checked + .slider:before {
 .icon-spinning {
   animation: icon-rotate 1s linear infinite;
 }
+
+/* ==============================================
+   OPTIMIZED DASHBOARD SPACING UTILITIES
+   ============================================== */
+
+/* Compact spacing variants for better content density */
+.btn-primary-compact {
+  background: var(--gradient-orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-primary-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary-compact {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-compact:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-danger-compact {
+  background: var(--brand-red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-danger-compact:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* Optimized card spacing */
+.card-compact {
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Optimized navigation spacing */
+.nav-menu-compact {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.nav-item-compact {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-item-compact:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item-compact.active {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(255, 107, 53, 0.3);
+}
+
+/* Responsive grid utilities */
+.grid-responsive {
+  display: grid;
+  gap: 12px;
+}
+
+.grid-responsive-sm {
+  grid-template-columns: 1fr;
+}
+
+.grid-responsive-md {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-responsive-lg {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-responsive-xl {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Optimized table spacing */
+.table-compact {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-compact th {
+  padding: 8px 16px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-compact td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Compact form spacing */
+.form-compact .form-group {
+  margin-bottom: 16px;
+}
+
+.form-compact label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-compact input,
+.form-compact select,
+.form-compact textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Optimized modal spacing */
+.modal-compact .modal-content {
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--secondary-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-large);
+}
+
+.modal-compact .modal-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-compact .modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Compact status badges */
+.status-badge-compact {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Optimized spacing for Arabic RTL */
+.rtl-optimized {
+  direction: rtl;
+  text-align: right;
+}
+
+.rtl-optimized .flex-reverse {
+  flex-direction: row-reverse;
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 640px) {
+  .nav-menu-compact {
+    padding: 4px;
+  }
+  
+  .nav-item-compact {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .card-compact {
+    padding: 12px;
+  }
+  
+  .btn-primary-compact,
+  .btn-secondary-compact,
+  .btn-danger-compact {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .table-compact th,
+  .table-compact td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .grid-responsive {
+    gap: 8px;
+  }
+}
+
+/* Medium screens */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .nav-item-compact {
+    padding: 8px 12px;
+  }
+  
+  .card-compact {
+    padding: 16px;
+  }
+  
+  .grid-responsive {
+    gap: 12px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1025px) {
+  .nav-item-compact {
+    padding: 10px 16px;
+  }
+  
+  .card-compact {
+    padding: 20px;
+  }
+  
+  .grid-responsive {
+    gap: 16px;
+  }
+}
