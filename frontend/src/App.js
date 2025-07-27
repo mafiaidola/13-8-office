@@ -3383,8 +3383,6 @@ const NotificationsCenter = () => {
   );
 };
 
-// Secret Reports Component
-
 // Advanced Analytics Dashboard Component
 const AdvancedAnalyticsDashboard = () => {
   const [loading, setLoading] = useState(true);
