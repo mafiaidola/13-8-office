@@ -11084,11 +11084,15 @@ const Dashboard = () => {
         </div>
 
         {/* Content */}
+        {activeTab === 'dashboard' && user.role === 'medical_rep' && (
+          <MedicalRepDashboard stats={stats} user={user} />
+        )}
+
         {activeTab === 'dashboard' && user.role === 'sales_rep' && (
           <SalesRepDashboard stats={stats} user={user} />
         )}
 
-        {activeTab === 'dashboard' && user.role !== 'sales_rep' && (
+        {activeTab === 'dashboard' && !['medical_rep', 'sales_rep'].includes(user.role) && (
           <EnhancedStatisticsDashboard stats={stats} user={user} />
         )}
 
