@@ -588,6 +588,18 @@ backend:
         agent: "main"
         comment: "بدء فحص شامل لجميع الأزرار في النظام للتأكد من عملها بشكل صحيح لجميع الأدوار (مندوب، مدير، أدمن). سيتم فحص كل زر والتأكد من أنه مربوط بوظيفته الصحيحة، وإنشاء أي وظائف مفقودة، وجعل كل شيء قابل للتشكيل في الإعدادات."
 
+  - task: "Complete Admin Control System - All Features Configuration"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تنفيذ نظام التحكم الكامل للأدمن في جميع أجزاء النظام والصلاحيات. سيتم التأكد من أن الأدمن يمكنه التحكم في كل ميزة وخاصية في النظام من خلال الإعدادات."
+
   - task: "Daily Selfie API for sales representatives"
     implemented: true
     working: true
