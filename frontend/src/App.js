@@ -52,9 +52,7 @@ const translations = {
     visits: 'الزيارات',
     visitsLog: 'سجل الزيارات',
     reports: 'التقارير',
-    chat: 'المحادثات',
     settings: 'الإعدادات',
-    secretReports: 'التقارير السرية',
     logout: 'تسجيل الخروج',
     
     // Dashboard
