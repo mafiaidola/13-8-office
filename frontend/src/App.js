@@ -17205,4 +17205,525 @@ const StockAdjustmentModal = ({ product, onClose, onSave }) => {
   );
 };
 
+// Advanced Approval System - Hierarchical Order Management
+const AdvancedApprovalSystem = () => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('pending');
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [approvalHistory, setApprovalHistory] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDateRange, setFilterDateRange] = useState({ start: '', end: '' });
+
+  useEffect(() => {
+    loadApprovalData();
+  }, []);
+
+  const loadApprovalData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Load pending approvals based on user role
+      const pendingResponse = await axios.get(`${API}/approvals/pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingApprovals(pendingResponse.data);
+      
+      // Load approval history
+      const historyResponse = await axios.get(`${API}/approvals/history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setApprovalHistory(historyResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading approval data:', error);
+      // Mock data for development
+      setPendingApprovals([
+        {
+          id: 'ord-001',
+          order_number: 'ORD-2024-001',
+          sales_rep: 'أحمد محمد',
+          sales_rep_id: 'user-001',
+          doctor_name: 'د. سعد علي',
+          clinic_name: 'عيادة النور',
+          total_amount: 2500,
+          items: [
+            { product_name: 'أكسزوم 500مج', quantity: 10, unit_price: 25.50 },
+            { product_name: 'فيتامين د3', quantity: 5, unit_price: 45.00 }
+          ],
+          current_stage: user.role === 'accounting' ? 'accounting_review' : 'warehouse_review',
+          submitted_at: '2024-01-24T10:30:00',
+          urgency: 'high',
+          notes: 'طلبية عاجلة للدكتور سعد',
+          workflow_status: {
+            rep_submitted: { status: 'completed', date: '2024-01-24T10:30:00', user: 'أحمد محمد' },
+            accounting_review: { status: 'pending', date: null, user: null },
+            warehouse_approval: { status: 'waiting', date: null, user: null }
+          }
+        },
+        {
+          id: 'ord-002',
+          order_number: 'ORD-2024-002',
+          sales_rep: 'فاطمة أحمد',
+          sales_rep_id: 'user-002',
+          doctor_name: 'د. منى حسن',
+          clinic_name: 'مستشفى الرحمة',
+          total_amount: 1800,
+          items: [
+            { product_name: 'باراسيتامول', quantity: 20, unit_price: 12.75 }
+          ],
+          current_stage: 'accounting_review',
+          submitted_at: '2024-01-23T15:20:00',
+          urgency: 'medium',
+          notes: 'طلبية دورية',
+          workflow_status: {
+            rep_submitted: { status: 'completed', date: '2024-01-23T15:20:00', user: 'فاطمة أحمد' },
+            accounting_review: { status: 'pending', date: null, user: null },
+            warehouse_approval: { status: 'waiting', date: null, user: null }
+          }
+        }
+      ]);
+      
+      setApprovalHistory([
+        {
+          id: 'hist-001',
+          order_number: 'ORD-2024-003',
+          action: 'approved',
+          stage: 'accounting_review',
+          approver: 'محمد السيد',
+          approver_role: 'accounting',
+          approved_at: '2024-01-20T14:30:00',
+          notes: 'موافقة مع تأكيد الأسعار',
+          total_amount: 3200
+        },
+        {
+          id: 'hist-002',
+          order_number: 'ORD-2024-004',
+          action: 'rejected',
+          stage: 'warehouse_approval',
+          approver: 'أمينة المخزن',
+          approver_role: 'warehouse_keeper',
+          approved_at: '2024-01-19T11:15:00',
+          notes: 'نفاد المخزون - منتج غير متوفر',
+          total_amount: 1500
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproval = async (orderId, action, notes = '') => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/approvals/process`, {
+        order_id: orderId,
+        action: action, // 'approve' or 'reject'
+        stage: getCurrentUserStage(),
+        notes: notes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Reload data
+      await loadApprovalData();
+      setShowOrderModal(false);
+      setSelectedOrder(null);
+    } catch (error) {
+      console.error('Error processing approval:', error);
+    }
+  };
+
+  const getCurrentUserStage = () => {
+    if (user.role === 'accounting') return 'accounting_review';
+    if (user.role === 'warehouse_keeper') return 'warehouse_approval';
+    return 'unknown';
+  };
+
+  const getStageIcon = (stage) => {
+    const icons = {
+      rep_submitted: '📝',
+      accounting_review: '💰', 
+      warehouse_approval: '📦',
+      completed: '✅',
+      rejected: '❌'
+    };
+    return icons[stage] || '⏳';
+  };
+
+  const getStageText = (stage) => {
+    const stages = {
+      rep_submitted: 'تم تقديم الطلب',
+      accounting_review: 'مراجعة المحاسبة',
+      warehouse_approval: 'موافقة المخزن',
+      completed: 'مكتمل',
+      rejected: 'مرفوض'
+    };
+    return stages[stage] || stage;
+  };
+
+  const getUrgencyColor = (urgency) => {
+    const colors = {
+      high: 'bg-red-100 text-red-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      low: 'bg-green-100 text-green-800'
+    };
+    return colors[urgency] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getUrgencyText = (urgency) => {
+    const urgencies = {
+      high: 'عاجل',
+      medium: 'متوسط',
+      low: 'عادي'
+    };
+    return urgencies[urgency] || urgency;
+  };
+
+  const canApproveOrder = (order) => {
+    if (user.role === 'admin') return true;
+    if (user.role === 'accounting' && order.current_stage === 'accounting_review') return true;
+    if (user.role === 'warehouse_keeper' && order.current_stage === 'warehouse_review') return true;
+    return false;
+  };
+
+  const filteredHistory = approvalHistory.filter(item => {
+    if (filterStatus !== 'all' && item.action !== filterStatus) return false;
+    if (filterDateRange.start && new Date(item.approved_at) < new Date(filterDateRange.start)) return false;
+    if (filterDateRange.end && new Date(item.approved_at) > new Date(filterDateRange.end)) return false;
+    return true;
+  });
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-green rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <SVGIcon name="analytics" size={32} />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">
+                نظام الموافقات المتقدم
+              </h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة التسلسل الهرمي للموافقات والمراجعات
+              </p>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-4 rounded-xl">
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>دورك الحالي:</div>
+            <div className="text-lg font-bold">{getStageText(getCurrentUserStage())}</div>
+            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              {pendingApprovals.length} طلب في الانتظار
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { id: 'pending', label: 'المعلقة', icon: '⏳', count: pendingApprovals.length },
+            { id: 'history', label: 'السجل', icon: '📋', count: approvalHistory.length },
+            { id: 'workflow', label: 'مسار العمل', icon: '🔄', count: null },
+            { id: 'analytics', label: 'التحليلات', icon: '📊', count: null }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-green-600 text-white shadow-lg'
+                  : 'glass-effect hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+              {tab.count !== null && (
+                <span className="mr-2 px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'pending' && (
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">{pendingApprovals.length}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>طلبات معلقة</div>
+                  </div>
+                  <div className="text-3xl">⏳</div>
+                </div>
+              </div>
+              
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {pendingApprovals.filter(o => o.urgency === 'high').length}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>عاجل</div>
+                  </div>
+                  <div className="text-3xl">🚨</div>
+                </div>
+              </div>
+              
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {pendingApprovals.reduce((sum, order) => sum + order.total_amount, 0)} ج.م
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>القيمة الإجمالية</div>
+                  </div>
+                  <div className="text-3xl">💰</div>
+                </div>
+              </div>
+              
+              <div className="glass-effect p-6 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-bold">
+                      {new Set(pendingApprovals.map(o => o.sales_rep_id)).size}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مناديب</div>
+                  </div>
+                  <div className="text-3xl">👥</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Orders */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {pendingApprovals.map((order) => (
+                <div key={order.id} className="glass-effect p-6 rounded-xl hover:scale-105 transition-transform">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-bold text-lg">{order.order_number}</h4>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {order.sales_rep} • {new Date(order.submitted_at).toLocaleDateString('ar-EG')}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${getUrgencyColor(order.urgency)}`}>
+                        {getUrgencyText(order.urgency)}
+                      </span>
+                      <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                        {getStageText(order.current_stage)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الطبيب:</span>
+                      <span className="text-sm font-bold">{order.doctor_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>العيادة:</span>
+                      <span className="text-sm">{order.clinic_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>عدد الأصناف:</span>
+                      <span className="text-sm">{order.items.length}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="font-bold">الإجمالي:</span>
+                      <span className="text-lg font-bold text-green-600">
+                        {order.total_amount} ج.م
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Workflow Progress */}
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      {Object.entries(order.workflow_status).map(([stage, status], index) => (
+                        <div key={stage} className="flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
+                            status.status === 'completed' ? 'bg-green-500 text-white' :
+                            status.status === 'pending' ? 'bg-blue-500 text-white' :
+                            'bg-gray-400 text-white'
+                          }`}>
+                            {getStageIcon(stage)}
+                          </div>
+                          <div className="text-xs mt-1 text-center">
+                            {getStageText(stage)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderModal(true);
+                      }}
+                      className="btn-info flex-1 text-xs py-2"
+                    >
+                      عرض التفاصيل
+                    </button>
+                    {canApproveOrder(order) && (
+                      <>
+                        <button
+                          onClick={() => handleApproval(order.id, 'approve')}
+                          className="btn-success flex-1 text-xs py-2"
+                        >
+                          موافقة
+                        </button>
+                        <button
+                          onClick={() => handleApproval(order.id, 'reject')}
+                          className="btn-danger flex-1 text-xs py-2"
+                        >
+                          رفض
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {pendingApprovals.length === 0 && (
+              <div className="glass-effect p-12 rounded-xl text-center">
+                <div className="text-4xl mb-4">✅</div>
+                <h3 className="text-xl font-bold mb-2">لا توجد طلبات معلقة</h3>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  جميع الطلبات تم مراجعتها
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="space-y-6">
+            {/* History Filters */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h3 className="text-lg font-bold mb-4">فلاتر السجل:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">الحالة:</label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="form-modern w-full"
+                  >
+                    <option value="all">جميع الحالات</option>
+                    <option value="approved">موافقة</option>
+                    <option value="rejected">رفض</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">من تاريخ:</label>
+                  <input
+                    type="date"
+                    value={filterDateRange.start}
+                    onChange={(e) => setFilterDateRange({...filterDateRange, start: e.target.value})}
+                    className="form-modern w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">إلى تاريخ:</label>
+                  <input
+                    type="date"
+                    value={filterDateRange.end}
+                    onChange={(e) => setFilterDateRange({...filterDateRange, end: e.target.value})}
+                    className="form-modern w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* History Table */}
+            <div className="glass-effect rounded-xl overflow-hidden">
+              <div className="table-modern overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-3 text-right">رقم الطلب</th>
+                      <th className="px-6 py-3 text-center">الإجراء</th>
+                      <th className="px-6 py-3 text-right">المرحلة</th>
+                      <th className="px-6 py-3 text-right">الموافق</th>
+                      <th className="px-6 py-3 text-center">التاريخ</th>
+                      <th className="px-6 py-3 text-right">القيمة</th>
+                      <th className="px-6 py-3 text-center">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredHistory.map((item) => (
+                      <tr key={item.id} className="border-b" style={{ borderColor: 'var(--border-color)' }}>
+                        <td className="px-6 py-4 font-bold">{item.order_number}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${
+                            item.action === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {item.action === 'approved' ? 'موافقة' : 'رفض'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">{getStageText(item.stage)}</td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="font-bold">{item.approver}</div>
+                            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                              {item.approver_role}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center text-sm">
+                          {new Date(item.approved_at).toLocaleDateString('ar-EG')}
+                          <br />
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            {new Date(item.approved_at).toLocaleTimeString('ar-EG')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-bold">{item.total_amount} ج.م</td>
+                        <td className="px-6 py-4 text-center">
+                          <button className="btn-info text-xs px-3 py-1">
+                            تفاصيل
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Order Details Modal */}
+        {showOrderModal && selectedOrder && (
+          <OrderApprovalModal
+            order={selectedOrder}
+            onClose={() => {
+              setShowOrderModal(false);
+              setSelectedOrder(null);
+            }}
+            onApprove={(notes) => handleApproval(selectedOrder.id, 'approve', notes)}
+            onReject={(notes) => handleApproval(selectedOrder.id, 'reject', notes)}
+            canApprove={canApproveOrder(selectedOrder)}
+            userRole={user.role}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
