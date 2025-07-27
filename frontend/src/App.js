@@ -14561,6 +14561,70 @@ const ComprehensiveAdminSettings = () => {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <div className="card-glass p-6 text-center">
                 <div className="text-3xl mb-2">👥</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي المستخدمين</div>
+                <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {settings?.total_users || 0}
+                </div>
+              </div>
+              <div className="card-glass p-6 text-center">
+                <div className="text-3xl mb-2">📊</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الأدوار</div>
+                <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {settings?.available_roles?.length || 0}
+                </div>
+              </div>
+              <div className="card-glass p-6 text-center">
+                <div className="text-3xl mb-2">🏢</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>الخطوط النشطة</div>
+                <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {settings?.available_lines?.length || 0}
+                </div>
+              </div>
+              <div className="card-glass p-6 text-center">
+                <div className="text-3xl mb-2">🎯</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>النظام مُهيأ</div>
+                <div className="text-xl font-bold text-green-400">
+                  {settings ? '✅' : '⚠️'}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <span>⚡</span>
+                <span>إجراءات سريعة</span>
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="p-4 bg-blue-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+                >
+                  <div className="text-2xl mb-2">👥</div>
+                  <div className="font-bold">إدارة المستخدمين</div>
+                </button>
+                <button
+                  onClick={() => setActiveTab('features')}
+                  className="p-4 bg-green-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+                >
+                  <div className="text-2xl mb-2">🎛️</div>
+                  <div className="font-bold">تحكم المميزات</div>
+                </button>
+                <button
+                  onClick={() => setActiveTab('system')}
+                  className="p-4 bg-purple-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+                >
+                  <div className="text-2xl mb-2">🔧</div>
+                  <div className="font-bold">صحة النظام</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'features' && (
+          <AdminFeatureControl />
+        )}
               <div className="text-2xl font-bold text-gradient mb-1">
                 {settings?.total_users || 0}
               </div>
