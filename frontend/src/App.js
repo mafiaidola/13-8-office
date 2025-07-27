@@ -2468,9 +2468,7 @@ const PermissionsTab = ({ permissions, onUpdate, loading }) => {
     warehouse_management: 'إدارة المخازن',
     visits_management: 'إدارة الزيارات',
     reports_access: 'الوصول للتقارير',
-    chat_access: 'الوصول للمحادثات',
     settings_access: 'الوصول للإعدادات',
-    secret_reports: 'التقارير السرية',
     financial_reports: 'التقارير المالية',
     system_logs: 'سجلات النظام'
   };
