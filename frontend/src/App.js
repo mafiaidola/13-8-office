@@ -4448,13 +4448,13 @@ const ApprovalsDashboard = ({ user }) => {
       setMyRequests(myRequestsResponse.data || []);
 
       // Fetch pending approvals (if user can approve)
-      if (['district_manager', 'area_manager', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role)) {
+      if (['district_manager', 'area_manager', 'line_manager', 'key_account', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role)) {
         const pendingResponse = await axios.get(`${API}/approvals/pending`, { headers });
         setPendingApprovals(pendingResponse.data || []);
       }
 
-      // Fetch approval history (admin/GM only)
-      if (['admin', 'gm'].includes(user.role)) {
+      // Fetch approval history (managers can see their team's history)
+      if (['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'key_account'].includes(user.role)) {
         const historyResponse = await axios.get(`${API}/approvals/history`, { headers });
         setApprovalHistory(historyResponse.data || []);
       }
