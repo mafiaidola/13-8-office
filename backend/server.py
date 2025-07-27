@@ -405,6 +405,30 @@ class UserCreate(BaseModel):
     full_name: str
     phone: Optional[str] = None
     managed_by: Optional[str] = None
+    
+    # New enhanced fields for complete user management
+    region_id: Optional[str] = None
+    direct_manager_id: Optional[str] = None
+    address: Optional[str] = None
+    national_id: Optional[str] = None
+    hire_date: Optional[str] = None
+    profile_photo: Optional[str] = None  # Base64 encoded image
+    is_active: bool = True
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    role: Optional[str] = None
+    region_id: Optional[str] = None
+    direct_manager_id: Optional[str] = None
+    address: Optional[str] = None
+    national_id: Optional[str] = None
+    hire_date: Optional[str] = None
+    profile_photo: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class UserLogin(BaseModel):
     username: str
