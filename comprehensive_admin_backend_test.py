@@ -241,7 +241,7 @@ class ComprehensiveAdminBackendTester:
         """Test all basic APIs for functionality"""
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         basic_apis = [
-            ("GET", "/dashboard/statistics", "Dashboard Statistics"),
+            ("GET", "/dashboard/stats", "Dashboard Statistics"),
             ("GET", "/users/managers", "Managers List"),
             ("GET", "/regions/list", "Regions List"),
             ("GET", "/analytics/realtime", "Real-time Analytics"),
