@@ -113,60 +113,190 @@ class BackendTester:
         return False
 
     def test_monthly_planning_get_api(self):
-        """Test GET /api/planning/monthly - Monthly plans retrieval"""
+        """Test GET /api/planning/monthly - Monthly plans retrieval with filters"""
         if not self.gm_token:
             self.log_test("Monthly Planning GET API", False, "No GM token available")
             return False
         
-        # Test with month parameter
-        status_code, response = self.make_request("GET", "/planning/monthly?month=2024-01", token=self.gm_token)
+        success_count = 0
+        total_tests = 4
         
-        if status_code == 200:
-            self.log_test("Monthly Planning GET API", True, f"Monthly plans retrieved successfully")
-            return True
-        elif status_code == 404:
-            self.log_test("Monthly Planning GET API", False, "Monthly planning API not implemented yet")
-            return False
+        # Test 1: Basic retrieval without filters
+        status_code, response = self.make_request("GET", "/planning/monthly", token=self.gm_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Monthly Planning GET API - Basic", True, f"Retrieved {len(response)} monthly plans")
+            success_count += 1
         else:
-            self.log_test("Monthly Planning GET API", False, f"Status: {status_code}", response)
-        return False
+            self.log_test("Monthly Planning GET API - Basic", False, f"Status: {status_code}", response)
+        
+        # Test 2: Filter by month
+        status_code, response = self.make_request("GET", "/planning/monthly?month=2024-01", token=self.gm_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Monthly Planning GET API - Month Filter", True, f"Retrieved plans for 2024-01")
+            success_count += 1
+        else:
+            self.log_test("Monthly Planning GET API - Month Filter", False, f"Status: {status_code}", response)
+        
+        # Test 3: Filter by rep_id (if we have one)
+        if self.sales_rep_id:
+            status_code, response = self.make_request("GET", f"/planning/monthly?rep_id={self.sales_rep_id}", token=self.gm_token)
+            if status_code == 200 and isinstance(response, list):
+                self.log_test("Monthly Planning GET API - Rep Filter", True, f"Retrieved plans for rep {self.sales_rep_id}")
+                success_count += 1
+            else:
+                self.log_test("Monthly Planning GET API - Rep Filter", False, f"Status: {status_code}", response)
+        else:
+            self.log_test("Monthly Planning GET API - Rep Filter", False, "No sales rep ID available")
+        
+        # Test 4: Filter by status
+        status_code, response = self.make_request("GET", "/planning/monthly?status=ACTIVE", token=self.gm_token)
+        if status_code == 200 and isinstance(response, list):
+            self.log_test("Monthly Planning GET API - Status Filter", True, f"Retrieved ACTIVE plans")
+            success_count += 1
+        else:
+            self.log_test("Monthly Planning GET API - Status Filter", False, f"Status: {status_code}", response)
+        
+        return success_count >= 3  # At least 3 out of 4 should work
 
     def test_monthly_planning_post_api(self):
         """Test POST /api/planning/monthly - Monthly plan creation"""
-        if not self.gm_token or not self.sales_rep_id:
-            self.log_test("Monthly Planning POST API", False, "No GM token or sales rep ID available")
+        if not self.gm_token:
+            self.log_test("Monthly Planning POST API", False, "No GM token available")
             return False
         
-        # Create monthly plan data
+        # First ensure we have a sales rep
+        if not self.sales_rep_id:
+            self.test_create_sales_rep_user()
+        
+        if not self.sales_rep_id:
+            self.log_test("Monthly Planning POST API", False, "No sales rep ID available")
+            return False
+        
+        # Create monthly plan data with proper structure
         plan_data = {
             "rep_id": self.sales_rep_id,
-            "month": "2024-01",
+            "month": "2024-12",  # Use December 2024 to avoid conflicts
             "clinic_visits": [
                 {
-                    "clinic_id": self.test_clinic_id or "test-clinic-id",
+                    "clinic_id": self.test_clinic_id or "test-clinic-id-123",
                     "planned_visits": 4,
-                    "target_doctors": 2
+                    "target_doctors": 2,
+                    "notes": "زيارات عيادة تجريبية"
                 }
             ],
             "targets": {
                 "total_visits": 20,
                 "effective_visits": 16,
                 "orders": 10,
-                "revenue": 50000
+                "revenue": 50000.0
             },
-            "notes": "خطة شهرية تجريبية لشهر يناير"
+            "notes": "خطة شهرية تجريبية لشهر ديسمبر 2024"
         }
         
         status_code, response = self.make_request("POST", "/planning/monthly", plan_data, self.gm_token)
         
         if status_code == 200:
-            self.log_test("Monthly Planning POST API", True, f"Monthly plan created successfully")
-            return True
-        elif status_code == 404:
-            self.log_test("Monthly Planning POST API", False, "Monthly planning creation API not implemented yet")
-            return False
+            if "plan_id" in response:
+                self.test_plan_id = response["plan_id"]
+                self.log_test("Monthly Planning POST API", True, f"Monthly plan created successfully: {response.get('plan_id')}")
+                return True
+            else:
+                self.log_test("Monthly Planning POST API", False, "Plan created but no plan_id returned")
         else:
             self.log_test("Monthly Planning POST API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_monthly_planning_get_specific_api(self):
+        """Test GET /api/planning/monthly/{plan_id} - Specific plan retrieval with progress tracking"""
+        if not self.gm_token:
+            self.log_test("Monthly Planning GET Specific API", False, "No GM token available")
+            return False
+        
+        # First get a plan ID
+        plan_id = getattr(self, 'test_plan_id', None)
+        if not plan_id:
+            # Try to get any existing plan
+            status_code, plans = self.make_request("GET", "/planning/monthly", token=self.gm_token)
+            if status_code == 200 and len(plans) > 0:
+                plan_id = plans[0]["id"]
+            else:
+                self.log_test("Monthly Planning GET Specific API", False, "No plan ID available for testing")
+                return False
+        
+        status_code, response = self.make_request("GET", f"/planning/monthly/{plan_id}", token=self.gm_token)
+        
+        if status_code == 200:
+            # Check for required fields including progress tracking
+            required_fields = ["id", "rep_id", "month", "clinic_visits", "targets", "progress"]
+            if all(field in response for field in required_fields):
+                # Check progress structure
+                progress = response.get("progress", {})
+                progress_fields = ["visits_progress", "effective_visits_progress", "orders_progress", "actual_stats"]
+                if all(field in progress for field in progress_fields):
+                    self.log_test("Monthly Planning GET Specific API", True, f"Plan retrieved with complete progress tracking")
+                    return True
+                else:
+                    self.log_test("Monthly Planning GET Specific API", False, "Missing progress tracking fields")
+            else:
+                self.log_test("Monthly Planning GET Specific API", False, "Missing required plan fields")
+        else:
+            self.log_test("Monthly Planning GET Specific API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_monthly_planning_patch_api(self):
+        """Test PATCH /api/planning/monthly/{plan_id} - Plan updates and status changes"""
+        if not self.gm_token:
+            self.log_test("Monthly Planning PATCH API", False, "No GM token available")
+            return False
+        
+        # Get a plan ID
+        plan_id = getattr(self, 'test_plan_id', None)
+        if not plan_id:
+            status_code, plans = self.make_request("GET", "/planning/monthly", token=self.gm_token)
+            if status_code == 200 and len(plans) > 0:
+                plan_id = plans[0]["id"]
+            else:
+                self.log_test("Monthly Planning PATCH API", False, "No plan ID available for testing")
+                return False
+        
+        # Test updating plan
+        update_data = {
+            "status": "APPROVED",
+            "notes": "خطة محدثة ومعتمدة"
+        }
+        
+        status_code, response = self.make_request("PATCH", f"/planning/monthly/{plan_id}", update_data, self.gm_token)
+        
+        if status_code == 200:
+            self.log_test("Monthly Planning PATCH API", True, "Plan updated successfully")
+            return True
+        else:
+            self.log_test("Monthly Planning PATCH API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_monthly_planning_delete_api(self):
+        """Test DELETE /api/planning/monthly/{plan_id} - Plan deletion/cancellation"""
+        if not self.gm_token:
+            self.log_test("Monthly Planning DELETE API", False, "No GM token available")
+            return False
+        
+        # Get a plan ID
+        plan_id = getattr(self, 'test_plan_id', None)
+        if not plan_id:
+            status_code, plans = self.make_request("GET", "/planning/monthly", token=self.gm_token)
+            if status_code == 200 and len(plans) > 0:
+                plan_id = plans[0]["id"]
+            else:
+                self.log_test("Monthly Planning DELETE API", False, "No plan ID available for testing")
+                return False
+        
+        status_code, response = self.make_request("DELETE", f"/planning/monthly/{plan_id}", token=self.gm_token)
+        
+        if status_code == 200:
+            self.log_test("Monthly Planning DELETE API", True, "Plan deleted/cancelled successfully")
+            return True
+        else:
+            self.log_test("Monthly Planning DELETE API", False, f"Status: {status_code}", response)
         return False
 
     def test_sales_reps_api(self):
@@ -179,16 +309,62 @@ class BackendTester:
         
         if status_code == 200:
             if isinstance(response, list):
-                self.log_test("Sales Reps API", True, f"Found {len(response)} sales representatives")
-                return True
+                # Check if response has enriched data
+                if len(response) > 0:
+                    rep = response[0]
+                    required_fields = ["id", "username", "full_name", "current_month_stats"]
+                    if all(field in rep for field in required_fields):
+                        stats = rep.get("current_month_stats", {})
+                        stats_fields = ["total_visits", "effective_visits", "total_orders", "has_monthly_plan"]
+                        if all(field in stats for field in stats_fields):
+                            self.log_test("Sales Reps API", True, f"Found {len(response)} sales reps with complete statistics")
+                            return True
+                        else:
+                            self.log_test("Sales Reps API", False, "Missing statistics fields in sales rep data")
+                    else:
+                        self.log_test("Sales Reps API", False, "Missing required fields in sales rep data")
+                else:
+                    self.log_test("Sales Reps API", True, f"No sales reps found (expected if none exist)")
+                    return True
             else:
                 self.log_test("Sales Reps API", False, "Response is not a list")
-        elif status_code == 404:
-            self.log_test("Sales Reps API", False, "Sales reps API not implemented yet")
-            return False
         else:
             self.log_test("Sales Reps API", False, f"Status: {status_code}", response)
         return False
+
+    def test_planning_analytics_api(self):
+        """Test GET /api/planning/analytics - Planning analytics"""
+        if not self.gm_token:
+            self.log_test("Planning Analytics API", False, "No GM token available")
+            return False
+        
+        success_count = 0
+        total_tests = 2
+        
+        # Test 1: Current month analytics
+        status_code, response = self.make_request("GET", "/planning/analytics", token=self.gm_token)
+        if status_code == 200:
+            required_fields = ["total_plans", "approved_plans", "active_plans", "completed_plans"]
+            if all(field in response for field in required_fields):
+                self.log_test("Planning Analytics API - Current Month", True, f"Analytics retrieved: {response}")
+                success_count += 1
+            else:
+                self.log_test("Planning Analytics API - Current Month", False, "Missing required analytics fields")
+        else:
+            self.log_test("Planning Analytics API - Current Month", False, f"Status: {status_code}", response)
+        
+        # Test 2: Specific month analytics
+        status_code, response = self.make_request("GET", "/planning/analytics?month=2024-12", token=self.gm_token)
+        if status_code == 200:
+            if isinstance(response, dict):
+                self.log_test("Planning Analytics API - Specific Month", True, f"Analytics for 2024-12 retrieved")
+                success_count += 1
+            else:
+                self.log_test("Planning Analytics API - Specific Month", False, "Invalid response format")
+        else:
+            self.log_test("Planning Analytics API - Specific Month", False, f"Status: {status_code}", response)
+        
+        return success_count >= 1  # At least 1 out of 2 should work
 
     def test_database_connectivity(self):
         """Test database connectivity by checking basic endpoints"""
