@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend Testing for Medical Sales Rep Visit Management System
-Testing system after adding warehouse manager dashboard and verifying removed features
-Priority testing as requested in the Arabic review
+Focus on Monthly Planning System APIs and System Health Check
+Testing as requested in the review request
 """
 
 import requests
@@ -14,6 +14,7 @@ from typing import Dict, Any, Optional
 # Configuration
 BASE_URL = "https://d3e37f5d-d88d-4215-b21c-f8e57e4d5486.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
+DEFAULT_GM = {"username": "gm", "password": "gm123456"}
 
 # Test data
 TEST_CLINIC_DATA = {
