@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://b77a755e-cd3d-4f06-b7e4-57c9ade235f8.preview.emergentagent.com/api"
+BASE_URL = "https://d3e37f5d-d88d-4215-b21c-f8e57e4d5486.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 class ChatSystemTester:
