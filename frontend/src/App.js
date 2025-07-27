@@ -10836,6 +10836,8 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
 
 // Orders Management Component
 const OrdersManagement = ({ orders, onRefresh, language }) => {
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const t = language === 'ar' ? {
     ordersTitle: 'إدارة الطلبات المنتظرة',
     orderId: 'رقم الطلبية',
