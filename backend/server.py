@@ -883,6 +883,90 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
         "role": user.role
     }
 
+@api_router.patch("/users/{user_id}")
+async def update_user(
+    user_id: str,
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update user information"""
+    # Find the target user
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check permissions
+    if not UserRole.can_manage(current_user.role, target_user["role"]):
+        raise HTTPException(status_code=403, detail="You don't have permission to update this user")
+    
+    # Prepare update data
+    update_data = {}
+    
+    # Update basic fields
+    if user_data.username:
+        # Check if username is already taken by another user
+        existing_user = await db.users.find_one({"username": user_data.username, "id": {"$ne": user_id}})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        update_data["username"] = user_data.username
+    
+    if user_data.email:
+        # Check if email is already taken by another user
+        existing_email = await db.users.find_one({"email": user_data.email, "id": {"$ne": user_id}})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        update_data["email"] = user_data.email
+    
+    if user_data.password:
+        update_data["password_hash"] = hash_password(user_data.password)
+    
+    # Update enhanced fields
+    for field in ["full_name", "phone", "role", "region_id", "address", "national_id", "hire_date", "profile_photo", "is_active"]:
+        value = getattr(user_data, field)
+        if value is not None:
+            # Map frontend field names to database field names
+            if field == "profile_photo":
+                update_data["photo"] = value
+            else:
+                update_data[field] = value
+    
+    if user_data.direct_manager_id:
+        # Validate manager exists
+        manager = await db.users.find_one({"id": user_data.direct_manager_id})
+        if not manager:
+            raise HTTPException(status_code=400, detail="Invalid manager ID")
+        update_data["managed_by"] = user_data.direct_manager_id
+    
+    # Validate region if provided
+    if user_data.region_id:
+        existing_region = await db.regions.find_one({"id": user_data.region_id})
+        if not existing_region:
+            raise HTTPException(status_code=400, detail="Invalid region ID")
+    
+    # Add update timestamp
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Update user
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    # Create activity log
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user.id,
+        "action": "user_updated",
+        "entity_type": "user",
+        "entity_id": user_id,
+        "details": f"تم تحديث معلومات المستخدم: {target_user['full_name']}",
+        "metadata": {
+            "updated_fields": list(update_data.keys()),
+            "target_user_id": user_id,
+            "target_user_role": target_user["role"]
+        },
+        "timestamp": datetime.utcnow()
+    })
+    
+    return {"message": "User updated successfully"}
+
 # User Management Routes
 @api_router.get("/users", response_model=List[Dict[str, Any]])
 async def get_users(current_user: User = Depends(get_current_user)):
