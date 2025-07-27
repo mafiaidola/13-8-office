@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Advanced Admin Control System Testing for Medical Sales Rep Visit Management System
-Tests the Google Maps Integration, Website Configuration, Performance Monitoring, and Advanced System Configuration APIs
-Priority testing as requested in the review
+Comprehensive Backend Testing for Medical Sales Rep Visit Management System
+Testing system after adding warehouse manager dashboard and verifying removed features
+Priority testing as requested in the Arabic review
 """
 
 import requests
