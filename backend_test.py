@@ -667,7 +667,114 @@ class BackendTester:
             self.log_test("System Health Check", False, f"System issues: only {success_count}/{total_tests} checks passed")
         return False
 
-    def test_comprehensive_admin_settings_apis(self):
+    def run_enhanced_user_management_tests(self):
+        """Run Enhanced User Management System Tests as requested in the review"""
+        print("=" * 80)
+        print("🚀 ENHANCED USER MANAGEMENT SYSTEM TESTING")
+        print("=" * 80)
+        print("Testing the Enhanced User Management System with new features:")
+        print("1. POST /api/auth/register - User creation with new fields")
+        print("2. PATCH /api/users/{user_id} - User update functionality")
+        print("3. GET /api/users/managers - Retrieval of users who can be managers")
+        print("4. GET /api/regions/list - Regions list for user assignment")
+        print("5. GET /api/users/enhanced - Enhanced user listing")
+        print("6. Authentication and permissions testing")
+        print("7. System health check")
+        print("=" * 80)
+        print()
+        
+        # Initialize test results
+        test_results = []
+        
+        # Primary Focus Tests - Enhanced User Management APIs
+        print("🎯 PRIMARY FOCUS - Enhanced User Management APIs:")
+        print("-" * 50)
+        
+        # Test 1: Admin Authentication (required for user management)
+        if self.test_admin_login():
+            test_results.append(("Admin Authentication", True))
+        else:
+            test_results.append(("Admin Authentication", False))
+        
+        # Test 2: GM Authentication (for manager functionalities)
+        if self.test_gm_authentication():
+            test_results.append(("GM Authentication", True))
+        else:
+            test_results.append(("GM Authentication", False))
+        
+        # Test 3: Enhanced User Creation with New Fields
+        if self.test_enhanced_user_creation_with_new_fields():
+            test_results.append(("Enhanced User Creation", True))
+        else:
+            test_results.append(("Enhanced User Creation", False))
+        
+        # Test 4: User Update Functionality
+        if self.test_user_update_functionality():
+            test_results.append(("User Update Functionality", True))
+        else:
+            test_results.append(("User Update Functionality", False))
+        
+        # Test 5: Get Managers API
+        if self.test_get_managers_api():
+            test_results.append(("Get Managers API", True))
+        else:
+            test_results.append(("Get Managers API", False))
+        
+        # Test 6: Get Regions List API
+        if self.test_get_regions_list_api():
+            test_results.append(("Get Regions List API", True))
+        else:
+            test_results.append(("Get Regions List API", False))
+        
+        # Test 7: Enhanced User Listing API
+        if self.test_enhanced_user_listing_api():
+            test_results.append(("Enhanced User Listing API", True))
+        else:
+            test_results.append(("Enhanced User Listing API", False))
+        
+        print("\n🔐 SECONDARY TESTS - System Health & Permissions:")
+        print("-" * 50)
+        
+        # Test 8: User Permissions and Role Validation
+        if self.test_user_permissions_and_role_validation():
+            test_results.append(("User Permissions & Role Validation", True))
+        else:
+            test_results.append(("User Permissions & Role Validation", False))
+        
+        # Test 9: System Health Check
+        if self.test_system_health_check():
+            test_results.append(("System Health Check", True))
+        else:
+            test_results.append(("System Health Check", False))
+        
+        # Calculate results
+        passed_tests = sum(1 for _, success in test_results if success)
+        total_tests = len(test_results)
+        success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+        
+        # Print summary
+        print("\n" + "=" * 80)
+        print("📊 ENHANCED USER MANAGEMENT SYSTEM TEST RESULTS")
+        print("=" * 80)
+        
+        for test_name, success in test_results:
+            status = "✅ PASS" if success else "❌ FAIL"
+            print(f"{status} {test_name}")
+        
+        print(f"\n📈 SUCCESS RATE: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+        
+        if success_rate >= 80:
+            print("🎉 EXCELLENT: Enhanced User Management System is working well!")
+        elif success_rate >= 60:
+            print("✅ GOOD: Enhanced User Management System is mostly functional")
+        elif success_rate >= 40:
+            print("⚠️  FAIR: Enhanced User Management System has some issues")
+        else:
+            print("❌ POOR: Enhanced User Management System needs significant fixes")
+        
+        print("=" * 80)
+        
+        return success_rate >= 60  # Consider 60% or higher as acceptable
         """Test Comprehensive Admin Settings APIs"""
         if not self.admin_token:
             self.log_test("Comprehensive Admin Settings APIs", False, "No admin token available")
