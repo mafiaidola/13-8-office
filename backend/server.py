@@ -10850,20 +10850,63 @@ async def process_approval_action(
     action_data: dict,
     current_user: User = Depends(get_current_user)
 ):
-    """Process approval action (approve/reject)"""
+    """Process approval action (approve/reject) with hierarchical validation"""
     try:
         # Get approval request
         approval_request = await db.approval_requests.find_one({"id": request_id})
         if not approval_request:
             raise HTTPException(status_code=404, detail="Approval request not found")
         
+        # Get requester information for hierarchical validation
+        requester = await db.users.find_one({"id": approval_request["requested_by"]}, {"_id": 0})
+        if not requester:
+            raise HTTPException(status_code=404, detail="Requester not found")
+        
         user_level = UserRole.ROLE_HIERARCHY.get(current_user.role, 0)
         
-        # Check if user can approve at current level
+        # Check if user can approve this specific request based on hierarchy
+        can_approve = False
+        
         # Admin and GM can approve any request
-        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
-            if user_level not in approval_request["required_levels"]:
-                raise HTTPException(status_code=403, detail="You don't have permission to approve this request")
+        if current_user.role in [UserRole.ADMIN, UserRole.GM]:
+            can_approve = True
+        
+        # Line Manager can approve requests from their line
+        elif current_user.role == UserRole.LINE_MANAGER:
+            if requester.get("line") == current_user.line:
+                can_approve = True
+        
+        # Area Manager can approve requests from their area
+        elif current_user.role == UserRole.AREA_MANAGER:
+            if (requester.get("area_id") == current_user.area_id or 
+                requester.get("managed_by") == current_user.id):
+                can_approve = True
+        
+        # District Manager can approve requests from their team
+        elif current_user.role == UserRole.DISTRICT_MANAGER:
+            if (requester.get("managed_by") == current_user.id or
+                requester.get("district_manager_id") == current_user.id):
+                can_approve = True
+        
+        # Accounting can approve all financial requests
+        elif current_user.role == UserRole.ACCOUNTING:
+            can_approve = True
+        
+        # Warehouse Keeper can approve requests for their warehouse
+        elif current_user.role == UserRole.WAREHOUSE_KEEPER:
+            if current_user.warehouse_id:
+                entity_data = approval_request.get("entity_data", {})
+                if entity_data.get("warehouse_id") == current_user.warehouse_id:
+                    can_approve = True
+            else:
+                can_approve = True
+        
+        if not can_approve:
+            raise HTTPException(status_code=403, detail="You don't have permission to approve this request")
+        
+        # Additional check for required levels
+        if user_level not in approval_request["required_levels"]:
+            raise HTTPException(status_code=403, detail="You don't have permission to approve at this level")
         
         # Create approval action
         approval_action = ApprovalAction(
