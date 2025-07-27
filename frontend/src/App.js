@@ -11830,6 +11830,7 @@ const Dashboard = () => {
             {(user.role === 'admin' || user.role === 'gm') && (
               <button
                 onClick={() => setActiveTab('settings')}
+                data-tab="settings"
                 className={`nav-item ${activeTab === 'settings' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
               >
                 <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>⚙️</span>
