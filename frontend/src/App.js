@@ -11299,6 +11299,10 @@ const Dashboard = () => {
           <OrderCreation />
         )}
 
+        {activeTab === 'approvals' && (
+          <ApprovalsDashboard user={user} />
+        )}
+
         {activeTab === 'users' && canAccessTab('users') && (
           <EnhancedUserManagementV2 />
         )}
