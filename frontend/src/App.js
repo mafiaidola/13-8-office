@@ -10780,16 +10780,6 @@ const Dashboard = () => {
               </button>
             )}
 
-            {/* Secret Reports only for Admin */}
-            {user.role === 'admin' && (
-              <button
-                onClick={() => setActiveTab('secret')}
-                className={`nav-item ${activeTab === 'secret' ? 'active' : ''} flex items-center whitespace-nowrap`}
-              >
-                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🔒</span>
-                {t('secretReports')}
-              </button>
-            )}
           </nav>
         </div>
 
