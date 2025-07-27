@@ -916,8 +916,15 @@ async def update_user(
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Check permissions
-    if not UserRole.can_manage(current_user.role, target_user["role"]):
+    # Check permissions - Admin can update all users
+    if current_user.role == UserRole.ADMIN:
+        # Admin can update all users
+        pass
+    elif current_user.role == UserRole.GM:
+        # GM can update most users except other GMs and Admins
+        if target_user["role"] in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="You don't have permission to update this user")
+    elif not UserRole.can_manage(current_user.role, target_user["role"]):
         raise HTTPException(status_code=403, detail="You don't have permission to update this user")
     
     # Prepare update data
