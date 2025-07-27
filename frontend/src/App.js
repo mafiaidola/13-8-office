@@ -13463,6 +13463,212 @@ const App = () => {
   );
 };
 
+// Order Details Modal Component
+const OrderDetailsModal = ({ order, onClose, language }) => {
+  const t = language === 'ar' ? {
+    orderDetails: 'تفاصيل الطلب',
+    orderNumber: 'رقم الطلب',
+    orderDate: 'تاريخ الطلب',
+    orderStatus: 'حالة الطلب',
+    salesRep: 'المندوب',
+    doctor: 'الطبيب',
+    clinic: 'العيادة',
+    warehouse: 'المخزن',
+    totalAmount: 'المبلغ الإجمالي',
+    items: 'المنتجات',
+    quantity: 'الكمية',
+    unitPrice: 'سعر الوحدة',
+    total: 'الإجمالي',
+    notes: 'ملاحظات',
+    close: 'إغلاق',
+    approved: 'معتمد',
+    pending: 'في الانتظار',
+    rejected: 'مرفوض'
+  } : {
+    orderDetails: 'Order Details',
+    orderNumber: 'Order Number',
+    orderDate: 'Order Date',
+    orderStatus: 'Order Status',
+    salesRep: 'Sales Rep',
+    doctor: 'Doctor',
+    clinic: 'Clinic',
+    warehouse: 'Warehouse',
+    totalAmount: 'Total Amount',
+    items: 'Items',
+    quantity: 'Quantity',
+    unitPrice: 'Unit Price',
+    total: 'Total',
+    notes: 'Notes',
+    close: 'Close',
+    approved: 'Approved',
+    pending: 'Pending',
+    rejected: 'Rejected'
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'bg-green-100 bg-opacity-20 text-green-300';
+      case 'PENDING':
+        return 'bg-yellow-100 bg-opacity-20 text-yellow-300';
+      case 'REJECTED':
+        return 'bg-red-100 bg-opacity-20 text-red-300';
+      default:
+        return 'bg-gray-100 bg-opacity-20 text-gray-300';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-60 flex items-center justify-center p-4">
+      <div className="glass-effect w-full max-w-4xl max-h-[95vh] overflow-hidden rounded-2xl shadow-2xl">
+        <div className="p-6 border-b border-white border-opacity-20 flex items-center justify-between">
+          <h3 className="text-2xl font-bold text-gradient">
+            {t.orderDetails} #{order.id?.slice(-8) || order.order_number}
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 hover:bg-opacity-10 rounded-full transition-colors"
+          >
+            <SVGIcon name="error" size={20} />
+          </button>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[80vh]">
+          <div className="space-y-6">
+            {/* Order Information */}
+            <div className="grid grid-cols-2 gap-8">
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="reports" size={20} />
+                  {t.orderDetails}
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.orderNumber}:</span>
+                    <span className="font-mono">#{order.id?.slice(-8) || order.order_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.orderDate}:</span>
+                    <span>{new Date(order.created_at || order.order_date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.orderStatus}:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                      {t[order.status?.toLowerCase()] || order.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-3 mt-3">
+                    <span className="font-bold text-lg">{t.totalAmount}:</span>
+                    <span className="font-bold text-lg text-green-500">{order.total_amount} ج.م</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="users" size={20} />
+                  معلومات الطلب
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.salesRep}:</span>
+                    <span>{order.sales_rep_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.doctor}:</span>
+                    <span>د. {order.doctor_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.clinic}:</span>
+                    <span>{order.clinic_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{t.warehouse}:</span>
+                    <span>{order.warehouse_name}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            {order.items && order.items.length > 0 && (
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="warehouse" size={20} />
+                  {t.items} ({order.items.length})
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--border-color)' }}>
+                        <th className="text-right py-3 px-4 font-bold">#</th>
+                        <th className="text-right py-3 px-4 font-bold">اسم المنتج</th>
+                        <th className="text-right py-3 px-4 font-bold">{t.quantity}</th>
+                        <th className="text-right py-3 px-4 font-bold">{t.unitPrice}</th>
+                        <th className="text-right py-3 px-4 font-bold">{t.total}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.items.map((item, index) => (
+                        <tr key={index} className="border-b border-opacity-20" style={{ borderColor: 'var(--border-color)' }}>
+                          <td className="py-3 px-4 text-center">{index + 1}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-medium">{item.product_name}</div>
+                            {item.product_description && (
+                              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                {item.product_description}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">{item.quantity}</td>
+                          <td className="py-3 px-4 text-center">{item.unit_price} ج.م</td>
+                          <td className="py-3 px-4 text-center font-bold">
+                            {(item.quantity * item.unit_price).toFixed(2)} ج.م
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-blue-500">
+                        <td colSpan="4" className="py-3 px-4 text-right font-bold text-lg">
+                          {t.totalAmount}:
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-lg text-green-500">
+                          {order.total_amount} ج.م
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {order.notes && (
+              <div className="glass-effect p-6 rounded-xl">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <SVGIcon name="chat" size={20} />
+                  {t.notes}
+                </h4>
+                <p className="text-sm leading-relaxed">{order.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-white border-opacity-20 flex justify-end">
+          <button
+            onClick={onClose}
+            className="btn-modern px-6 py-3"
+          >
+            {t.close}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AppContent = () => {
   const { user, loading } = useAuth();
   const [showQRScanner, setShowQRScanner] = useState(false);
