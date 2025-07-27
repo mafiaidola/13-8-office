@@ -4607,60 +4607,60 @@ const ApprovalsDashboard = ({ user }) => {
 
       {/* My Requests Tab */}
       {activeTab === 'my_requests' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {myRequests.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📋</div>
-              <p>لا توجد طلبات</p>
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-3">📋</div>
+              <p className="text-sm">لا توجد طلبات</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {myRequests.map((request) => (
-                <div key={request.id} className="glass-effect p-6 rounded-xl">
-                  <div className="flex items-center justify-between mb-4">
+                <div key={request.id} className="glass-effect p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="text-2xl">
+                      <div className="text-xl">
                         {request.type === 'order' ? '🛒' : 
                          request.type === 'clinic' ? '🏥' : 
                          request.type === 'doctor' ? '👨‍⚕️' : '📋'}
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-bold text-base">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-xs text-gray-600">
                           تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar-EG')}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                         {getStatusText(request.status)}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">تقدم الموافقة</span>
-                      <span className="text-sm font-medium">{getApprovalProgress(request)}%</span>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">تقدم الموافقة</span>
+                      <span className="text-xs font-medium">{getApprovalProgress(request)}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                         style={{ width: `${getApprovalProgress(request)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {request.status === 'pending' && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600">
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600">
                         <span className="font-medium">منتظر موافقة:</span> {getCurrentApprover(request)}
                       </p>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
+                    <div className="text-xs text-gray-600">
                       ID: {request.id.slice(0, 8)}...
                     </div>
                     <button 
@@ -4668,7 +4668,7 @@ const ApprovalsDashboard = ({ user }) => {
                         setSelectedRequest(request);
                         setShowRequestDetails(true);
                       }}
-                      className="btn-secondary text-sm"
+                      className="btn-secondary text-xs px-3 py-1"
                     >
                       عرض التفاصيل
                     </button>
@@ -4682,56 +4682,56 @@ const ApprovalsDashboard = ({ user }) => {
 
       {/* Pending Approvals Tab */}
       {activeTab === 'pending_approvals' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {pendingApprovals.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">✅</div>
-              <p>لا توجد موافقات في انتظارك</p>
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-3">✅</div>
+              <p className="text-sm">لا توجد موافقات في انتظارك</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {pendingApprovals.map((request) => (
-                <div key={request.id} className="glass-effect p-6 rounded-xl border-l-4 border-yellow-500">
-                  <div className="flex items-center justify-between mb-4">
+                <div key={request.id} className="glass-effect p-4 rounded-lg border-l-4 border-yellow-500">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="text-2xl">
+                      <div className="text-xl">
                         {request.type === 'order' ? '🛒' : 
                          request.type === 'clinic' ? '🏥' : 
                          request.type === 'doctor' ? '👨‍⚕️' : '📋'}
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-bold text-base">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-xs text-gray-600">
                           بواسطة: {request.requester_name || 'غير محدد'}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs text-gray-600">
                           تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar-EG')}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                         في انتظار موافقتك
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
+                    <div className="text-xs text-gray-600">
                       ID: {request.id.slice(0, 8)}...
                     </div>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleApprovalAction(request.id, 'approve')}
                         disabled={actionLoading}
-                        className="btn-primary text-sm"
+                        className="btn-primary text-xs px-3 py-1"
                       >
                         {actionLoading ? 'جاري المعالجة...' : 'موافق'}
                       </button>
                       <button 
                         onClick={() => handleApprovalAction(request.id, 'reject')}
                         disabled={actionLoading}
-                        className="btn-danger text-sm"
+                        className="btn-danger text-xs px-3 py-1"
                       >
                         رفض
                       </button>
@@ -4740,7 +4740,7 @@ const ApprovalsDashboard = ({ user }) => {
                           setSelectedRequest(request);
                           setShowRequestDetails(true);
                         }}
-                        className="btn-secondary text-sm"
+                        className="btn-secondary text-xs px-3 py-1"
                       >
                         التفاصيل
                       </button>
