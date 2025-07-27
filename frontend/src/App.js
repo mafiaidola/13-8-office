@@ -13819,10 +13819,6 @@ const ComprehensiveAdminSettings = () => {
           <AdminNotificationSettings />
         )}
 
-        {activeTab === 'chat' && (
-          <AdminChatSettings />
-        )}
-
         {activeTab === 'scanner' && (
           <AdminScannerSettings />
         )}
