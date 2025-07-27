@@ -10836,6 +10836,10 @@ const Dashboard = () => {
           <WarehouseKeeperDashboard />
         )}
 
+        {activeTab === 'approvals' && (user.role === 'accounting' || user.role === 'warehouse_keeper' || user.role === 'admin') && (
+          <AdvancedApprovalSystem />
+        )}
+
         {activeTab === 'invoices' && canAccessTab('warehouse') && (
           <InvoiceManagement />
         )}
