@@ -10104,6 +10104,487 @@ async def get_category_settings(category: str, current_user: User = Depends(get_
     
     return settings.get(category_key, {}) if settings else {}
 
+# =============================================
+# Monthly Planning System APIs
+# =============================================
+
+class ClinicVisitPlan(BaseModel):
+    clinic_id: str
+    planned_visits: int
+    target_doctors: int
+    notes: Optional[str] = None
+
+class MonthlyPlanTargets(BaseModel):
+    total_visits: int
+    effective_visits: int
+    orders: int
+    revenue: float
+
+class MonthlyPlan(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    rep_id: str
+    rep_name: str  # Cached for performance
+    month: str  # Format: YYYY-MM
+    clinic_visits: List[ClinicVisitPlan]
+    targets: MonthlyPlanTargets
+    notes: Optional[str] = None
+    status: str = "DRAFT"  # DRAFT, APPROVED, ACTIVE, COMPLETED, CANCELLED
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    updated_at: Optional[datetime] = None
+    updated_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    approved_by: Optional[str] = None
+
+class MonthlyPlanCreate(BaseModel):
+    rep_id: str
+    month: str
+    clinic_visits: List[ClinicVisitPlan]
+    targets: MonthlyPlanTargets
+    notes: Optional[str] = None
+
+@api_router.get("/planning/monthly")
+async def get_monthly_plans(
+    month: Optional[str] = None,
+    rep_id: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get monthly plans with filtering options"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to view monthly plans")
+        
+        # Build query
+        query = {}
+        if month:
+            query["month"] = month
+        if rep_id:
+            query["rep_id"] = rep_id
+        if status:
+            query["status"] = status
+        
+        # Role-based filtering
+        if current_user.role == UserRole.AREA_MANAGER:
+            # Area managers can see plans for reps in their area
+            area_reps = await db.users.find(
+                {"role": UserRole.MEDICAL_REP, "area_manager_id": current_user.id},
+                {"_id": 0, "id": 1}
+            ).to_list(100)
+            rep_ids = [rep["id"] for rep in area_reps]
+            query["rep_id"] = {"$in": rep_ids}
+        elif current_user.role == UserRole.DISTRICT_MANAGER:
+            # District managers can see plans for reps in their district
+            district_reps = await db.users.find(
+                {"role": UserRole.MEDICAL_REP, "district_manager_id": current_user.id},
+                {"_id": 0, "id": 1}
+            ).to_list(100)
+            rep_ids = [rep["id"] for rep in district_reps]
+            query["rep_id"] = {"$in": rep_ids}
+        
+        # Get plans with enriched data
+        plans = await db.monthly_plans.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+        
+        # Enrich with clinic names
+        for plan in plans:
+            for clinic_visit in plan.get("clinic_visits", []):
+                clinic = await db.clinics.find_one({"id": clinic_visit["clinic_id"]}, {"_id": 0, "name": 1})
+                if clinic:
+                    clinic_visit["clinic_name"] = clinic["name"]
+        
+        return plans
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/planning/monthly")
+async def create_monthly_plan(
+    plan_data: MonthlyPlanCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new monthly plan"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to create monthly plans")
+        
+        # Validate rep exists
+        rep = await db.users.find_one({"id": plan_data.rep_id}, {"_id": 0})
+        if not rep:
+            raise HTTPException(status_code=404, detail="Sales representative not found")
+        
+        if rep["role"] not in [UserRole.MEDICAL_REP, UserRole.SALES_REP]:
+            raise HTTPException(status_code=400, detail="Selected user is not a sales representative")
+        
+        # Check if plan already exists for this month
+        existing_plan = await db.monthly_plans.find_one({
+            "rep_id": plan_data.rep_id,
+            "month": plan_data.month
+        })
+        
+        if existing_plan:
+            raise HTTPException(status_code=400, detail="Monthly plan already exists for this representative and month")
+        
+        # Validate clinic IDs
+        clinic_ids = [cv.clinic_id for cv in plan_data.clinic_visits]
+        if clinic_ids:
+            clinic_count = await db.clinics.count_documents({"id": {"$in": clinic_ids}})
+            if clinic_count != len(clinic_ids):
+                raise HTTPException(status_code=400, detail="One or more clinic IDs are invalid")
+        
+        # Create the plan
+        plan = MonthlyPlan(
+            **plan_data.dict(),
+            rep_name=rep["full_name"],
+            created_by=current_user.id
+        )
+        
+        await db.monthly_plans.insert_one(plan.dict())
+        
+        # Create activity log
+        await db.activity_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "monthly_plan_created",
+            "entity_type": "monthly_plan",
+            "entity_id": plan.id,
+            "details": f"تم إنشاء خطة شهرية جديدة للمندوب {rep['full_name']} لشهر {plan_data.month}",
+            "metadata": {
+                "rep_id": plan_data.rep_id,
+                "month": plan_data.month,
+                "total_visits": plan_data.targets.total_visits,
+                "total_clinics": len(plan_data.clinic_visits)
+            },
+            "timestamp": datetime.utcnow()
+        })
+        
+        return {
+            "message": "Monthly plan created successfully",
+            "plan_id": plan.id,
+            "rep_name": rep["full_name"],
+            "month": plan_data.month
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/planning/monthly/{plan_id}")
+async def get_monthly_plan(
+    plan_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get specific monthly plan details"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER, UserRole.MEDICAL_REP]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to view monthly plan")
+        
+        plan = await db.monthly_plans.find_one({"id": plan_id}, {"_id": 0})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Monthly plan not found")
+        
+        # Check if user can access this plan
+        if current_user.role == UserRole.MEDICAL_REP and plan["rep_id"] != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only view your own monthly plans")
+        
+        # Enrich with clinic and progress data
+        for clinic_visit in plan.get("clinic_visits", []):
+            clinic = await db.clinics.find_one({"id": clinic_visit["clinic_id"]}, {"_id": 0})
+            if clinic:
+                clinic_visit["clinic_name"] = clinic["name"]
+                clinic_visit["clinic_address"] = clinic.get("address", "")
+                
+                # Get actual visits for this clinic in the plan month
+                month_start = datetime.strptime(plan["month"], "%Y-%m")
+                month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+                
+                actual_visits = await db.visits.count_documents({
+                    "sales_rep_id": plan["rep_id"],
+                    "clinic_id": clinic_visit["clinic_id"],
+                    "created_at": {"$gte": month_start, "$lte": month_end}
+                })
+                
+                clinic_visit["actual_visits"] = actual_visits
+                clinic_visit["visit_progress"] = round((actual_visits / clinic_visit["planned_visits"] * 100), 1) if clinic_visit["planned_visits"] > 0 else 0
+        
+        # Get overall progress
+        month_start = datetime.strptime(plan["month"], "%Y-%m")
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        actual_stats = {
+            "total_visits": await db.visits.count_documents({
+                "sales_rep_id": plan["rep_id"],
+                "created_at": {"$gte": month_start, "$lte": month_end}
+            }),
+            "effective_visits": await db.visits.count_documents({
+                "sales_rep_id": plan["rep_id"],
+                "created_at": {"$gte": month_start, "$lte": month_end},
+                "is_effective": True
+            }),
+            "orders": await db.orders.count_documents({
+                "sales_rep_id": plan["rep_id"],
+                "created_at": {"$gte": month_start, "$lte": month_end}
+            })
+        }
+        
+        # Calculate progress percentages
+        plan["progress"] = {
+            "visits_progress": round((actual_stats["total_visits"] / plan["targets"]["total_visits"] * 100), 1) if plan["targets"]["total_visits"] > 0 else 0,
+            "effective_visits_progress": round((actual_stats["effective_visits"] / plan["targets"]["effective_visits"] * 100), 1) if plan["targets"]["effective_visits"] > 0 else 0,
+            "orders_progress": round((actual_stats["orders"] / plan["targets"]["orders"] * 100), 1) if plan["targets"]["orders"] > 0 else 0,
+            "actual_stats": actual_stats
+        }
+        
+        return plan
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.patch("/planning/monthly/{plan_id}")
+async def update_monthly_plan(
+    plan_id: str,
+    update_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update monthly plan"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to update monthly plans")
+        
+        plan = await db.monthly_plans.find_one({"id": plan_id})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Monthly plan not found")
+        
+        # Prevent changes to approved/completed plans
+        if plan["status"] in ["COMPLETED", "CANCELLED"]:
+            raise HTTPException(status_code=400, detail="Cannot modify completed or cancelled plans")
+        
+        # Update fields
+        update_fields = {k: v for k, v in update_data.items() if v is not None}
+        update_fields["updated_at"] = datetime.utcnow()
+        update_fields["updated_by"] = current_user.id
+        
+        # Handle status changes
+        if update_data.get("status") == "APPROVED":
+            update_fields["approved_at"] = datetime.utcnow()
+            update_fields["approved_by"] = current_user.id
+        
+        await db.monthly_plans.update_one({"id": plan_id}, {"$set": update_fields})
+        
+        # Log the update
+        await db.activity_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "monthly_plan_updated",
+            "entity_type": "monthly_plan",
+            "entity_id": plan_id,
+            "details": f"تم تحديث الخطة الشهرية للمندوب {plan['rep_name']} لشهر {plan['month']}",
+            "metadata": {
+                "updated_fields": list(update_fields.keys()),
+                "status": update_data.get("status", plan["status"])
+            },
+            "timestamp": datetime.utcnow()
+        })
+        
+        return {"message": "Monthly plan updated successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/planning/monthly/{plan_id}")
+async def delete_monthly_plan(
+    plan_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete monthly plan"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Only GM/Admin can delete monthly plans")
+        
+        plan = await db.monthly_plans.find_one({"id": plan_id})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Monthly plan not found")
+        
+        # Soft delete - mark as cancelled
+        await db.monthly_plans.update_one(
+            {"id": plan_id},
+            {"$set": {
+                "status": "CANCELLED",
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user.id
+            }}
+        )
+        
+        # Log the deletion
+        await db.activity_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "action": "monthly_plan_deleted",
+            "entity_type": "monthly_plan",
+            "entity_id": plan_id,
+            "details": f"تم حذف الخطة الشهرية للمندوب {plan['rep_name']} لشهر {plan['month']}",
+            "timestamp": datetime.utcnow()
+        })
+        
+        return {"message": "Monthly plan deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/sales-reps")
+async def get_sales_reps(
+    current_user: User = Depends(get_current_user)
+):
+    """Get sales representatives for managers"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to view sales representatives")
+        
+        # Build query based on role
+        query = {"role": {"$in": [UserRole.MEDICAL_REP, UserRole.SALES_REP]}}
+        
+        # Role-based filtering
+        if current_user.role == UserRole.AREA_MANAGER:
+            query["area_manager_id"] = current_user.id
+        elif current_user.role == UserRole.DISTRICT_MANAGER:
+            query["district_manager_id"] = current_user.id
+        elif current_user.role == UserRole.MANAGER:
+            query["manager_id"] = current_user.id
+        
+        # Get sales reps
+        sales_reps = await db.users.find(
+            query,
+            {"_id": 0, "id": 1, "username": 1, "full_name": 1, "email": 1, "phone": 1, "role": 1, "is_active": 1}
+        ).to_list(100)
+        
+        # Enrich with statistics
+        for rep in sales_reps:
+            # Get current month statistics
+            current_month = datetime.utcnow().strftime("%Y-%m")
+            month_start = datetime.strptime(current_month, "%Y-%m")
+            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            
+            rep_stats = {
+                "total_visits": await db.visits.count_documents({
+                    "sales_rep_id": rep["id"],
+                    "created_at": {"$gte": month_start, "$lte": month_end}
+                }),
+                "effective_visits": await db.visits.count_documents({
+                    "sales_rep_id": rep["id"],
+                    "created_at": {"$gte": month_start, "$lte": month_end},
+                    "is_effective": True
+                }),
+                "total_orders": await db.orders.count_documents({
+                    "sales_rep_id": rep["id"],
+                    "created_at": {"$gte": month_start, "$lte": month_end}
+                }),
+                "has_monthly_plan": await db.monthly_plans.count_documents({
+                    "rep_id": rep["id"],
+                    "month": current_month
+                }) > 0
+            }
+            
+            rep["current_month_stats"] = rep_stats
+        
+        return sales_reps
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Monthly Planning Analytics
+@api_router.get("/planning/analytics")
+async def get_planning_analytics(
+    month: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get monthly planning analytics"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Only GM/Admin can access planning analytics")
+        
+        if not month:
+            month = datetime.utcnow().strftime("%Y-%m")
+        
+        # Get all plans for the month
+        plans = await db.monthly_plans.find({"month": month}, {"_id": 0}).to_list(100)
+        
+        # Calculate analytics
+        total_plans = len(plans)
+        approved_plans = len([p for p in plans if p["status"] == "APPROVED"])
+        active_plans = len([p for p in plans if p["status"] == "ACTIVE"])
+        completed_plans = len([p for p in plans if p["status"] == "COMPLETED"])
+        
+        # Calculate target vs actual
+        total_target_visits = sum(p["targets"]["total_visits"] for p in plans)
+        total_target_orders = sum(p["targets"]["orders"] for p in plans)
+        total_target_revenue = sum(p["targets"]["revenue"] for p in plans)
+        
+        # Get actual performance for the month
+        month_start = datetime.strptime(month, "%Y-%m")
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        actual_visits = await db.visits.count_documents({
+            "created_at": {"$gte": month_start, "$lte": month_end}
+        })
+        
+        actual_orders = await db.orders.count_documents({
+            "created_at": {"$gte": month_start, "$lte": month_end}
+        })
+        
+        # Performance by rep
+        rep_performance = []
+        for plan in plans:
+            rep_visits = await db.visits.count_documents({
+                "sales_rep_id": plan["rep_id"],
+                "created_at": {"$gte": month_start, "$lte": month_end}
+            })
+            
+            rep_orders = await db.orders.count_documents({
+                "sales_rep_id": plan["rep_id"],
+                "created_at": {"$gte": month_start, "$lte": month_end}
+            })
+            
+            rep_performance.append({
+                "rep_id": plan["rep_id"],
+                "rep_name": plan["rep_name"],
+                "target_visits": plan["targets"]["total_visits"],
+                "actual_visits": rep_visits,
+                "visits_achievement": round((rep_visits / plan["targets"]["total_visits"] * 100), 1) if plan["targets"]["total_visits"] > 0 else 0,
+                "target_orders": plan["targets"]["orders"],
+                "actual_orders": rep_orders,
+                "orders_achievement": round((rep_orders / plan["targets"]["orders"] * 100), 1) if plan["targets"]["orders"] > 0 else 0,
+                "plan_status": plan["status"]
+            })
+        
+        return {
+            "month": month,
+            "overview": {
+                "total_plans": total_plans,
+                "approved_plans": approved_plans,
+                "active_plans": active_plans,
+                "completed_plans": completed_plans,
+                "completion_rate": round((completed_plans / total_plans * 100), 1) if total_plans > 0 else 0
+            },
+            "targets_vs_actual": {
+                "target_visits": total_target_visits,
+                "actual_visits": actual_visits,
+                "visits_achievement": round((actual_visits / total_target_visits * 100), 1) if total_target_visits > 0 else 0,
+                "target_orders": total_target_orders,
+                "actual_orders": actual_orders,
+                "orders_achievement": round((actual_orders / total_target_orders * 100), 1) if total_target_orders > 0 else 0,
+                "target_revenue": total_target_revenue
+            },
+            "rep_performance": rep_performance
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 app.include_router(api_router)
 
 app.add_middleware(
