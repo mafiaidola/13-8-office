@@ -11700,9 +11700,6 @@ const Dashboard = () => {
                 {language === 'ar' ? 'المحاسبة' : 'Accounting'}
               </button>
             )}
-                {language === 'ar' ? 'المحاسبة' : 'Accounting'}
-              </button>
-            )}
             
             {/* System Settings only for Admin and GM */}
             {(user.role === 'admin' || user.role === 'gm') && (
