@@ -8744,24 +8744,6 @@ async def update_security_settings(settings_data: dict, current_user: User = Dep
     
     return {"message": "Security settings updated successfully"}
 
-@api_router.get("/admin/settings/{category}")
-async def get_category_settings(category: str, current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
-        raise HTTPException(status_code=403, detail="Only GM/Admin can access admin settings")
-    
-    valid_categories = [
-        "user-management", "gps", "theme", "gamification", 
-        "notifications", "chat", "scanner", "visits", "security"
-    ]
-    
-    if category not in valid_categories:
-        raise HTTPException(status_code=400, detail="Invalid settings category")
-    
-    settings = await db.system_settings.find_one({}, {"_id": 0})
-    category_key = f"{category.replace('-', '_')}_settings"
-    
-    return settings.get(category_key, {}) if settings else {}
-
 # Enhanced Feature Control API
 @api_router.post("/admin/features/toggle")
 async def toggle_system_feature(feature_data: dict, current_user: User = Depends(get_current_user)):
