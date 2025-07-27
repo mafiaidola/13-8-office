@@ -558,6 +558,122 @@ class DoctorCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
 
+# New Hierarchical Approval System
+class ApprovalRequest(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # order, clinic, doctor, etc.
+    entity_id: str  # ID of the entity being approved
+    entity_data: Dict[str, Any]  # Complete entity data
+    
+    # Approval hierarchy
+    current_level: int = 1  # Current approval level
+    required_levels: List[int] = [3, 4, 5]  # district_manager, area_manager, accounting
+    
+    # Approval history
+    approvals: List[Dict[str, Any]] = []  # [{level, user_id, action, timestamp, notes}]
+    
+    # Request details
+    requested_by: str  # user_id who made the request
+    requested_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Current status
+    status: str = "pending"  # pending, approved, rejected, cancelled
+    current_approver_id: Optional[str] = None
+    
+    # Metadata
+    notes: Optional[str] = None
+    priority: str = "normal"  # low, normal, high, urgent
+    due_date: Optional[datetime] = None
+    
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ApprovalAction(BaseModel):
+    action: str  # approve, reject, request_changes
+    notes: Optional[str] = None
+    level: int
+    user_id: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced Order Model with New Approval System
+class OrderEnhanced(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    order_number: str = Field(default_factory=lambda: f"ORD-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}")
+    
+    # Basic order information
+    medical_rep_id: str
+    clinic_id: str
+    warehouse_id: str
+    
+    # Order details
+    items: List[Dict[str, Any]]  # [{product_id, quantity, unit_price, total}]
+    subtotal: float
+    tax_amount: float = 0
+    discount_amount: float = 0
+    total_amount: float
+    
+    # New hierarchical approval system
+    approval_request_id: Optional[str] = None
+    approval_status: str = "pending"  # pending, district_approved, area_approved, accounting_approved, final_approved, rejected
+    
+    # Approval levels tracking
+    district_manager_approval: Optional[Dict[str, Any]] = None  # {user_id, timestamp, action, notes}
+    area_manager_approval: Optional[Dict[str, Any]] = None
+    accounting_approval: Optional[Dict[str, Any]] = None
+    warehouse_approval: Optional[Dict[str, Any]] = None
+    
+    # Order flow
+    status: str = "draft"  # draft, submitted, approved, fulfilled, cancelled
+    
+    # Line and area assignment
+    line: Optional[str] = None  # line_1, line_2
+    area_id: Optional[str] = None
+    
+    # Metadata
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class OrderCreate(BaseModel):
+    clinic_id: str
+    warehouse_id: str
+    items: List[Dict[str, Any]]
+    notes: Optional[str] = None
+    line: Optional[str] = None
+    area_id: Optional[str] = None
+
+# Enhanced User Model with Line and Area Assignment
+class UserEnhanced(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str
+    password_hash: str
+    full_name: str
+    role: str
+    phone: Optional[str] = None
+    
+    # Line and area assignment
+    line: Optional[str] = None  # line_1, line_2
+    area_id: Optional[str] = None
+    warehouse_id: Optional[str] = None  # For warehouse keepers
+    
+    # Hierarchy
+    direct_manager_id: Optional[str] = None
+    managed_by: Optional[str] = None
+    
+    # Enhanced fields
+    address: Optional[str] = None
+    national_id: Optional[str] = None
+    hire_date: Optional[str] = None
+    photo: Optional[str] = None
+    region_id: Optional[str] = None
+    
+    # Permissions and status
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: Optional[str] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Enhanced Models for Phase 2 and improvements
 class SystemSettings(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -568,18 +684,22 @@ class SystemSettings(BaseModel):
     # New enhanced settings
     available_themes: List[str] = ["dark", "light", "blue", "green", "purple"]
     default_theme: str = "dark"
-    available_roles: List[str] = ["admin", "manager", "sales_rep", "warehouse_manager", "accounting"]
+    available_roles: List[str] = ["admin", "gm", "line_manager", "area_manager", "district_manager", "key_account", "medical_rep", "warehouse_keeper", "accounting"]
     role_permissions: Dict[str, List[str]] = {
         "admin": ["all"],
-        "manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
-        "sales_rep": ["visits.create", "doctors.create", "orders.create"],
-        "warehouse_manager": ["inventory.manage", "orders.fulfill"],
-        "accounting": ["reports.view", "financial.view"]
+        "gm": ["all"],
+        "line_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
+        "area_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
+        "district_manager": ["visits.view", "doctors.approve", "orders.approve"],
+        "key_account": ["visits.create", "doctors.create", "orders.create"],
+        "medical_rep": ["visits.create", "doctors.create", "orders.create"],
+        "warehouse_keeper": ["inventory.manage", "orders.fulfill"],
+        "accounting": ["reports.view", "financial.view", "orders.approve"]
     }
     display_mode: str = "grid"  # grid, list, compact
     language: str = "ar"  # ar, en
     notifications_enabled: bool = True
-    chat_enabled: bool = True
+    chat_enabled: bool = False  # Disabled as per requirements
     voice_notes_enabled: bool = True
     updated_by: str
     updated_at: datetime = Field(default_factory=datetime.utcnow)
