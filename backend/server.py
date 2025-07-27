@@ -10567,427 +10567,348 @@ async def get_category_settings(category: str, current_user: User = Depends(get_
     return settings.get(category_key, {}) if settings else {}
 
 # =============================================
-# Monthly Planning System APIs
+# New Area Management APIs
 # =============================================
 
-class ClinicVisitPlan(BaseModel):
-    clinic_id: str
-    planned_visits: int
-    target_doctors: int
-    notes: Optional[str] = None
-
-class MonthlyPlanTargets(BaseModel):
-    total_visits: int
-    effective_visits: int
-    orders: int
-    revenue: float
-
-class MonthlyPlan(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    rep_id: str
-    rep_name: str  # Cached for performance
-    month: str  # Format: YYYY-MM
-    clinic_visits: List[ClinicVisitPlan]
-    targets: MonthlyPlanTargets
-    notes: Optional[str] = None
-    status: str = "DRAFT"  # DRAFT, APPROVED, ACTIVE, COMPLETED, CANCELLED
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    created_by: str
-    updated_at: Optional[datetime] = None
-    updated_by: Optional[str] = None
-    approved_at: Optional[datetime] = None
-    approved_by: Optional[str] = None
-
-class MonthlyPlanCreate(BaseModel):
-    rep_id: str
-    month: str
-    clinic_visits: List[ClinicVisitPlan]
-    targets: MonthlyPlanTargets
-    notes: Optional[str] = None
-
-@api_router.get("/planning/monthly")
-async def get_monthly_plans(
-    month: Optional[str] = None,
-    rep_id: Optional[str] = None,
-    status: Optional[str] = None,
+@api_router.post("/areas")
+async def create_area(
+    area_data: AreaCreate,
     current_user: User = Depends(get_current_user)
 ):
-    """Get monthly plans with filtering options"""
+    """Create a new area"""
     try:
         # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions to view monthly plans")
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="Only Admin/GM can create areas")
         
-        # Build query
-        query = {}
-        if month:
-            query["month"] = month
-        if rep_id:
-            query["rep_id"] = rep_id
-        if status:
-            query["status"] = status
+        # Check if area code already exists
+        existing_area = await db.areas.find_one({"code": area_data.code})
+        if existing_area:
+            raise HTTPException(status_code=400, detail="Area code already exists")
         
-        # Role-based filtering
-        if current_user.role == UserRole.AREA_MANAGER:
-            # Area managers can see plans for reps in their area
-            area_reps = await db.users.find(
-                {"role": UserRole.MEDICAL_REP, "area_manager_id": current_user.id},
-                {"_id": 0, "id": 1}
-            ).to_list(100)
-            rep_ids = [rep["id"] for rep in area_reps]
-            query["rep_id"] = {"$in": rep_ids}
-        elif current_user.role == UserRole.DISTRICT_MANAGER:
-            # District managers can see plans for reps in their district
-            district_reps = await db.users.find(
-                {"role": UserRole.MEDICAL_REP, "district_manager_id": current_user.id},
-                {"_id": 0, "id": 1}
-            ).to_list(100)
-            rep_ids = [rep["id"] for rep in district_reps]
-            query["rep_id"] = {"$in": rep_ids}
+        # Create area
+        area = Area(**area_data.dict())
+        await db.areas.insert_one(area.dict())
         
-        # Get plans with enriched data
-        plans = await db.monthly_plans.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
-        
-        # Enrich with clinic names
-        for plan in plans:
-            for clinic_visit in plan.get("clinic_visits", []):
-                clinic = await db.clinics.find_one({"id": clinic_visit["clinic_id"]}, {"_id": 0, "name": 1})
-                if clinic:
-                    clinic_visit["clinic_name"] = clinic["name"]
-        
-        return plans
-        
+        return {"message": "Area created successfully", "area_id": area.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/planning/monthly")
-async def create_monthly_plan(
-    plan_data: MonthlyPlanCreate,
-    current_user: User = Depends(get_current_user)
-):
-    """Create a new monthly plan"""
+@api_router.get("/areas")
+async def get_areas(current_user: User = Depends(get_current_user)):
+    """Get all areas"""
+    try:
+        areas = await db.areas.find({"is_active": True}, {"_id": 0}).to_list(100)
+        return areas
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/areas/initialize")
+async def initialize_default_areas(current_user: User = Depends(get_current_user)):
+    """Initialize default areas"""
     try:
         # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions to create monthly plans")
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="Only Admin/GM can initialize areas")
         
-        # Validate rep exists
-        rep = await db.users.find_one({"id": plan_data.rep_id}, {"_id": 0})
-        if not rep:
-            raise HTTPException(status_code=404, detail="Sales representative not found")
+        default_areas = [
+            {"name": "القاهرة والجيزة", "code": "cairo_giza", "description": "منطقة القاهرة والجيزة"},
+            {"name": "الدلتا 1", "code": "delta_1", "description": "منطقة الدلتا الأولى"},
+            {"name": "الدلتا 2", "code": "delta_2", "description": "منطقة الدلتا الثانية"},
+            {"name": "صعيد مصر", "code": "upper_egypt", "description": "منطقة صعيد مصر"},
+            {"name": "الإسكندرية", "code": "alexandria", "description": "منطقة الإسكندرية"},
+            {"name": "الغربية", "code": "western", "description": "منطقة الغربية"}
+        ]
         
-        if rep["role"] not in [UserRole.MEDICAL_REP, UserRole.SALES_REP]:
-            raise HTTPException(status_code=400, detail="Selected user is not a sales representative")
+        created_areas = []
+        for area_data in default_areas:
+            existing = await db.areas.find_one({"code": area_data["code"]})
+            if not existing:
+                area = Area(**area_data)
+                await db.areas.insert_one(area.dict())
+                created_areas.append(area.name)
         
-        # Check if plan already exists for this month
-        existing_plan = await db.monthly_plans.find_one({
-            "rep_id": plan_data.rep_id,
-            "month": plan_data.month
-        })
+        return {"message": f"Created {len(created_areas)} areas", "areas": created_areas}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================
+# New Warehouse Management APIs
+# =============================================
+
+@api_router.post("/warehouses/new")
+async def create_warehouse_new(
+    warehouse_data: WarehouseCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new warehouse"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="Only Admin/GM can create warehouses")
         
-        if existing_plan:
-            raise HTTPException(status_code=400, detail="Monthly plan already exists for this representative and month")
+        # Check if warehouse code already exists
+        existing_warehouse = await db.warehouses_new.find_one({"code": warehouse_data.code})
+        if existing_warehouse:
+            raise HTTPException(status_code=400, detail="Warehouse code already exists")
         
-        # Validate clinic IDs (allow test clinics for development)
-        clinic_ids = [cv.clinic_id for cv in plan_data.clinic_visits]
-        if clinic_ids:
-            # Check for test clinic IDs
-            test_clinic_ids = [cid for cid in clinic_ids if cid.startswith("test-")]
-            real_clinic_ids = [cid for cid in clinic_ids if not cid.startswith("test-")]
-            
-            if real_clinic_ids:
-                clinic_count = await db.clinics.count_documents({"id": {"$in": real_clinic_ids}})
-                if clinic_count != len(real_clinic_ids):
-                    raise HTTPException(status_code=400, detail="One or more clinic IDs are invalid")
+        # Create warehouse
+        warehouse = WarehouseNew(**warehouse_data.dict())
+        await db.warehouses_new.insert_one(warehouse.dict())
         
-        # Create the plan
-        plan = MonthlyPlan(
-            **plan_data.dict(),
-            rep_name=rep["full_name"],
-            created_by=current_user.id
+        return {"message": "Warehouse created successfully", "warehouse_id": warehouse.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/warehouses/new")
+async def get_warehouses_new(current_user: User = Depends(get_current_user)):
+    """Get all warehouses"""
+    try:
+        warehouses = await db.warehouses_new.find({"is_active": True}, {"_id": 0}).to_list(100)
+        return warehouses
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/warehouses/initialize")
+async def initialize_default_warehouses(current_user: User = Depends(get_current_user)):
+    """Initialize default warehouses"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="Only Admin/GM can initialize warehouses")
+        
+        default_warehouses = [
+            {"name": "المخزن الرئيسي", "code": "main_warehouse", "type": "main", "location": {"address": "المقر الرئيسي"}},
+            {"name": "مخزن القاهرة", "code": "cairo_warehouse", "type": "branch", "location": {"address": "القاهرة"}},
+            {"name": "مخزن الجيزة", "code": "giza_warehouse", "type": "branch", "location": {"address": "الجيزة"}},
+            {"name": "مخزن الإسكندرية", "code": "alexandria_warehouse", "type": "branch", "location": {"address": "الإسكندرية"}},
+            {"name": "مخزن الغربية", "code": "gharbia_warehouse", "type": "branch", "location": {"address": "الغربية"}},
+            {"name": "مخزن الدقهلية", "code": "dakahlia_warehouse", "type": "branch", "location": {"address": "الدقهلية"}},
+            {"name": "مخزن سوهاج", "code": "sohag_warehouse", "type": "branch", "location": {"address": "سوهاج"}},
+            {"name": "مخزن الجيزة 2", "code": "giza_2_warehouse", "type": "branch", "location": {"address": "الجيزة 2"}}
+        ]
+        
+        created_warehouses = []
+        for warehouse_data in default_warehouses:
+            existing = await db.warehouses_new.find_one({"code": warehouse_data["code"]})
+            if not existing:
+                warehouse = WarehouseNew(**warehouse_data)
+                await db.warehouses_new.insert_one(warehouse.dict())
+                created_warehouses.append(warehouse.name)
+        
+        return {"message": f"Created {len(created_warehouses)} warehouses", "warehouses": created_warehouses}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================
+# New Hierarchical Approval System APIs
+# =============================================
+
+@api_router.post("/approvals/request")
+async def create_approval_request(
+    request_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new approval request"""
+    try:
+        # Determine approval levels based on user role and request type
+        required_levels = []
+        
+        if current_user.role == UserRole.MEDICAL_REP:
+            # Medical rep orders: district_manager -> area_manager -> accounting -> warehouse
+            required_levels = [3, 4, 3, 3]  # district, area, accounting, warehouse
+        elif current_user.role == UserRole.KEY_ACCOUNT:
+            # Key account orders: area_manager -> accounting -> warehouse
+            required_levels = [4, 3, 3]  # area, accounting, warehouse
+        
+        # Create approval request
+        approval_request = ApprovalRequest(
+            type=request_data["type"],
+            entity_id=request_data["entity_id"],
+            entity_data=request_data["entity_data"],
+            required_levels=required_levels,
+            requested_by=current_user.id,
+            notes=request_data.get("notes")
         )
         
-        await db.monthly_plans.insert_one(plan.dict())
-        
-        # Create activity log
-        await db.activity_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": current_user.id,
-            "action": "monthly_plan_created",
-            "entity_type": "monthly_plan",
-            "entity_id": plan.id,
-            "details": f"تم إنشاء خطة شهرية جديدة للمندوب {rep['full_name']} لشهر {plan_data.month}",
-            "metadata": {
-                "rep_id": plan_data.rep_id,
-                "month": plan_data.month,
-                "total_visits": plan_data.targets.total_visits,
-                "total_clinics": len(plan_data.clinic_visits)
-            },
-            "timestamp": datetime.utcnow()
-        })
+        await db.approval_requests.insert_one(approval_request.dict())
         
         return {
-            "message": "Monthly plan created successfully",
-            "plan_id": plan.id,
-            "rep_name": rep["full_name"],
-            "month": plan_data.month
+            "message": "Approval request created successfully",
+            "request_id": approval_request.id,
+            "required_levels": required_levels
         }
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/planning/monthly/{plan_id}")
-async def get_monthly_plan(
-    plan_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """Get specific monthly plan details"""
+@api_router.get("/approvals/pending")
+async def get_pending_approvals(current_user: User = Depends(get_current_user)):
+    """Get pending approvals for current user"""
     try:
-        # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER, UserRole.MEDICAL_REP]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions to view monthly plan")
+        user_level = UserRole.ROLE_HIERARCHY.get(current_user.role, 0)
         
-        plan = await db.monthly_plans.find_one({"id": plan_id}, {"_id": 0})
-        if not plan:
-            raise HTTPException(status_code=404, detail="Monthly plan not found")
+        # Find approval requests where current user can approve
+        pending_approvals = await db.approval_requests.find({
+            "status": "pending",
+            "required_levels": user_level,
+            "current_level": user_level
+        }, {"_id": 0}).to_list(100)
         
-        # Check if user can access this plan
-        if current_user.role == UserRole.MEDICAL_REP and plan["rep_id"] != current_user.id:
-            raise HTTPException(status_code=403, detail="You can only view your own monthly plans")
-        
-        # Enrich with clinic and progress data
-        for clinic_visit in plan.get("clinic_visits", []):
-            clinic = await db.clinics.find_one({"id": clinic_visit["clinic_id"]}, {"_id": 0})
-            if clinic:
-                clinic_visit["clinic_name"] = clinic["name"]
-                clinic_visit["clinic_address"] = clinic.get("address", "")
-                
-                # Get actual visits for this clinic in the plan month
-                month_start = datetime.strptime(plan["month"], "%Y-%m")
-                month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-                
-                actual_visits = await db.visits.count_documents({
-                    "sales_rep_id": plan["rep_id"],
-                    "clinic_id": clinic_visit["clinic_id"],
-                    "created_at": {"$gte": month_start, "$lte": month_end}
-                })
-                
-                clinic_visit["actual_visits"] = actual_visits
-                clinic_visit["visit_progress"] = round((actual_visits / clinic_visit["planned_visits"] * 100), 1) if clinic_visit["planned_visits"] > 0 else 0
-        
-        # Get overall progress
-        month_start = datetime.strptime(plan["month"], "%Y-%m")
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
-        actual_stats = {
-            "total_visits": await db.visits.count_documents({
-                "sales_rep_id": plan["rep_id"],
-                "created_at": {"$gte": month_start, "$lte": month_end}
-            }),
-            "effective_visits": await db.visits.count_documents({
-                "sales_rep_id": plan["rep_id"],
-                "created_at": {"$gte": month_start, "$lte": month_end},
-                "is_effective": True
-            }),
-            "orders": await db.orders.count_documents({
-                "sales_rep_id": plan["rep_id"],
-                "created_at": {"$gte": month_start, "$lte": month_end}
-            })
-        }
-        
-        # Calculate progress percentages
-        plan["progress"] = {
-            "visits_progress": round((actual_stats["total_visits"] / plan["targets"]["total_visits"] * 100), 1) if plan["targets"]["total_visits"] > 0 else 0,
-            "effective_visits_progress": round((actual_stats["effective_visits"] / plan["targets"]["effective_visits"] * 100), 1) if plan["targets"]["effective_visits"] > 0 else 0,
-            "orders_progress": round((actual_stats["orders"] / plan["targets"]["orders"] * 100), 1) if plan["targets"]["orders"] > 0 else 0,
-            "actual_stats": actual_stats
-        }
-        
-        return plan
-        
+        return pending_approvals
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.patch("/planning/monthly/{plan_id}")
-async def update_monthly_plan(
-    plan_id: str,
-    update_data: dict,
+@api_router.post("/approvals/{request_id}/action")
+async def process_approval_action(
+    request_id: str,
+    action_data: dict,
     current_user: User = Depends(get_current_user)
 ):
-    """Update monthly plan"""
+    """Process approval action (approve/reject)"""
     try:
-        # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions to update monthly plans")
+        # Get approval request
+        approval_request = await db.approval_requests.find_one({"id": request_id})
+        if not approval_request:
+            raise HTTPException(status_code=404, detail="Approval request not found")
         
-        plan = await db.monthly_plans.find_one({"id": plan_id})
-        if not plan:
-            raise HTTPException(status_code=404, detail="Monthly plan not found")
+        user_level = UserRole.ROLE_HIERARCHY.get(current_user.role, 0)
         
-        # Prevent changes to approved/completed plans
-        if plan["status"] in ["COMPLETED", "CANCELLED"]:
-            raise HTTPException(status_code=400, detail="Cannot modify completed or cancelled plans")
+        # Check if user can approve at current level
+        if user_level not in approval_request["required_levels"]:
+            raise HTTPException(status_code=403, detail="You don't have permission to approve this request")
         
-        # Update fields
-        update_fields = {k: v for k, v in update_data.items() if v is not None}
-        update_fields["updated_at"] = datetime.utcnow()
-        update_fields["updated_by"] = current_user.id
-        
-        # Handle status changes
-        if update_data.get("status") == "APPROVED":
-            update_fields["approved_at"] = datetime.utcnow()
-            update_fields["approved_by"] = current_user.id
-        
-        await db.monthly_plans.update_one({"id": plan_id}, {"$set": update_fields})
-        
-        # Log the update
-        await db.activity_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": current_user.id,
-            "action": "monthly_plan_updated",
-            "entity_type": "monthly_plan",
-            "entity_id": plan_id,
-            "details": f"تم تحديث الخطة الشهرية للمندوب {plan['rep_name']} لشهر {plan['month']}",
-            "metadata": {
-                "updated_fields": list(update_fields.keys()),
-                "status": update_data.get("status", plan["status"])
-            },
-            "timestamp": datetime.utcnow()
-        })
-        
-        return {"message": "Monthly plan updated successfully"}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.delete("/planning/monthly/{plan_id}")
-async def delete_monthly_plan(
-    plan_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """Delete monthly plan"""
-    try:
-        # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
-            raise HTTPException(status_code=403, detail="Only GM/Admin can delete monthly plans")
-        
-        plan = await db.monthly_plans.find_one({"id": plan_id})
-        if not plan:
-            raise HTTPException(status_code=404, detail="Monthly plan not found")
-        
-        # Soft delete - mark as cancelled
-        await db.monthly_plans.update_one(
-            {"id": plan_id},
-            {"$set": {
-                "status": "CANCELLED",
-                "updated_at": datetime.utcnow(),
-                "updated_by": current_user.id
-            }}
+        # Create approval action
+        approval_action = ApprovalAction(
+            action=action_data["action"],
+            notes=action_data.get("notes"),
+            level=user_level,
+            user_id=current_user.id
         )
         
-        # Log the deletion
-        await db.activity_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "user_id": current_user.id,
-            "action": "monthly_plan_deleted",
-            "entity_type": "monthly_plan",
-            "entity_id": plan_id,
-            "details": f"تم حذف الخطة الشهرية للمندوب {plan['rep_name']} لشهر {plan['month']}",
-            "timestamp": datetime.utcnow()
-        })
+        # Update approval request
+        update_data = {
+            "$push": {"approvals": approval_action.dict()}
+        }
         
-        return {"message": "Monthly plan deleted successfully"}
+        # Update status based on action
+        if action_data["action"] == "approve":
+            # Move to next level or complete
+            current_level_index = approval_request["required_levels"].index(user_level)
+            if current_level_index < len(approval_request["required_levels"]) - 1:
+                # Move to next level
+                next_level = approval_request["required_levels"][current_level_index + 1]
+                update_data["$set"] = {
+                    "current_level": next_level,
+                    "status": "pending"
+                }
+            else:
+                # Final approval
+                update_data["$set"] = {
+                    "status": "approved"
+                }
+        else:
+            # Rejected
+            update_data["$set"] = {
+                "status": "rejected"
+            }
         
+        await db.approval_requests.update_one({"id": request_id}, update_data)
+        
+        return {"message": f"Approval {action_data['action']} processed successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Monthly Planning Analytics
-@api_router.get("/planning/analytics")
-async def get_planning_analytics(
-    month: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
-):
-    """Get monthly planning analytics"""
+@api_router.get("/approvals/history")
+async def get_approval_history(current_user: User = Depends(get_current_user)):
+    """Get approval history"""
     try:
         # Check permissions
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
-            raise HTTPException(status_code=403, detail="Only GM/Admin can access planning analytics")
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="Only Admin/GM can view approval history")
         
-        if not month:
-            month = datetime.utcnow().strftime("%Y-%m")
+        # Get all approval requests with history
+        approvals = await db.approval_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
         
-        # Get all plans for the month
-        plans = await db.monthly_plans.find({"month": month}, {"_id": 0}).to_list(100)
-        
-        # Calculate analytics
-        total_plans = len(plans)
-        approved_plans = len([p for p in plans if p["status"] == "APPROVED"])
-        active_plans = len([p for p in plans if p["status"] == "ACTIVE"])
-        completed_plans = len([p for p in plans if p["status"] == "COMPLETED"])
-        
-        # Calculate target vs actual
-        total_target_visits = sum(p["targets"]["total_visits"] for p in plans)
-        total_target_orders = sum(p["targets"]["orders"] for p in plans)
-        total_target_revenue = sum(p["targets"]["revenue"] for p in plans)
-        
-        # Get actual performance for the month
-        month_start = datetime.strptime(month, "%Y-%m")
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
-        actual_visits = await db.visits.count_documents({
-            "created_at": {"$gte": month_start, "$lte": month_end}
-        })
-        
-        actual_orders = await db.orders.count_documents({
-            "created_at": {"$gte": month_start, "$lte": month_end}
-        })
-        
-        # Performance by rep
-        rep_performance = []
-        for plan in plans:
-            rep_visits = await db.visits.count_documents({
-                "sales_rep_id": plan["rep_id"],
-                "created_at": {"$gte": month_start, "$lte": month_end}
-            })
+        # Enrich with user information
+        for approval in approvals:
+            # Get requester info
+            requester = await db.users.find_one({"id": approval["requested_by"]}, {"_id": 0, "full_name": 1})
+            approval["requester_name"] = requester["full_name"] if requester else "Unknown"
             
-            rep_orders = await db.orders.count_documents({
-                "sales_rep_id": plan["rep_id"],
-                "created_at": {"$gte": month_start, "$lte": month_end}
-            })
+            # Get approver info for each approval
+            for approval_action in approval.get("approvals", []):
+                approver = await db.users.find_one({"id": approval_action["user_id"]}, {"_id": 0, "full_name": 1})
+                approval_action["approver_name"] = approver["full_name"] if approver else "Unknown"
+        
+        return approvals
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# =============================================
+# Enhanced Stock Display API for Medical Reps
+# =============================================
+
+@api_router.get("/stock/dashboard")
+async def get_stock_dashboard(current_user: User = Depends(get_current_user)):
+    """Get stock dashboard for medical reps"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            raise HTTPException(status_code=403, detail="Only medical reps can view stock dashboard")
+        
+        # Get user's assigned warehouse based on area
+        user_area = current_user.area_id if hasattr(current_user, 'area_id') else None
+        
+        # Get warehouses for user's area
+        warehouses = await db.warehouses_new.find({
+            "area_id": user_area,
+            "is_active": True
+        }, {"_id": 0}).to_list(10)
+        
+        if not warehouses:
+            # Fallback to all warehouses if no area assigned
+            warehouses = await db.warehouses_new.find({"is_active": True}, {"_id": 0}).to_list(10)
+        
+        # Get stock information for each warehouse
+        stock_info = []
+        for warehouse in warehouses:
+            # Get stock for this warehouse
+            stock_items = await db.stock_movements.find({
+                "warehouse_id": warehouse["id"]
+            }, {"_id": 0}).to_list(100)
             
-            rep_performance.append({
-                "rep_id": plan["rep_id"],
-                "rep_name": plan["rep_name"],
-                "target_visits": plan["targets"]["total_visits"],
-                "actual_visits": rep_visits,
-                "visits_achievement": round((rep_visits / plan["targets"]["total_visits"] * 100), 1) if plan["targets"]["total_visits"] > 0 else 0,
-                "target_orders": plan["targets"]["orders"],
-                "actual_orders": rep_orders,
-                "orders_achievement": round((rep_orders / plan["targets"]["orders"] * 100), 1) if plan["targets"]["orders"] > 0 else 0,
-                "plan_status": plan["status"]
-            })
+            # Calculate current stock levels
+            product_stock = {}
+            for item in stock_items:
+                product_id = item["product_id"]
+                if product_id not in product_stock:
+                    product_stock[product_id] = 0
+                
+                if item["type"] == "in":
+                    product_stock[product_id] += item["quantity"]
+                else:
+                    product_stock[product_id] -= item["quantity"]
+            
+            # Get product details
+            for product_id, quantity in product_stock.items():
+                product = await db.products.find_one({"id": product_id}, {"_id": 0})
+                if product:
+                    stock_info.append({
+                        "warehouse_name": warehouse["name"],
+                        "warehouse_id": warehouse["id"],
+                        "product_name": product["name"],
+                        "product_id": product_id,
+                        "current_stock": quantity,
+                        "product_unit": product.get("unit", "unit"),
+                        "product_price": product.get("price", 0),
+                        "status": "in_stock" if quantity > 0 else "out_of_stock"
+                    })
         
         return {
-            "month": month,
-            "overview": {
-                "total_plans": total_plans,
-                "approved_plans": approved_plans,
-                "active_plans": active_plans,
-                "completed_plans": completed_plans,
-                "completion_rate": round((completed_plans / total_plans * 100), 1) if total_plans > 0 else 0
-            },
-            "targets_vs_actual": {
-                "target_visits": total_target_visits,
-                "actual_visits": actual_visits,
-                "visits_achievement": round((actual_visits / total_target_visits * 100), 1) if total_target_visits > 0 else 0,
-                "target_orders": total_target_orders,
-                "actual_orders": actual_orders,
-                "orders_achievement": round((actual_orders / total_target_orders * 100), 1) if total_target_orders > 0 else 0,
-                "target_revenue": total_target_revenue
-            },
-            "rep_performance": rep_performance
+            "warehouse_count": len(warehouses),
+            "total_products": len(stock_info),
+            "stock_items": stock_info
         }
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
