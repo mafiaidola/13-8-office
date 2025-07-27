@@ -585,29 +585,6 @@ class Appointment(BaseModel):
     reminder_sent: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-# Enhanced User model
-class User(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    username: str
-    email: str
-    password_hash: str
-    full_name: str
-    role: str  # Changed from UserRole to str to fix Pydantic issue
-    phone: Optional[str] = None
-    manager_id: Optional[str] = None
-    is_active: bool = True
-    # New fields for enhanced user management
-    hire_date: Optional[datetime] = None
-    department: Optional[str] = None
-    employee_id: Optional[str] = None
-    profile_image: Optional[str] = None  # base64
-    permissions: List[str] = []  # custom permissions
-    last_login: Optional[datetime] = None
-    login_attempts: int = 0
-    is_locked: bool = False
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
 class Notification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
