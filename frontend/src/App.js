@@ -11290,10 +11290,6 @@ const Dashboard = () => {
           <DocumentScannerDashboard />
         )}
         
-        {activeTab === 'chat' && (
-          <ChatSystem />
-        )}
-        
         {activeTab === 'settings' && (user.role === 'admin' || user.role === 'gm') && (
           <AdminSettingsPage />
         )}
