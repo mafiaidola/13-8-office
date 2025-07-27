@@ -9094,23 +9094,482 @@ async def get_performance_metrics(current_user: User = Depends(get_current_user)
     except Exception as e:
         return {"error": f"Could not retrieve performance metrics: {str(e)}"}
 
-@api_router.get("/admin/settings/{category}")
-async def get_category_settings(category: str, current_user: User = Depends(get_current_user)):
+# Enhanced Warehouse Management APIs
+@api_router.post("/admin/warehouses")
+async def create_warehouse(warehouse_data: WarehouseCreate, current_user: User = Depends(get_current_user)):
     if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
-        raise HTTPException(status_code=403, detail="Only GM/Admin can access admin settings")
+        raise HTTPException(status_code=403, detail="Only GM/Admin can create warehouses")
     
-    valid_categories = [
-        "user-management", "gps", "theme", "gamification", 
-        "notifications", "chat", "scanner", "visits", "security"
+    # Check if warehouse code already exists
+    existing_warehouse = await db.warehouses.find_one({"code": warehouse_data.code})
+    if existing_warehouse:
+        raise HTTPException(status_code=400, detail="Warehouse code already exists")
+    
+    # Calculate available quantity
+    warehouse = WarehouseLocation(
+        **warehouse_data.dict(),
+        created_by=current_user.id
+    )
+    
+    await db.warehouses.insert_one(warehouse.dict())
+    return {"message": "Warehouse created successfully", "warehouse_id": warehouse.id}
+
+@api_router.get("/admin/warehouses")
+async def get_warehouses(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    warehouses = await db.warehouses.find({"is_active": True}, {"_id": 0}).to_list(1000)
+    
+    # Enrich with manager information and stock summary
+    for warehouse in warehouses:
+        if warehouse.get("manager_id"):
+            manager = await db.users.find_one({"id": warehouse["manager_id"]}, {"_id": 0})
+            warehouse["manager_name"] = manager["full_name"] if manager else "Unassigned"
+        
+        # Calculate total products and stock value
+        stock_summary = await db.product_stock.aggregate([
+            {"$match": {"warehouse_id": warehouse["id"]}},
+            {"$group": {
+                "_id": None,
+                "total_products": {"$sum": 1},
+                "total_stock_value": {"$sum": "$total_value"},
+                "total_quantity": {"$sum": "$quantity"}
+            }}
+        ]).to_list(1)
+        
+        if stock_summary:
+            warehouse["total_products"] = stock_summary[0]["total_products"]
+            warehouse["total_stock_value"] = stock_summary[0]["total_stock_value"]
+            warehouse["total_quantity"] = stock_summary[0]["total_quantity"]
+        else:
+            warehouse["total_products"] = 0
+            warehouse["total_stock_value"] = 0.0
+            warehouse["total_quantity"] = 0.0
+    
+    return warehouses
+
+@api_router.patch("/admin/warehouses/{warehouse_id}")
+async def update_warehouse(warehouse_id: str, warehouse_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can update warehouses")
+    
+    # Check if warehouse exists
+    warehouse = await db.warehouses.find_one({"id": warehouse_id})
+    if not warehouse:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    
+    # If code is being changed, check uniqueness
+    if "code" in warehouse_data and warehouse_data["code"] != warehouse.get("code"):
+        existing_warehouse = await db.warehouses.find_one({"code": warehouse_data["code"]})
+        if existing_warehouse:
+            raise HTTPException(status_code=400, detail="Warehouse code already exists")
+    
+    update_data = {k: v for k, v in warehouse_data.items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_by"] = current_user.id
+    
+    await db.warehouses.update_one({"id": warehouse_id}, {"$set": update_data})
+    return {"message": "Warehouse updated successfully"}
+
+@api_router.delete("/admin/warehouses/{warehouse_id}")
+async def delete_warehouse(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can delete warehouses")
+    
+    # Check if warehouse has stock
+    stock_count = await db.product_stock.count_documents({"warehouse_id": warehouse_id, "quantity": {"$gt": 0}})
+    if stock_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete warehouse with existing stock")
+    
+    # Soft delete
+    await db.warehouses.update_one(
+        {"id": warehouse_id},
+        {"$set": {"is_active": False, "updated_at": datetime.utcnow(), "updated_by": current_user.id}}
+    )
+    return {"message": "Warehouse deleted successfully"}
+
+# Product Stock Management APIs
+@api_router.post("/admin/warehouses/{warehouse_id}/stock")
+async def add_product_stock(warehouse_id: str, stock_data: ProductStockCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Verify warehouse exists
+    warehouse = await db.warehouses.find_one({"id": warehouse_id, "is_active": True})
+    if not warehouse:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    
+    # Verify product exists
+    product = await db.products.find_one({"id": stock_data.product_id, "is_active": True})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Check if stock record already exists
+    existing_stock = await db.product_stock.find_one({
+        "product_id": stock_data.product_id,
+        "warehouse_id": warehouse_id
+    })
+    
+    if existing_stock:
+        # Update existing stock
+        new_quantity = existing_stock["quantity"] + stock_data.quantity
+        total_value = new_quantity * stock_data.unit_cost
+        available_quantity = new_quantity - existing_stock.get("reserved_quantity", 0)
+        
+        await db.product_stock.update_one(
+            {"id": existing_stock["id"]},
+            {"$set": {
+                "quantity": new_quantity,
+                "unit_cost": stock_data.unit_cost,
+                "total_value": total_value,
+                "available_quantity": available_quantity,
+                "last_updated": datetime.utcnow(),
+                "updated_by": current_user.id
+            }}
+        )
+        stock_id = existing_stock["id"]
+    else:
+        # Create new stock record
+        stock = ProductStock(
+            **stock_data.dict(),
+            available_quantity=stock_data.quantity,
+            total_value=stock_data.quantity * stock_data.unit_cost,
+            updated_by=current_user.id
+        )
+        await db.product_stock.insert_one(stock.dict())
+        stock_id = stock.id
+    
+    # Record stock movement
+    movement = StockMovement(
+        warehouse_id=warehouse_id,
+        product_id=stock_data.product_id,
+        movement_type="IN",
+        quantity=stock_data.quantity,
+        unit_cost=stock_data.unit_cost,
+        total_cost=stock_data.quantity * stock_data.unit_cost,
+        reference_type="STOCK_ADDITION",
+        batch_number=stock_data.batch_number,
+        expiry_date=stock_data.expiry_date,
+        created_by=current_user.id
+    )
+    await db.stock_movements.insert_one(movement.dict())
+    
+    return {"message": "Product stock added successfully", "stock_id": stock_id}
+
+@api_router.get("/admin/warehouses/{warehouse_id}/stock")
+async def get_warehouse_stock(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get stock with product information
+    pipeline = [
+        {"$match": {"warehouse_id": warehouse_id}},
+        {"$lookup": {
+            "from": "products",
+            "localField": "product_id",
+            "foreignField": "id",
+            "as": "product"
+        }},
+        {"$unwind": "$product"},
+        {"$project": {
+            "_id": 0,
+            "stock_id": "$id",
+            "product_id": "$product_id",
+            "product_name": "$product.name",
+            "product_category": "$product.category",
+            "product_unit": "$product.unit",
+            "quantity": "$quantity",
+            "reserved_quantity": "$reserved_quantity",
+            "available_quantity": "$available_quantity",
+            "reorder_level": "$reorder_level",
+            "max_stock_level": "$max_stock_level",
+            "unit_cost": "$unit_cost",
+            "total_value": "$total_value",
+            "expiry_date": "$expiry_date",
+            "batch_number": "$batch_number",
+            "location_in_warehouse": "$location_in_warehouse",
+            "last_updated": "$last_updated",
+            "stock_status": {
+                "$cond": {
+                    "if": {"$lte": ["$available_quantity", "$reorder_level"]},
+                    "then": "LOW_STOCK",
+                    "else": "NORMAL"
+                }
+            }
+        }}
     ]
     
-    if category not in valid_categories:
-        raise HTTPException(status_code=400, detail="Invalid settings category")
+    stock_items = await db.product_stock.aggregate(pipeline).to_list(1000)
+    return stock_items
+
+@api_router.patch("/admin/warehouses/{warehouse_id}/stock/{stock_id}")
+async def update_product_stock(warehouse_id: str, stock_id: str, stock_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
     
-    settings = await db.system_settings.find_one({}, {"_id": 0})
-    category_key = f"{category.replace('-', '_')}_settings"
+    # Find existing stock
+    existing_stock = await db.product_stock.find_one({"id": stock_id, "warehouse_id": warehouse_id})
+    if not existing_stock:
+        raise HTTPException(status_code=404, detail="Stock record not found")
     
-    return settings.get(category_key, {}) if settings else {}
+    # Update stock
+    update_data = {k: v for k, v in stock_data.items() if v is not None}
+    
+    # Recalculate values if quantity or unit_cost changed
+    if "quantity" in update_data or "unit_cost" in update_data:
+        new_quantity = update_data.get("quantity", existing_stock["quantity"])
+        new_unit_cost = update_data.get("unit_cost", existing_stock["unit_cost"])
+        update_data["total_value"] = new_quantity * new_unit_cost
+        update_data["available_quantity"] = new_quantity - existing_stock.get("reserved_quantity", 0)
+    
+    update_data["last_updated"] = datetime.utcnow()
+    update_data["updated_by"] = current_user.id
+    
+    await db.product_stock.update_one({"id": stock_id}, {"$set": update_data})
+    
+    # Record stock movement if quantity changed
+    if "quantity" in update_data:
+        quantity_diff = update_data["quantity"] - existing_stock["quantity"]
+        if quantity_diff != 0:
+            movement = StockMovement(
+                warehouse_id=warehouse_id,
+                product_id=existing_stock["product_id"],
+                movement_type="ADJUSTMENT",
+                quantity=abs(quantity_diff),
+                unit_cost=update_data.get("unit_cost", existing_stock["unit_cost"]),
+                reference_type="STOCK_ADJUSTMENT",
+                notes=f"Stock adjustment: {quantity_diff:+.2f}",
+                created_by=current_user.id
+            )
+            await db.stock_movements.insert_one(movement.dict())
+    
+    return {"message": "Product stock updated successfully"}
+
+@api_router.get("/admin/warehouses/{warehouse_id}/movements")
+async def get_stock_movements(warehouse_id: str, limit: int = 100, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    # Get stock movements with product information
+    pipeline = [
+        {"$match": {"warehouse_id": warehouse_id}},
+        {"$lookup": {
+            "from": "products",
+            "localField": "product_id",
+            "foreignField": "id",  
+            "as": "product"
+        }},
+        {"$lookup": {
+            "from": "users",
+            "localField": "created_by",
+            "foreignField": "id",
+            "as": "user"
+        }},
+        {"$unwind": "$product"},
+        {"$unwind": "$user"},
+        {"$sort": {"created_at": -1}},
+        {"$limit": limit},
+        {"$project": {
+            "_id": 0,
+            "id": 1,
+            "movement_type": 1,
+            "quantity": 1,
+            "unit_cost": 1,
+            "total_cost": 1,
+            "reference_type": 1,
+            "notes": 1,
+            "batch_number": 1,
+            "created_at": 1,
+            "product_name": "$product.name",
+            "created_by_name": "$user.full_name"
+        }}
+    ]
+    
+    movements = await db.stock_movements.aggregate(pipeline).to_list(limit)
+    return movements
+
+# Stock Transfer Between Warehouses
+@api_router.post("/admin/warehouses/transfer")
+async def transfer_stock(transfer_data: dict, current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.WAREHOUSE_MANAGER]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    from_warehouse_id = transfer_data["from_warehouse_id"]
+    to_warehouse_id = transfer_data["to_warehouse_id"]
+    product_id = transfer_data["product_id"]
+    quantity = float(transfer_data["quantity"])
+    
+    # Verify warehouses exist
+    from_warehouse = await db.warehouses.find_one({"id": from_warehouse_id, "is_active": True})
+    to_warehouse = await db.warehouses.find_one({"id": to_warehouse_id, "is_active": True})
+    
+    if not from_warehouse or not to_warehouse:
+        raise HTTPException(status_code=404, detail="One or both warehouses not found")
+    
+    # Check source stock availability
+    source_stock = await db.product_stock.find_one({
+        "warehouse_id": from_warehouse_id,
+        "product_id": product_id
+    })
+    
+    if not source_stock or source_stock["available_quantity"] < quantity:
+        raise HTTPException(status_code=400, detail="Insufficient stock available for transfer")
+    
+    # Update source warehouse stock
+    new_source_quantity = source_stock["quantity"] - quantity
+    new_source_available = source_stock["available_quantity"] - quantity
+    new_source_value = new_source_quantity * source_stock["unit_cost"]
+    
+    await db.product_stock.update_one(
+        {"id": source_stock["id"]},
+        {"$set": {
+            "quantity": new_source_quantity,
+            "available_quantity": new_source_available,
+            "total_value": new_source_value,
+            "last_updated": datetime.utcnow(),
+            "updated_by": current_user.id
+        }}
+    )
+    
+    # Update destination warehouse stock
+    dest_stock = await db.product_stock.find_one({
+        "warehouse_id": to_warehouse_id,
+        "product_id": product_id
+    })
+    
+    if dest_stock:
+        # Update existing stock
+        new_dest_quantity = dest_stock["quantity"] + quantity
+        new_dest_available = dest_stock["available_quantity"] + quantity
+        new_dest_value = new_dest_quantity * dest_stock["unit_cost"]
+        
+        await db.product_stock.update_one(
+            {"id": dest_stock["id"]},
+            {"$set": {
+                "quantity": new_dest_quantity,
+                "available_quantity": new_dest_available,
+                "total_value": new_dest_value,
+                "last_updated": datetime.utcnow(),
+                "updated_by": current_user.id
+            }}
+        )
+    else:
+        # Create new stock record
+        new_stock = ProductStock(
+            product_id=product_id,
+            warehouse_id=to_warehouse_id,
+            quantity=quantity,
+            available_quantity=quantity,
+            unit_cost=source_stock["unit_cost"],
+            total_value=quantity * source_stock["unit_cost"],
+            reorder_level=source_stock.get("reorder_level", 0.0),
+            max_stock_level=source_stock.get("max_stock_level", 1000.0),
+            updated_by=current_user.id
+        )
+        await db.product_stock.insert_one(new_stock.dict())
+    
+    # Record stock movements
+    # OUT movement from source
+    out_movement = StockMovement(
+        warehouse_id=from_warehouse_id,
+        product_id=product_id,
+        movement_type="OUT",
+        quantity=quantity,
+        unit_cost=source_stock["unit_cost"],
+        total_cost=quantity * source_stock["unit_cost"],
+        reference_type="TRANSFER",
+        to_warehouse_id=to_warehouse_id,
+        notes=f"Transfer to {to_warehouse['name']}",
+        created_by=current_user.id
+    )
+    await db.stock_movements.insert_one(out_movement.dict())
+    
+    # IN movement to destination
+    in_movement = StockMovement(
+        warehouse_id=to_warehouse_id,
+        product_id=product_id,
+        movement_type="IN",
+        quantity=quantity,
+        unit_cost=source_stock["unit_cost"],
+        total_cost=quantity * source_stock["unit_cost"],
+        reference_type="TRANSFER",
+        from_warehouse_id=from_warehouse_id,
+        notes=f"Transfer from {from_warehouse['name']}",
+        created_by=current_user.id
+    )
+    await db.stock_movements.insert_one(in_movement.dict())
+    
+    return {"message": "Stock transfer completed successfully"}
+
+# Warehouse Analytics and Reports
+@api_router.get("/admin/warehouses/analytics")
+async def get_warehouse_analytics(current_user: User = Depends(get_current_user)):
+    if current_user.role not in [UserRole.GM, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only GM/Admin can access warehouse analytics")
+    
+    # Total warehouses
+    total_warehouses = await db.warehouses.count_documents({"is_active": True})
+    
+    # Total stock value
+    stock_value_pipeline = [
+        {"$group": {
+            "_id": None,
+            "total_stock_value": {"$sum": "$total_value"},
+            "total_products": {"$sum": 1}
+        }}
+    ]
+    stock_value_result = await db.product_stock.aggregate(stock_value_pipeline).to_list(1)
+    total_stock_value = stock_value_result[0]["total_stock_value"] if stock_value_result else 0
+    total_products_stocked = stock_value_result[0]["total_products"] if stock_value_result else 0
+    
+    # Low stock alerts
+    low_stock_count = await db.product_stock.count_documents({
+        "$expr": {"$lte": ["$available_quantity", "$reorder_level"]}
+    })
+    
+    # Stock movements summary (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    movements_pipeline = [
+        {"$match": {"created_at": {"$gte": thirty_days_ago}}},
+        {"$group": {
+            "_id": "$movement_type",
+            "count": {"$sum": 1},
+            "total_quantity": {"$sum": "$quantity"}
+        }}
+    ]
+    movements_summary = await db.stock_movements.aggregate(movements_pipeline).to_list(10)
+    
+    # Top warehouses by stock value
+    warehouse_value_pipeline = [
+        {"$lookup": {
+            "from": "warehouses",
+            "localField": "warehouse_id",
+            "foreignField": "id",
+            "as": "warehouse"
+        }},
+        {"$unwind": "$warehouse"},
+        {"$group": {
+            "_id": "$warehouse_id",
+            "warehouse_name": {"$first": "$warehouse.name"},
+            "total_value": {"$sum": "$total_value"},
+            "product_count": {"$sum": 1}
+        }},
+        {"$sort": {"total_value": -1}},
+        {"$limit": 10}
+    ]
+    top_warehouses = await db.product_stock.aggregate(warehouse_value_pipeline).to_list(10)
+    
+    return {
+        "summary": {
+            "total_warehouses": total_warehouses,
+            "total_stock_value": total_stock_value,
+            "total_products_stocked": total_products_stocked,
+            "low_stock_alerts": low_stock_count
+        },
+        "movements_summary": movements_summary,
+        "top_warehouses": top_warehouses
+    }
 
 app.include_router(api_router)
 
