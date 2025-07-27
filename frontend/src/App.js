@@ -13688,8 +13688,6 @@ const ComprehensiveAdminSettings = () => {
     { id: 'gamification', label: 'نظام الألعاب', icon: 'gamification' },
     { id: 'accounting', label: 'نظام المحاسبة', icon: 'accounting' },
     { id: 'notifications', label: 'نظام الإشعارات', icon: 'notifications' },
-    { id: 'chat', label: 'نظام الدردشة', icon: 'chat' },
-    { id: 'scanner', label: 'ماسح المستندات', icon: 'scanner' },
     { id: 'visits', label: 'نظام الزيارات', icon: 'visits' },
     { id: 'reports', label: 'التقارير', icon: 'reports' },
     { id: 'themes', label: 'الألوان والثيمات', icon: 'theme' },
