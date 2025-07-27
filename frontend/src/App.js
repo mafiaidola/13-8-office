@@ -11106,7 +11106,7 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'users' && canAccessTab('users') && (
-          <EnhancedUserManagement />
+          <EnhancedUserManagementV2 />
         )}
 
         {activeTab === 'warehouse' && canAccessTab('warehouse') && (
