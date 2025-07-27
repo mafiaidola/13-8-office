@@ -13466,6 +13466,9 @@ const App = () => {
 const AppContent = () => {
   const { user, loading } = useAuth();
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const { language } = useLanguage();
 
   const handleQRScan = async (qrData) => {
     try {
