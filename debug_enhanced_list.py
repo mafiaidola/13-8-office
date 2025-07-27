@@ -6,7 +6,7 @@ Debug Enhanced List API specifically
 import requests
 import json
 
-BASE_URL = "https://d3e37f5d-d88d-4215-b21c-f8e57e4d5486.preview.emergentagent.com/api"
+BASE_URL = "https://e87cf1b6-8af9-48b1-aced-d66263eca300.preview.emergentagent.com/api"
 
 def test_enhanced_list_debug():
     # Login as admin
