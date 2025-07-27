@@ -10916,9 +10916,6 @@ const Dashboard = () => {
           <ComprehensiveAdminSettings />
         )}
 
-        {activeTab === 'secret' && user.role === 'admin' && (
-          <SecretReports />
-        )}
         </div>
         
         {/* Enhanced Footer */}
