@@ -48,6 +48,9 @@
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-focus: #0ea5e9;
 }
 
 /* Light Mode */
