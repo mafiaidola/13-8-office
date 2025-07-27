@@ -1584,6 +1584,276 @@ const EnhancedInvoiceModal = ({ invoice, onClose }) => {
   );
 };
 
+// User Management Modal Component
+const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    username: user?.username || '',
+    full_name: user?.full_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    role: user?.role || 'medical_rep',
+    region_id: user?.region_id || '',
+    direct_manager_id: user?.direct_manager_id || '',
+    address: user?.address || '',
+    national_id: user?.national_id || '',
+    hire_date: user?.hire_date || new Date().toISOString().split('T')[0],
+    is_active: user?.is_active !== undefined ? user.is_active : true,
+    profile_photo: user?.profile_photo || null,
+    password: ''
+  });
+  const [photoPreview, setPhotoPreview] = useState(user?.profile_photo || null);
+
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        setPhotoPreview(base64);
+        setFormData({ ...formData, profile_photo: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const availableManagers = managers.filter(manager => 
+    !formData.region_id || manager.region_id === formData.region_id || !manager.region_id
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">
+          {mode === 'add' ? 'إضافة مستخدم جديد' : `تعديل: ${user?.full_name}`}
+        </h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">المعلومات الشخصية</h4>
+            
+            {/* Profile Photo */}
+            <div className="flex items-center gap-6 mb-6">
+              <div className="flex flex-col items-center">
+                <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mb-2">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Profile" className="w-24 h-24 rounded-full object-cover" />
+                  ) : (
+                    formData.full_name.charAt(0).toUpperCase() || '👤'
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  id="photo-upload"
+                />
+                <label htmlFor="photo-upload" className="btn-secondary text-xs px-3 py-1 cursor-pointer">
+                  تغيير الصورة
+                </label>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  الصورة الشخصية إجبارية
+                </p>
+              </div>
+              
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">الاسم الكامل *:</label>
+                  <input
+                    type="text"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                    className="form-modern w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">اسم المستخدم *:</label>
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    className="form-modern w-full"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">البريد الإلكتروني *:</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">رقم الهاتف *:</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">الرقم القومي:</label>
+                <input
+                  type="text"
+                  value={formData.national_id}
+                  onChange={(e) => setFormData({...formData, national_id: e.target.value})}
+                  className="form-modern w-full"
+                  maxLength="14"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">تاريخ التوظيف:</label>
+                <input
+                  type="date"
+                  value={formData.hire_date}
+                  onChange={(e) => setFormData({...formData, hire_date: e.target.value})}
+                  className="form-modern w-full"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold mb-2">العنوان:</label>
+              <textarea
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="form-modern w-full h-20"
+                placeholder="العنوان بالتفصيل..."
+              />
+            </div>
+          </div>
+
+          {/* Work Information */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">معلومات العمل</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">الدور *:</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="">اختر الدور</option>
+                  <option value="admin">مدير النظام</option>
+                  <option value="gm">المدير العام</option>
+                  <option value="line_manager">مدير الخط</option>
+                  <option value="area_manager">مدير المنطقة</option>
+                  <option value="district_manager">مدير المنطقة المحلية</option>
+                  <option value="key_account">حسابات رئيسية</option>
+                  <option value="medical_rep">مندوب طبي</option>
+                  <option value="warehouse_keeper">أمين المخزن</option>
+                  <option value="accounting">محاسب</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">المنطقة *:</label>
+                <select
+                  value={formData.region_id}
+                  onChange={(e) => setFormData({...formData, region_id: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="">اختر المنطقة</option>
+                  {regions.map(region => (
+                    <option key={region.id} value={region.id}>{region.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">المدير المباشر *:</label>
+                <select
+                  value={formData.direct_manager_id}
+                  onChange={(e) => setFormData({...formData, direct_manager_id: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="">اختر المدير المباشر</option>
+                  {availableManagers.map(manager => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.name} ({manager.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Security */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">إعدادات الأمان</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mode === 'add' && (
+                <div>
+                  <label className="block text-sm font-bold mb-2">كلمة المرور *:</label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    className="form-modern w-full"
+                    required={mode === 'add'}
+                    minLength="6"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="is_active" className="text-sm font-bold">
+                  حساب نشط
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements Notice */}
+          <div className="glass-effect p-4 rounded-xl bg-blue-500 bg-opacity-10 border border-blue-500">
+            <h4 className="text-lg font-bold mb-2 text-blue-400">متطلبات إنشاء المستخدم:</h4>
+            <ul className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+              <li>✅ تحديد المنطقة الخاصة بالمستخدم</li>
+              <li>✅ تحديد المدير المباشر</li>
+              <li>✅ إضافة صورة شخصية</li>
+              <li>✅ بيانات كاملة وصحيحة</li>
+            </ul>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              {mode === 'add' ? 'إضافة المستخدم' : 'حفظ التغييرات'}
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced Theme Toggle Component
 const ThemeToggle = ({ showLabel = false, isDropdown = false }) => {
   const { theme, cycleTheme, availableThemes, setSpecificTheme } = useTheme();
