@@ -4585,7 +4585,7 @@ const ApprovalsDashboard = ({ user }) => {
           طلباتي ({myRequests.length})
         </button>
         
-        {['district_manager', 'area_manager', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role) && (
+        {['district_manager', 'area_manager', 'line_manager', 'key_account', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role) && (
           <button
             onClick={() => setActiveTab('pending_approvals')}
             className={`pb-2 px-4 ${activeTab === 'pending_approvals' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
@@ -4594,7 +4594,8 @@ const ApprovalsDashboard = ({ user }) => {
           </button>
         )}
         
-        {['admin', 'gm'].includes(user.role) && (
+        {/* Approval History - Now available for all managers to see their team's history */}
+        {['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'key_account'].includes(user.role) && (
           <button
             onClick={() => setActiveTab('approval_history')}
             className={`pb-2 px-4 ${activeTab === 'approval_history' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
