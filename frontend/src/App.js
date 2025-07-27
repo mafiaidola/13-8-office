@@ -10749,6 +10749,17 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Approvals System for accounting and warehouse_keeper */}
+            {(user.role === 'accounting' || user.role === 'warehouse_keeper' || user.role === 'admin') && (
+              <button
+                onClick={() => setActiveTab('approvals')}
+                className={`nav-item ${activeTab === 'approvals' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>✅</span>
+                نظام الموافقات
+              </button>
+            )}
+            
             {/* Accounting tab for admin, accounting, and manager roles */}
             {canAccessTab('accounting') && (
               <button
