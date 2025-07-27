@@ -10445,20 +10445,21 @@ async def get_sales_reps(
 ):
     """Get sales representatives for managers"""
     try:
-        # Check permissions
+        # Check permissions - GM and Admin can see all sales reps
         if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
             raise HTTPException(status_code=403, detail="Insufficient permissions to view sales representatives")
         
         # Build query based on role
-        query = {"role": {"$in": [UserRole.MEDICAL_REP, UserRole.SALES_REP]}}
+        query = {"role": {"$in": [UserRole.MEDICAL_REP, UserRole.SALES_REP]}, "is_active": True}
         
-        # Role-based filtering
+        # Role-based filtering (GM and Admin see all)
         if current_user.role == UserRole.AREA_MANAGER:
             query["area_manager_id"] = current_user.id
         elif current_user.role == UserRole.DISTRICT_MANAGER:
             query["district_manager_id"] = current_user.id
         elif current_user.role == UserRole.MANAGER:
             query["manager_id"] = current_user.id
+        # GM and ADMIN see all sales reps, so no additional filtering needed
         
         # Get sales reps
         sales_reps = await db.users.find(
