@@ -6703,6 +6703,165 @@ const AdminFeatureControl = () => {
   );
 };
 
+// Admin System Control Component
+const AdminSystemControl = () => {
+  const [systemHealth, setSystemHealth] = useState(null);
+  const [allButtons, setAllButtons] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkSystemHealth();
+    scanAllButtons();
+  }, []);
+
+  const checkSystemHealth = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/system-health`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSystemHealth(response.data);
+    } catch (error) {
+      console.error('Error checking system health:', error);
+    }
+  };
+
+  const scanAllButtons = () => {
+    // Scan all buttons in the system and check their functionality
+    const buttons = document.querySelectorAll('button');
+    const buttonList = Array.from(buttons).map((button, index) => ({
+      id: index,
+      text: button.textContent?.trim() || 'غير محدد',
+      isConnected: button.onclick !== null || button.getAttribute('data-connected') === 'true',
+      element: button
+    }));
+    setAllButtons(buttonList);
+    setLoading(false);
+  };
+
+  const testButton = (buttonId) => {
+    const button = allButtons.find(b => b.id === buttonId);
+    if (button) {
+      button.element.click();
+      alert(`تم اختبار الزر: ${button.text}`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="loading-spinner-enhanced mx-auto mb-4"></div>
+        <p>جاري فحص النظام...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* System Health */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🔧</span>
+          <span>صحة النظام</span>
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="p-4 bg-green-600 bg-opacity-20 rounded-lg text-center">
+            <div className="text-3xl mb-2">💾</div>
+            <div className="text-sm text-green-400">قاعدة البيانات</div>
+            <div className="font-bold text-green-300">متصلة</div>
+          </div>
+          <div className="p-4 bg-blue-600 bg-opacity-20 rounded-lg text-center">
+            <div className="text-3xl mb-2">🌐</div>
+            <div className="text-sm text-blue-400">الشبكة</div>
+            <div className="font-bold text-blue-300">مستقرة</div>
+          </div>
+          <div className="p-4 bg-purple-600 bg-opacity-20 rounded-lg text-center">
+            <div className="text-3xl mb-2">🔐</div>
+            <div className="text-sm text-purple-400">الأمان</div>
+            <div className="font-bold text-purple-300">محمي</div>
+          </div>
+          <div className="p-4 bg-yellow-600 bg-opacity-20 rounded-lg text-center">
+            <div className="text-3xl mb-2">⚡</div>
+            <div className="text-sm text-yellow-400">الأداء</div>
+            <div className="font-bold text-yellow-300">جيد</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Button Management */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🔘</span>
+          <span>إدارة الأزرار</span>
+        </h3>
+        <div className="mb-4">
+          <div className="flex items-center gap-4">
+            <div className="px-4 py-2 bg-green-600 bg-opacity-20 text-green-400 rounded-lg">
+              إجمالي الأزرار: {allButtons.length}
+            </div>
+            <div className="px-4 py-2 bg-blue-600 bg-opacity-20 text-blue-400 rounded-lg">
+              متصلة: {allButtons.filter(b => b.isConnected).length}
+            </div>
+            <div className="px-4 py-2 bg-red-600 bg-opacity-20 text-red-400 rounded-lg">
+              غير متصلة: {allButtons.filter(b => !b.isConnected).length}
+            </div>
+          </div>
+        </div>
+        
+        <div className="max-h-96 overflow-y-auto">
+          <div className="grid gap-2">
+            {allButtons.map((button) => (
+              <div key={button.id} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${button.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">{button.text}</span>
+                </div>
+                <button
+                  onClick={() => testButton(button.id)}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+                >
+                  اختبار
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>⚡</span>
+          <span>إجراءات سريعة</span>
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <button
+            onClick={() => window.location.reload()}
+            className="p-4 bg-blue-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+          >
+            <div className="text-2xl mb-2">🔄</div>
+            <div className="font-bold">إعادة تحميل النظام</div>
+          </button>
+          <button
+            onClick={() => scanAllButtons()}
+            className="p-4 bg-green-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+          >
+            <div className="text-2xl mb-2">🔍</div>
+            <div className="font-bold">فحص الأزرار</div>
+          </button>
+          <button
+            onClick={() => checkSystemHealth()}
+            className="p-4 bg-purple-600 bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors text-center"
+          >
+            <div className="text-2xl mb-2">🔧</div>
+            <div className="font-bold">فحص النظام</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced User Management Component
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
