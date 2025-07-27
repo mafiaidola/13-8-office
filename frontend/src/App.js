@@ -14892,20 +14892,6 @@ const ComprehensiveAdminSettings = () => {
         {activeTab === 'system' && (
           <AdminSystemControl />
         )}
-              </div>
-            </div>
-
-            <div className="card-glass p-6 text-center">
-              <div className="text-3xl mb-2">📈</div>
-              <div className="text-2xl font-bold text-gradient mb-1">
-                {Object.keys(settings?.available_roles || {}).length}
-              </div>
-              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                الأدوار المتاحة
-              </div>
-            </div>
-          </div>
-        )}
 
         {activeTab === 'users' && (
           <AdminUserManagement />
