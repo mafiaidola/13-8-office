@@ -11328,6 +11328,16 @@ const Dashboard = () => {
               </button>
             )}
             
+            {canAccessTab('warehouse') && (
+              <button
+                onClick={() => setActiveTab('invoices')}
+                className={`nav-item ${activeTab === 'invoices' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              >
+                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>🧾</span>
+                {t('invoiceManagement') || 'إدارة الفواتير'}
+              </button>
+            )}
+            
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('clinic-registration')}
