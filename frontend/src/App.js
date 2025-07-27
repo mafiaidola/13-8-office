@@ -11123,15 +11123,6 @@ const Dashboard = () => {
               </button>
             )}
             
-            {/* Chat System for all users */}
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`nav-item ${activeTab === 'chat' ? 'active' : ''} flex items-center whitespace-nowrap`}
-            >
-              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>💬</span>
-              {t('chat')}
-            </button>
-            
             {/* System Settings only for Admin and GM */}
             {(user.role === 'admin' || user.role === 'gm') && (
               <button
