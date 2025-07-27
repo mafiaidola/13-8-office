@@ -821,7 +821,24 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
     
-    # Create new user
+    # Check if email exists
+    existing_email = await db.users.find_one({"email": user_data.email})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Validate region_id if provided
+    if user_data.region_id:
+        existing_region = await db.regions.find_one({"id": user_data.region_id})
+        if not existing_region:
+            raise HTTPException(status_code=400, detail="Invalid region ID")
+    
+    # Validate direct_manager_id if provided
+    if user_data.direct_manager_id:
+        manager = await db.users.find_one({"id": user_data.direct_manager_id})
+        if not manager:
+            raise HTTPException(status_code=400, detail="Invalid manager ID")
+    
+    # Create new user with enhanced fields
     hashed_password = hash_password(user_data.password)
     user = User(
         username=user_data.username,
@@ -831,11 +848,40 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
         full_name=user_data.full_name,
         phone=user_data.phone,
         created_by=current_user.id,
-        managed_by=user_data.managed_by or current_user.id
+        managed_by=user_data.direct_manager_id or user_data.managed_by or current_user.id,
+        region_id=user_data.region_id,
+        address=user_data.address,
+        national_id=user_data.national_id,
+        hire_date=user_data.hire_date,
+        photo=user_data.profile_photo,
+        is_active=user_data.is_active
     )
     
     await db.users.insert_one(user.dict())
-    return {"message": "User created successfully", "user_id": user.id}
+    
+    # Create activity log
+    await db.activity_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user.id,
+        "action": "user_created",
+        "entity_type": "user",
+        "entity_id": user.id,
+        "details": f"تم إنشاء مستخدم جديد: {user.full_name} ({user.role})",
+        "metadata": {
+            "created_user_id": user.id,
+            "created_user_role": user.role,
+            "region_id": user.region_id,
+            "direct_manager_id": user_data.direct_manager_id
+        },
+        "timestamp": datetime.utcnow()
+    })
+    
+    return {
+        "message": "User created successfully",
+        "user_id": user.id,
+        "full_name": user.full_name,
+        "role": user.role
+    }
 
 # User Management Routes
 @api_router.get("/users", response_model=List[Dict[str, Any]])
