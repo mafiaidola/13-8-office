@@ -96,7 +96,288 @@ class BackendTester:
         except json.JSONDecodeError:
             return response.status_code, {"error": "Invalid JSON response"}
     
-    def test_admin_login(self):
+    def test_gm_login(self):
+        """Test GM login with default credentials (gm/gm123456)"""
+        status_code, response = self.make_request("POST", "/auth/login", DEFAULT_GM)
+        
+        if status_code == 200 and "token" in response:
+            self.gm_token = response["token"]
+            user_info = response.get("user", {})
+            if user_info.get("role") == "gm":
+                self.log_test("GM Login", True, f"Successfully logged in as {user_info.get('username')}")
+                return True
+            else:
+                self.log_test("GM Login", False, f"Wrong role: {user_info.get('role')}")
+        else:
+            self.log_test("GM Login", False, f"Status: {status_code}", response)
+        return False
+
+    def test_monthly_planning_get_api(self):
+        """Test GET /api/planning/monthly - Monthly plans retrieval"""
+        if not self.gm_token:
+            self.log_test("Monthly Planning GET API", False, "No GM token available")
+            return False
+        
+        # Test with month parameter
+        status_code, response = self.make_request("GET", "/planning/monthly?month=2024-01", token=self.gm_token)
+        
+        if status_code == 200:
+            self.log_test("Monthly Planning GET API", True, f"Monthly plans retrieved successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Monthly Planning GET API", False, "Monthly planning API not implemented yet")
+            return False
+        else:
+            self.log_test("Monthly Planning GET API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_monthly_planning_post_api(self):
+        """Test POST /api/planning/monthly - Monthly plan creation"""
+        if not self.gm_token or not self.sales_rep_id:
+            self.log_test("Monthly Planning POST API", False, "No GM token or sales rep ID available")
+            return False
+        
+        # Create monthly plan data
+        plan_data = {
+            "rep_id": self.sales_rep_id,
+            "month": "2024-01",
+            "clinic_visits": [
+                {
+                    "clinic_id": self.test_clinic_id or "test-clinic-id",
+                    "planned_visits": 4,
+                    "target_doctors": 2
+                }
+            ],
+            "targets": {
+                "total_visits": 20,
+                "effective_visits": 16,
+                "orders": 10,
+                "revenue": 50000
+            },
+            "notes": "خطة شهرية تجريبية لشهر يناير"
+        }
+        
+        status_code, response = self.make_request("POST", "/planning/monthly", plan_data, self.gm_token)
+        
+        if status_code == 200:
+            self.log_test("Monthly Planning POST API", True, f"Monthly plan created successfully")
+            return True
+        elif status_code == 404:
+            self.log_test("Monthly Planning POST API", False, "Monthly planning creation API not implemented yet")
+            return False
+        else:
+            self.log_test("Monthly Planning POST API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_sales_reps_api(self):
+        """Test GET /api/users/sales-reps - Sales reps retrieval for managers"""
+        if not self.gm_token:
+            self.log_test("Sales Reps API", False, "No GM token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/users/sales-reps", token=self.gm_token)
+        
+        if status_code == 200:
+            if isinstance(response, list):
+                self.log_test("Sales Reps API", True, f"Found {len(response)} sales representatives")
+                return True
+            else:
+                self.log_test("Sales Reps API", False, "Response is not a list")
+        elif status_code == 404:
+            self.log_test("Sales Reps API", False, "Sales reps API not implemented yet")
+            return False
+        else:
+            self.log_test("Sales Reps API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_database_connectivity(self):
+        """Test database connectivity by checking basic endpoints"""
+        if not self.admin_token:
+            self.log_test("Database Connectivity", False, "No admin token available")
+            return False
+        
+        # Test multiple database collections
+        endpoints_to_test = [
+            ("/users", "users collection"),
+            ("/clinics", "clinics collection"),
+            ("/doctors", "doctors collection"),
+            ("/visits", "visits collection"),
+            ("/products", "products collection"),
+            ("/warehouses", "warehouses collection")
+        ]
+        
+        successful_connections = 0
+        for endpoint, description in endpoints_to_test:
+            status_code, response = self.make_request("GET", endpoint, token=self.admin_token)
+            if status_code == 200:
+                successful_connections += 1
+        
+        if successful_connections >= 4:  # At least 4 out of 6 should work
+            self.log_test("Database Connectivity", True, f"Database healthy: {successful_connections}/{len(endpoints_to_test)} collections accessible")
+            return True
+        else:
+            self.log_test("Database Connectivity", False, f"Database issues: only {successful_connections}/{len(endpoints_to_test)} collections accessible")
+        return False
+
+    def test_backend_service_status(self):
+        """Test backend service status and health"""
+        # Test basic health endpoint
+        try:
+            response = self.session.get(f"{BASE_URL.replace('/api', '')}/health", timeout=10)
+            if response.status_code == 200:
+                self.log_test("Backend Service Status", True, "Backend service is healthy")
+                return True
+        except:
+            pass
+        
+        # Fallback: test if we can reach any API endpoint
+        status_code, response = self.make_request("POST", "/auth/login", DEFAULT_ADMIN)
+        if status_code in [200, 401]:  # Either success or auth error means service is running
+            self.log_test("Backend Service Status", True, "Backend service is running and responding")
+            return True
+        else:
+            self.log_test("Backend Service Status", False, f"Backend service not responding properly: {status_code}")
+        return False
+
+    def test_enhanced_user_management_apis(self):
+        """Test Enhanced User Management APIs"""
+        if not self.admin_token:
+            self.log_test("Enhanced User Management APIs", False, "No admin token available")
+            return False
+        
+        success_count = 0
+        total_tests = 4
+        
+        # Test 1: Enhanced user list with pagination
+        status_code, response = self.make_request("GET", "/users/enhanced-list?page=1&limit=10", token=self.admin_token)
+        if status_code == 200:
+            if "users" in response and "total_count" in response:
+                self.log_test("Enhanced User List API", True, f"Found {response.get('total_count', 0)} users with pagination")
+                success_count += 1
+            else:
+                self.log_test("Enhanced User List API", False, "Missing pagination structure")
+        else:
+            self.log_test("Enhanced User List API", False, f"Status: {status_code}", response)
+        
+        # Test 2: Update last seen
+        update_data = {"timestamp": datetime.utcnow().isoformat()}
+        status_code, response = self.make_request("POST", "/users/update-last-seen", update_data, self.admin_token)
+        if status_code == 200:
+            self.log_test("Update Last Seen API", True, "Last seen updated successfully")
+            success_count += 1
+        else:
+            self.log_test("Update Last Seen API", False, f"Status: {status_code}", response)
+        
+        # Test 3: Photo upload
+        photo_data = {
+            "user_id": "admin-user-id",
+            "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA=="
+        }
+        status_code, response = self.make_request("POST", "/users/upload-photo", photo_data, self.admin_token)
+        if status_code == 200:
+            self.log_test("Photo Upload API", True, "Photo uploaded successfully")
+            success_count += 1
+        else:
+            self.log_test("Photo Upload API", False, f"Status: {status_code}", response)
+        
+        # Test 4: Activity summary
+        if self.sales_rep_id:
+            status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}/activity-summary", token=self.admin_token)
+            if status_code == 200:
+                if "daily_breakdown" in response and "totals" in response:
+                    self.log_test("Activity Summary API", True, "Activity summary retrieved successfully")
+                    success_count += 1
+                else:
+                    self.log_test("Activity Summary API", False, "Missing activity summary structure")
+            else:
+                self.log_test("Activity Summary API", False, f"Status: {status_code}", response)
+        else:
+            self.log_test("Activity Summary API", False, "No sales rep ID available")
+        
+        return success_count >= 3  # At least 3 out of 4 should work
+
+    def test_comprehensive_admin_settings_apis(self):
+        """Test Comprehensive Admin Settings APIs"""
+        if not self.admin_token:
+            self.log_test("Comprehensive Admin Settings APIs", False, "No admin token available")
+            return False
+        
+        success_count = 0
+        total_tests = 3
+        
+        # Test 1: Get comprehensive settings
+        status_code, response = self.make_request("GET", "/admin/settings/comprehensive", token=self.admin_token)
+        if status_code == 200:
+            required_sections = ["role_statistics", "line_statistics", "available_roles", "total_users"]
+            if all(section in response for section in required_sections):
+                self.log_test("Get Comprehensive Settings API", True, f"Complete settings retrieved with all sections")
+                success_count += 1
+            else:
+                self.log_test("Get Comprehensive Settings API", False, "Missing required settings sections")
+        else:
+            self.log_test("Get Comprehensive Settings API", False, f"Status: {status_code}", response)
+        
+        # Test 2: Update comprehensive settings
+        settings_data = {
+            "company_name": "شركة الاختبار الطبية",
+            "primary_color": "#ff6b35",
+            "secondary_color": "#0ea5e9",
+            "language": "ar",
+            "theme": "dark"
+        }
+        status_code, response = self.make_request("POST", "/admin/settings/comprehensive", settings_data, self.admin_token)
+        if status_code == 200:
+            self.log_test("Update Comprehensive Settings API", True, "Settings updated successfully")
+            success_count += 1
+        else:
+            self.log_test("Update Comprehensive Settings API", False, f"Status: {status_code}", response)
+        
+        # Test 3: System health monitoring
+        status_code, response = self.make_request("GET", "/admin/system-health", token=self.admin_token)
+        if status_code == 200:
+            if "database_status" in response or "system_status" in response:
+                self.log_test("System Health API", True, "System health retrieved successfully")
+                success_count += 1
+            else:
+                self.log_test("System Health API", False, "Missing system health information")
+        else:
+            self.log_test("System Health API", False, f"Status: {status_code}", response)
+        
+        return success_count >= 2  # At least 2 out of 3 should work
+
+    def test_feature_management_system(self):
+        """Test Feature Management System"""
+        if not self.admin_token:
+            self.log_test("Feature Management System", False, "No admin token available")
+            return False
+        
+        success_count = 0
+        total_tests = 2
+        
+        # Test 1: Get feature status
+        status_code, response = self.make_request("GET", "/admin/features/status", token=self.admin_token)
+        if status_code == 200:
+            if isinstance(response, dict) and len(response) > 0:
+                self.log_test("Get Feature Status API", True, f"Retrieved status for {len(response)} features")
+                success_count += 1
+            else:
+                self.log_test("Get Feature Status API", False, "No features found or invalid response")
+        else:
+            self.log_test("Get Feature Status API", False, f"Status: {status_code}", response)
+        
+        # Test 2: Toggle feature
+        toggle_data = {
+            "feature_name": "gps_tracking",
+            "enabled": True
+        }
+        status_code, response = self.make_request("POST", "/admin/features/toggle", toggle_data, self.admin_token)
+        if status_code == 200:
+            self.log_test("Toggle Feature API", True, "Feature toggled successfully")
+            success_count += 1
+        else:
+            self.log_test("Toggle Feature API", False, f"Status: {status_code}", response)
+        
+        return success_count == total_tests
         """Test 1: Admin login with default credentials"""
         status_code, response = self.make_request("POST", "/auth/login", DEFAULT_ADMIN)
         
