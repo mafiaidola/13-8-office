@@ -10821,6 +10821,10 @@ const Dashboard = () => {
           <WarehouseManagement />
         )}
 
+        {activeTab === 'warehouse-keeper' && user.role === 'warehouse_keeper' && (
+          <WarehouseKeeperDashboard />
+        )}
+
         {activeTab === 'invoices' && canAccessTab('warehouse') && (
           <InvoiceManagement />
         )}
