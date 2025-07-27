@@ -10526,10 +10526,24 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button className="btn-info text-xs px-3 py-1" title={t.view}>
+                        <button 
+                          className="btn-info text-xs px-3 py-1" 
+                          title={t.view}
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setShowDetailsModal(true);
+                          }}
+                        >
                           👁️
                         </button>
-                        <button className="btn-primary text-xs px-3 py-1" title={t.edit}>
+                        <button 
+                          className="btn-primary text-xs px-3 py-1" 
+                          title={t.edit}
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setShowEditModal(true);
+                          }}
+                        >
                           ✏️
                         </button>
                       </div>
