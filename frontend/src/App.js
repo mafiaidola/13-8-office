@@ -17147,4 +17147,220 @@ const EnhancedWarehouseManagement = () => {
   );
 };
 
+// Invoice Management Component
+const InvoiceManagement = () => {
+  const { t } = useLanguage();
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/accounting/invoices`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInvoices(response.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      // Mock data for development
+      setInvoices([
+        {
+          id: 'INV-001',
+          invoice_number: 'INV-001',
+          customer_name: 'د. أحمد محمد',
+          customer_specialty: 'باطنة',
+          clinic_name: 'عيادة النور',
+          created_at: '2024-01-24',
+          subtotal: 1500,
+          tax_amount: 225,
+          discount_amount: 50,
+          total_amount: 1675,
+          status: 'paid',
+          items: [
+            { product_name: 'أكسزوم 500مج', quantity: 10, unit_price: 25.50, total_price: 255 },
+            { product_name: 'فيتامين د3', quantity: 5, unit_price: 45.00, total_price: 225 }
+          ]
+        },
+        {
+          id: 'INV-002',
+          invoice_number: 'INV-002',
+          customer_name: 'د. فاطمة علي',
+          customer_specialty: 'أطفال',
+          clinic_name: 'عيادة الشفاء',
+          created_at: '2024-01-23',
+          subtotal: 850,
+          tax_amount: 127.5,
+          discount_amount: 0,
+          total_amount: 977.5,
+          status: 'pending',
+          items: [
+            { product_name: 'باراسيتامول', quantity: 20, unit_price: 12.75, total_price: 255 }
+          ]
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateInvoice = () => {
+    setSelectedInvoice(null);
+    setShowCreateModal(true);
+  };
+
+  const handleEditInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowEditModal(true);
+  };
+
+  const handlePreviewInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowPreviewModal(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-purple rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <SVGIcon name="reports" size={32} />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">
+                {t('invoiceManagement') || 'إدارة الفواتير'}
+              </h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                {t('invoiceManagementSubtitle') || 'إنشاء وإدارة الفواتير المهنية'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleCreateInvoice}
+            className="btn-primary flex items-center gap-2"
+          >
+            <SVGIcon name="add" size={20} />
+            <span>{t('createInvoice') || 'إنشاء فاتورة جديدة'}</span>
+          </button>
+        </div>
+
+        {/* Invoices Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {invoices.map((invoice) => (
+            <div key={invoice.id} className="card-modern p-6 hover:scale-105 transition-transform">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold">{invoice.invoice_number}</h3>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                  </p>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                  invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {invoice.status === 'paid' ? 'مدفوعة' :
+                   invoice.status === 'pending' ? 'معلقة' : 'ملغاة'}
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span className="text-sm">العميل:</span>
+                  <span className="text-sm font-bold">{invoice.customer_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">العيادة:</span>
+                  <span className="text-sm">{invoice.clinic_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">التخصص:</span>
+                  <span className="text-sm">{invoice.customer_specialty}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="font-bold">الإجمالي:</span>
+                  <span className="text-lg font-bold text-green-600">
+                    {invoice.total_amount} ج.م
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePreviewInvoice(invoice)}
+                  className="btn-info flex-1 text-xs flex items-center justify-center gap-1"
+                >
+                  <SVGIcon name="visits" size={16} />
+                  <span>معاينة</span>
+                </button>
+                <button
+                  onClick={() => handleEditInvoice(invoice)}
+                  className="btn-primary flex-1 text-xs flex items-center justify-center gap-1"
+                >
+                  <SVGIcon name="settings" size={16} />
+                  <span>تعديل</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Modals */}
+        {showCreateModal && (
+          <InvoiceCreateModal
+            onClose={() => setShowCreateModal(false)}
+            onSave={() => {
+              setShowCreateModal(false);
+              fetchInvoices();
+            }}
+          />
+        )}
+
+        {showEditModal && selectedInvoice && (
+          <InvoiceEditModal
+            invoice={selectedInvoice}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedInvoice(null);
+            }}
+            onSave={() => {
+              setShowEditModal(false);
+              setSelectedInvoice(null);
+              fetchInvoices();
+            }}
+          />
+        )}
+
+        {showPreviewModal && selectedInvoice && (
+          <InvoicePreviewModal
+            invoice={selectedInvoice}
+            onClose={() => {
+              setShowPreviewModal(false);
+              setSelectedInvoice(null);
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
