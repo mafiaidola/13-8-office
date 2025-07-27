@@ -10908,27 +10908,79 @@ async def process_approval_action(
 
 @api_router.get("/approvals/history")
 async def get_approval_history(current_user: User = Depends(get_current_user)):
-    """Get approval history"""
+    """Get approval history based on hierarchical relationships"""
     try:
-        # Check permissions
-        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
-            raise HTTPException(status_code=403, detail="Only Admin/GM can view approval history")
-        
         # Get all approval requests with history
-        approvals = await db.approval_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        all_approvals = await db.approval_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
         
-        # Enrich with user information
-        for approval in approvals:
-            # Get requester info
-            requester = await db.users.find_one({"id": approval["requested_by"]}, {"_id": 0, "full_name": 1})
-            approval["requester_name"] = requester["full_name"] if requester else "Unknown"
+        # Filter based on hierarchical relationships
+        filtered_approvals = []
+        
+        for approval in all_approvals:
+            # Get the requester information
+            requester = await db.users.find_one({"id": approval["requested_by"]}, {"_id": 0})
+            if not requester:
+                continue
+                
+            # Check if current user can view this approval based on hierarchy
+            can_view = False
             
-            # Get approver info for each approval
-            for approval_action in approval.get("approvals", []):
-                approver = await db.users.find_one({"id": approval_action["user_id"]}, {"_id": 0, "full_name": 1})
-                approval_action["approver_name"] = approver["full_name"] if approver else "Unknown"
+            # Admin and GM can view all approvals
+            if current_user.role in [UserRole.ADMIN, UserRole.GM]:
+                can_view = True
+            
+            # Line Manager can view approvals from their line
+            elif current_user.role == UserRole.LINE_MANAGER:
+                if requester.get("line") == current_user.line:
+                    can_view = True
+            
+            # Area Manager can view approvals from their area
+            elif current_user.role == UserRole.AREA_MANAGER:
+                if (requester.get("area_id") == current_user.area_id or 
+                    requester.get("managed_by") == current_user.id):
+                    can_view = True
+            
+            # District Manager can view approvals from their team
+            elif current_user.role == UserRole.DISTRICT_MANAGER:
+                if (requester.get("managed_by") == current_user.id or
+                    requester.get("district_manager_id") == current_user.id):
+                    can_view = True
+            
+            # Key Account can view approvals from their medical reps
+            elif current_user.role == UserRole.KEY_ACCOUNT:
+                if requester.get("managed_by") == current_user.id:
+                    can_view = True
+            
+            # Medical Rep can only view their own approvals
+            elif current_user.role == UserRole.MEDICAL_REP:
+                if approval["requested_by"] == current_user.id:
+                    can_view = True
+            
+            # Accounting can view all financial approvals
+            elif current_user.role == UserRole.ACCOUNTING:
+                can_view = True
+            
+            # Warehouse Keeper can view approvals for their warehouse
+            elif current_user.role == UserRole.WAREHOUSE_KEEPER:
+                if current_user.warehouse_id:
+                    entity_data = approval.get("entity_data", {})
+                    if entity_data.get("warehouse_id") == current_user.warehouse_id:
+                        can_view = True
+                else:
+                    can_view = True
+            
+            if can_view:
+                # Add requester name
+                approval["requester_name"] = requester.get("full_name", "Unknown")
+                
+                # Get approver info for each approval
+                for approval_action in approval.get("approvals", []):
+                    approver = await db.users.find_one({"id": approval_action["user_id"]}, {"_id": 0, "full_name": 1})
+                    approval_action["approver_name"] = approver["full_name"] if approver else "Unknown"
+                
+                filtered_approvals.append(approval)
         
-        return approvals
+        return filtered_approvals
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
