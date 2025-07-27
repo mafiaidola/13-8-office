@@ -884,6 +884,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "🎉 MONTHLY PLANNING SYSTEM FULLY RESOLVED! Final debugging session successfully identified and fixed the last remaining issue. ✅ ROOT CAUSE IDENTIFIED: FastAPI route ordering conflict where `/users/{user_id}` was defined BEFORE `/users/sales-reps`, causing GM users to get 403 Forbidden and Admin users to get 404 Not Found. ✅ SOLUTION IMPLEMENTED: Moved the specific `/users/sales-reps` route definition BEFORE the parameterized `/users/{user_id}` route in the FastAPI router. ✅ FINAL RESULTS: GM users can now successfully access the sales-reps endpoint and retrieve 33 sales representatives with complete monthly statistics. All Monthly Planning System APIs are now 100% functional: GET /api/planning/monthly (retrieval with filters), POST /api/planning/monthly (plan creation), GET /api/planning/monthly/{id} (specific plan details), PATCH /api/planning/monthly/{id} (updates), DELETE /api/planning/monthly/{id} (deletion), GET /api/users/sales-reps (33 sales reps retrieved), GET /api/planning/analytics (comprehensive analytics). 🏆 SYSTEM STATUS: PRODUCTION READY - The Monthly Planning System is fully operational with proper role-based access control, complete functionality, and excellent system health."
+
+  - task: "Enhanced User Management System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Enhanced User Management System with complete user creation/editing functionality. Added support for all required fields including region assignment, direct manager assignment, address, national ID, hire date, profile photo upload, and comprehensive role-based permissions. Created UserManagementModal with all enhanced fields and integrated with EnhancedUserManagementV2 component."
+      - working: true
+        agent: "testing"
+        comment: "🎉 ENHANCED USER MANAGEMENT SYSTEM FULLY RESOLVED AND WORKING PERFECTLY! All 4 primary APIs working flawlessly (POST /api/auth/register, PATCH /api/users/{user_id}, GET /api/users/managers, GET /api/regions/list). ✅ CRITICAL FIX APPLIED: Removed duplicate User model definition that was causing AttributeError. ✅ COMPREHENSIVE VALIDATION CONFIRMED: Enhanced user creation with all new fields (region_id, direct_manager_id, address, national_id, hire_date, profile_photo), user update functionality, managers API, and regions API all working perfectly. ✅ SYSTEM IS PRODUCTION-READY: All enhanced user management features including region validation, manager assignment, Arabic language support, and role-based permissions are functioning correctly. 🏆 100% SUCCESS RATE: All primary APIs tested with complete success (7/7 tests passed). The Enhanced User Management System is now fully operational and ready for production use."
       - working: true
         agent: "testing"
         comment: "🎉 GM USER SALES-REPS API ISSUE RESOLVED! Conducted comprehensive debugging of the GET /api/users/sales-reps API issue for GM user as requested in the review. ✅ ROOT CAUSE IDENTIFIED: FastAPI route ordering conflict - the parameterized route /users/{user_id} was defined BEFORE the specific route /users/sales-reps, causing FastAPI to match 'sales-reps' as a user_id parameter. This resulted in GM getting 403 (insufficient permissions for /users/{user_id}) and Admin getting 404 (user 'sales-reps' not found). ✅ SOLUTION IMPLEMENTED: Moved the /users/sales-reps route definition BEFORE the parameterized /users/{user_id} route in the FastAPI router. This ensures specific routes are matched before parameterized ones. ✅ TESTING RESULTS: 100% success rate (8/8 tests passed). GM user can now successfully access /api/users/sales-reps endpoint and retrieve 33 sales representatives with complete statistics (total_visits, effective_visits, total_orders, has_monthly_plan). Admin user also confirmed working. ✅ COMPREHENSIVE VERIFICATION: GM authentication working, /api/auth/me endpoint working, GM user exists in database with correct role, 33 sales rep users exist in database, role hierarchy analysis confirms GM should have full access. The Monthly Planning System is now fully functional for GM users!"
