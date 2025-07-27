@@ -16701,8 +16701,8 @@ const WarehouseKeeperDashboard = () => {
   );
 };
 
-// Add Product Modal Component
-const AddProductModal = ({ onClose, onSave, warehouseId }) => {
+// Warehouse Keeper Add Product Modal Component
+const WarehouseKeeperAddProductModal = ({ onClose, onSave, warehouseId }) => {
   const [formData, setFormData] = useState({
     product_name: '',
     category: '',
@@ -16828,8 +16828,8 @@ const AddProductModal = ({ onClose, onSave, warehouseId }) => {
   );
 };
 
-// Stock Adjustment Modal Component
-const StockAdjustmentModal = ({ product, onClose, onSave }) => {
+// Warehouse Keeper Stock Adjustment Modal Component
+const WarehouseKeeperStockAdjustmentModal = ({ product, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     type: 'add',
     quantity: 0,
