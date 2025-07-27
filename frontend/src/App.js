@@ -10349,6 +10349,239 @@ const VisitRegistration = () => {
   );
 };
 
+// Inventory Edit Modal Component
+const InventoryEditModal = ({ item, warehouses, onClose, onSave, language }) => {
+  const [formData, setFormData] = useState({
+    quantity: item?.quantity || 0,
+    minimum_stock: item?.minimum_stock || 0,
+    warehouse_id: item?.warehouse_id || '',
+    product_id: item?.product_id || ''
+  });
+
+  const t = language === 'ar' ? {
+    editInventory: 'تعديل المخزون',
+    product: 'المنتج',
+    warehouse: 'المخزن',
+    currentQuantity: 'الكمية الحالية',
+    newQuantity: 'الكمية الجديدة',
+    minimumStock: 'الحد الأدنى للمخزون',
+    save: 'حفظ',
+    cancel: 'إلغاء'
+  } : {
+    editInventory: 'Edit Inventory',
+    product: 'Product',
+    warehouse: 'Warehouse',
+    currentQuantity: 'Current Quantity',
+    newQuantity: 'New Quantity',
+    minimumStock: 'Minimum Stock',
+    save: 'Save',
+    cancel: 'Cancel'
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-md">
+        <h3 className="text-xl font-bold mb-4">{t.editInventory}</h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.product}:</label>
+            <input
+              type="text"
+              value={item?.product_name || ''}
+              disabled
+              className="form-modern w-full bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.warehouse}:</label>
+            <select
+              value={formData.warehouse_id}
+              onChange={(e) => setFormData({...formData, warehouse_id: e.target.value})}
+              className="form-modern w-full"
+            >
+              {warehouses.map(warehouse => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.currentQuantity}:</label>
+            <input
+              type="text"
+              value={item?.quantity || 0}
+              disabled
+              className="form-modern w-full bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.newQuantity}:</label>
+            <input
+              type="number"
+              value={formData.quantity}
+              onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
+              className="form-modern w-full"
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.minimumStock}:</label>
+            <input
+              type="number"
+              value={formData.minimum_stock}
+              onChange={(e) => setFormData({...formData, minimum_stock: parseInt(e.target.value)})}
+              className="form-modern w-full"
+              min="0"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="submit"
+              className="btn-primary flex-1"
+            >
+              {t.save}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary flex-1"
+            >
+              {t.cancel}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Inventory Details Modal Component
+const InventoryDetailsModal = ({ item, onClose, language }) => {
+  const t = language === 'ar' ? {
+    inventoryDetails: 'تفاصيل المخزون',
+    product: 'المنتج',
+    warehouse: 'المخزن',
+    category: 'الفئة',
+    quantity: 'الكمية',
+    minimumStock: 'الحد الأدنى',
+    unitPrice: 'سعر الوحدة',
+    totalValue: 'القيمة الإجمالية',
+    lastUpdated: 'آخر تحديث',
+    status: 'الحالة',
+    inStock: 'متوفر',
+    lowStock: 'مخزون منخفض',
+    outOfStock: 'نفد المخزون',
+    close: 'إغلاق'
+  } : {
+    inventoryDetails: 'Inventory Details',
+    product: 'Product',
+    warehouse: 'Warehouse',
+    category: 'Category',
+    quantity: 'Quantity',
+    minimumStock: 'Minimum Stock',
+    unitPrice: 'Unit Price',
+    totalValue: 'Total Value',
+    lastUpdated: 'Last Updated',
+    status: 'Status',
+    inStock: 'In Stock',
+    lowStock: 'Low Stock',
+    outOfStock: 'Out of Stock',
+    close: 'Close'
+  };
+
+  const getStockStatus = () => {
+    if (item.quantity === 0) return { text: t.outOfStock, color: 'text-red-500' };
+    if (item.quantity <= item.minimum_stock) return { text: t.lowStock, color: 'text-yellow-500' };
+    return { text: t.inStock, color: 'text-green-500' };
+  };
+
+  const status = getStockStatus();
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-lg">
+        <h3 className="text-xl font-bold mb-4">{t.inventoryDetails}</h3>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.product}:</label>
+              <p className="text-sm">{item.product_name}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.warehouse}:</label>
+              <p className="text-sm">{item.warehouse_name}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.category}:</label>
+              <p className="text-sm">{item.category || 'غير محدد'}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.status}:</label>
+              <p className={`text-sm font-bold ${status.color}`}>{status.text}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.quantity}:</label>
+              <p className="text-lg font-bold">{item.quantity}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.minimumStock}:</label>
+              <p className="text-lg font-bold">{item.minimum_stock}</p>
+            </div>
+          </div>
+
+          {item.unit_price && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">{t.unitPrice}:</label>
+                <p className="text-sm">{item.unit_price} ج.م</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">{t.totalValue}:</label>
+                <p className="text-sm font-bold">{(item.quantity * item.unit_price).toFixed(2)} ج.م</p>
+              </div>
+            </div>
+          )}
+
+          {item.last_updated && (
+            <div>
+              <label className="block text-sm font-bold mb-1">{t.lastUpdated}:</label>
+              <p className="text-sm">{new Date(item.last_updated).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end pt-4 mt-4 border-t">
+          <button
+            onClick={onClose}
+            className="btn-primary px-6"
+          >
+            {t.close}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Inventory Management Component
 const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('all');
