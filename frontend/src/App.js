@@ -6731,7 +6731,7 @@ const AdminSystemControl = () => {
     const buttons = document.querySelectorAll('button');
     const buttonList = Array.from(buttons).map((button, index) => ({
       id: index,
-      text: button.textContent?.trim() || 'غير محدد',
+      text: button.textContent?.trim() || 'No text',
       isConnected: button.onclick !== null || button.getAttribute('data-connected') === 'true',
       element: button
     }));
