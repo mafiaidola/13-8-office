@@ -8377,7 +8377,8 @@ const ReportsSection = () => {
                     warehouse_manager: 'مدير مخزن',
                     warehouse_keeper: 'أمين المخزن',
                     manager: 'مدير',
-                    sales_rep: 'مندوب'
+                    sales_rep: 'مندوب',
+                    accounting: 'محاسب'
                   };
                   return (
                     <div key={role} className="bg-gray-50 p-3 rounded-lg text-center">
