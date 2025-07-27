@@ -6664,19 +6664,4 @@ class BackendTester:
 
 if __name__ == "__main__":
     tester = BackendTester()
-    
-    # Run comprehensive review tests based on the specific requirements
-    print("🎯 RUNNING COMPREHENSIVE REVIEW TESTS")
-    print("=" * 80)
-    print("Focus: Login Flow, Dashboard APIs, Authentication, Error Handling, Search, Statistics")
-    print("=" * 80)
-    
-    passed, failed = tester.run_comprehensive_review_tests()
-    
-    print("\n" + "=" * 80)
-    print("🎉 COMPREHENSIVE REVIEW TESTING COMPLETED!")
-    print("=" * 80)
-    print(f"✅ PASSED: {passed}")
-    print(f"❌ FAILED: {failed}")
-    print(f"📊 SUCCESS RATE: {(passed/(passed+failed)*100):.1f}%")
-    print("=" * 80)
+    tester.run_comprehensive_backend_tests()
