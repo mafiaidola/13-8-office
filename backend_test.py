@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend Testing for Medical Sales Rep Visit Management System
-Focus on Monthly Planning System APIs and System Health Check
-Testing as requested in the review request
+Focus on Enhanced User Management System APIs as requested in the review
+Testing the new user creation and management features with enhanced fields
 """
 
 import requests
