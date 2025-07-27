@@ -221,9 +221,113 @@ class Warehouse(BaseModel):
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Enhanced Warehouse Management Models
+class WarehouseLocation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # Unique warehouse code
+    description: Optional[str] = None
+    address: str
+    city: str
+    region: str
+    country: str = "Egypt"
+    postal_code: Optional[str] = None
+    coordinates: Optional[Dict[str, float]] = None  # lat, lng
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    manager_id: Optional[str] = None  # Warehouse manager
+    capacity: Optional[float] = None  # Total capacity in cubic meters
+    current_occupancy: float = 0.0  # Current occupancy percentage
+    operating_hours: Optional[Dict[str, str]] = None  # {"monday": "08:00-17:00", ...}
+    warehouse_type: str = "main"  # main, branch, distribution, cold_storage
+    temperature_controlled: bool = False
+    security_level: str = "standard"  # standard, high, maximum
+    insurance_info: Optional[Dict[str, Any]] = None
+    certifications: List[str] = []  # ISO, HACCP, etc.
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    updated_at: Optional[datetime] = None
+    updated_by: Optional[str] = None
+
+class ProductStock(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    product_id: str
+    warehouse_id: str
+    quantity: float
+    reserved_quantity: float = 0.0  # Quantity reserved for orders
+    available_quantity: float  # quantity - reserved_quantity
+    reorder_level: float = 0.0  # Minimum stock level
+    max_stock_level: float = 1000.0  # Maximum stock level
+    unit_cost: float  # Cost per unit
+    total_value: float  # quantity * unit_cost
+    expiry_date: Optional[datetime] = None
+    batch_number: Optional[str] = None
+    supplier_id: Optional[str] = None
+    location_in_warehouse: Optional[str] = None  # Shelf/Section location
+    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    updated_by: str
+
+class StockMovement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    warehouse_id: str
+    product_id: str
+    movement_type: str  # IN, OUT, TRANSFER, ADJUSTMENT
+    quantity: float
+    unit_cost: Optional[float] = None
+    total_cost: Optional[float] = None
+    reference_type: Optional[str] = None  # ORDER, PURCHASE, RETURN, ADJUSTMENT
+    reference_id: Optional[str] = None
+    from_warehouse_id: Optional[str] = None  # For transfers
+    to_warehouse_id: Optional[str] = None  # For transfers
+    notes: Optional[str] = None
+    batch_number: Optional[str] = None
+    expiry_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
 class WarehouseCreate(BaseModel):
     name: str
-    location: str
+    code: str
+    description: Optional[str] = None
+    address: str
+    city: str
+    region: str
+    postal_code: Optional[str] = None
+    coordinates: Optional[Dict[str, float]] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    manager_id: Optional[str] = None
+    capacity: Optional[float] = None
+    warehouse_type: str = "main"
+    temperature_controlled: bool = False
+    security_level: str = "standard"
+    operating_hours: Optional[Dict[str, str]] = None
+
+class ProductStockCreate(BaseModel):
+    product_id: str
+    warehouse_id: str
+    quantity: float
+    unit_cost: float
+    reorder_level: float = 0.0
+    max_stock_level: float = 1000.0
+    expiry_date: Optional[datetime] = None
+    batch_number: Optional[str] = None
+    location_in_warehouse: Optional[str] = None
+
+class StockMovementCreate(BaseModel):
+    warehouse_id: str
+    product_id: str
+    movement_type: str
+    quantity: float
+    unit_cost: Optional[float] = None
+    reference_type: Optional[str] = None
+    reference_id: Optional[str] = None
+    from_warehouse_id: Optional[str] = None
+    to_warehouse_id: Optional[str] = None
+    notes: Optional[str] = None
+    batch_number: Optional[str] = None
+    expiry_date: Optional[datetime] = None
     address: str
     manager_id: str
     warehouse_number: int
