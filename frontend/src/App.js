@@ -3450,93 +3450,93 @@ const MedicalRepDashboard = ({ stats, user }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="glass-effect p-6 rounded-xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="glass-effect p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{stats.total_visits || 0}</div>
+              <div className="text-xl font-bold">{stats.total_visits || 0}</div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الزيارات</div>
             </div>
-            <div className="text-3xl">🏥</div>
+            <div className="text-2xl">🏥</div>
           </div>
         </div>
         
-        <div className="glass-effect p-6 rounded-xl">
+        <div className="glass-effect p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{stats.total_orders || 0}</div>
+              <div className="text-xl font-bold">{stats.total_orders || 0}</div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الطلبات</div>
             </div>
-            <div className="text-3xl">📦</div>
+            <div className="text-2xl">📦</div>
           </div>
         </div>
         
-        <div className="glass-effect p-6 rounded-xl">
+        <div className="glass-effect p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{stats.total_doctors || 0}</div>
+              <div className="text-xl font-bold">{stats.total_doctors || 0}</div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>الأطباء المسجلين</div>
             </div>
-            <div className="text-3xl">👨‍⚕️</div>
+            <div className="text-2xl">👨‍⚕️</div>
           </div>
         </div>
         
-        <div className="glass-effect p-6 rounded-xl">
+        <div className="glass-effect p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{stockData.length || 0}</div>
+              <div className="text-xl font-bold">{stockData.length || 0}</div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>المنتجات المتاحة</div>
             </div>
-            <div className="text-3xl">📊</div>
+            <div className="text-2xl">📊</div>
           </div>
         </div>
       </div>
 
       {/* Stock Display */}
-      <div className="glass-effect p-6 rounded-xl">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <span className="text-2xl">📦</span>
+      <div className="glass-effect p-4 rounded-lg">
+        <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+          <span className="text-xl">📦</span>
           حالة المخزون
         </h3>
         
         {loadingStock ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4">جاري تحميل بيانات المخزون...</p>
+          <div className="text-center py-6">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-3 text-sm">جاري تحميل بيانات المخزون...</p>
           </div>
         ) : stockError ? (
-          <div className="text-center py-8 text-red-500">
-            <p>{stockError}</p>
+          <div className="text-center py-6 text-red-500">
+            <p className="text-sm">{stockError}</p>
             <button 
               onClick={fetchStockData}
-              className="btn-primary mt-4"
+              className="btn-primary mt-3 text-sm px-4 py-2"
             >
               إعادة المحاولة
             </button>
           </div>
         ) : stockData.length === 0 ? (
-          <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>
-            <p>لا توجد بيانات مخزون متاحة</p>
+          <div className="text-center py-6" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-sm">لا توجد بيانات مخزون متاحة</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Stock Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-green-100 p-4 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div className="bg-green-100 p-3 rounded-lg">
                 <div className="text-lg font-bold text-green-800">
                   {stockData.filter(item => item.status === 'in_stock').length}
                 </div>
                 <div className="text-sm text-green-600">متوفر</div>
               </div>
-              <div className="bg-yellow-100 p-4 rounded-lg">
+              <div className="bg-yellow-100 p-3 rounded-lg">
                 <div className="text-lg font-bold text-yellow-800">
                   {stockData.filter(item => item.current_stock > 0 && item.current_stock < 10).length}
                 </div>
                 <div className="text-sm text-yellow-600">مخزون منخفض</div>
               </div>
-              <div className="bg-red-100 p-4 rounded-lg">
+              <div className="bg-red-100 p-3 rounded-lg">
                 <div className="text-lg font-bold text-red-800">
                   {stockData.filter(item => item.status === 'out_of_stock').length}
                 </div>
@@ -3545,9 +3545,9 @@ const MedicalRepDashboard = ({ stats, user }) => {
             </div>
 
             {/* Stock Items */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {stockData.map((item, index) => (
-                <div key={index} className="bg-white bg-opacity-5 p-4 rounded-lg">
+                <div key={index} className="bg-white bg-opacity-5 p-3 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium text-sm">{item.product_name}</h4>
                     <span className={`text-lg ${getStockStatusColor(item.status)}`}>
@@ -3555,7 +3555,7 @@ const MedicalRepDashboard = ({ stats, user }) => {
                     </span>
                   </div>
                   
-                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  <div className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
                     <div>المخزن: {item.warehouse_name}</div>
                     <div>الكمية: {item.current_stock} {item.product_unit}</div>
                     <div>السعر: {item.product_price} جنيه</div>
@@ -3576,12 +3576,12 @@ const MedicalRepDashboard = ({ stats, user }) => {
             </div>
 
             {/* Refresh Button */}
-            <div className="text-center mt-6">
+            <div className="text-center mt-4">
               <button 
                 onClick={fetchStockData}
-                className="btn-secondary"
+                className="btn-secondary text-sm px-4 py-2"
               >
-                <span className="text-lg mr-2">🔄</span>
+                <span className="text-base mr-2">🔄</span>
                 تحديث بيانات المخزون
               </button>
             </div>
