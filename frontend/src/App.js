@@ -11585,10 +11585,17 @@ const Dashboard = () => {
       setActiveTab(event.detail);
     };
     
+    // Add event listener for settings navigation
+    const handleSettingsNavigation = () => {
+      setActiveTab('settings');
+    };
+    
     window.addEventListener('navigateToTab', handleNavigation);
+    window.addEventListener('navigate-to-settings', handleSettingsNavigation);
     
     return () => {
       window.removeEventListener('navigateToTab', handleNavigation);
+      window.removeEventListener('navigate-to-settings', handleSettingsNavigation);
     };
   }, []);
 
