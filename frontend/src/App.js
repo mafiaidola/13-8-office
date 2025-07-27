@@ -19132,4 +19132,506 @@ const MonthlyPlanningSystem = () => {
   );
 };
 
+// Create Plan Modal Component
+const CreatePlanModal = ({ salesReps, clinics, selectedMonth, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    rep_id: '',
+    month: selectedMonth,
+    planned_visits: []
+  });
+  const [selectedRep, setSelectedRep] = useState(null);
+  const [tempVisit, setTempVisit] = useState({
+    clinic_id: '',
+    planned_date: '',
+    notes: ''
+  });
+
+  const handleAddVisit = () => {
+    if (!tempVisit.clinic_id || !tempVisit.planned_date) return;
+    
+    const clinic = clinics.find(c => c.id === tempVisit.clinic_id);
+    const newVisit = {
+      ...tempVisit,
+      id: Date.now().toString(),
+      clinic_name: clinic.name,
+      doctor_name: clinic.doctor_name,
+      status: 'planned'
+    };
+    
+    setFormData({
+      ...formData,
+      planned_visits: [...formData.planned_visits, newVisit]
+    });
+    
+    setTempVisit({ clinic_id: '', planned_date: '', notes: '' });
+  };
+
+  const handleRemoveVisit = (visitId) => {
+    setFormData({
+      ...formData,
+      planned_visits: formData.planned_visits.filter(v => v.id !== visitId)
+    });
+  };
+
+  const handleRepChange = (repId) => {
+    const rep = salesReps.find(r => r.id === repId);
+    setSelectedRep(rep);
+    setFormData({ ...formData, rep_id: repId });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.rep_id || formData.planned_visits.length === 0) return;
+    
+    const planData = {
+      ...formData,
+      total_visits_planned: formData.planned_visits.length
+    };
+    
+    onSave(planData);
+  };
+
+  const getDaysInMonth = (month) => {
+    const date = new Date(month + '-01');
+    const year = date.getFullYear();
+    const monthNum = date.getMonth();
+    return new Date(year, monthNum + 1, 0).getDate();
+  };
+
+  const generateDateOptions = () => {
+    const days = getDaysInMonth(selectedMonth);
+    const options = [];
+    
+    for (let day = 1; day <= days; day++) {
+      const dateStr = `${selectedMonth}-${day.toString().padStart(2, '0')}`;
+      const dayName = new Date(dateStr).toLocaleDateString('ar-EG', { weekday: 'long' });
+      options.push(
+        <option key={dateStr} value={dateStr}>
+          {day} - {dayName}
+        </option>
+      );
+    }
+    
+    return options;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">
+          إنشاء خطة شهرية - {new Date(selectedMonth).toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
+        </h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Rep Selection */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">اختيار المندوب</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {salesReps.map((rep) => (
+                <div
+                  key={rep.id}
+                  onClick={() => handleRepChange(rep.id)}
+                  className={`p-4 rounded-lg cursor-pointer transition-all ${
+                    formData.rep_id === rep.id
+                      ? 'bg-blue-600 text-white'
+                      : 'hover:bg-white hover:bg-opacity-10 border border-gray-600'
+                  }`}
+                >
+                  <h5 className="font-bold">{rep.name}</h5>
+                  <p className="text-sm opacity-75">{rep.region}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Visit Planning */}
+          {selectedRep && (
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="text-lg font-bold mb-4">تخطيط الزيارات</h4>
+              
+              {/* Add Visit Form */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 border border-gray-600 rounded-lg">
+                <div>
+                  <label className="block text-sm font-bold mb-2">العيادة:</label>
+                  <select
+                    value={tempVisit.clinic_id}
+                    onChange={(e) => setTempVisit({...tempVisit, clinic_id: e.target.value})}
+                    className="form-modern w-full"
+                  >
+                    <option value="">اختر العيادة</option>
+                    {clinics.map(clinic => (
+                      <option key={clinic.id} value={clinic.id}>
+                        {clinic.name} - {clinic.doctor_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">تاريخ الزيارة:</label>
+                  <select
+                    value={tempVisit.planned_date}
+                    onChange={(e) => setTempVisit({...tempVisit, planned_date: e.target.value})}
+                    className="form-modern w-full"
+                  >
+                    <option value="">اختر التاريخ</option>
+                    {generateDateOptions()}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">ملاحظات:</label>
+                  <input
+                    type="text"
+                    value={tempVisit.notes}
+                    onChange={(e) => setTempVisit({...tempVisit, notes: e.target.value})}
+                    className="form-modern w-full"
+                    placeholder="ملاحظات اختيارية..."
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={handleAddVisit}
+                    className="btn-primary w-full"
+                    disabled={!tempVisit.clinic_id || !tempVisit.planned_date}
+                  >
+                    إضافة
+                  </button>
+                </div>
+              </div>
+
+              {/* Planned Visits List */}
+              <div className="space-y-3">
+                <h5 className="font-bold">الزيارات المخططة ({formData.planned_visits.length}):</h5>
+                {formData.planned_visits.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <p>لم يتم إضافة زيارات بعد</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {formData.planned_visits.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-bold">{visit.clinic_name}</div>
+                          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                            {visit.doctor_name} • {new Date(visit.planned_date).toLocaleDateString('ar-EG')}
+                          </div>
+                          {visit.notes && (
+                            <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                              {visit.notes}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVisit(visit.id)}
+                          className="btn-danger text-xs px-3 py-1"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Summary */}
+          {formData.planned_visits.length > 0 && (
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="text-lg font-bold mb-4">ملخص الخطة</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formData.planned_visits.length}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات مخططة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {new Set(formData.planned_visits.map(v => v.clinic_id)).size}
+                  </div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>عيادات مختلفة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {Math.round(formData.planned_visits.length / getDaysInMonth(selectedMonth) * 100)}%
+                  </div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>تغطية الشهر</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="submit"
+              disabled={!formData.rep_id || formData.planned_visits.length === 0}
+              className="btn-primary flex-1"
+            >
+              إنشاء الخطة
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Plan View Modal Component
+const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
+  const [activeTab, setActiveTab] = useState('visits');
+  const [visits, setVisits] = useState(plan.visits || []);
+  const [newNote, setNewNote] = useState('');
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
+
+  const handleAddNote = async (visitId, note) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/planning/visits/${visitId}/notes`, { note }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Update local state
+      setVisits(visits.map(v => 
+        v.id === visitId 
+          ? { ...v, notes: v.notes ? `${v.notes}\n${note}` : note }
+          : v
+      ));
+      setShowAddNoteModal(false);
+      setSelectedVisit(null);
+      setNewNote('');
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
+  };
+
+  const handleUpdateVisitStatus = async (visitId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/planning/visits/${visitId}/status`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVisits(visits.map(v => 
+        v.id === visitId ? { ...v, status } : v
+      ));
+    } catch (error) {
+      console.error('Error updating visit status:', error);
+    }
+  };
+
+  const getVisitStatusColor = (status) => {
+    const colors = {
+      planned: 'bg-blue-100 text-blue-800',
+      completed: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800',
+      postponed: 'bg-yellow-100 text-yellow-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getVisitStatusText = (status) => {
+    const statuses = {
+      planned: 'مخطط',
+      completed: 'مكتمل',
+      cancelled: 'ملغي',
+      postponed: 'مؤجل'
+    };
+    return statuses[status] || status;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">
+            خطة {plan.rep_name} - {new Date(plan.month).toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Plan Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="glass-effect p-4 rounded-xl text-center">
+            <div className="text-2xl font-bold">{plan.total_visits_planned}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات مخططة</div>
+          </div>
+          <div className="glass-effect p-4 rounded-xl text-center">
+            <div className="text-2xl font-bold">{plan.total_visits_completed}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات مكتملة</div>
+          </div>
+          <div className="glass-effect p-4 rounded-xl text-center">
+            <div className={`text-2xl font-bold ${
+              plan.completion_rate >= 90 ? 'text-green-600' :
+              plan.completion_rate >= 70 ? 'text-yellow-600' : 'text-red-600'
+            }`}>
+              {plan.completion_rate}%
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>معدل الإنجاز</div>
+          </div>
+          <div className="glass-effect p-4 rounded-xl text-center">
+            <div className={`text-lg font-bold px-3 py-1 rounded ${
+              plan.status === 'active' ? 'bg-blue-100 text-blue-800' :
+              plan.status === 'completed' ? 'bg-green-100 text-green-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {plan.status === 'active' ? 'نشط' : 
+               plan.status === 'completed' ? 'مكتمل' : plan.status}
+            </div>
+            <div className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>حالة الخطة</div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6">
+          {[
+            { id: 'visits', label: 'الزيارات', icon: '📅' },
+            { id: 'notes', label: 'الملاحظات', icon: '📝' },
+            { id: 'analytics', label: 'التحليلات', icon: '📊' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'glass-effect hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'visits' && (
+          <div className="space-y-4">
+            {visits.map((visit) => (
+              <div key={visit.id} className="glass-effect p-6 rounded-xl">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h4 className="text-lg font-bold">{visit.clinic_name}</h4>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {visit.doctor_name}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className={`px-2 py-1 rounded text-xs font-bold ${getVisitStatusColor(visit.status)}`}>
+                      {getVisitStatusText(visit.status)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <span className="text-sm font-bold">التاريخ المخطط:</span>
+                    <div>{new Date(visit.planned_date).toLocaleDateString('ar-EG')}</div>
+                  </div>
+                  {visit.actual_date && (
+                    <div>
+                      <span className="text-sm font-bold">التاريخ الفعلي:</span>
+                      <div>{new Date(visit.actual_date).toLocaleDateString('ar-EG')}</div>
+                    </div>
+                  )}
+                </div>
+
+                {visit.notes && (
+                  <div className="mb-4 p-3 bg-white bg-opacity-5 rounded-lg">
+                    <span className="text-sm font-bold">ملاحظات:</span>
+                    <div className="text-sm mt-1">{visit.notes}</div>
+                  </div>
+                )}
+
+                {visit.rep_notes && (
+                  <div className="mb-4 p-3 bg-yellow-500 bg-opacity-10 rounded-lg">
+                    <span className="text-sm font-bold text-yellow-600">ملاحظات المندوب:</span>
+                    <div className="text-sm mt-1">{visit.rep_notes}</div>
+                  </div>
+                )}
+
+                {canEdit && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedVisit(visit);
+                        setShowAddNoteModal(true);
+                      }}
+                      className="btn-info text-xs px-3 py-1"
+                    >
+                      إضافة ملاحظة
+                    </button>
+                    {visit.status === 'planned' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}
+                          className="btn-success text-xs px-3 py-1"
+                        >
+                          تمت الزيارة
+                        </button>
+                        <button
+                          onClick={() => handleUpdateVisitStatus(visit.id, 'postponed')}
+                          className="btn-warning text-xs px-3 py-1"
+                        >
+                          تأجيل
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add Note Modal */}
+        {showAddNoteModal && selectedVisit && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+            <div className="modal-modern p-6 w-full max-w-2xl">
+              <h4 className="text-lg font-bold mb-4">إضافة ملاحظة</h4>
+              <div className="mb-4">
+                <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  {selectedVisit.clinic_name} - {selectedVisit.doctor_name}
+                </p>
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="form-modern w-full h-20"
+                  placeholder="أضف ملاحظتك هنا..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleAddNote(selectedVisit.id, newNote)}
+                  disabled={!newNote.trim()}
+                  className="btn-primary flex-1"
+                >
+                  إضافة الملاحظة
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddNoteModal(false);
+                    setSelectedVisit(null);
+                    setNewNote('');
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
