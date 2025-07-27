@@ -20752,6 +20752,7 @@ const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
             </div>
           </div>
         )}
+      </div>
     </div>
   );
 };
