@@ -11541,9 +11541,9 @@ const Dashboard = () => {
           <nav className={`flex space-x-2 overflow-x-auto nav-menu rounded-xl p-1.5 shadow-md ${isRTL ? 'space-x-reverse' : ''}`} aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
+              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
             >
-              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📊</span>
+              <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📊</span>
               {user.role === 'admin' ? t('statistics') : t('dashboard')}
             </button>
             
