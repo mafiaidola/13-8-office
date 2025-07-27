@@ -455,6 +455,48 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+# New Area Management Models
+class Area(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # cairo_giza, delta_1, etc.
+    description: Optional[str] = None
+    manager_id: Optional[str] = None
+    warehouses: List[str] = []  # List of warehouse IDs
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AreaCreate(BaseModel):
+    name: str
+    code: str
+    description: Optional[str] = None
+    manager_id: Optional[str] = None
+
+# New Warehouse Management Models
+class WarehouseNew(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # main_warehouse, cairo_warehouse, etc.
+    type: str  # main, branch
+    area_id: Optional[str] = None
+    location: Dict[str, Any] = {}  # address, coordinates
+    manager_id: Optional[str] = None
+    keeper_id: Optional[str] = None
+    capacity: Optional[int] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class WarehouseCreate(BaseModel):
+    name: str
+    code: str
+    type: str = "branch"
+    area_id: Optional[str] = None
+    location: Dict[str, Any] = {}
+    manager_id: Optional[str] = None
+    keeper_id: Optional[str] = None
+    capacity: Optional[int] = None
+
+# Enhanced Clinic Model with new classifications
 class Clinic(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -462,6 +504,22 @@ class Clinic(BaseModel):
     latitude: float
     longitude: float
     phone: Optional[str] = None
+    
+    # New classification system
+    classification: str = "class_c"  # class_a_star, class_a, class_b, class_c, class_d
+    
+    # Accounting manager in clinic
+    accounting_manager_name: Optional[str] = None
+    accounting_manager_phone: Optional[str] = None
+    
+    # Working hours
+    working_hours: Dict[str, Any] = {}  # {day: {start: time, end: time}}
+    accounting_working_hours: Dict[str, Any] = {}  # Specific hours for accounting manager
+    
+    # Assignments
+    area_id: Optional[str] = None
+    line: Optional[str] = None  # line_1, line_2
+    
     added_by: str  # user_id of sales rep
     approved_by: Optional[str] = None  # admin user_id
     is_active: bool = True
@@ -473,6 +531,13 @@ class ClinicCreate(BaseModel):
     latitude: float
     longitude: float
     phone: Optional[str] = None
+    classification: str = "class_c"
+    accounting_manager_name: Optional[str] = None
+    accounting_manager_phone: Optional[str] = None
+    working_hours: Dict[str, Any] = {}
+    accounting_working_hours: Dict[str, Any] = {}
+    area_id: Optional[str] = None
+    line: Optional[str] = None
 
 class Doctor(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
