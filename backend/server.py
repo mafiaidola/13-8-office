@@ -44,39 +44,60 @@ security = HTTPBearer()
 
 # User Roles with New Hierarchical Structure
 class UserRole:
-    # New Role Structure
-    GM = "gm"  # General Manager - Level 6 - Full control
+    # New Hierarchical Role Structure
+    ADMIN = "admin"  # System Administrator - Level 7 - Full system control
+    GM = "gm"  # General Manager - Level 6 - Full operational control
     LINE_MANAGER = "line_manager"  # Line Manager - Level 5 - Manage multiple areas
     AREA_MANAGER = "area_manager"  # Area Manager - Level 4 - Manage districts
     DISTRICT_MANAGER = "district_manager"  # District Manager - Level 3 - Manage key accounts
     KEY_ACCOUNT = "key_account"  # Key Account - Level 2 - Manage medical reps
     MEDICAL_REP = "medical_rep"  # Medical Rep - Level 1 - Basic operations
     
-    # Legacy roles for backward compatibility
-    ADMIN = "admin"  # Equivalent to GM
-    WAREHOUSE_MANAGER = "warehouse_manager"  # Special role - Level 3
-    MANAGER = "manager"  # Equivalent to Area Manager
-    SALES_REP = "sales_rep"  # Equivalent to Medical Rep
-    ACCOUNTING = "accounting"  # Special role - Level 3
+    # Special roles
+    WAREHOUSE_KEEPER = "warehouse_keeper"  # Warehouse operations
+    ACCOUNTING = "accounting"  # Accounting operations
     
-    # Role hierarchy for permissions
+    # Role hierarchy for permissions (approval levels)
     ROLE_HIERARCHY = {
+        "admin": 7,
         "gm": 6,
-        "admin": 6,  # Legacy compatibility
         "line_manager": 5,
         "area_manager": 4,
-        "manager": 4,  # Legacy compatibility
         "district_manager": 3,
-        "warehouse_manager": 3,
-        "accounting": 3,
         "key_account": 2,
         "medical_rep": 1,
-        "sales_rep": 1  # Legacy compatibility
+        "warehouse_keeper": 3,
+        "accounting": 3
     }
     
-    # Line Assignment
+    # Lines Assignment
     LINE_1 = "line_1"
     LINE_2 = "line_2"
+    
+    # Areas Definition
+    CAIRO_GIZA = "cairo_giza"
+    DELTA_1 = "delta_1"
+    DELTA_2 = "delta_2"
+    UPPER_EGYPT = "upper_egypt"
+    ALEXANDRIA = "alexandria"
+    WESTERN = "western"
+    
+    # Warehouses Definition
+    MAIN_WAREHOUSE = "main_warehouse"
+    CAIRO_WAREHOUSE = "cairo_warehouse"
+    GIZA_WAREHOUSE = "giza_warehouse"
+    ALEXANDRIA_WAREHOUSE = "alexandria_warehouse"
+    GHARBIA_WAREHOUSE = "gharbia_warehouse"
+    DAKAHLIA_WAREHOUSE = "dakahlia_warehouse"
+    SOHAG_WAREHOUSE = "sohag_warehouse"
+    GIZA_2_WAREHOUSE = "giza_2_warehouse"
+    
+    # Clinic Classifications
+    CLASS_A_STAR = "class_a_star"
+    CLASS_A = "class_a"
+    CLASS_B = "class_b"
+    CLASS_C = "class_c"
+    CLASS_D = "class_d"
     
     @classmethod
     def can_manage(cls, manager_role: str, target_role: str) -> bool:
