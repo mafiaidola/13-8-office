@@ -378,7 +378,9 @@ class BackendTester:
             self.log_test("Toggle Feature API", False, f"Status: {status_code}", response)
         
         return success_count == total_tests
-        """Test 1: Admin login with default credentials"""
+
+    def test_admin_login(self):
+        """Test Admin login with default credentials"""
         status_code, response = self.make_request("POST", "/auth/login", DEFAULT_ADMIN)
         
         if status_code == 200 and "token" in response:
