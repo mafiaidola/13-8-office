@@ -1,74 +1,69 @@
 <analysis>
-The previous AI engineer effectively transitioned the EP Group System from an MVP to a feature-rich application. The development followed an iterative, user-feedback-driven approach, prioritizing critical UI/UX fixes before new feature implementation. Key work included resolving the persistent  display issue, which stemmed from a frontend data parsing mismatch. A significant portion of the work focused on enhancing core system modules: a comprehensive  with user photos and real-time status, an  providing deep insights, and an  tightly coupled with user performance. More recently, the engineer addressed UI consistency (unified theme toggle, scrollbar theming) and initiated advanced functionalities like a  and a  with OCR, demonstrating strong full-stack capabilities in Python (FastAPI) and React.
+The previous AI engineer effectively transitioned the EP Group System from an MVP to a robust enterprise solution. The development was iterative, driven by direct user feedback, and followed a full-stack approach. Initial efforts focused on critical UI/UX fixes, notably language translation inconsistencies and the  display. A significant architectural overhaul involved re-structuring user roles (GM, Line Manager, etc.) and implementing comprehensive admin settings with 18 distinct tabs for granular control over system features, regions, and lines. Further enhancements included a dynamic SVG icon system integrated with themes and an extensive Google Maps integration for location-based functionalities. The engineer demonstrated strong capabilities in React (frontend), FastAPI (backend), and MongoDB, ensuring API protection and comprehensive testing. The last major work involved initiating the development of a detailed warehouse management system and an advanced invoice generation system, with initial backend APIs and frontend components already in place.
 </analysis>
 
 <product_requirements>
-The EP Group System aims to be a comprehensive enterprise management solution featuring: dynamic theme selection (9 themes with SVG animations), global search (representatives, doctors, clinics, invoices, products), interactive statistical dashboards with filtering, detailed user management (photos, individual stats, daily check-ins, hierarchy), a comprehensive warehouse module, detailed visit logs with real-time tracking, multi-format reports, a WhatsApp-like team chat, and a sensitive Secret Report with logging and filtering. The system emphasizes modern, responsive, and visually appealing design. Recent updates focused on addressing user feedback regarding inconsistent translations across all pages (including login), full theme application to menus and scrollbars, updated footer content, visible intellectual property text, a non-functional  component, and improved user list management (including manager/warehouse assignments, last seen, activity). The system has successfully integrated advanced analytics, gamification, and is now extending into GPS tracking and document scanning.
+The EP Group System is designed as a comprehensive enterprise management solution featuring: dynamic theme selection (9 themes with SVG animations), global search, interactive statistical dashboards, detailed user management (photos, check-ins, hierarchy), a comprehensive warehouse module, detailed visit logs, multi-format reports, a WhatsApp-like team chat, and a sensitive Secret Report. Recent updates addressed inconsistent translations, full theme application, footer content, and user list management. The system integrated advanced analytics, gamification, GPS tracking, and document scanning. Current priorities include:
+1.  **Enhanced Language Switching**: Full Arabic/English translation for UI, excluding proper nouns.
+2.  **Comprehensive Admin Settings**: Granular control over all features, including Area Management (regions, lines, teams, managers), and re-structured roles (GM, Line Manager, Area Manager, District Manager, Key Account, Medical Rep).
+3.  **System Division into Lines**: Separate Line 1 and Line 2 with distinct products and management structures.
+4.  **Warehouse Management**: Full CRUD operations for warehouses and products, controlled by Admin.
+5.  **Advanced Invoicing**: Robust generation, export, print (with logo, client/clinic details, type, professional formatting, PDF export/print), and management.
+6.  **Gamification**: Transition from games to tangible incentive systems.
+7.  **Accounting System**: Completion and integration.
+8.  **AI/Advanced Analytics, User Experience, Advanced Reports/Statistics**: Continued enhancements.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-Stack Development**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
-- **UI/UX**: Tailwind CSS, responsive design, SVG animations, comprehensive theme management, i18n/L10n, CSS variables for theming.
-- **API Design**: RESTful API endpoints, Pydantic models for data validation.
-- **State Management**: React Context API for themes and language.
-- **Data Handling**: API response parsing, backend data enrichment.
-- **Algorithmic**: Haversine Formula for precise distance calculation, Nearest-Neighbor Algorithm for route optimization.
+-   **Full-Stack Development**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
+-   **UI/UX**: Tailwind CSS, CSS Custom Properties (theming), SVG animations, i18n/L10n, Responsive Design.
+-   **API Design**: RESTful APIs, Pydantic for data validation, Role-Based Access Control.
+-   **State Management**: React Context API (Theme, Auth, Language).
+-   **Algorithmic**: Haversine Formula (GPS), Nearest-Neighbor (route optimization).
+-   **Third-Party Integrations**: Google Maps API.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard full-stack architecture with a React frontend and a FastAPI backend, interacting with a MongoDB database.
+The application employs a standard full-stack architecture. The frontend is built with React, the backend with FastAPI, and data is persisted in a MongoDB database.
 
 
 
 -   ****:
-    -   **Summary of importance**: This is the core React application file, responsible for routing, global state (ThemeContext, AuthContext, LanguageContext), and integrating all major components (Header, Footer, LoginPage, Dashboard, AdminSettingsPage, AccountingPage, EnhancedUserManagement, AdvancedAnalyticsDashboard, GamificationDashboard, GPSTrackingDashboard, DocumentScannerDashboard). It orchestrates the entire frontend UI and functionality.
-    -   **Changes made**:
-        -   Fixed  display by correcting API response parsing (expected array vs. object with  key).
-        -   Integrated and refined  and  components, including dynamic links and intellectual property text.
-        -   Consolidated theme toggling into a single, unified button.
-        -   Implemented  for comprehensive i18n support (English/Arabic).
-        -   Enhanced  by integrating new features like user photos, last seen status, and basic KPIs, requiring extensive updates to state management and props passing within the  component (e.g., , , , , , , ).
-        -   Integrated  and  components.
-        -   Added  component and integrated it into the navigation.
-        -   Added  component and integrated it, ensuring deep linkage with user performance data.
-        -   Integrated  component and added its navigation tab.
-        -   Integrated  component, with plans for navigation integration.
-        -   Numerous linting fixes and state management adjustments to ensure component stability and correct data flow.
+    -   **Summary of importance**: The core React application file, responsible for routing, global state (ThemeContext, AuthContext, LanguageContext), and integrating all major components.
+    -   **Changes made**: Fixed , refined Header/Footer, consolidated theme toggling, implemented . Integrated and enhanced , , , , and  components. Crucially, updated to support new hierarchical roles (GM, Line, Area, District, Key Account, Medical Rep). Implemented a **Comprehensive Admin Settings System** with 22 tabs, including , , , and . Integrated a dynamic **SVG icon system** and Google Maps configuration components. Initiated integration of  and  components.
 -   ****:
-    -   **Summary of importance**: Defines global CSS styles, theme-specific variables using CSS custom properties, and animations. It uses Tailwind CSS for utility-first styling.
-    -   **Changes made**: Added styles for new themes, SVG icon animations, general UI enhancements (glass, glow effects), specific footer animations, and updated scrollbar styling to correctly adopt application theme colors and transitions. Added visual feedback for theme toggle.
+    -   **Summary of importance**: Defines global CSS styles, theme-specific variables, and animations, using Tailwind CSS.
+    -   **Changes made**: Added styles for new themes, SVG icon animations, UI enhancements (glass, glow effects), footer animations, updated scrollbar styling, and styles for new switch components.
 -   ****:
-    -   **Summary of importance**: The FastAPI backend, serving as the central API for the frontend, handling business logic, user authentication, data processing, and MongoDB interactions. It's crucial for all data-driven functionalities.
-    -   **Changes made**:
-        -   Enhanced existing APIs for comprehensive search, filtered statistics, and charts.
-        -   Added API endpoint for .
-        -   Implemented a full multi-lingual  with endpoints for overview, invoices, expenses, profit/loss, customer summary, and dashboard stats, including role-based access.
-        -   Added new  APIs to support user photos, last seen status, and detailed user statistics ().
-        -   Developed  APIs for performance dashboards, KPI metrics, real-time analytics, and top performers' analysis.
-        -   Implemented  APIs for managing points, levels, achievements, and challenges.
-        -   Developed  APIs for location tracking, history, team locations, geofencing, and route optimization (using Haversine formula).
-        -   Added  and  APIs for document upload, text extraction, and management.
+    -   **Summary of importance**: The FastAPI backend, serving as the central API, handling business logic, user authentication, data processing, and MongoDB interactions.
+    -   **Changes made**: Enhanced existing APIs, added . Implemented multi-lingual  APIs. Developed , , , , and  APIs. Critically, re-structured role hierarchy and added APIs for managing **Regions and Lines**. Implemented **Comprehensive Admin Control APIs** for settings, Google Maps, site, performance, and feature toggles (13 new APIs). Added APIs for **Warehouse Management** (CRUD for warehouses and products) and **Invoice System** (models and APIs for creation). Fixed FastAPI route ordering.
+-   ****:
+    -   **Summary of importance**: Contains the original problem statement, testing protocols, and a log of past agent communications and testing results.
+    -   **Changes made**: Regularly updated with new tasks, test results, and summaries of implemented features throughout the development phases.
 </code_architecture>
 
 <pending_tasks>
-- Full implementation of comprehensive admin settings (beyond basic access).
-- Detailed permissions management.
-- Complete overhaul of the warehouse management dashboard.
-- Further enhancements to GPS tracking (e.g., dedicated Geofencing Management and Route Planning views).
-- Implementation of Gamification and Personal KPI features (though core Gamification is done, fine-tuning might be pending).
-- Enhance visit logs with Google Maps integration (specifically linking GPS data to visits).
-- Full integration and completion of the WhatsApp-like Chat System.
-- Full integration and completion of AI-Powered features.
+-   Full implementation of comprehensive admin settings (beyond basic access), specifically refining permissions management.
+-   Complete overhaul and full implementation of the warehouse management dashboard (frontend components and logic).
+-   Full implementation and UI integration for the advanced invoice system (frontend components for generation, export, print, management).
+-   Refine Gamification into tangible incentive systems.
+-   Complete the Accounting System.
+-   Enhance visit logs with Google Maps integration.
+-   Full integration and completion of the WhatsApp-like Chat System.
+-   Full integration and completion of AI-Powered features beyond current analytics.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was developing the **Document Scanner System**.
-The backend APIs for the Document Scanner and OCR System were successfully implemented in  (as confirmed by Chat Message 199).
-Following this, the frontend interface for the Document Scanner was developed and integrated into  (as confirmed by Chat Message 201). This includes components for document uploading, OCR capabilities, and potentially file management.
-The current status is that the core Document Scanner components are in place on both the backend and frontend. The next immediate step planned by the AI engineer is to integrate the Document Scanner into the main navigation menu, as explicitly stated in the last message of the trajectory.
-The system is in a highly developed state, with core features like dynamic theming, comprehensive search, multi-lingual support, an accounting system, enhanced user management, advanced analytics, and a gamification system successfully implemented and integrated. The GPS tracking system has also been largely completed, with 7 out of 8 tests passing.
+Immediately before this summary request, the AI engineer was actively developing the **Warehouse Management System** and the **Advanced Invoice System**.
+For **Warehouse Management**:
+-   Backend APIs in  were implemented, allowing CRUD (Create, Read, Update, Delete) operations for warehouses and products.
+-   Frontend integration was initiated, with the  component added to . The next step involved adding modal components for warehouse operations.
+For the **Advanced Invoice System**:
+-   Backend APIs in  were implemented, including models for invoice generation and related data.
+-   Frontend integration was initiated with the  component added to .
+The system is in a highly developed state, with robust language switching, a new hierarchical role structure (GM, Line, Area, District, Key Account, Medical Rep), comprehensive admin settings (22 tabs controlling all major features, including dedicated sections for Google Maps, site settings, and performance), an SVG icon system, and extensive backend APIs. The GPS tracking and Document Scanner systems are largely complete and integrated into the overall UI. The immediate task at the point of interruption was to add the frontend modals for the warehouse section.
 </current_work>
 
 <optional_next_step>
-Integrate the Document Scanner tab into the main navigation menu and complete the frontend system.
+Continue developing the frontend for the Warehouse Management System by adding the necessary modal components (e.g., for creating or editing warehouses).
 </optional_next_step>
