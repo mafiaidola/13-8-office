@@ -11225,6 +11225,10 @@ const Dashboard = () => {
           <ComprehensiveAdminSettings />
         )}
 
+        {activeTab === 'monthly-planning' && (['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role)) && (
+          <MonthlyPlanningSystem />
+        )}
+
         </div>
         
         {/* Enhanced Footer */}
