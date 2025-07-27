@@ -10774,18 +10774,73 @@ async def get_my_requests(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/approvals/pending")
 async def get_pending_approvals(current_user: User = Depends(get_current_user)):
-    """Get pending approvals for current user"""
+    """Get pending approvals for current user based on hierarchical relationships"""
     try:
         user_level = UserRole.ROLE_HIERARCHY.get(current_user.role, 0)
         
         # Find approval requests where current user can approve
-        pending_approvals = await db.approval_requests.find({
+        base_query = {
             "status": "pending",
             "required_levels": user_level,
             "current_level": user_level
-        }, {"_id": 0}).to_list(100)
+        }
         
-        return pending_approvals
+        # Get all pending approvals first
+        all_pending = await db.approval_requests.find(base_query, {"_id": 0}).to_list(100)
+        
+        # Filter based on hierarchical relationships
+        filtered_approvals = []
+        
+        for approval in all_pending:
+            # Get the requester information
+            requester = await db.users.find_one({"id": approval["requested_by"]}, {"_id": 0})
+            if not requester:
+                continue
+                
+            # Check if current user can approve this request based on hierarchy
+            can_approve = False
+            
+            # Admin and GM can approve all requests
+            if current_user.role in [UserRole.ADMIN, UserRole.GM]:
+                can_approve = True
+            
+            # Line Manager can approve requests from their area managers and below
+            elif current_user.role == UserRole.LINE_MANAGER:
+                if requester.get("line") == current_user.line:
+                    can_approve = True
+            
+            # Area Manager can approve requests from their district managers and below
+            elif current_user.role == UserRole.AREA_MANAGER:
+                if (requester.get("area_id") == current_user.area_id or 
+                    requester.get("managed_by") == current_user.id):
+                    can_approve = True
+            
+            # District Manager can approve requests from their key accounts and medical reps
+            elif current_user.role == UserRole.DISTRICT_MANAGER:
+                if (requester.get("managed_by") == current_user.id or
+                    requester.get("district_manager_id") == current_user.id):
+                    can_approve = True
+            
+            # Accounting can approve all financial requests
+            elif current_user.role == UserRole.ACCOUNTING:
+                can_approve = True  # Accounting approves all financial requests
+            
+            # Warehouse Keeper can approve requests for their warehouse
+            elif current_user.role == UserRole.WAREHOUSE_KEEPER:
+                if current_user.warehouse_id:
+                    # Check if the request is for this warehouse
+                    entity_data = approval.get("entity_data", {})
+                    if entity_data.get("warehouse_id") == current_user.warehouse_id:
+                        can_approve = True
+                else:
+                    can_approve = True  # If no specific warehouse, can approve all
+            
+            if can_approve:
+                # Add requester name
+                approval["requester_name"] = requester.get("full_name", "Unknown")
+                filtered_approvals.append(approval)
+        
+        return filtered_approvals
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
