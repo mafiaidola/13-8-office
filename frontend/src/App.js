@@ -17147,6 +17147,510 @@ const EnhancedWarehouseManagement = () => {
   );
 };
 
+// Invoice Preview Modal Component
+const InvoicePreviewModal = ({ invoice, onClose }) => {
+  const { t } = useLanguage();
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('invoice-print-content');
+    const originalContent = document.body.innerHTML;
+    document.body.innerHTML = printContent.outerHTML;
+    window.print();
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+  };
+
+  const handleDownload = () => {
+    // Simulate PDF download
+    const blob = new Blob([JSON.stringify(invoice, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${invoice.invoice_number}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">
+            معاينة الفاتورة {invoice.invoice_number}
+          </h3>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrint}
+              className="btn-primary flex items-center gap-2 px-4 py-2"
+            >
+              <SVGIcon name="scanner" size={20} />
+              <span>طباعة</span>
+            </button>
+            <button
+              onClick={handleDownload}
+              className="btn-info flex items-center gap-2 px-4 py-2"
+            >
+              <SVGIcon name="reports" size={20} />
+              <span>تحميل</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="btn-secondary px-4 py-2"
+            >
+              إغلاق
+            </button>
+          </div>
+        </div>
+
+        {/* Invoice Content for Print */}
+        <div id="invoice-print-content" className="glass-effect p-8 rounded-xl">
+          {/* Company Header */}
+          <div className="text-center mb-8 border-b pb-4">
+            <h1 className="text-3xl font-bold text-gradient mb-2">EP Group System</h1>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              نظام إدارة شامل للمؤسسات الطبية
+            </p>
+          </div>
+
+          {/* Invoice Header */}
+          <div className="grid grid-cols-2 gap-8 mb-8">
+            <div>
+              <h2 className="text-xl font-bold mb-4">فاتورة رقم: {invoice.invoice_number}</h2>
+              <div className="space-y-2 text-sm">
+                <div><strong>تاريخ الإصدار:</strong> {new Date(invoice.created_at).toLocaleDateString('ar-EG')}</div>
+                <div><strong>الحالة:</strong> 
+                  <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                    invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                    invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {invoice.status === 'paid' ? 'مدفوعة' :
+                     invoice.status === 'pending' ? 'معلقة' : 'ملغاة'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <h3 className="text-lg font-bold mb-4">بيانات العميل</h3>
+              <div className="space-y-2 text-sm">
+                <div><strong>الاسم:</strong> {invoice.customer_name}</div>
+                <div><strong>التخصص:</strong> {invoice.customer_specialty}</div>
+                <div><strong>العيادة:</strong> {invoice.clinic_name}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4">تفاصيل الفاتورة</h3>
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 px-4 py-2 text-right">المنتج</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">الكمية</th>
+                  <th className="border border-gray-300 px-4 py-2 text-right">سعر الوحدة</th>
+                  <th className="border border-gray-300 px-4 py-2 text-right">الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items && invoice.items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-gray-300 px-4 py-2">{item.product_name}</td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">{item.quantity}</td>
+                    <td className="border border-gray-300 px-4 py-2">{item.unit_price} ج.م</td>
+                    <td className="border border-gray-300 px-4 py-2 font-bold">{item.total_price} ج.م</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Totals */}
+          <div className="flex justify-end">
+            <div className="w-80 space-y-2">
+              <div className="flex justify-between">
+                <span>المجموع الجزئي:</span>
+                <span>{invoice.subtotal} ج.م</span>
+              </div>
+              {invoice.discount_amount > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>الخصم:</span>
+                  <span>-{invoice.discount_amount} ج.م</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>الضريبة (15%):</span>
+                <span>{invoice.tax_amount} ج.م</span>
+              </div>
+              <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                <span>الإجمالي:</span>
+                <span className="text-green-600">{invoice.total_amount} ج.م</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-8 pt-4 border-t text-sm" style={{ color: 'var(--text-muted)' }}>
+            <p>شكراً لتعاملكم معنا</p>
+            <p>EP Group System - جميع الحقوق محفوظة</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Invoice Create Modal Component
+const InvoiceCreateModal = ({ onClose, onSave }) => {
+  const { t } = useLanguage();
+  const [formData, setFormData] = useState({
+    customer_name: '',
+    customer_specialty: '',
+    clinic_name: '',
+    discount_amount: 0,
+    items: [{ product_name: '', quantity: 1, unit_price: 0 }]
+  });
+
+  const addItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, { product_name: '', quantity: 1, unit_price: 0 }]
+    });
+  };
+
+  const removeItem = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const updateItem = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const calculateTotals = () => {
+    const subtotal = formData.items.reduce((sum, item) => 
+      sum + (item.quantity * item.unit_price), 0
+    );
+    const discountAmount = formData.discount_amount || 0;
+    const taxAmount = (subtotal - discountAmount) * 0.15;
+    const total = subtotal - discountAmount + taxAmount;
+
+    return { subtotal, discountAmount, taxAmount, total };
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const totals = calculateTotals();
+    
+    const newInvoice = {
+      ...formData,
+      id: `INV-${Date.now()}`,
+      invoice_number: `INV-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      subtotal: totals.subtotal,
+      tax_amount: totals.taxAmount,
+      total_amount: totals.total,
+      status: 'pending'
+    };
+
+    // Add total_price to each item
+    newInvoice.items = newInvoice.items.map(item => ({
+      ...item,
+      total_price: item.quantity * item.unit_price
+    }));
+
+    onSave(newInvoice);
+  };
+
+  const totals = calculateTotals();
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">إنشاء فاتورة جديدة</h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Customer Information */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">بيانات العميل</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">اسم العميل:</label>
+                <input
+                  type="text"
+                  value={formData.customer_name}
+                  onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">التخصص:</label>
+                <input
+                  type="text"
+                  value={formData.customer_specialty}
+                  onChange={(e) => setFormData({...formData, customer_specialty: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">اسم العيادة:</label>
+                <input
+                  type="text"
+                  value={formData.clinic_name}
+                  onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Items */}
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-bold">عناصر الفاتورة</h4>
+              <button
+                type="button"
+                onClick={addItem}
+                className="btn-primary flex items-center gap-2"
+              >
+                <SVGIcon name="add" size={16} />
+                <span>إضافة عنصر</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.items.map((item, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                  <div>
+                    <label className="block text-sm font-bold mb-2">المنتج:</label>
+                    <input
+                      type="text"
+                      value={item.product_name}
+                      onChange={(e) => updateItem(index, 'product_name', e.target.value)}
+                      className="form-modern w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">الكمية:</label>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
+                      className="form-modern w-full"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-2">سعر الوحدة:</label>
+                    <input
+                      type="number"
+                      value={item.unit_price}
+                      onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value))}
+                      className="form-modern w-full"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      className="btn-danger w-full"
+                      disabled={formData.items.length === 1}
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Discount */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">الخصم</h4>
+            <div className="w-1/3">
+              <label className="block text-sm font-bold mb-2">مبلغ الخصم:</label>
+              <input
+                type="number"
+                value={formData.discount_amount}
+                onChange={(e) => setFormData({...formData, discount_amount: parseFloat(e.target.value) || 0})}
+                className="form-modern w-full"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+
+          {/* Totals Summary */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">ملخص الفاتورة</h4>
+            <div className="w-1/2 space-y-2">
+              <div className="flex justify-between">
+                <span>المجموع الجزئي:</span>
+                <span>{totals.subtotal.toFixed(2)} ج.م</span>
+              </div>
+              {totals.discountAmount > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>الخصم:</span>
+                  <span>-{totals.discountAmount.toFixed(2)} ج.م</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>الضريبة (15%):</span>
+                <span>{totals.taxAmount.toFixed(2)} ج.م</span>
+              </div>
+              <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                <span>الإجمالي:</span>
+                <span className="text-green-600">{totals.total.toFixed(2)} ج.م</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              إنشاء الفاتورة
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Invoice Edit Modal Component (similar to create but with existing data)
+const InvoiceEditModal = ({ invoice, onClose, onSave }) => {
+  const { t } = useLanguage();
+  const [formData, setFormData] = useState({
+    customer_name: invoice.customer_name,
+    customer_specialty: invoice.customer_specialty,
+    clinic_name: invoice.clinic_name,
+    discount_amount: invoice.discount_amount || 0,
+    items: invoice.items || [{ product_name: '', quantity: 1, unit_price: 0 }]
+  });
+
+  // Same logic as create modal but with update functionality
+  const addItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, { product_name: '', quantity: 1, unit_price: 0 }]
+    });
+  };
+
+  const removeItem = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const updateItem = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const calculateTotals = () => {
+    const subtotal = formData.items.reduce((sum, item) => 
+      sum + (item.quantity * item.unit_price), 0
+    );
+    const discountAmount = formData.discount_amount || 0;
+    const taxAmount = (subtotal - discountAmount) * 0.15;
+    const total = subtotal - discountAmount + taxAmount;
+
+    return { subtotal, discountAmount, taxAmount, total };
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const totals = calculateTotals();
+    
+    const updatedInvoice = {
+      ...invoice,
+      ...formData,
+      subtotal: totals.subtotal,
+      tax_amount: totals.taxAmount,
+      total_amount: totals.total,
+      items: formData.items.map(item => ({
+        ...item,
+        total_price: item.quantity * item.unit_price
+      }))
+    };
+
+    onSave(updatedInvoice);
+  };
+
+  const totals = calculateTotals();
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">
+          تعديل الفاتورة {invoice.invoice_number}
+        </h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Same form structure as create modal */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">بيانات العميل</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">اسم العميل:</label>
+                <input
+                  type="text"
+                  value={formData.customer_name}
+                  onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">التخصص:</label>
+                <input
+                  type="text"
+                  value={formData.customer_specialty}
+                  onChange={(e) => setFormData({...formData, customer_specialty: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">اسم العيادة:</label>
+                <input
+                  type="text"
+                  value={formData.clinic_name}
+                  onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              حفظ التغييرات
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Invoice Management Component
 const InvoiceManagement = () => {
   const { t } = useLanguage();
