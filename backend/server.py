@@ -10741,6 +10741,31 @@ async def create_approval_request(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/approvals/my-requests")
+async def get_my_requests(current_user: User = Depends(get_current_user)):
+    """Get approval requests created by current user"""
+    try:
+        my_requests = await db.approval_requests.find({
+            "requested_by": current_user.id
+        }, {"_id": 0}).sort("created_at", -1).to_list(100)
+        
+        # Enrich with additional information
+        for request in my_requests:
+            # Add current approver role information
+            if request.get("current_level"):
+                # Find the role that corresponds to current level
+                for role, level in UserRole.ROLE_HIERARCHY.items():
+                    if level == request["current_level"]:
+                        request["current_approver_role"] = role
+                        break
+            
+            # Add requester name (current user)
+            request["requester_name"] = current_user.full_name
+        
+        return my_requests
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/approvals/pending")
 async def get_pending_approvals(current_user: User = Depends(get_current_user)):
     """Get pending approvals for current user"""
