@@ -9560,16 +9560,125 @@ async def get_warehouse_analytics(current_user: User = Depends(get_current_user)
     ]
     top_warehouses = await db.product_stock.aggregate(warehouse_value_pipeline).to_list(10)
     
-    return {
-        "summary": {
-            "total_warehouses": total_warehouses,
-            "total_stock_value": total_stock_value,
-            "total_products_stocked": total_products_stocked,
-            "low_stock_alerts": low_stock_count
-        },
-        "movements_summary": movements_summary,
-        "top_warehouses": top_warehouses
-    }
+# Enhanced Invoice System Models
+class InvoiceItem(BaseModel):
+    product_id: str
+    product_name: str  # Cached for performance
+    quantity: float
+    unit_price: float
+    discount_percentage: float = 0.0
+    discount_amount: float = 0.0
+    subtotal: float  # quantity * unit_price
+    total: float  # subtotal - discount_amount
+
+class Invoice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_number: str  # Auto-generated unique number
+    clinic_id: str
+    clinic_name: str  # Cached for performance
+    clinic_code: str  # Unique clinic code
+    doctor_id: str
+    doctor_name: str  # Cached for performance
+    doctor_specialty: str
+    invoice_type: str = "CASH"  # CASH or CREDIT
+    payment_terms: Optional[str] = None  # For credit invoices
+    due_date: Optional[datetime] = None  # For credit invoices
+    items: List[InvoiceItem]
+    subtotal: float  # Sum of all item subtotals
+    discount_percentage: float = 0.0
+    discount_amount: float = 0.0
+    tax_percentage: float = 14.0  # Egypt VAT
+    tax_amount: float
+    total_amount: float  # subtotal - discount_amount + tax_amount
+    paid_amount: float = 0.0
+    remaining_amount: float  # total_amount - paid_amount
+    status: str = "DRAFT"  # DRAFT, SENT, PAID, PARTIALLY_PAID, OVERDUE, CANCELLED
+    notes: Optional[str] = None
+    terms_and_conditions: Optional[str] = None
+    
+    # Company/System Information
+    company_logo: Optional[str] = None
+    company_name: str = "EP Group System"
+    company_address: Optional[str] = None
+    company_phone: Optional[str] = None
+    company_email: Optional[str] = None
+    company_tax_id: Optional[str] = None
+    
+    # Dates
+    invoice_date: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+    updated_at: Optional[datetime] = None
+    updated_by: Optional[str] = None
+    sent_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+
+class InvoiceCreate(BaseModel):
+    clinic_id: str
+    doctor_id: str
+    invoice_type: str = "CASH"
+    payment_terms: Optional[str] = None
+    due_days: Optional[int] = None  # Days from invoice date
+    items: List[Dict[str, Any]]  # Will be converted to InvoiceItem
+    discount_percentage: float = 0.0
+    notes: Optional[str] = None
+    terms_and_conditions: Optional[str] = None
+
+class InvoicePayment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_id: str
+    amount: float
+    payment_method: str  # CASH, BANK_TRANSFER, CREDIT_CARD, CHECK
+    payment_date: datetime = Field(default_factory=datetime.utcnow)
+    reference_number: Optional[str] = None
+    notes: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class InvoicePaymentCreate(BaseModel):
+    amount: float
+    payment_method: str
+    reference_number: Optional[str] = None
+    notes: Optional[str] = None
+
+# Enhanced Clinic Model with Code Generation
+class ClinicEnhanced(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # Auto-generated unique clinic code (e.g., CLI001, CLI002)
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: str
+    city: str
+    region: str
+    postal_code: Optional[str] = None
+    coordinates: Optional[Dict[str, float]] = None
+    specialty: Optional[str] = None
+    license_number: Optional[str] = None
+    tax_id: Optional[str] = None
+    credit_limit: float = 0.0
+    payment_terms: Optional[str] = None  # Default payment terms
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+# Enhanced Doctor Model
+class DoctorEnhanced(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    code: str  # Auto-generated unique doctor code (e.g., DOC001, DOC002)
+    specialty: str
+    clinic_id: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    license_number: Optional[str] = None
+    qualifications: Optional[List[str]] = []
+    experience_years: Optional[int] = None
+    consultation_fee: Optional[float] = None
+    working_hours: Optional[Dict[str, str]] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
 
 app.include_router(api_router)
 
