@@ -11167,6 +11167,15 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Approvals Tab - Available for all users */}
+            <button
+              onClick={() => setActiveTab('approvals')}
+              className={`nav-item ${activeTab === 'approvals' ? 'active' : ''} flex items-center whitespace-nowrap`}
+            >
+              <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>⚖️</span>
+              {language === 'ar' ? 'الموافقات' : 'Approvals'}
+            </button>
+            
             {/* Advanced Analytics tab for admin and manager roles */}
             {canAccessTab('reports') && (
               <button
