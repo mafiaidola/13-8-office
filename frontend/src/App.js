@@ -8371,6 +8371,7 @@ const ReportsSection = () => {
                   const roleNames = {
                     admin: 'أدمن',
                     warehouse_manager: 'مدير مخزن',
+                    warehouse_keeper: 'أمين المخزن',
                     manager: 'مدير',
                     sales_rep: 'مندوب'
                   };
