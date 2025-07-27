@@ -1037,6 +1037,41 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
     
     return {"message": "User deleted successfully"}
 
+@api_router.get("/users/managers")
+async def get_managers(current_user: User = Depends(get_current_user)):
+    """Get all users who can be assigned as managers"""
+    try:
+        # Get users with manager roles
+        manager_roles = [UserRole.ADMIN, UserRole.GM, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]
+        managers = await db.users.find(
+            {"role": {"$in": manager_roles}, "is_active": True},
+            {"_id": 0, "id": 1, "full_name": 1, "role": 1, "region_id": 1}
+        ).to_list(100)
+        
+        # Add role display names
+        for manager in managers:
+            manager["name"] = manager["full_name"]
+            
+        return managers
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/regions/list")
+async def get_regions_list(current_user: User = Depends(get_current_user)):
+    """Get all regions for user assignment"""
+    try:
+        regions = await db.regions.find({"is_active": True}, {"_id": 0}).to_list(100)
+        return regions
+    except Exception as e:
+        # Mock data for development
+        return [
+            {"id": "region-001", "name": "القاهرة", "manager_id": "manager-001"},
+            {"id": "region-002", "name": "الجيزة", "manager_id": "manager-002"},
+            {"id": "region-003", "name": "الإسكندرية", "manager_id": "manager-003"},
+            {"id": "region-004", "name": "الدقهلية", "manager_id": "manager-004"},
+            {"id": "region-005", "name": "الغربية", "manager_id": "manager-005"}
+        ]
+
 # Product Management Routes
 @api_router.post("/products")
 async def create_product(product_data: ProductCreate, current_user: User = Depends(get_current_user)):
