@@ -14696,8 +14696,6 @@ const AdminFeatureToggle = () => {
   const featureLabels = {
     gps_tracking: 'نظام تتبع GPS',
     gamification: 'نظام الألعاب',
-    chat_system: 'نظام الدردشة',
-    document_scanner: 'ماسح المستندات',
     visit_management: 'إدارة الزيارات',
     accounting_system: 'نظام المحاسبة',
     notifications: 'نظام الإشعارات',
