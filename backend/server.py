@@ -10720,6 +10720,12 @@ async def create_approval_request(
         elif current_user.role == UserRole.KEY_ACCOUNT:
             # Key account orders: area_manager -> accounting -> warehouse
             required_levels = [4, 3, 3]  # area, accounting, warehouse
+        elif current_user.role in [UserRole.ADMIN, UserRole.GM]:
+            # Admin and GM requests can be self-approved or require minimal approval
+            required_levels = [7]  # Admin level approval
+        else:
+            # Default approval levels for other roles
+            required_levels = [3, 4]  # district_manager, area_manager
         
         # Create approval request
         approval_request = ApprovalRequest(
