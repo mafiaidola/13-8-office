@@ -4754,12 +4754,13 @@ const ApprovalsDashboard = ({ user }) => {
       )}
 
       {/* Approval History Tab */}
-      {activeTab === 'approval_history' && ['admin', 'gm'].includes(user.role) && (
+      {activeTab === 'approval_history' && ['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'key_account'].includes(user.role) && (
         <div className="space-y-4">
           {approvalHistory.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="text-6xl mb-4">📜</div>
-              <p>لا يوجد سجل موافقات</p>
+              <p>لا يوجد سجل موافقات للفريق الخاص بك</p>
+              <p className="text-sm mt-2">سيظهر هنا سجل الموافقات للمستخدمين التابعين لك فقط</p>
             </div>
           ) : (
             <div className="grid gap-4">
