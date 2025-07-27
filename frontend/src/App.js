@@ -8057,19 +8057,24 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
             </button>
 
             {/* Single Unified Theme Toggle */}
-            <button
-              onClick={() => {
-                const currentIndex = themes.findIndex(t => t.id === theme);
-                const nextIndex = (currentIndex + 1) % themes.length;
-                changeTheme(themes[nextIndex].id);
-              }}
-              className="theme-toggle-button glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
-              title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
-            >
-              <span className="text-lg transition-transform duration-300">
-                {themes.find(t => t.id === theme)?.icon}
-              </span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const currentIndex = themes.findIndex(t => t.id === theme);
+                  const nextIndex = (currentIndex + 1) % themes.length;
+                  changeTheme(themes[nextIndex].id);
+                }}
+                className="theme-toggle-button glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md flex items-center gap-2"
+                title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
+              >
+                <span className="text-lg transition-transform duration-300">
+                  {themes.find(t => t.id === theme)?.icon}
+                </span>
+                <span className="text-xs font-medium hidden md:block" style={{ color: 'var(--text-primary)' }}>
+                  {themes.find(t => t.id === theme)?.name}
+                </span>
+              </button>
+            </div>
 
             {/* User Menu */}
             <div className="relative">
