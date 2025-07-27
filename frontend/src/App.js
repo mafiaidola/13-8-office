@@ -2641,7 +2641,6 @@ const DashboardConfigTab = ({ config, onUpdate, loading }) => {
     warehouse_tab: 'إدارة المخازن',
     visits_tab: 'سجل الزيارات',
     reports_tab: 'التقارير',
-    chat_tab: 'المحادثات',
     settings_tab: 'الإعدادات'
   };
 
