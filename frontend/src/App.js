@@ -229,9 +229,7 @@ const translations = {
     visits: 'Visits',
     visitsLog: 'Visits Log',
     reports: 'Reports',
-    chat: 'Chat',
     settings: 'Settings',
-    secretReports: 'Secret Reports',
     logout: 'Logout',
     
     // Dashboard
