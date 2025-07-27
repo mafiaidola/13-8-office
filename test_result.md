@@ -554,9 +554,9 @@ backend:
 
   - task: "Enhanced User Management APIs with Advanced Features"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -572,6 +572,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE IDENTIFIED IN ENHANCED USER MANAGEMENT: Conducted focused testing of the Enhanced User Management System fixes as requested in the review. 🔍 ROOT CAUSE FOUND: There are duplicate User model definitions in server.py (lines 136 and 589). The second User model (line 589) is missing critical fields like region_id, address, national_id, etc. The register_user function tries to create a User object with these fields but fails with AttributeError: 'User' object has no attribute 'region_id'. ✅ WORKING COMPONENTS: 1) Admin Authentication (admin/admin123) ✅ 2) GM Authentication (gm/gm123456) ✅ 3) GET /api/users/managers - Found 30 managers ✅ 4) GET /api/regions/list - Found 4 regions ✅ 5) System Health Check - All 6 database collections accessible ✅. ❌ FAILING COMPONENTS: 1) POST /api/auth/register - 500 Internal Server Error due to duplicate User model definitions 2) PATCH /api/users/{user_id} - Cannot test due to user creation failure. 🛠️ TECHNICAL SOLUTION NEEDED: Remove duplicate User model definition at line 589 and ensure the correct User model (line 136) with all enhanced fields (region_id, address, national_id, hire_date, etc.) is used throughout the codebase. SUCCESS RATE: 5/7 tests passed (71.4%). Core APIs working but user creation/update blocked by model definition conflict."
+      - working: true
+        agent: "testing"
+        comment: "🎉 ENHANCED USER MANAGEMENT SYSTEM FULLY RESOLVED AND WORKING PERFECTLY! Final comprehensive testing after duplicate User model issue fix shows 100% success rate (7/7 tests passed). ✅ ALL PRIMARY APIS WORKING FLAWLESSLY: 1) POST /api/auth/register - Enhanced user creation with all new fields (region_id, direct_manager_id, address, national_id, hire_date, profile_photo) working perfectly. Successfully created user 'مستخدم تجريبي نهائي' with role 'medical_rep' 2) PATCH /api/users/{user_id} - User update functionality working correctly, successfully updated user information 3) GET /api/users/managers - Found 30 managers with proper structure for user assignment 4) GET /api/regions/list - Found 4 regions with proper structure for user assignment. ✅ SYSTEM HEALTH CONFIRMED: Backend service healthy and responding correctly, all authentication systems working (admin/admin123 and gm/gm123456). ✅ DUPLICATE USER MODEL ISSUE RESOLVED: The main agent successfully fixed the duplicate User model definitions that were causing AttributeError. The correct User model (line 136) with all enhanced fields is now being used throughout the codebase. ✅ COMPREHENSIVE VALIDATION: All enhanced user management features including region validation, manager assignment, Arabic language support, and role-based permissions are functioning correctly. The Enhanced User Management System is now production-ready and fully functional!"
 
   - task: "Daily Selfie API for sales representatives"
     implemented: true
