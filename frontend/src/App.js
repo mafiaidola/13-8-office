@@ -7756,7 +7756,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Logo and System Name */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
+            <div className="logo-container w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
                   <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
@@ -7774,7 +7774,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
             {/* Search Button */}
             <button
               onClick={onSearchOpen}
-              className="glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              className="search-button glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
               title={t('search') || 'البحث'}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--text-primary)">
@@ -7785,7 +7785,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
             {/* Language Toggle */}
             <button
               onClick={() => changeLanguage(language === 'ar' ? 'en' : 'ar')}
-              className="glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              className="language-toggle glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
               title={language === 'ar' ? 'Switch to English' : 'تبديل إلى العربية'}
             >
               <span className="text-sm font-bold text-gradient">
@@ -7803,7 +7803,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
               className="theme-toggle-button glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
               title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
             >
-              <span className="text-lg transition-transform duration-300 hover:rotate-12">
+              <span className="text-lg transition-transform duration-300">
                 {themes.find(t => t.id === theme)?.icon}
               </span>
             </button>
@@ -7812,9 +7812,9 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 glass-effect px-3 py-2 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+                className="user-menu-button flex items-center gap-2 px-3 py-2 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+                <div className="user-avatar w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                   {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
                 </div>
                 <span className="font-medium hidden md:block text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -7826,7 +7826,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
               </button>
 
               {showUserMenu && (
-                <div className="absolute top-full right-0 mt-2 glass-effect rounded-lg p-2 min-w-48 border border-white border-opacity-10 shadow-xl">
+                <div className="user-menu-dropdown absolute top-full right-0 mt-2 rounded-lg p-2 min-w-48 shadow-xl">
                   <div className="p-3 border-b border-white border-opacity-10">
                     <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                       {user.full_name || user.username}
@@ -7839,7 +7839,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
                   <div className="py-2 space-y-1">
                     <button 
                       onClick={handleProfileClick}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
+                      className="menu-item w-full text-left px-3 py-2 hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
                       style={{ color: 'var(--text-primary)' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -7850,7 +7850,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
                     
                     <button 
                       onClick={handleSettingsClick}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
+                      className="menu-item w-full text-left px-3 py-2 hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
                       style={{ color: 'var(--text-primary)' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -7863,7 +7863,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
                     
                     <button 
                       onClick={onLogout}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 transition-colors flex items-center gap-3 text-sm text-red-400"
+                      className="menu-item danger w-full text-left px-3 py-2 hover:bg-red-500 hover:bg-opacity-20 transition-colors flex items-center gap-3 text-sm text-red-400"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
