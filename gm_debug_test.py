@@ -132,6 +132,11 @@ class GMDebugTester:
             self.log_test("GM Sales Reps API Debug", False, "No GM token available")
             return False
         
+        # First, let's verify the GM user's role from the token
+        status_code, me_response = self.make_request("GET", "/auth/me", token=self.gm_token)
+        if status_code == 200:
+            print(f"   GM User Role from Token: {me_response.get('role')}")
+        
         status_code, response = self.make_request("GET", "/users/sales-reps", token=self.gm_token)
         
         print(f"   Request URL: {BASE_URL}/users/sales-reps")
@@ -147,6 +152,8 @@ class GMDebugTester:
                 if len(response) > 0:
                     sample_rep = response[0]
                     print(f"   Sample Sales Rep: {sample_rep.get('full_name', 'N/A')} ({sample_rep.get('username', 'N/A')})")
+                    # Show the structure
+                    print(f"   Sample Rep Structure: {list(sample_rep.keys())}")
                 return True
             else:
                 self.log_test("GM Sales Reps API Debug", False, 
@@ -156,9 +163,18 @@ class GMDebugTester:
                 f"ACCESS DENIED (403): {response.get('detail', 'No error message')}")
             print(f"   🚨 ISSUE CONFIRMED: GM user cannot access sales-reps endpoint")
             print(f"   Error Details: {response}")
+            print(f"   🔍 BACKEND CODE ANALYSIS:")
+            print(f"      - Endpoint exists at /api/users/sales-reps")
+            print(f"      - Should allow UserRole.GM (which is 'gm')")
+            print(f"      - GM user role from token: {me_response.get('role') if status_code == 200 else 'Unknown'}")
+            print(f"      - This suggests a role comparison issue in the backend")
         elif status_code == 404:
             self.log_test("GM Sales Reps API Debug", False, 
                 "Endpoint not found (404) - API may not be implemented")
+        elif status_code == 500:
+            self.log_test("GM Sales Reps API Debug", False, 
+                f"Internal Server Error (500): {response.get('detail', 'No error message')}")
+            print(f"   🚨 SERVER ERROR: There may be an exception in the backend code")
         else:
             self.log_test("GM Sales Reps API Debug", False, 
                 f"Unexpected status code: {status_code}", response)
