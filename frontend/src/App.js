@@ -11535,10 +11535,10 @@ const Dashboard = () => {
           onClose={() => setShowGlobalSearch(false)}
         />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 flex-1">
         {/* Navigation Tabs with comprehensive translation */}
-        <div className="mb-8">
-          <nav className={`flex space-x-4 overflow-x-auto nav-menu rounded-2xl p-2 shadow-lg ${isRTL ? 'space-x-reverse' : ''}`} aria-label="Tabs">
+        <div className="mb-4">
+          <nav className={`flex space-x-2 overflow-x-auto nav-menu rounded-xl p-1.5 shadow-md ${isRTL ? 'space-x-reverse' : ''}`} aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''} flex items-center whitespace-nowrap`}
