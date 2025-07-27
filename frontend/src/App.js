@@ -14729,6 +14729,10 @@ const ComprehensiveAdminSettings = () => {
         {activeTab === 'features' && (
           <AdminFeatureControl />
         )}
+
+        {activeTab === 'system' && (
+          <AdminSystemControl />
+        )}
               <div className="text-2xl font-bold text-gradient mb-1">
                 {settings?.total_users || 0}
               </div>
