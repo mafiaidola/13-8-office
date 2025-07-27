@@ -10439,68 +10439,6 @@ async def delete_monthly_plan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/users/sales-reps")
-async def get_sales_reps(
-    current_user: User = Depends(get_current_user)
-):
-    """Get sales representatives for managers"""
-    try:
-        # Check permissions - GM and Admin can see all sales reps
-        if current_user.role not in [UserRole.GM, UserRole.ADMIN, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, UserRole.MANAGER]:
-            raise HTTPException(status_code=403, detail="Insufficient permissions to view sales representatives")
-        
-        # Build query based on role
-        query = {"role": {"$in": [UserRole.MEDICAL_REP, UserRole.SALES_REP]}, "is_active": True}
-        
-        # Role-based filtering (GM and Admin see all)
-        if current_user.role == UserRole.AREA_MANAGER:
-            query["area_manager_id"] = current_user.id
-        elif current_user.role == UserRole.DISTRICT_MANAGER:
-            query["district_manager_id"] = current_user.id
-        elif current_user.role == UserRole.MANAGER:
-            query["manager_id"] = current_user.id
-        # GM and ADMIN see all sales reps, so no additional filtering needed
-        
-        # Get sales reps
-        sales_reps = await db.users.find(
-            query,
-            {"_id": 0, "id": 1, "username": 1, "full_name": 1, "email": 1, "phone": 1, "role": 1, "is_active": 1}
-        ).to_list(100)
-        
-        # Enrich with statistics
-        for rep in sales_reps:
-            # Get current month statistics
-            current_month = datetime.utcnow().strftime("%Y-%m")
-            month_start = datetime.strptime(current_month, "%Y-%m")
-            month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-            
-            rep_stats = {
-                "total_visits": await db.visits.count_documents({
-                    "sales_rep_id": rep["id"],
-                    "created_at": {"$gte": month_start, "$lte": month_end}
-                }),
-                "effective_visits": await db.visits.count_documents({
-                    "sales_rep_id": rep["id"],
-                    "created_at": {"$gte": month_start, "$lte": month_end},
-                    "is_effective": True
-                }),
-                "total_orders": await db.orders.count_documents({
-                    "sales_rep_id": rep["id"],
-                    "created_at": {"$gte": month_start, "$lte": month_end}
-                }),
-                "has_monthly_plan": await db.monthly_plans.count_documents({
-                    "rep_id": rep["id"],
-                    "month": current_month
-                }) > 0
-            }
-            
-            rep["current_month_stats"] = rep_stats
-        
-        return sales_reps
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 # Monthly Planning Analytics
 @api_router.get("/planning/analytics")
 async def get_planning_analytics(
