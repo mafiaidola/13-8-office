@@ -10354,6 +10354,9 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
   const [selectedWarehouse, setSelectedWarehouse] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const t = language === 'ar' ? {
     inventoryTitle: 'إدارة المخزون الشامل',
