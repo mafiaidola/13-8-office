@@ -16705,6 +16705,279 @@ const WarehouseKeeperDashboard = () => {
 const AddProductModal = ({ onClose, onSave, warehouseId }) => {
   const [formData, setFormData] = useState({
     product_name: '',
+    category: '',
+    description: '',
+    unit_price: 0,
+    minimum_stock: 10,
+    maximum_stock: 100,
+    initial_stock: 0
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-2xl">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">إضافة منتج جديد</h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">اسم المنتج:</label>
+              <input
+                type="text"
+                value={formData.product_name}
+                onChange={(e) => setFormData({...formData, product_name: e.target.value})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الفئة:</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                className="form-modern w-full"
+                required
+              >
+                <option value="">اختر الفئة</option>
+                <option value="antibiotics">مضادات حيوية</option>
+                <option value="vitamins">فيتامينات</option>
+                <option value="painkillers">مسكنات</option>
+                <option value="cardiovascular">أدوية القلب</option>
+                <option value="diabetes">أدوية السكري</option>
+                <option value="respiratory">أدوية الجهاز التنفسي</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">الوصف:</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="form-modern w-full h-20"
+              placeholder="وصف مختصر للمنتج..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">سعر الوحدة (ج.م):</label>
+              <input
+                type="number"
+                value={formData.unit_price}
+                onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value)})}
+                className="form-modern w-full"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الحد الأدنى:</label>
+              <input
+                type="number"
+                value={formData.minimum_stock}
+                onChange={(e) => setFormData({...formData, minimum_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الحد الأقصى:</label>
+              <input
+                type="number"
+                value={formData.maximum_stock}
+                onChange={(e) => setFormData({...formData, maximum_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                min="1"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">الكمية الأولية:</label>
+            <input
+              type="number"
+              value={formData.initial_stock}
+              onChange={(e) => setFormData({...formData, initial_stock: parseInt(e.target.value)})}
+              className="form-modern w-full"
+              min="0"
+              required
+            />
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              إضافة المنتج
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Stock Adjustment Modal Component
+const StockAdjustmentModal = ({ product, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    type: 'add',
+    quantity: 0,
+    reason: '',
+    notes: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(product.id, formData);
+  };
+
+  const adjustmentTypes = [
+    { value: 'add', label: 'إضافة مخزون', icon: '➕' },
+    { value: 'remove', label: 'سحب مخزون', icon: '➖' },
+    { value: 'adjust', label: 'تعديل مخزون', icon: '🔄' },
+    { value: 'damaged', label: 'تالف', icon: '❌' },
+    { value: 'expired', label: 'منتهي الصلاحية', icon: '⚠️' }
+  ];
+
+  const reasons = [
+    'استلام شحنة جديدة',
+    'تسليم للمناديب', 
+    'عينات مجانية',
+    'أدوية تالفة',
+    'انتهاء صلاحية',
+    'جرد دوري',
+    'تصحيح خطأ إدخال',
+    'إعادة من المناديب',
+    'أخرى'
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-2xl">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">
+          تعديل مخزون: {product.product_name}
+        </h3>
+        
+        <div className="glass-effect p-4 rounded-xl mb-6">
+          <div className="flex justify-between items-center">
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المخزون الحالي:</span>
+            <span className="text-2xl font-bold">{product.current_stock}</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-2">نوع التعديل:</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {adjustmentTypes.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setFormData({...formData, type: type.value})}
+                  className={`p-3 rounded-lg text-sm transition-all ${
+                    formData.type === type.value
+                      ? 'bg-blue-600 text-white'
+                      : 'glass-effect hover:bg-white hover:bg-opacity-10'
+                  }`}
+                >
+                  <div className="text-xl mb-1">{type.icon}</div>
+                  <div>{type.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">الكمية:</label>
+              <input
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">السبب:</label>
+              <select
+                value={formData.reason}
+                onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                className="form-modern w-full"
+                required
+              >
+                <option value="">اختر السبب</option>
+                {reasons.map((reason, index) => (
+                  <option key={index} value={reason}>{reason}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">ملاحظات إضافية:</label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              className="form-modern w-full h-20"
+              placeholder="أي ملاحظات إضافية..."
+            />
+          </div>
+
+          {/* Preview */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-2">معاينة التغيير:</h4>
+            <div className="flex justify-between items-center">
+              <span>المخزون الحالي:</span>
+              <span className="font-bold">{product.current_stock}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>التغيير:</span>
+              <span className={`font-bold ${
+                formData.type === 'add' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {formData.type === 'add' ? '+' : '-'}{formData.quantity || 0}
+              </span>
+            </div>
+            <div className="border-t pt-2 mt-2 flex justify-between items-center">
+              <span className="font-bold">المخزون الجديد:</span>
+              <span className="text-xl font-bold">
+                {formData.type === 'add' 
+                  ? product.current_stock + (formData.quantity || 0)
+                  : Math.max(0, product.current_stock - (formData.quantity || 0))
+                }
+              </span>
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              تأكيد التعديل
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+const AddProductModal = ({ onClose, onSave, warehouseId }) => {
+  const [formData, setFormData] = useState({
+    product_name: '',
     description: '',
     category: '',
     unit_price: 0,
