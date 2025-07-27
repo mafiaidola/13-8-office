@@ -6603,6 +6603,7 @@ const EnhancedUserManagement = () => {
                       <option value="manager">مدير</option>
                       <option value="sales_rep">مندوب مبيعات</option>
                       <option value="warehouse_manager">مدير مخزن</option>
+                      <option value="warehouse_keeper">أمين المخزن</option>
                       <option value="accounting">محاسب</option>
                     </select>
                   </div>
