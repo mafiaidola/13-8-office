@@ -17726,4 +17726,261 @@ const AdvancedApprovalSystem = () => {
   );
 };
 
+// Order Approval Modal Component
+const OrderApprovalModal = ({ order, onClose, onApprove, onReject, canApprove, userRole }) => {
+  const [notes, setNotes] = useState('');
+  const [action, setAction] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleAction = (actionType) => {
+    setAction(actionType);
+    setShowConfirmation(true);
+  };
+
+  const confirmAction = () => {
+    if (action === 'approve') {
+      onApprove(notes);
+    } else if (action === 'reject') {
+      onReject(notes);
+    }
+    setShowConfirmation(false);
+    setNotes('');
+    setAction('');
+  };
+
+  const getStageIcon = (stage) => {
+    const icons = {
+      rep_submitted: '📝',
+      accounting_review: '💰', 
+      warehouse_approval: '📦',
+      completed: '✅',
+      rejected: '❌'
+    };
+    return icons[stage] || '⏳';
+  };
+
+  const getStageText = (stage) => {
+    const stages = {
+      rep_submitted: 'تم تقديم الطلب',
+      accounting_review: 'مراجعة المحاسبة',
+      warehouse_approval: 'موافقة المخزن',
+      completed: 'مكتمل',
+      rejected: 'مرفوض'
+    };
+    return stages[stage] || stage;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">
+            تفاصيل الطلب: {order.order_number}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Order Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">معلومات الطلب</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>رقم الطلب:</span>
+                <span className="font-bold">{order.order_number}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المندوب:</span>
+                <span className="font-bold">{order.sales_rep}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>تاريخ الإرسال:</span>
+                <span className="text-sm">{new Date(order.submitted_at).toLocaleDateString('ar-EG')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الأولوية:</span>
+                <span className={`px-2 py-1 rounded text-xs font-bold ${
+                  order.urgency === 'high' ? 'bg-red-100 text-red-800' :
+                  order.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {order.urgency === 'high' ? 'عاجل' : 
+                   order.urgency === 'medium' ? 'متوسط' : 'عادي'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-effect p-6 rounded-xl">
+            <h4 className="text-lg font-bold mb-4">معلومات العميل</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الطبيب:</span>
+                <span className="font-bold">{order.doctor_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>العيادة:</span>
+                <span className="text-sm">{order.clinic_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>عدد الأصناف:</span>
+                <span className="text-sm">{order.items.length}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-bold">الإجمالي:</span>
+                <span className="text-lg font-bold text-green-600">{order.total_amount} ج.م</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Workflow Status */}
+        <div className="glass-effect p-6 rounded-xl mb-6">
+          <h4 className="text-lg font-bold mb-4">حالة سير العمل</h4>
+          <div className="flex justify-between items-center">
+            {Object.entries(order.workflow_status).map(([stage, status], index) => (
+              <div key={stage} className="flex flex-col items-center flex-1">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg ${
+                  status.status === 'completed' ? 'bg-green-500 text-white' :
+                  status.status === 'pending' ? 'bg-blue-500 text-white' :
+                  'bg-gray-400 text-white'
+                }`}>
+                  {getStageIcon(stage)}
+                </div>
+                <div className="text-sm mt-2 text-center font-bold">
+                  {getStageText(stage)}
+                </div>
+                {status.status === 'completed' && (
+                  <div className="text-xs mt-1 text-center" style={{ color: 'var(--text-secondary)' }}>
+                    {status.user}<br />
+                    {new Date(status.date).toLocaleDateString('ar-EG')}
+                  </div>
+                )}
+                {index < Object.entries(order.workflow_status).length - 1 && (
+                  <div className={`absolute top-6 w-8 h-0.5 transform translate-x-12 ${
+                    status.status === 'completed' ? 'bg-green-500' : 'bg-gray-400'
+                  }`}></div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Order Items */}
+        <div className="glass-effect p-6 rounded-xl mb-6">
+          <h4 className="text-lg font-bold mb-4">عناصر الطلب</h4>
+          <div className="table-modern overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2 text-right">المنتج</th>
+                  <th className="px-4 py-2 text-center">الكمية</th>
+                  <th className="px-4 py-2 text-right">سعر الوحدة</th>
+                  <th className="px-4 py-2 text-right">الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-4 py-2 font-bold">{item.product_name}</td>
+                    <td className="px-4 py-2 text-center">{item.quantity}</td>
+                    <td className="px-4 py-2">{item.unit_price} ج.م</td>
+                    <td className="px-4 py-2 font-bold">{(item.quantity * item.unit_price).toFixed(2)} ج.م</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Order Notes */}
+        {order.notes && (
+          <div className="glass-effect p-6 rounded-xl mb-6">
+            <h4 className="text-lg font-bold mb-4">ملاحظات الطلب</h4>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{order.notes}</p>
+          </div>
+        )}
+
+        {/* Approval Section */}
+        {canApprove && !showConfirmation && (
+          <div className="glass-effect p-6 rounded-xl mb-6">
+            <h4 className="text-lg font-bold mb-4">إجراء الموافقة</h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">ملاحظات (اختيارية):</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="form-modern w-full h-20"
+                  placeholder="أضف أي ملاحظات أو تعليقات..."
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleAction('approve')}
+                  className="btn-success flex-1 flex items-center justify-center gap-2"
+                >
+                  <span>✅</span>
+                  <span>موافقة</span>
+                </button>
+                <button
+                  onClick={() => handleAction('reject')}
+                  className="btn-danger flex-1 flex items-center justify-center gap-2"
+                >
+                  <span>❌</span>
+                  <span>رفض</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Dialog */}
+        {showConfirmation && (
+          <div className="glass-effect p-6 rounded-xl mb-6 border-2 border-yellow-500">
+            <h4 className="text-lg font-bold mb-4 text-yellow-600">تأكيد الإجراء</h4>
+            <p className="mb-4">
+              هل أنت متأكد من {action === 'approve' ? 'الموافقة على' : 'رفض'} هذا الطلب؟
+            </p>
+            {notes && (
+              <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+                <strong>الملاحظات:</strong> {notes}
+              </div>
+            )}
+            <div className="flex gap-4">
+              <button
+                onClick={confirmAction}
+                className={`flex-1 ${action === 'approve' ? 'btn-success' : 'btn-danger'}`}
+              >
+                تأكيد {action === 'approve' ? 'الموافقة' : 'الرفض'}
+              </button>
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="btn-secondary flex-1"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Close Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="btn-secondary px-6 py-2"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default App;
