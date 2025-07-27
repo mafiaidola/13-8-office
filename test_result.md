@@ -1462,6 +1462,7 @@ test_plan:
     - "Comprehensive Accounting System - Customers API"
     - "Comprehensive Accounting System - Dashboard Stats API"
     - "Comprehensive Accounting System - Role-Based Access Control"
+    - "Areas and Warehouses System Initialization"
   test_all: false
   test_priority: "stuck_first"
 
