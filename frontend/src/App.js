@@ -5795,6 +5795,7 @@ const EnhancedUserManagement = () => {
       'manager': 'مدير فرع',
       'sales_rep': 'مندوب مبيعات',
       'warehouse_manager': 'مدير مخزن',
+      'warehouse_keeper': 'أمين المخزن',
       'accounting': 'محاسب'
     };
     return roleMap[role] || role;
