@@ -17161,6 +17161,233 @@ const EnhancedWarehouseManagement = () => {
   );
 };
 
+// Inventory Edit Modal Component
+const InventoryEditModal = ({ item, warehouses, onClose, onSave, language }) => {
+  const [formData, setFormData] = useState({
+    warehouse_id: item.warehouse_id,
+    product_id: item.product_id,
+    product_name: item.product_name,
+    quantity: item.quantity,
+    minimum_stock: item.minimum_stock,
+    unit_price: item.unit_price || 0
+  });
+
+  const t = language === 'ar' ? {
+    editInventory: 'تعديل المخزون',
+    warehouse: 'المستودع',
+    product: 'المنتج',
+    quantity: 'الكمية',
+    minimumStock: 'الحد الأدنى',
+    unitPrice: 'سعر الوحدة',
+    save: 'حفظ',
+    cancel: 'إلغاء'
+  } : {
+    editInventory: 'Edit Inventory',
+    warehouse: 'Warehouse',
+    product: 'Product',
+    quantity: 'Quantity',
+    minimumStock: 'Minimum Stock',
+    unitPrice: 'Unit Price',
+    save: 'Save',
+    cancel: 'Cancel'
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-2xl">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">{t.editInventory}</h3>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.warehouse}:</label>
+            <select
+              value={formData.warehouse_id}
+              onChange={(e) => setFormData({...formData, warehouse_id: e.target.value})}
+              className="form-modern w-full"
+              required
+            >
+              {warehouses.map(warehouse => (
+                <option key={warehouse.id} value={warehouse.id}>
+                  {warehouse.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">{t.product}:</label>
+            <input
+              type="text"
+              value={formData.product_name}
+              onChange={(e) => setFormData({...formData, product_name: e.target.value})}
+              className="form-modern w-full"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">{t.quantity}:</label>
+              <input
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">{t.minimumStock}:</label>
+              <input
+                type="number"
+                value={formData.minimum_stock}
+                onChange={(e) => setFormData({...formData, minimum_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">{t.unitPrice}:</label>
+              <input
+                type="number"
+                value={formData.unit_price}
+                onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value)})}
+                className="form-modern w-full"
+                step="0.01"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              {t.save}
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              {t.cancel}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Inventory Details Modal Component
+const InventoryDetailsModal = ({ item, onClose, language }) => {
+  const t = language === 'ar' ? {
+    inventoryDetails: 'تفاصيل المخزون',
+    warehouse: 'المستودع',
+    product: 'المنتج',
+    currentStock: 'المخزون الحالي',
+    minimumStock: 'الحد الأدنى',
+    unitPrice: 'سعر الوحدة',
+    totalValue: 'القيمة الإجمالية',
+    status: 'الحالة',
+    inStock: 'متوفر',
+    lowStock: 'مخزون منخفض',
+    outOfStock: 'نفد المخزون',
+    lastUpdated: 'آخر تحديث',
+    close: 'إغلاق'
+  } : {
+    inventoryDetails: 'Inventory Details',
+    warehouse: 'Warehouse',
+    product: 'Product',
+    currentStock: 'Current Stock',
+    minimumStock: 'Minimum Stock',
+    unitPrice: 'Unit Price',
+    totalValue: 'Total Value',
+    status: 'Status',
+    inStock: 'In Stock',
+    lowStock: 'Low Stock',
+    outOfStock: 'Out of Stock',
+    lastUpdated: 'Last Updated',
+    close: 'Close'
+  };
+
+  const getStockStatus = () => {
+    if (item.quantity === 0) return { text: t.outOfStock, color: 'text-red-600' };
+    if (item.quantity <= item.minimum_stock) return { text: t.lowStock, color: 'text-orange-600' };
+    return { text: t.inStock, color: 'text-green-600' };
+  };
+
+  const status = getStockStatus();
+  const totalValue = (item.quantity * (item.unit_price || 0)).toFixed(2);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="modal-modern p-6 w-full max-w-2xl">
+        <h3 className="text-2xl font-bold mb-6 text-gradient">{t.inventoryDetails}</h3>
+        
+        <div className="space-y-6">
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.warehouse}:</label>
+                  <p className="text-lg">{item.warehouse_name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.product}:</label>
+                  <p className="text-lg">{item.product_name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.status}:</label>
+                  <p className={`text-lg font-bold ${status.color}`}>{status.text}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.currentStock}:</label>
+                  <p className="text-2xl font-bold">{item.quantity}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.minimumStock}:</label>
+                  <p className="text-lg">{item.minimum_stock}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-1">{t.unitPrice}:</label>
+                  <p className="text-lg">{item.unit_price || 0} ج.م</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold">{t.totalValue}:</span>
+              <span className="text-2xl font-bold text-green-600">{totalValue} ج.م</span>
+            </div>
+          </div>
+
+          {item.last_updated && (
+            <div className="text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {t.lastUpdated}: {new Date(item.last_updated).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={onClose}
+            className="btn-primary px-6 py-2"
+          >
+            {t.close}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Invoice Preview Modal Component
 const InvoicePreviewModal = ({ invoice, onClose }) => {
   const { t } = useLanguage();
