@@ -6614,6 +6614,106 @@ class BackendTester:
         self.log_test("Token Validation Security", all_passed, details)
         return all_passed
 
+    def run_comprehensive_backend_tests(self):
+        """Run all comprehensive backend tests"""
+        print("🚀 COMPREHENSIVE BACKEND TESTING STARTED")
+        print("=" * 80)
+        print(f"Testing Backend URL: {BASE_URL}")
+        print(f"Test Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 80)
+        
+        # Run Monthly Planning System tests
+        planning_success, planning_total = self.run_monthly_planning_system_tests()
+        
+        # Run Key Features Integration tests
+        features_success, features_total = self.run_key_features_integration_tests()
+        
+        # Calculate overall results
+        total_success = planning_success + features_success
+        total_tests = planning_total + features_total
+        success_rate = (total_success / total_tests) * 100 if total_tests > 0 else 0
+        
+        # Print final summary
+        print("\n" + "=" * 80)
+        print("🎉 COMPREHENSIVE BACKEND TESTING COMPLETED")
+        print("=" * 80)
+        print(f"📊 OVERALL RESULTS:")
+        print(f"   ✅ Total Tests Passed: {total_success}/{total_tests}")
+        print(f"   📈 Success Rate: {success_rate:.1f}%")
+        print(f"   🕒 Test Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Detailed breakdown
+        print(f"\n📋 DETAILED BREAKDOWN:")
+        print(f"   🎯 Monthly Planning System: {planning_success}/{planning_total} ({(planning_success/planning_total)*100:.1f}%)")
+        print(f"   🔧 Key Features Integration: {features_success}/{features_total} ({(features_success/features_total)*100:.1f}%)")
+        
+        # Critical issues summary
+        failed_tests = [result for result in self.test_results if not result["success"]]
+        if failed_tests:
+            print(f"\n❌ FAILED TESTS ({len(failed_tests)}):")
+            for test in failed_tests:
+                print(f"   • {test['test']}: {test['details']}")
+        
+        print("=" * 80)
+        
+        return total_success, total_tests, success_rate
+
+    def run_monthly_planning_system_tests(self):
+        """Run comprehensive Monthly Planning System tests"""
+        print("\n🎯 MONTHLY PLANNING SYSTEM BACKEND TESTING")
+        print("=" * 60)
+        
+        success_count = 0
+        total_tests = 8
+        
+        # Core system tests
+        if self.test_admin_login():
+            success_count += 1
+        if self.test_gm_login():
+            success_count += 1
+        if self.test_database_connectivity():
+            success_count += 1
+        if self.test_backend_service_status():
+            success_count += 1
+        
+        # Create test users for planning tests
+        if self.test_create_sales_rep_user():
+            success_count += 1
+        
+        # Monthly Planning System APIs
+        if self.test_monthly_planning_get_api():
+            success_count += 1
+        if self.test_monthly_planning_post_api():
+            success_count += 1
+        if self.test_sales_reps_api():
+            success_count += 1
+        
+        print(f"\n📊 MONTHLY PLANNING SYSTEM TEST RESULTS: {success_count}/{total_tests} PASSED")
+        return success_count, total_tests
+
+    def run_key_features_integration_tests(self):
+        """Run tests for key recent features integration"""
+        print("\n🔧 KEY RECENT FEATURES INTEGRATION TESTING")
+        print("=" * 60)
+        
+        success_count = 0
+        total_tests = 3
+        
+        # Enhanced User Management APIs
+        if self.test_enhanced_user_management_apis():
+            success_count += 1
+        
+        # Comprehensive Admin Settings APIs
+        if self.test_comprehensive_admin_settings_apis():
+            success_count += 1
+        
+        # Feature Management System
+        if self.test_feature_management_system():
+            success_count += 1
+        
+        print(f"\n📊 KEY FEATURES INTEGRATION TEST RESULTS: {success_count}/{total_tests} PASSED")
+        return success_count, total_tests
+
     def run_comprehensive_review_tests(self):
         """Run comprehensive tests based on review request"""
         print("🎯 STARTING COMPREHENSIVE REVIEW TESTING...")
