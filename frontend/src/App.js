@@ -11630,10 +11630,10 @@ const Dashboard = () => {
             {canAccessTab('reports') && (
               <button
                 onClick={() => setActiveTab('reports')}
-                className={`nav-item ${activeTab === 'reports' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'reports' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
               >
-                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📈</span>
-                {t('reports')}
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📊</span>
+                {t('reports_tab')}
               </button>
             )}
             
