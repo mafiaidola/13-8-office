@@ -1098,15 +1098,18 @@ frontend:
 
   - task: "Comprehensive Admin Settings and Permissions Management"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js, /app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "تم تطوير نظام إعدادات الآدمن الشاملة مع 5 تبويبات رئيسية: 1) الصلاحيات - إدارة صلاحيات كل دور مع جدول تفاعلي 2) لوحة التحكم - التحكم في التبويبات المرئية لكل دور وتخصيص الألوان 3) النظام - مراقبة صحة النظام وقواعد البيانات 4) الأمان - إعدادات كلمة المرور والجلسات و2FA 5) السجلات - عرض الأنشطة الحديثة. تم إضافة 6 APIs جديدة في الباك إند: admin/permissions, admin/dashboard-config, admin/system-health, admin/activity-logs, user/permissions"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE ADMIN SETTINGS WORKING PERFECTLY: Backend API GET /api/admin/settings/comprehensive working correctly with all required sections (system_settings, role_statistics, line_statistics, recent_activities, total_users, available_roles, available_lines). Admin authentication working with admin/admin123 credentials. All 7 key sections present and functional for comprehensive system management."
 
   - task: "Comprehensive Accounting System Implementation"
     implemented: true
