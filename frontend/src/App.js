@@ -2395,6 +2395,8 @@ const DashboardConfigTab = ({ config, onUpdate, loading }) => {
                     {role === 'admin' ? 'مدير' : 
                      role === 'manager' ? 'مدير فرع' :
                      role === 'sales_rep' ? 'مندوب' :
+                     role === 'warehouse_manager' ? 'مدير مخزن' :
+                     role === 'warehouse_keeper' ? 'أمين المخزن' :
                      role === 'warehouse' ? 'مخزن' : 'محاسب'}
                   </th>
                 ))}
