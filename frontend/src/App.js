@@ -7714,14 +7714,16 @@ const useRealTimeAnalytics = () => {
 };
 
 // Enhanced Header Component with comprehensive language support
+// Enhanced Header Component with comprehensive language support and improved design
 const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
   const { theme, changeTheme } = useTheme();
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const themes = [
-    { id: 'light', name: t('themeLight'), icon: '☀️' },
     { id: 'dark', name: t('themeDark'), icon: '🌙' },
+    { id: 'light', name: t('themeLight'), icon: '☀️' },
     { id: 'minimal', name: t('themeMinimal'), icon: '⚪' },
     { id: 'modern', name: t('themeModern'), icon: '🔮' },
     { id: 'fancy', name: t('themeFancy'), icon: '✨' },
@@ -7731,113 +7733,229 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
     { id: 'forest', name: t('themeForest'), icon: '🌲' }
   ];
 
+  const handleSettingsClick = () => {
+    setShowUserMenu(false);
+    // Navigate to settings tab
+    const settingsButton = document.querySelector('[data-tab="settings"]');
+    if (settingsButton) {
+      settingsButton.click();
+    } else {
+      // Alternative method - dispatch custom event
+      window.dispatchEvent(new CustomEvent('navigate-to-settings'));
+    }
+  };
+
+  const handleProfileClick = () => {
+    setShowUserMenu(false);
+    setShowProfileModal(true);
+  };
+
   return (
-    <header className="header-enhanced sticky top-0 z-50 px-6 py-4">
-      <div className="flex items-center justify-between">
-        {/* Logo and System Name */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 glass-effect rounded-full flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-              </svg>
-            </div>
-          </div>
-          <h1 className={`header-brand system-brand ${isRTL ? 'arabic' : 'english'}`}>
-            {t('systemName')}
-          </h1>
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-4">
-          
-          {/* Search Button */}
-          <button
-            onClick={onSearchOpen}
-            className="glass-effect p-3 rounded-full hover:scale-105 transition-transform"
-            title={t('search')}
-          >
-            <SVGIcon name="search" size={20} className="svg-icon-animated" />
-          </button>
-
-          {/* Language Toggle */}
-          <LanguageToggle />
-
-          {/* Unified Theme Toggle - Single Button */}
-          <button
-            onClick={() => {
-              const currentIndex = themes.findIndex(t => t.id === theme);
-              const nextIndex = (currentIndex + 1) % themes.length;
-              changeTheme(themes[nextIndex].id);
-            }}
-            className="theme-toggle-button glass-effect p-3 rounded-full hover:scale-105 transition-all duration-300 flex items-center gap-2"
-            title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
-          >
-            <span className="text-lg transition-transform duration-300 hover:rotate-12">
-              {themes.find(t => t.id === theme)?.icon}
-            </span>
-            <SVGIcon name="theme" size={16} className="svg-icon-animated" />
-          </button>
-
-          {/* User Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 glass-effect px-4 py-2 rounded-full hover:scale-105 transition-transform"
-            >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
-                {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
+    <>
+      <header className="header-enhanced sticky top-0 z-50 px-4 py-3 shadow-lg">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          {/* Logo and System Name */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                </svg>
               </div>
-              <span className="font-medium hidden md:block" style={{ color: 'var(--text-primary)' }}>
-                {user.full_name || user.username}
-              </span>
-              <SVGIcon name="user" size={16} />
+            </div>
+            <h1 className={`header-brand system-brand text-lg font-bold ${isRTL ? 'arabic' : 'english'}`}>
+              {t('systemName')}
+            </h1>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            
+            {/* Search Button */}
+            <button
+              onClick={onSearchOpen}
+              className="glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              title={t('search') || 'البحث'}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--text-primary)">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" strokeWidth="2" fill="none"/>
+              </svg>
             </button>
 
-            {showUserMenu && (
-              <div className="absolute top-full right-0 mt-2 glass-effect rounded-xl p-2 min-w-48 border border-white border-opacity-20">
-                <div className="p-3 border-b border-white border-opacity-20">
-                  <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                    {user.full_name || user.username}
+            {/* Language Toggle */}
+            <button
+              onClick={() => changeLanguage(language === 'ar' ? 'en' : 'ar')}
+              className="glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              title={language === 'ar' ? 'Switch to English' : 'تبديل إلى العربية'}
+            >
+              <span className="text-sm font-bold text-gradient">
+                {language === 'ar' ? 'EN' : 'ع'}
+              </span>
+            </button>
+
+            {/* Single Unified Theme Toggle */}
+            <button
+              onClick={() => {
+                const currentIndex = themes.findIndex(t => t.id === theme);
+                const nextIndex = (currentIndex + 1) % themes.length;
+                changeTheme(themes[nextIndex].id);
+              }}
+              className="theme-toggle-button glass-effect p-2.5 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              title={language === 'ar' ? `الثيم الحالي: ${themes.find(t => t.id === theme)?.name} - اضغط للتبديل` : `Current: ${themes.find(t => t.id === theme)?.name} - Click to switch`}
+            >
+              <span className="text-lg transition-transform duration-300 hover:rotate-12">
+                {themes.find(t => t.id === theme)?.icon}
+              </span>
+            </button>
+
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 glass-effect px-3 py-2 rounded-lg hover:scale-105 transition-all duration-200 hover:shadow-md"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+                  {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
+                </div>
+                <span className="font-medium hidden md:block text-sm" style={{ color: 'var(--text-primary)' }}>
+                  {user.full_name || user.username}
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-secondary)" className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}>
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none"/>
+                </svg>
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute top-full right-0 mt-2 glass-effect rounded-lg p-2 min-w-48 border border-white border-opacity-10 shadow-xl">
+                  <div className="p-3 border-b border-white border-opacity-10">
+                    <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {user.full_name || user.username}
+                    </div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                      {t(user.role || 'user')} • {user.email}
+                    </div>
                   </div>
-                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {t(user.role || 'user')} • {user.email}
+                  
+                  <div className="py-2 space-y-1">
+                    <button 
+                      onClick={handleProfileClick}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                      <span>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
+                    </button>
+                    
+                    <button 
+                      onClick={handleSettingsClick}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                      </svg>
+                      <span>{t('settings')}</span>
+                    </button>
+                    
+                    <div className="border-t border-white border-opacity-10 my-2"></div>
+                    
+                    <button 
+                      onClick={onLogout}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 transition-colors flex items-center gap-3 text-sm text-red-400"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                      </svg>
+                      <span>{t('logout')}</span>
+                    </button>
                   </div>
                 </div>
-                
-                <div className="py-2 space-y-1">
-                  <button 
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    <SVGIcon name="user" size={16} />
-                    <span>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
-                  </button>
-                  
-                  <button 
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    <SVGIcon name="settings" size={16} />
-                    <span>{t('settings')}</span>
-                  </button>
-                  
-                  <div className="border-t border-white border-opacity-20 my-2"></div>
-                  
-                  <button 
-                    onClick={onLogout}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 transition-colors flex items-center gap-3 text-red-400"
-                  >
-                    <SVGIcon name="close" size={16} />
-                    <span>{t('logout')}</span>
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 glass-effect">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
+              </h3>
+              <button 
+                onClick={() => setShowProfileModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Profile Picture */}
+              <div className="flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl">
+                  {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
+                </div>
+              </div>
+              
+              {/* User Info */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    {language === 'ar' ? 'الاسم الكامل' : 'Full Name'}
+                  </label>
+                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
+                    {user.full_name || user.username}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                  </label>
+                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
+                    {user.email}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    {language === 'ar' ? 'الدور' : 'Role'}
+                  </label>
+                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
+                    {t(user.role || 'user')}
+                  </p>
+                </div>
+                
+                {user.phone && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                      {language === 'ar' ? 'رقم الهاتف' : 'Phone'}
+                    </label>
+                    <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
+                      {user.phone}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="flex-1 btn-primary-compact"
+                >
+                  {language === 'ar' ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
