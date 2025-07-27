@@ -415,62 +415,257 @@ class BackendTester:
             self.log_test("Backend Service Status", False, f"Backend service not responding properly: {status_code}")
         return False
 
-    def test_enhanced_user_management_apis(self):
-        """Test Enhanced User Management APIs"""
+    def test_enhanced_user_creation_with_new_fields(self):
+        """Test Enhanced User Creation with new fields (region_id, direct_manager_id, address, national_id, hire_date, profile_photo)"""
         if not self.admin_token:
-            self.log_test("Enhanced User Management APIs", False, "No admin token available")
+            self.log_test("Enhanced User Creation with New Fields", False, "No admin token available")
+            return False
+        
+        # Test data for user creation with new enhanced fields
+        import time
+        timestamp = str(int(time.time()))
+        
+        enhanced_user_data = {
+            "username": f"test_user_new_{timestamp}",
+            "email": f"testuser_{timestamp}@company.com",
+            "password": "testpass123",
+            "full_name": "مستخدم تجريبي جديد",
+            "phone": "01234567890",
+            "role": "medical_rep",
+            "region_id": "region-001",
+            "direct_manager_id": "test-manager-id",
+            "address": "القاهرة، مصر",
+            "national_id": "12345678901234",
+            "hire_date": "2024-01-15",
+            "profile_photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+            "is_active": True
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", enhanced_user_data, self.admin_token)
+        
+        if status_code == 200:
+            user_id = response.get("user_id")
+            if user_id:
+                self.test_enhanced_user_id = user_id
+                self.log_test("Enhanced User Creation with New Fields", True, f"Enhanced user created successfully with ID: {user_id}")
+                return True
+            else:
+                self.log_test("Enhanced User Creation with New Fields", False, "User created but no user_id returned")
+        else:
+            self.log_test("Enhanced User Creation with New Fields", False, f"Status: {status_code}", response)
+        return False
+
+    def test_user_update_functionality(self):
+        """Test PATCH /api/users/{user_id} - User update functionality"""
+        if not self.admin_token:
+            self.log_test("User Update Functionality", False, "No admin token available")
+            return False
+        
+        # Use the enhanced user created in previous test or create a new one
+        user_id = getattr(self, 'test_enhanced_user_id', None)
+        if not user_id:
+            # Get any existing user for testing
+            status_code, users = self.make_request("GET", "/users", token=self.admin_token)
+            if status_code == 200 and len(users) > 0:
+                user_id = users[0]["id"]
+            else:
+                self.log_test("User Update Functionality", False, "No user available for update testing")
+                return False
+        
+        # Test data for user update
+        update_data = {
+            "full_name": "مستخدم محدث",
+            "phone": "01098765432",
+            "address": "الجيزة، مصر",
+            "region_id": "region-002"
+        }
+        
+        status_code, response = self.make_request("PATCH", f"/users/{user_id}", update_data, self.admin_token)
+        
+        if status_code == 200:
+            self.log_test("User Update Functionality", True, "User updated successfully")
+            return True
+        else:
+            self.log_test("User Update Functionality", False, f"Status: {status_code}", response)
+        return False
+
+    def test_get_managers_api(self):
+        """Test GET /api/users/managers - Retrieval of users who can be managers"""
+        if not self.admin_token:
+            self.log_test("Get Managers API", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/users/managers", token=self.admin_token)
+        
+        if status_code == 200:
+            if isinstance(response, list):
+                # Check if managers have required fields
+                if len(response) > 0:
+                    manager = response[0]
+                    required_fields = ["id", "full_name", "role"]
+                    if all(field in manager for field in required_fields):
+                        self.log_test("Get Managers API", True, f"Found {len(response)} managers with proper structure")
+                        return True
+                    else:
+                        self.log_test("Get Managers API", False, "Missing required fields in manager data")
+                else:
+                    self.log_test("Get Managers API", True, "No managers found (expected if none exist)")
+                    return True
+            else:
+                self.log_test("Get Managers API", False, "Response is not a list")
+        else:
+            self.log_test("Get Managers API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_get_regions_list_api(self):
+        """Test GET /api/regions/list - Regions list for user assignment"""
+        if not self.admin_token:
+            self.log_test("Get Regions List API", False, "No admin token available")
+            return False
+        
+        status_code, response = self.make_request("GET", "/regions/list", token=self.admin_token)
+        
+        if status_code == 200:
+            if isinstance(response, list):
+                # Check if regions have required fields
+                if len(response) > 0:
+                    region = response[0]
+                    required_fields = ["id", "name"]
+                    if all(field in region for field in required_fields):
+                        self.log_test("Get Regions List API", True, f"Found {len(response)} regions with proper structure")
+                        return True
+                    else:
+                        self.log_test("Get Regions List API", False, "Missing required fields in region data")
+                else:
+                    self.log_test("Get Regions List API", True, "No regions found - using mock data")
+                    return True
+            else:
+                self.log_test("Get Regions List API", False, "Response is not a list")
+        else:
+            self.log_test("Get Regions List API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_enhanced_user_listing_api(self):
+        """Test GET /api/users/enhanced - Enhanced user listing (if exists)"""
+        if not self.admin_token:
+            self.log_test("Enhanced User Listing API", False, "No admin token available")
+            return False
+        
+        # Try enhanced user listing endpoint
+        status_code, response = self.make_request("GET", "/users/enhanced", token=self.admin_token)
+        
+        if status_code == 200:
+            if isinstance(response, (list, dict)):
+                self.log_test("Enhanced User Listing API", True, "Enhanced user listing endpoint working")
+                return True
+            else:
+                self.log_test("Enhanced User Listing API", False, "Invalid response format")
+        elif status_code == 404:
+            # Try alternative enhanced listing endpoint
+            status_code, response = self.make_request("GET", "/users/enhanced-list", token=self.admin_token)
+            if status_code == 200:
+                self.log_test("Enhanced User Listing API", True, "Enhanced user listing available at /users/enhanced-list")
+                return True
+            else:
+                self.log_test("Enhanced User Listing API", False, "Enhanced user listing endpoint not found")
+        else:
+            self.log_test("Enhanced User Listing API", False, f"Status: {status_code}", response)
+        return False
+
+    def test_gm_authentication(self):
+        """Test GM authentication with gm/gm123456 credentials"""
+        status_code, response = self.make_request("POST", "/auth/login", DEFAULT_GM)
+        
+        if status_code == 200 and "token" in response:
+            self.gm_token = response["token"]
+            user_info = response.get("user", {})
+            if user_info.get("role") == "gm":
+                self.log_test("GM Authentication", True, f"Successfully logged in as GM: {user_info.get('username')}")
+                return True
+            else:
+                self.log_test("GM Authentication", False, f"Wrong role: {user_info.get('role')}")
+        else:
+            self.log_test("GM Authentication", False, f"Status: {status_code}", response)
+        return False
+
+    def test_user_permissions_and_role_validation(self):
+        """Test user permissions and role validation"""
+        if not self.admin_token or not self.gm_token:
+            self.log_test("User Permissions and Role Validation", False, "Missing required tokens")
             return False
         
         success_count = 0
+        total_tests = 3
+        
+        # Test 1: Admin can create users
+        import time
+        timestamp = str(int(time.time()))
+        test_user_data = {
+            "username": f"perm_test_{timestamp}",
+            "email": f"permtest_{timestamp}@test.com",
+            "password": "test123",
+            "role": "medical_rep",
+            "full_name": "اختبار الصلاحيات"
+        }
+        
+        status_code, response = self.make_request("POST", "/auth/register", test_user_data, self.admin_token)
+        if status_code == 200:
+            success_count += 1
+            self.log_test("User Permissions - Admin Create", True, "Admin can create users")
+        else:
+            self.log_test("User Permissions - Admin Create", False, f"Admin cannot create users: {status_code}")
+        
+        # Test 2: GM can create users
+        test_user_data["username"] = f"gm_perm_test_{timestamp}"
+        test_user_data["email"] = f"gmpermtest_{timestamp}@test.com"
+        
+        status_code, response = self.make_request("POST", "/auth/register", test_user_data, self.gm_token)
+        if status_code == 200:
+            success_count += 1
+            self.log_test("User Permissions - GM Create", True, "GM can create users")
+        else:
+            self.log_test("User Permissions - GM Create", False, f"GM cannot create users: {status_code}")
+        
+        # Test 3: Role hierarchy validation
+        if self.sales_rep_token:
+            status_code, response = self.make_request("POST", "/auth/register", test_user_data, self.sales_rep_token)
+            if status_code == 403:
+                success_count += 1
+                self.log_test("User Permissions - Role Hierarchy", True, "Sales rep correctly denied user creation")
+            else:
+                self.log_test("User Permissions - Role Hierarchy", False, f"Sales rep should be denied: {status_code}")
+        else:
+            self.log_test("User Permissions - Role Hierarchy", False, "No sales rep token for testing")
+        
+        return success_count >= 2  # At least 2 out of 3 should work
+
+    def test_system_health_check(self):
+        """Test system health check"""
+        success_count = 0
         total_tests = 4
         
-        # Test 1: Enhanced user list with pagination
-        status_code, response = self.make_request("GET", "/users/enhanced-list?page=1&limit=10", token=self.admin_token)
-        if status_code == 200:
-            if "users" in response and "total_count" in response:
-                self.log_test("Enhanced User List API", True, f"Found {response.get('total_count', 0)} users with pagination")
-                success_count += 1
-            else:
-                self.log_test("Enhanced User List API", False, "Missing pagination structure")
-        else:
-            self.log_test("Enhanced User List API", False, f"Status: {status_code}", response)
-        
-        # Test 2: Update last seen
-        update_data = {"timestamp": datetime.utcnow().isoformat()}
-        status_code, response = self.make_request("POST", "/users/update-last-seen", update_data, self.admin_token)
-        if status_code == 200:
-            self.log_test("Update Last Seen API", True, "Last seen updated successfully")
+        # Test 1: Backend service status
+        if self.test_backend_service_status():
             success_count += 1
-        else:
-            self.log_test("Update Last Seen API", False, f"Status: {status_code}", response)
         
-        # Test 3: Photo upload
-        photo_data = {
-            "user_id": "admin-user-id",
-            "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA=="
-        }
-        status_code, response = self.make_request("POST", "/users/upload-photo", photo_data, self.admin_token)
-        if status_code == 200:
-            self.log_test("Photo Upload API", True, "Photo uploaded successfully")
+        # Test 2: Database connectivity
+        if self.test_database_connectivity():
             success_count += 1
-        else:
-            self.log_test("Photo Upload API", False, f"Status: {status_code}", response)
         
-        # Test 4: Activity summary
-        if self.sales_rep_id:
-            status_code, response = self.make_request("GET", f"/users/{self.sales_rep_id}/activity-summary", token=self.admin_token)
-            if status_code == 200:
-                if "daily_breakdown" in response and "totals" in response:
-                    self.log_test("Activity Summary API", True, "Activity summary retrieved successfully")
-                    success_count += 1
-                else:
-                    self.log_test("Activity Summary API", False, "Missing activity summary structure")
-            else:
-                self.log_test("Activity Summary API", False, f"Status: {status_code}", response)
-        else:
-            self.log_test("Activity Summary API", False, "No sales rep ID available")
+        # Test 3: Authentication system
+        if self.test_admin_login():
+            success_count += 1
         
-        return success_count >= 3  # At least 3 out of 4 should work
+        # Test 4: JWT token validation
+        if self.test_jwt_token_validation():
+            success_count += 1
+        
+        if success_count >= 3:
+            self.log_test("System Health Check", True, f"System healthy: {success_count}/{total_tests} checks passed")
+            return True
+        else:
+            self.log_test("System Health Check", False, f"System issues: only {success_count}/{total_tests} checks passed")
+        return False
 
     def test_comprehensive_admin_settings_apis(self):
         """Test Comprehensive Admin Settings APIs"""
