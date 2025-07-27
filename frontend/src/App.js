@@ -10891,10 +10891,6 @@ const Dashboard = () => {
           <GPSTrackingDashboard />
         )}
         
-        {activeTab === 'documents' && (
-          <DocumentScannerDashboard />
-        )}
-        
         {activeTab === 'settings' && (user.role === 'admin' || user.role === 'gm') && (
           <AdminSettingsPage />
         )}
