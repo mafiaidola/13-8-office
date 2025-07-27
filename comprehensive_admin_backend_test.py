@@ -171,9 +171,9 @@ class ComprehensiveAdminBackendTester:
         try:
             headers = {"Authorization": f"Bearer {self.admin_token}"}
             
-            # Test toggling a feature
+            # Test toggling a feature (correct parameter name is feature_name)
             toggle_data = {
-                "feature": "notifications_enabled",
+                "feature_name": "gps_tracking",
                 "enabled": True
             }
             
@@ -183,7 +183,7 @@ class ComprehensiveAdminBackendTester:
             if response.status_code == 200:
                 data = response.json()
                 self.log_test("POST /api/admin/features/toggle", True, 
-                            f"Feature toggle successful: {toggle_data['feature']} = {toggle_data['enabled']}")
+                            f"Feature toggle successful: {toggle_data['feature_name']} = {toggle_data['enabled']}")
                 return True
             else:
                 self.log_test("POST /api/admin/features/toggle", False, 
