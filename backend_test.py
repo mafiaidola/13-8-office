@@ -6940,6 +6940,114 @@ class BackendTester:
         
         return passed, failed
 
+    def run_focused_monthly_planning_tests(self):
+        """Run focused tests for Monthly Planning System APIs as requested in review"""
+        print("=" * 80)
+        print("🎯 FOCUSED MONTHLY PLANNING SYSTEM API TESTING")
+        print("Testing the two previously failing APIs as requested in review:")
+        print("1. POST /api/planning/monthly - Monthly plan creation with test clinic IDs")
+        print("2. GET /api/users/sales-reps - Sales reps retrieval for GM users")
+        print("=" * 80)
+        print()
+        
+        # Initialize test results tracking
+        focused_tests = []
+        
+        # Test 1: GM Login (prerequisite)
+        if self.test_gm_login():
+            focused_tests.append(("GM Login", True))
+        else:
+            focused_tests.append(("GM Login", False))
+            print("❌ Cannot proceed without GM login")
+            return focused_tests
+        
+        # Test 2: GET /api/users/sales-reps (Primary focus API #2)
+        print("🔍 Testing GET /api/users/sales-reps API...")
+        if self.test_sales_reps_api():
+            focused_tests.append(("GET /api/users/sales-reps", True))
+        else:
+            focused_tests.append(("GET /api/users/sales-reps", False))
+        
+        # Test 3: Create sales rep for plan creation (prerequisite)
+        print("🔍 Setting up sales rep for plan creation...")
+        if not self.sales_rep_id:
+            # First login as admin to create sales rep
+            if self.test_admin_login():
+                self.test_create_sales_rep_user()
+        
+        # Test 4: POST /api/planning/monthly (Primary focus API #1)
+        print("🔍 Testing POST /api/planning/monthly API...")
+        if self.test_monthly_planning_post_api():
+            focused_tests.append(("POST /api/planning/monthly", True))
+        else:
+            focused_tests.append(("POST /api/planning/monthly", False))
+        
+        # Test 5: Additional Monthly Planning APIs (Secondary tests)
+        print("🔍 Testing additional Monthly Planning APIs...")
+        secondary_tests = [
+            ("GET /api/planning/monthly", self.test_monthly_planning_get_api()),
+            ("GET /api/planning/monthly/{id}", self.test_monthly_planning_get_specific_api()),
+            ("PATCH /api/planning/monthly/{id}", self.test_monthly_planning_patch_api()),
+            ("DELETE /api/planning/monthly/{id}", self.test_monthly_planning_delete_api()),
+            ("GET /api/planning/analytics", self.test_planning_analytics_api())
+        ]
+        
+        for test_name, result in secondary_tests:
+            focused_tests.append((test_name, result))
+        
+        # Test 6: System Health Check
+        print("🔍 Running system health check...")
+        if self.test_backend_service_status():
+            focused_tests.append(("Backend Service Status", True))
+        else:
+            focused_tests.append(("Backend Service Status", False))
+        
+        if self.test_database_connectivity():
+            focused_tests.append(("Database Connectivity", True))
+        else:
+            focused_tests.append(("Database Connectivity", False))
+        
+        return focused_tests
+
 if __name__ == "__main__":
     tester = BackendTester()
-    tester.run_comprehensive_backend_tests()
+    
+    # Run focused tests as requested in the review
+    print("🎯 RUNNING FOCUSED MONTHLY PLANNING SYSTEM TESTS")
+    print("=" * 80)
+    focused_results = tester.run_focused_monthly_planning_tests()
+    
+    # Print focused test summary
+    print("\n📊 FOCUSED TEST RESULTS SUMMARY")
+    print("=" * 50)
+    passed = 0
+    total = len(focused_results)
+    
+    for test_name, result in focused_results:
+        status = "✅ PASS" if result else "❌ FAIL"
+        print(f"{status} {test_name}")
+        if result:
+            passed += 1
+    
+    print(f"\nFocused Tests Result: {passed}/{total} tests passed")
+    
+    if passed >= total * 0.8:
+        print("🎉 FOCUSED TESTS MOSTLY SUCCESSFUL!")
+    else:
+        print("🚨 FOCUSED TESTS NEED ATTENTION")
+    
+    # Print test results for main agent
+    print("\n" + "=" * 80)
+    print("📋 DETAILED TEST RESULTS FOR MAIN AGENT")
+    print("=" * 80)
+    
+    for result in tester.test_results:
+        status = "✅" if result["success"] else "❌"
+        print(f"{status} {result['test']} - {result['details']}")
+    
+    print(f"\nTotal Tests: {len(tester.test_results)}")
+    print(f"Passed: {sum(1 for r in tester.test_results if r['success'])}")
+    print(f"Failed: {sum(1 for r in tester.test_results if not r['success'])}")
+    
+    success_rate = (sum(1 for r in tester.test_results if r['success']) / len(tester.test_results)) * 100 if tester.test_results else 0
+    print(f"Success Rate: {success_rate:.1f}%")
