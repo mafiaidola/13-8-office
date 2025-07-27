@@ -10555,6 +10555,48 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
           </table>
         </div>
       </div>
+
+      {/* Inventory Edit Modal */}
+      {showEditModal && selectedItem && (
+        <InventoryEditModal
+          item={selectedItem}
+          warehouses={warehouses}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedItem(null);
+          }}
+          onSave={async (updatedItem) => {
+            // Handle inventory update
+            try {
+              const token = localStorage.getItem('token');
+              await axios.patch(`${API}/inventory/${updatedItem.warehouse_id}/${updatedItem.product_id}`, {
+                quantity: updatedItem.quantity,
+                minimum_stock: updatedItem.minimum_stock
+              }, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              onRefresh();
+              setShowEditModal(false);
+              setSelectedItem(null);
+            } catch (error) {
+              console.error('Error updating inventory:', error);
+            }
+          }}
+          language={language}
+        />
+      )}
+
+      {/* Inventory Details Modal */}
+      {showDetailsModal && selectedItem && (
+        <InventoryDetailsModal
+          item={selectedItem}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedItem(null);
+          }}
+          language={language}
+        />
+      )}
     </div>
   );
 };
