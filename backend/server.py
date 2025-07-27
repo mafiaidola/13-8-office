@@ -10799,8 +10799,10 @@ async def process_approval_action(
         user_level = UserRole.ROLE_HIERARCHY.get(current_user.role, 0)
         
         # Check if user can approve at current level
-        if user_level not in approval_request["required_levels"]:
-            raise HTTPException(status_code=403, detail="You don't have permission to approve this request")
+        # Admin and GM can approve any request
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            if user_level not in approval_request["required_levels"]:
+                raise HTTPException(status_code=403, detail="You don't have permission to approve this request")
         
         # Create approval action
         approval_action = ApprovalAction(
