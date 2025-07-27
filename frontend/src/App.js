@@ -10838,6 +10838,32 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
 const OrdersManagement = ({ orders, onRefresh, language }) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handleApproveOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/orders/${orderId}/review`, 
+        { approved: true },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      onRefresh();
+    } catch (error) {
+      console.error('Error approving order:', error);
+    }
+  };
+
+  const handleRejectOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/orders/${orderId}/review`, 
+        { approved: false },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      onRefresh();
+    } catch (error) {
+      console.error('Error rejecting order:', error);
+    }
+  };
   const t = language === 'ar' ? {
     ordersTitle: 'إدارة الطلبات المنتظرة',
     orderId: 'رقم الطلبية',
