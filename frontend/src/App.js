@@ -11610,10 +11610,10 @@ const Dashboard = () => {
             {canAccessTab('visit') && (
               <button
                 onClick={() => setActiveTab('visit')}
-                className={`nav-item ${activeTab === 'visit' ? 'active' : ''} flex items-center whitespace-nowrap`}
+                className={`nav-item ${activeTab === 'visit' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
               >
-                <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>📝</span>
-                {language === 'ar' ? 'تسجيل زيارة' : 'Register Visit'}
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🏥</span>
+                {language === 'ar' ? 'تسجيل زيارة' : 'Visit Registration'}
               </button>
             )}
             
