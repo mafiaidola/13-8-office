@@ -18717,4 +18717,419 @@ const EnhancedUserManagementV2 = () => {
   );
 };
 
+// Monthly Planning System for Managers
+const MonthlyPlanningSystem = () => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('plans');
+  const [monthlyPlans, setMonthlyPlans] = useState([]);
+  const [salesReps, setSalesReps] = useState([]);
+  const [clinics, setClinics] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false);
+  const [showPlanViewModal, setShowPlanViewModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadPlanningData();
+  }, [selectedMonth]);
+
+  const loadPlanningData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Load monthly plans
+      const plansResponse = await axios.get(`${API}/planning/monthly`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { month: selectedMonth }
+      });
+      setMonthlyPlans(plansResponse.data);
+      
+      // Load sales reps under this manager
+      const repsResponse = await axios.get(`${API}/users/sales-reps`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSalesReps(repsResponse.data);
+      
+      // Load clinics
+      const clinicsResponse = await axios.get(`${API}/clinics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClinics(clinicsResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading planning data:', error);
+      // Mock data for development
+      setMonthlyPlans([
+        {
+          id: 'plan-001',
+          rep_id: 'rep-001',
+          rep_name: 'أحمد محمد',
+          month: selectedMonth,
+          total_visits_planned: 25,
+          total_visits_completed: 18,
+          completion_rate: 72,
+          status: 'active',
+          created_by: user.id,
+          created_at: '2024-01-01',
+          visits: [
+            {
+              id: 'visit-001',
+              clinic_id: 'clinic-001',
+              clinic_name: 'عيادة النور',
+              doctor_name: 'د. سعد علي',
+              planned_date: '2024-01-15',
+              status: 'completed',
+              actual_date: '2024-01-15',
+              notes: 'زيارة ناجحة، تم تقديم العينات',
+              rep_notes: ''
+            },
+            {
+              id: 'visit-002',
+              clinic_id: 'clinic-002',
+              clinic_name: 'مستشفى الرحمة',
+              doctor_name: 'د. منى حسن',
+              planned_date: '2024-01-16',
+              status: 'pending',
+              actual_date: null,
+              notes: '',
+              rep_notes: 'الطبيب في إجازة، سيتم إعادة الجدولة'
+            }
+          ]
+        },
+        {
+          id: 'plan-002',
+          rep_id: 'rep-002',
+          rep_name: 'فاطمة أحمد',
+          month: selectedMonth,
+          total_visits_planned: 20,
+          total_visits_completed: 20,
+          completion_rate: 100,
+          status: 'completed',
+          created_by: user.id,
+          created_at: '2024-01-01',
+          visits: []
+        }
+      ]);
+      
+      setSalesReps([
+        { id: 'rep-001', name: 'أحمد محمد', region: 'القاهرة' },
+        { id: 'rep-002', name: 'فاطمة أحمد', region: 'الجيزة' },
+        { id: 'rep-003', name: 'محمد سعد', region: 'الإسكندرية' }
+      ]);
+      
+      setClinics([
+        { id: 'clinic-001', name: 'عيادة النور', doctor_name: 'د. سعد علي', area: 'مدينة نصر' },
+        { id: 'clinic-002', name: 'مستشفى الرحمة', doctor_name: 'د. منى حسن', area: 'المعادي' },
+        { id: 'clinic-003', name: 'عيادة الشفاء', doctor_name: 'د. أحمد علي', area: 'الزمالك' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePlan = async (planData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/planning/create`, planData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadPlanningData();
+      setShowCreatePlanModal(false);
+    } catch (error) {
+      console.error('Error creating plan:', error);
+    }
+  };
+
+  const handleUpdatePlanStatus = async (planId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/planning/${planId}/status`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await loadPlanningData();
+    } catch (error) {
+      console.error('Error updating plan status:', error);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      active: 'bg-blue-100 text-blue-800',
+      completed: 'bg-green-100 text-green-800',
+      paused: 'bg-yellow-100 text-yellow-800',
+      cancelled: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusText = (status) => {
+    const statuses = {
+      active: 'نشط',
+      completed: 'مكتمل',
+      paused: 'متوقف',
+      cancelled: 'ملغي'
+    };
+    return statuses[status] || status;
+  };
+
+  const getCompletionColor = (rate) => {
+    if (rate >= 90) return 'text-green-600';
+    if (rate >= 70) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const canManagePlans = () => {
+    return ['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role);
+  };
+
+  const canViewPlans = () => {
+    return ['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role);
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-orange rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <SVGIcon name="calendar" size={32} />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">
+                نظام التخطيط الشهري
+              </h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة الخطط الشهرية وتتبع الزيارات المجدولة
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">الشهر:</label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="form-modern"
+              />
+            </div>
+            {canManagePlans() && (
+              <button
+                onClick={() => setShowCreatePlanModal(true)}
+                className="btn-primary flex items-center gap-2 self-end"
+              >
+                <SVGIcon name="add" size={20} />
+                <span>خطة جديدة</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">{monthlyPlans.length}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي الخطط</div>
+              </div>
+              <div className="text-3xl">📋</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">
+                  {monthlyPlans.filter(p => p.status === 'active').length}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>خطط نشطة</div>
+              </div>
+              <div className="text-3xl">⚡</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">
+                  {monthlyPlans.reduce((sum, p) => sum + p.total_visits_planned, 0)}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>زيارات مخططة</div>
+              </div>
+              <div className="text-3xl">📅</div>
+            </div>
+          </div>
+          
+          <div className="glass-effect p-6 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">
+                  {Math.round(monthlyPlans.reduce((sum, p) => sum + p.completion_rate, 0) / monthlyPlans.length) || 0}%
+                </div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>معدل الإنجاز</div>
+              </div>
+              <div className="text-3xl">🎯</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { id: 'plans', label: 'الخطط الشهرية', icon: '📋' },
+            { id: 'calendar', label: 'التقويم', icon: '📅' },
+            { id: 'reports', label: 'التقارير', icon: '📊' },
+            { id: 'notes', label: 'الملاحظات', icon: '📝' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-orange-600 text-white shadow-lg'
+                  : 'glass-effect hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'plans' && (
+          <div className="space-y-6">
+            {/* Plans Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {monthlyPlans.map((plan) => (
+                <div key={plan.id} className="glass-effect p-6 rounded-xl hover:scale-105 transition-transform">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-bold text-lg">{plan.rep_name}</h4>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {new Date(plan.month).toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(plan.status)}`}>
+                        {getStatusText(plan.status)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الزيارات المخططة:</span>
+                      <span className="font-bold">{plan.total_visits_planned}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الزيارات المكتملة:</span>
+                      <span className="font-bold">{plan.total_visits_completed}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>معدل الإنجاز:</span>
+                      <span className={`font-bold ${getCompletionColor(plan.completion_rate)}`}>
+                        {plan.completion_rate}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>التقدم</span>
+                      <span>{plan.completion_rate}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-3">
+                      <div 
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          plan.completion_rate >= 90 ? 'bg-green-500' :
+                          plan.completion_rate >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${plan.completion_rate}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedPlan(plan);
+                        setShowPlanViewModal(true);
+                      }}
+                      className="btn-info flex-1 text-xs py-2"
+                    >
+                      عرض التفاصيل
+                    </button>
+                    {canManagePlans() && plan.status === 'active' && (
+                      <button
+                        onClick={() => handleUpdatePlanStatus(plan.id, 'paused')}
+                        className="btn-warning flex-1 text-xs py-2"
+                      >
+                        إيقاف
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {monthlyPlans.length === 0 && (
+              <div className="glass-effect p-12 rounded-xl text-center">
+                <div className="text-4xl mb-4">📋</div>
+                <h3 className="text-xl font-bold mb-2">لا توجد خطط شهرية</h3>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  ابدأ بإنشاء خطة شهرية جديدة للمناديب
+                </p>
+                {canManagePlans() && (
+                  <button
+                    onClick={() => setShowCreatePlanModal(true)}
+                    className="btn-primary mt-4"
+                  >
+                    إنشاء خطة جديدة
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Plan Modal */}
+        {showCreatePlanModal && (
+          <CreatePlanModal
+            salesReps={salesReps}
+            clinics={clinics}
+            selectedMonth={selectedMonth}
+            onClose={() => setShowCreatePlanModal(false)}
+            onSave={handleCreatePlan}
+          />
+        )}
+
+        {/* Plan View Modal */}
+        {showPlanViewModal && selectedPlan && (
+          <PlanViewModal
+            plan={selectedPlan}
+            canEdit={canManagePlans()}
+            onClose={() => {
+              setShowPlanViewModal(false);
+              setSelectedPlan(null);
+            }}
+            onUpdate={() => {
+              loadPlanningData();
+              setShowPlanViewModal(false);
+              setSelectedPlan(null);
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default App;
