@@ -8417,6 +8417,7 @@ const ReportsSection = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {user.role === 'admin' && 'أدمن'}
                         {user.role === 'warehouse_manager' && 'مدير مخزن'}
+                        {user.role === 'warehouse_keeper' && 'أمين المخزن'}
                         {user.role === 'manager' && 'مدير'}
                         {user.role === 'sales_rep' && 'مندوب'}
                       </td>
