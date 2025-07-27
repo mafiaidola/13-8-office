@@ -16340,4 +16340,582 @@ const InvoiceManagement = () => {
   );
 };
 
+// Advanced Warehouse Keeper Management System
+const WarehouseKeeperDashboard = () => {
+  const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [inventory, setInventory] = useState([]);
+  const [movements, setMovements] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showStockAdjustmentModal, setShowStockAdjustmentModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    loadWarehouseData();
+  }, []);
+
+  const loadWarehouseData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Load warehouses assigned to this keeper
+      const warehouseResponse = await axios.get(`${API}/warehouses/assigned`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWarehouses(warehouseResponse.data);
+      
+      if (warehouseResponse.data.length > 0) {
+        setSelectedWarehouse(warehouseResponse.data[0]);
+        await loadWarehouseInventory(warehouseResponse.data[0].id);
+      }
+      
+      // Load pending requests
+      const requestsResponse = await axios.get(`${API}/warehouse-requests/pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingRequests(requestsResponse.data);
+      
+    } catch (error) {
+      console.error('Error loading warehouse data:', error);
+      // Mock data for development
+      setWarehouses([
+        {
+          id: 'wh-001',
+          name: 'مخزن الرئيسي',
+          region: 'القاهرة',
+          address: 'شارع النهضة، مدينة نصر',
+          capacity: 1000,
+          current_stock: 750
+        }
+      ]);
+      setSelectedWarehouse({
+        id: 'wh-001',
+        name: 'مخزن الرئيسي',
+        region: 'القاهرة'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadWarehouseInventory = async (warehouseId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/warehouses/${warehouseId}/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInventory(response.data);
+    } catch (error) {
+      console.error('Error loading inventory:', error);
+      // Mock data
+      setInventory([
+        {
+          id: 'inv-001',
+          product_name: 'أكسزوم 500مج',
+          current_stock: 150,
+          minimum_stock: 50,
+          maximum_stock: 500,
+          unit_price: 25.50,
+          last_updated: '2024-01-24T10:30:00',
+          status: 'in_stock'
+        },
+        {
+          id: 'inv-002',
+          product_name: 'فيتامين د3',
+          current_stock: 25,
+          minimum_stock: 50,
+          maximum_stock: 200,
+          unit_price: 45.00,
+          last_updated: '2024-01-23T15:20:00',
+          status: 'low_stock'
+        }
+      ]);
+    }
+  };
+
+  const handleStockAdjustment = async (productId, adjustment) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/inventory/adjust`, {
+        warehouse_id: selectedWarehouse.id,
+        product_id: productId,
+        adjustment_type: adjustment.type,
+        quantity: adjustment.quantity,
+        reason: adjustment.reason,
+        notes: adjustment.notes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Reload inventory
+      await loadWarehouseInventory(selectedWarehouse.id);
+      setShowStockAdjustmentModal(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error('Error adjusting stock:', error);
+    }
+  };
+
+  const handleAddProduct = async (productData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/inventory/add-product`, {
+        warehouse_id: selectedWarehouse.id,
+        ...productData
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      await loadWarehouseInventory(selectedWarehouse.id);
+      setShowAddProductModal(false);
+    } catch (error) {
+      console.error('Error adding product:', error);
+    }
+  };
+
+  const getStockStatus = (item) => {
+    if (item.current_stock === 0) {
+      return { text: 'نفد المخزون', color: 'text-red-600', bg: 'bg-red-100' };
+    } else if (item.current_stock <= item.minimum_stock) {
+      return { text: 'مخزون منخفض', color: 'text-orange-600', bg: 'bg-orange-100' };
+    } else if (item.current_stock >= item.maximum_stock * 0.9) {
+      return { text: 'مخزون مرتفع', color: 'text-blue-600', bg: 'bg-blue-100' };
+    }
+    return { text: 'مخزون طبيعي', color: 'text-green-600', bg: 'bg-green-100' };
+  };
+
+  return (
+    <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center">
+            <div className="w-12 h-12 md:w-16 md:h-16 card-gradient-blue rounded-full flex items-center justify-center ml-4 glow-pulse">
+              <SVGIcon name="warehouse" size={32} />
+            </div>
+            <div>
+              <h2 className="text-2xl md:text-4xl font-bold text-gradient">
+                لوحة أمين المخزن
+              </h2>
+              <p className="text-sm md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                إدارة شاملة للمخزون والعمليات اليومية
+              </p>
+            </div>
+          </div>
+          
+          {selectedWarehouse && (
+            <div className="glass-effect p-4 rounded-xl">
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>المخزن الحالي:</div>
+              <div className="text-lg font-bold">{selectedWarehouse.name}</div>
+              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{selectedWarehouse.region}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Warehouse Selection */}
+        {warehouses.length > 1 && (
+          <div className="glass-effect p-6 rounded-xl mb-6">
+            <h3 className="text-lg font-bold mb-4">اختيار المخزن:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {warehouses.map((warehouse) => (
+                <div
+                  key={warehouse.id}
+                  onClick={() => {
+                    setSelectedWarehouse(warehouse);
+                    loadWarehouseInventory(warehouse.id);
+                  }}
+                  className={`p-4 rounded-lg cursor-pointer transition-all ${
+                    selectedWarehouse?.id === warehouse.id
+                      ? 'bg-blue-600 text-white'
+                      : 'hover:bg-white hover:bg-opacity-10'
+                  }`}
+                >
+                  <h4 className="font-bold">{warehouse.name}</h4>
+                  <p className="text-sm opacity-75">{warehouse.region}</p>
+                  <div className="mt-2 text-xs">
+                    الاستخدام: {Math.round((warehouse.current_stock / warehouse.capacity) * 100)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { id: 'inventory', label: 'إدارة المخزون', icon: '📦' },
+            { id: 'movements', label: 'حركات المخزن', icon: '🔄' },
+            { id: 'requests', label: 'الطلبات المعلقة', icon: '⏳' },
+            { id: 'reports', label: 'التقارير', icon: '📊' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'glass-effect hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'inventory' && (
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="glass-effect p-6 rounded-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold">إجراءات سريعة:</h3>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowAddProductModal(true)}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    <SVGIcon name="add" size={20} />
+                    <span>إضافة منتج</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Export inventory
+                      const data = inventory.map(item => ({
+                        'اسم المنتج': item.product_name,
+                        'المخزون الحالي': item.current_stock,
+                        'الحد الأدنى': item.minimum_stock,
+                        'الحالة': getStockStatus(item).text
+                      }));
+                      const csv = Object.keys(data[0]).join(',') + '\n' + 
+                                 data.map(row => Object.values(row).join(',')).join('\n');
+                      const blob = new Blob([csv], { type: 'text/csv' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `inventory-${selectedWarehouse.name}-${new Date().toISOString().split('T')[0]}.csv`;
+                      a.click();
+                    }}
+                    className="btn-info flex items-center gap-2"
+                  >
+                    <SVGIcon name="reports" size={20} />
+                    <span>تصدير</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {inventory.map((item) => {
+                const status = getStockStatus(item);
+                return (
+                  <div key={item.id} className="glass-effect p-6 rounded-xl">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-lg">{item.product_name}</h4>
+                        <div className={`px-2 py-1 rounded text-xs font-bold ${status.bg} ${status.color} mt-1`}>
+                          {status.text}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(item);
+                          setShowStockAdjustmentModal(true);
+                        }}
+                        className="btn-primary text-xs px-3 py-1"
+                      >
+                        تعديل
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المخزون الحالي:</span>
+                        <span className="font-bold text-lg">{item.current_stock}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الحد الأدنى:</span>
+                        <span className="text-sm">{item.minimum_stock}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الحد الأقصى:</span>
+                        <span className="text-sm">{item.maximum_stock}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>سعر الوحدة:</span>
+                        <span className="text-sm font-bold">{item.unit_price} ج.م</span>
+                      </div>
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>مستوى المخزون</span>
+                          <span>{Math.round((item.current_stock / item.maximum_stock) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              item.current_stock <= item.minimum_stock ? 'bg-red-500' :
+                              item.current_stock >= item.maximum_stock * 0.9 ? 'bg-blue-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(100, (item.current_stock / item.maximum_stock) * 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Add Product Modal */}
+        {showAddProductModal && (
+          <AddProductModal
+            onClose={() => setShowAddProductModal(false)}
+            onSave={handleAddProduct}
+            warehouseId={selectedWarehouse?.id}
+          />
+        )}
+
+        {/* Stock Adjustment Modal */}
+        {showStockAdjustmentModal && selectedProduct && (
+          <StockAdjustmentModal
+            product={selectedProduct}
+            onClose={() => {
+              setShowStockAdjustmentModal(false);
+              setSelectedProduct(null);
+            }}
+            onSave={handleStockAdjustment}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Add Product Modal Component
+const AddProductModal = ({ onClose, onSave, warehouseId }) => {
+  const [formData, setFormData] = useState({
+    product_name: '',
+    description: '',
+    category: '',
+    unit_price: 0,
+    minimum_stock: 0,
+    maximum_stock: 0,
+    initial_stock: 0
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="glass-effect w-full max-w-2xl rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold">إضافة منتج جديد</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 hover:bg-opacity-10 rounded-full">
+            <SVGIcon name="close" size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">اسم المنتج:</label>
+              <input
+                type="text"
+                value={formData.product_name}
+                onChange={(e) => setFormData({...formData, product_name: e.target.value})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الفئة:</label>
+              <input
+                type="text"
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">الوصف:</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="form-modern w-full h-20"
+              rows="3"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">سعر الوحدة:</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.unit_price}
+                onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value)})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الحد الأدنى:</label>
+              <input
+                type="number"
+                value={formData.minimum_stock}
+                onChange={(e) => setFormData({...formData, minimum_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">الحد الأقصى:</label>
+              <input
+                type="number"
+                value={formData.maximum_stock}
+                onChange={(e) => setFormData({...formData, maximum_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">المخزون الأولي:</label>
+              <input
+                type="number"
+                value={formData.initial_stock}
+                onChange={(e) => setFormData({...formData, initial_stock: parseInt(e.target.value)})}
+                className="form-modern w-full"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              إضافة المنتج
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Stock Adjustment Modal Component
+const StockAdjustmentModal = ({ product, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    type: 'add',
+    quantity: 0,
+    reason: '',
+    notes: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(product.id, formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="glass-effect w-full max-w-lg rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold">تعديل المخزون - {product.product_name}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 hover:bg-opacity-10 rounded-full">
+            <SVGIcon name="close" size={20} />
+          </button>
+        </div>
+
+        <div className="mb-4 p-4 glass-effect rounded-lg">
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>المخزون الحالي:</div>
+          <div className="text-2xl font-bold">{product.current_stock}</div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-2">نوع التعديل:</label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({...formData, type: e.target.value})}
+              className="form-modern w-full"
+              required
+            >
+              <option value="add">إضافة مخزون</option>
+              <option value="remove">خصم مخزون</option>
+              <option value="adjust">تعديل المخزون</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">الكمية:</label>
+            <input
+              type="number"
+              value={formData.quantity}
+              onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
+              className="form-modern w-full"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">السبب:</label>
+            <select
+              value={formData.reason}
+              onChange={(e) => setFormData({...formData, reason: e.target.value})}
+              className="form-modern w-full"
+              required
+            >
+              <option value="">اختر السبب</option>
+              <option value="purchase">شراء جديد</option>
+              <option value="sale">بيع</option>
+              <option value="damage">تلف</option>
+              <option value="expired">انتهاء صلاحية</option>
+              <option value="transfer">نقل</option>
+              <option value="correction">تصحيح</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">ملاحظات:</label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              className="form-modern w-full h-20"
+              rows="3"
+            />
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="submit" className="btn-primary flex-1">
+              تطبيق التعديل
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default App;
