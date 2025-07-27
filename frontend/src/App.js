@@ -4399,6 +4399,449 @@ const AdminStatsDashboard = () => {
   );
 };
 
+// Comprehensive Approvals Dashboard Component
+const ApprovalsDashboard = ({ user }) => {
+  const [myRequests, setMyRequests] = useState([]);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [approvalHistory, setApprovalHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('my_requests');
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    fetchApprovalData();
+  }, []);
+
+  const fetchApprovalData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Fetch my requests
+      const myRequestsResponse = await axios.get(`${API}/approvals/my-requests`, { headers });
+      setMyRequests(myRequestsResponse.data || []);
+
+      // Fetch pending approvals (if user can approve)
+      if (['district_manager', 'area_manager', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role)) {
+        const pendingResponse = await axios.get(`${API}/approvals/pending`, { headers });
+        setPendingApprovals(pendingResponse.data || []);
+      }
+
+      // Fetch approval history (admin/GM only)
+      if (['admin', 'gm'].includes(user.role)) {
+        const historyResponse = await axios.get(`${API}/approvals/history`, { headers });
+        setApprovalHistory(historyResponse.data || []);
+      }
+
+    } catch (error) {
+      console.error('Error fetching approval data:', error);
+      setError('فشل في تحميل بيانات الموافقات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprovalAction = async (requestId, action, notes = '') => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/approvals/${requestId}/action`, 
+        { action, notes }, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Refresh data
+      fetchApprovalData();
+      setShowRequestDetails(false);
+      
+    } catch (error) {
+      console.error('Error processing approval:', error);
+      setError('فشل في معالجة الموافقة');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'في انتظار الموافقة';
+      case 'approved': return 'تمت الموافقة';
+      case 'rejected': return 'مرفوض';
+      case 'cancelled': return 'ملغي';
+      default: return 'غير محدد';
+    }
+  };
+
+  const getRequestTypeText = (type) => {
+    switch (type) {
+      case 'order': return 'طلب شراء';
+      case 'clinic': return 'تسجيل عيادة';
+      case 'doctor': return 'تسجيل طبيب';
+      case 'visit': return 'زيارة';
+      case 'expense': return 'مصروف';
+      default: return type;
+    }
+  };
+
+  const getCurrentApprover = (request) => {
+    if (request.status !== 'pending') return null;
+    
+    const roleNames = {
+      'district_manager': 'مدير المنطقة المحلية',
+      'area_manager': 'مدير المنطقة',
+      'accounting': 'المحاسبة',
+      'warehouse_keeper': 'أمين المخزن',
+      'admin': 'الإدارة',
+      'gm': 'المدير العام'
+    };
+    
+    return roleNames[request.current_approver_role] || 'غير محدد';
+  };
+
+  const getApprovalProgress = (request) => {
+    if (!request.required_levels || request.required_levels.length === 0) return 0;
+    
+    const completedLevels = request.approvals ? request.approvals.filter(a => a.action === 'approve').length : 0;
+    return Math.round((completedLevels / request.required_levels.length) * 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gradient">الموافقات</h1>
+          <p className="text-gray-600">إدارة شاملة للموافقات والطلبات</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{myRequests.length}</div>
+            <div className="text-sm text-gray-500">طلباتي</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-yellow-600">{pendingApprovals.length}</div>
+            <div className="text-sm text-gray-500">في انتظار موافقتي</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Navigation Tabs */}
+      <div className="flex space-x-4 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('my_requests')}
+          className={`pb-2 px-4 ${activeTab === 'my_requests' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+        >
+          طلباتي ({myRequests.length})
+        </button>
+        
+        {['district_manager', 'area_manager', 'accounting', 'warehouse_keeper', 'admin', 'gm'].includes(user.role) && (
+          <button
+            onClick={() => setActiveTab('pending_approvals')}
+            className={`pb-2 px-4 ${activeTab === 'pending_approvals' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+          >
+            في انتظار موافقتي ({pendingApprovals.length})
+          </button>
+        )}
+        
+        {['admin', 'gm'].includes(user.role) && (
+          <button
+            onClick={() => setActiveTab('approval_history')}
+            className={`pb-2 px-4 ${activeTab === 'approval_history' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+          >
+            سجل الموافقات ({approvalHistory.length})
+          </button>
+        )}
+      </div>
+
+      {/* My Requests Tab */}
+      {activeTab === 'my_requests' && (
+        <div className="space-y-4">
+          {myRequests.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-6xl mb-4">📋</div>
+              <p>لا توجد طلبات</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {myRequests.map((request) => (
+                <div key={request.id} className="glass-effect p-6 rounded-xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">
+                        {request.type === 'order' ? '🛒' : 
+                         request.type === 'clinic' ? '🏥' : 
+                         request.type === 'doctor' ? '👨‍⚕️' : '📋'}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-sm text-gray-600">
+                          تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar-EG')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">تقدم الموافقة</span>
+                      <span className="text-sm font-medium">{getApprovalProgress(request)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${getApprovalProgress(request)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {request.status === 'pending' && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">منتظر موافقة:</span> {getCurrentApprover(request)}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      ID: {request.id.slice(0, 8)}...
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSelectedRequest(request);
+                        setShowRequestDetails(true);
+                      }}
+                      className="btn-secondary text-sm"
+                    >
+                      عرض التفاصيل
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pending Approvals Tab */}
+      {activeTab === 'pending_approvals' && (
+        <div className="space-y-4">
+          {pendingApprovals.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-6xl mb-4">✅</div>
+              <p>لا توجد موافقات في انتظارك</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {pendingApprovals.map((request) => (
+                <div key={request.id} className="glass-effect p-6 rounded-xl border-l-4 border-yellow-500">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">
+                        {request.type === 'order' ? '🛒' : 
+                         request.type === 'clinic' ? '🏥' : 
+                         request.type === 'doctor' ? '👨‍⚕️' : '📋'}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-sm text-gray-600">
+                          بواسطة: {request.requester_name || 'غير محدد'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          تاريخ الطلب: {new Date(request.created_at).toLocaleDateString('ar-EG')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        في انتظار موافقتك
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      ID: {request.id.slice(0, 8)}...
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleApprovalAction(request.id, 'approve')}
+                        disabled={actionLoading}
+                        className="btn-primary text-sm"
+                      >
+                        {actionLoading ? 'جاري المعالجة...' : 'موافق'}
+                      </button>
+                      <button 
+                        onClick={() => handleApprovalAction(request.id, 'reject')}
+                        disabled={actionLoading}
+                        className="btn-danger text-sm"
+                      >
+                        رفض
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setShowRequestDetails(true);
+                        }}
+                        className="btn-secondary text-sm"
+                      >
+                        التفاصيل
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Approval History Tab */}
+      {activeTab === 'approval_history' && ['admin', 'gm'].includes(user.role) && (
+        <div className="space-y-4">
+          {approvalHistory.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-6xl mb-4">📜</div>
+              <p>لا يوجد سجل موافقات</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {approvalHistory.map((request) => (
+                <div key={request.id} className="glass-effect p-6 rounded-xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">
+                        {request.type === 'order' ? '🛒' : 
+                         request.type === 'clinic' ? '🏥' : 
+                         request.type === 'doctor' ? '👨‍⚕️' : '📋'}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{getRequestTypeText(request.type)}</h3>
+                        <p className="text-sm text-gray-600">بواسطة: {request.requester_name}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {request.approvals && request.approvals.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <h4 className="text-sm font-medium text-gray-700">سجل الموافقات:</h4>
+                      {request.approvals.map((approval, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm">{approval.approver_name}</span>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            approval.action === 'approve' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {approval.action === 'approve' ? 'وافق' : 'رفض'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(approval.timestamp).toLocaleDateString('ar-EG')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Request Details Modal */}
+      {showRequestDetails && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">تفاصيل الطلب</h3>
+                <button 
+                  onClick={() => setShowRequestDetails(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">نوع الطلب</label>
+                  <p className="text-sm text-gray-900">{getRequestTypeText(selectedRequest.type)}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">الحالة</label>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedRequest.status)}`}>
+                    {getStatusText(selectedRequest.status)}
+                  </span>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">تاريخ الطلب</label>
+                  <p className="text-sm text-gray-900">{new Date(selectedRequest.created_at).toLocaleString('ar-EG')}</p>
+                </div>
+                
+                {selectedRequest.notes && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">ملاحظات</label>
+                    <p className="text-sm text-gray-900">{selectedRequest.notes}</p>
+                  </div>
+                )}
+                
+                {selectedRequest.entity_data && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">بيانات الطلب</label>
+                    <pre className="text-xs bg-gray-100 p-2 rounded mt-1 max-h-32 overflow-y-auto">
+                      {JSON.stringify(selectedRequest.entity_data, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Enhanced Visits Log Component
 const EnhancedVisitsLog = () => {
   const [visits, setVisits] = useState([]);
