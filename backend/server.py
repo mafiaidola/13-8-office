@@ -1221,6 +1221,50 @@ async def get_users(current_user: User = Depends(get_current_user)):
     
     return users
 
+@api_router.get("/users/enhanced", response_model=List[Dict[str, Any]])
+async def get_users_enhanced(current_user: User = Depends(get_current_user)):
+    """Enhanced users endpoint with additional information"""
+    query = {}
+    
+    # Role-based filtering
+    if current_user.role == UserRole.MANAGER:
+        # Managers can only see their subordinates
+        query = {"$or": [
+            {"managed_by": current_user.id},
+            {"created_by": current_user.id},
+            {"role": UserRole.SALES_REP}
+        ]}
+    elif current_user.role == UserRole.WAREHOUSE_MANAGER:
+        # Warehouse managers can see sales reps and managers
+        query = {"role": {"$in": [UserRole.SALES_REP, UserRole.MANAGER]}}
+    elif current_user.role == UserRole.SALES_REP:
+        # Sales reps can only see themselves
+        query = {"id": current_user.id}
+    
+    users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
+    
+    # Add enhanced information
+    for user in users:
+        if user.get("created_by"):
+            creator = await db.users.find_one({"id": user["created_by"]}, {"_id": 0})
+            user["created_by_name"] = creator["full_name"] if creator else "Unknown"
+        
+        if user.get("managed_by"):
+            manager = await db.users.find_one({"id": user["managed_by"]}, {"_id": 0})
+            user["manager_name"] = manager["full_name"] if manager else "Unknown"
+        
+        # Add region information if available
+        if user.get("region_id"):
+            region = await db.regions.find_one({"id": user["region_id"]}, {"_id": 0})
+            user["region_name"] = region["name"] if region else "Unknown"
+        
+        # Add enhanced fields with defaults
+        user["last_seen"] = user.get("last_login", None)
+        user["is_online"] = False  # Default to offline
+        user["profile_photo"] = user.get("photo", None)
+    
+    return users
+
 @api_router.patch("/users/{user_id}/status")
 async def toggle_user_status(user_id: str, current_user: User = Depends(get_current_user)):
     # Find the target user
