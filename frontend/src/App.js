@@ -10232,7 +10232,9 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen, onProfileOpen }) => {
 
   const handleProfileClick = () => {
     setShowUserMenu(false);
-    if (onProfileOpen) {
+    // Profile is only available for managers and admin
+    const allowedRoles = ['admin', 'gm', 'manager', 'line_manager', 'area_manager', 'district_manager', 'warehouse_manager'];
+    if (allowedRoles.includes(user.role) && onProfileOpen) {
       onProfileOpen();
     }
   };
