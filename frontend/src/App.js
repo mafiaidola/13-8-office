@@ -3,10 +3,98 @@ import "./App.css";
 import axios from "axios";
 import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Enhanced Google Maps Component
+const EnhancedGoogleMap = ({ google, latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
-// Debounce utility function
+  useEffect(() => {
+    if (showCurrentLocation && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+        }
+      );
+    }
+  }, [showCurrentLocation]);
+
+  const handleMapClick = (mapProps, map, clickEvent) => {
+    const location = {
+      lat: clickEvent.latLng.lat(),
+      lng: clickEvent.latLng.lng()
+    };
+    setSelectedLocation(location);
+    if (onLocationSelect) {
+      onLocationSelect(location);
+    }
+  };
+
+  const mapCenter = {
+    lat: latitude || currentLocation?.lat || 30.0444, // Cairo coordinates as default
+    lng: longitude || currentLocation?.lng || 31.2357
+  };
+
+  return (
+    <div className="w-full h-64 rounded-xl overflow-hidden">
+      <Map
+        google={google}
+        zoom={15}
+        style={{ width: '100%', height: '100%' }}
+        initialCenter={mapCenter}
+        center={mapCenter}
+        onClick={handleMapClick}
+      >
+        {/* Current location marker */}
+        {currentLocation && (
+          <Marker
+            position={currentLocation}
+            title="موقعك الحالي"
+            icon={{
+              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2NmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzAwN2NmZiIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzAwN2NmZiIvPgo8L3N2Zz4=',
+              scaledSize: new google.maps.Size(24, 24)
+            }}
+          />
+        )}
+        
+        {/* Selected location marker */}
+        {selectedLocation && (
+          <Marker
+            position={selectedLocation}
+            title="الموقع المحدد"
+            icon={{
+              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+              scaledSize: new google.maps.Size(32, 32)
+            }}
+          />
+        )}
+        
+        {/* Existing location marker */}
+        {latitude && longitude && !selectedLocation && (
+          <Marker
+            position={{ lat: latitude, lng: longitude }}
+            title="الموقع المسجل"
+            icon={{
+              url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+              scaledSize: new google.maps.Size(32, 32)
+            }}
+          />
+        )}
+      </Map>
+    </div>
+  );
+};
+
+// Wrapped Google Maps component
+const GoogleMapComponent = GoogleApiWrapper({
+  apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
+})(EnhancedGoogleMap);
+
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
