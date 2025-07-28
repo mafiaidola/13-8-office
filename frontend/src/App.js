@@ -21891,6 +21891,17 @@ const EnhancedUserManagementV2 = () => {
             onSave={handleEditUser}
           />
         )}
+
+        {/* Mini Profile Modal */}
+        {showMiniProfile && selectedUserProfile && (
+          <MiniProfile
+            user={selectedUserProfile}
+            onClose={() => {
+              setShowMiniProfile(false);
+              setSelectedUserProfile(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
