@@ -158,72 +158,76 @@ class InvoiceProductTester:
             return False
 
     def test_create_order_and_invoice(self):
-        """Test creating order with invoice generation"""
+        """Test creating invoice directly using admin API"""
         try:
             if not self.created_product_id:
                 self.log_test(
                     "Create Order and Invoice",
                     False,
                     "",
-                    "No product ID available for order creation"
+                    "No product ID available for invoice creation"
                 )
                 return False
             
-            # Get available clinics and warehouses first
+            # Get available clinics and doctors first
             clinics_response = self.session.get(f"{API_BASE}/clinics")
-            warehouses_response = self.session.get(f"{API_BASE}/warehouses")
+            doctors_response = self.session.get(f"{API_BASE}/doctors")
             
-            if clinics_response.status_code != 200 or warehouses_response.status_code != 200:
+            if clinics_response.status_code != 200 or doctors_response.status_code != 200:
                 self.log_test(
                     "Create Order and Invoice",
                     False,
-                    "Failed to get clinics or warehouses",
-                    f"Clinics: {clinics_response.status_code}, Warehouses: {warehouses_response.status_code}"
+                    "Failed to get clinics or doctors",
+                    f"Clinics: {clinics_response.status_code}, Doctors: {doctors_response.status_code}"
                 )
                 return False
             
             clinics = clinics_response.json()
-            warehouses = warehouses_response.json()
+            doctors = doctors_response.json()
             
-            if not clinics or not warehouses:
+            if not clinics or not doctors:
                 self.log_test(
                     "Create Order and Invoice",
                     False,
-                    "No clinics or warehouses available",
-                    f"Clinics: {len(clinics)}, Warehouses: {len(warehouses)}"
+                    "No clinics or doctors available",
+                    f"Clinics: {len(clinics)}, Doctors: {len(doctors)}"
                 )
                 return False
             
             clinic_id = clinics[0]["id"]
-            warehouse_id = warehouses[0]["id"]
+            doctor_id = doctors[0]["id"]
             
-            order_data = {
+            # Create invoice using admin API
+            invoice_data = {
                 "clinic_id": clinic_id,
-                "warehouse_id": warehouse_id,
+                "doctor_id": doctor_id,
+                "invoice_type": "CASH",
                 "items": [
                     {
                         "product_id": self.created_product_id,
+                        "product_name": "دواء تجريبي",
                         "quantity": 2,
-                        "price_tier": "10",
                         "unit_price": 90.0,
+                        "price_tier": "10",
+                        "discount_percentage": 0.0,
+                        "cashback_amount": 3.6,  # 2% of 180
                         "total": 180.0
                     }
                 ],
-                "line": "line_1",
-                "notes": "Test order for د. أحمد محمد - عيادة الأمل"
+                "discount_percentage": 0.0,
+                "notes": "فاتورة تجريبية للاختبار - د. أحمد محمد"
             }
             
-            response = self.session.post(f"{API_BASE}/orders/create", json=order_data)
+            response = self.session.post(f"{API_BASE}/admin/invoices", json=invoice_data)
             
             if response.status_code == 200:
                 data = response.json()
-                self.created_order_id = data.get("order_id")
                 self.created_invoice_id = data.get("invoice_id")
                 
                 self.log_test(
                     "Create Order and Invoice",
                     True,
-                    f"Order ID: {self.created_order_id}, Invoice ID: {self.created_invoice_id}"
+                    f"Invoice created successfully. ID: {self.created_invoice_id}"
                 )
                 return True
             else:
