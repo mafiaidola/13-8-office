@@ -14498,6 +14498,16 @@ const Dashboard = () => {
                 {language === 'ar' ? 'تسجيل عيادة' : 'Clinic Registration'}
               </button>
             )}
+
+            {canAccessTab('clinics-management') && (
+              <button
+                onClick={() => setActiveTab('clinics-management')}
+                className={`nav-item ${activeTab === 'clinics-management' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🏥📋</span>
+                {language === 'ar' ? 'إدارة العيادات' : 'Clinics Management'}
+              </button>
+            )}
             
             {canAccessTab('visit') && (
               <button
