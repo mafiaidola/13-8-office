@@ -282,7 +282,7 @@ class InvoiceEdit(BaseModel):
     changes: List[Dict[str, Any]]
     reason: Optional[str] = None
 
-class OrderCreate(BaseModel):
+class OrderCreateWithInvoice(BaseModel):
     customer_info: Dict[str, Any]
     items: List[Dict[str, Any]]
     total_amount: float
