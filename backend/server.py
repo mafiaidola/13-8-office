@@ -725,6 +725,17 @@ class OrderCreate(BaseModel):
     notes: Optional[str] = None
     line: Optional[str] = None
     area_id: Optional[str] = None
+    # موقع المندوب الحالي (سري)
+    rep_current_latitude: Optional[float] = None
+    rep_current_longitude: Optional[float] = None
+    rep_location_timestamp: Optional[str] = None
+    rep_location_accuracy: Optional[float] = None
+    # موقع العيادة المستهدفة
+    target_clinic_latitude: Optional[float] = None
+    target_clinic_longitude: Optional[float] = None
+    # معلومات إضافية للتتبع
+    order_source: Optional[str] = "field_order"
+    device_info: Optional[str] = ""
 
 # Enhanced User Model with Line and Area Assignment
 class UserEnhanced(BaseModel):
