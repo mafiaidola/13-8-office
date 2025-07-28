@@ -169,6 +169,34 @@ class InvoiceProductTester:
                 )
                 return False
             
+            # Get available clinics and warehouses first
+            clinics_response = self.session.get(f"{API_BASE}/clinics")
+            warehouses_response = self.session.get(f"{API_BASE}/warehouses")
+            
+            if clinics_response.status_code != 200 or warehouses_response.status_code != 200:
+                self.log_test(
+                    "Create Order and Invoice",
+                    False,
+                    "Failed to get clinics or warehouses",
+                    f"Clinics: {clinics_response.status_code}, Warehouses: {warehouses_response.status_code}"
+                )
+                return False
+            
+            clinics = clinics_response.json()
+            warehouses = warehouses_response.json()
+            
+            if not clinics or not warehouses:
+                self.log_test(
+                    "Create Order and Invoice",
+                    False,
+                    "No clinics or warehouses available",
+                    f"Clinics: {len(clinics)}, Warehouses: {len(warehouses)}"
+                )
+                return False
+            
+            clinic_id = clinics[0]["id"]
+            warehouse_id = warehouses[0]["id"]
+            
             order_data = {
                 "customer_info": {
                     "name": "د. أحمد محمد",
@@ -186,7 +214,9 @@ class InvoiceProductTester:
                     }
                 ],
                 "total_amount": 180.0,
-                "line": "line_1"
+                "line": "line_1",
+                "clinic_id": clinic_id,
+                "warehouse_id": warehouse_id
             }
             
             response = self.session.post(f"{API_BASE}/orders/create", json=order_data)
