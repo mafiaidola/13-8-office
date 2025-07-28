@@ -11477,6 +11477,282 @@ async def admin_delete_product(product_id: str, current_user: User = Depends(get
     
     return {"message": "Product deleted successfully"}
 
+# Enhanced User Profile API
+@api_router.get("/users/{user_id}/profile", response_model=Dict[str, Any])
+async def get_user_profile(user_id: str, current_user: User = Depends(get_current_user)):
+    """Get comprehensive user profile with sales activity, debt info, and territory details"""
+    try:
+        # Get user basic info
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM] and current_user.id != user_id:
+            # Managers can view profiles of their subordinates
+            if current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
+                subordinates = await db.users.find({"direct_manager_id": current_user.id}).to_list(1000)
+                subordinate_ids = [sub["id"] for sub in subordinates]
+                if user_id not in subordinate_ids:
+                    raise HTTPException(status_code=403, detail="Not authorized to view this profile")
+            else:
+                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
+        
+        # Get sales activity
+        sales_activity = await get_user_sales_activity(user_id)
+        
+        # Get debt information
+        debt_info = await get_user_debt_info(user_id)
+        
+        # Get territory information
+        territory_info = await get_user_territory_info(user_id)
+        
+        # Get team information
+        team_info = await get_user_team_info(user_id)
+        
+        # Get region and manager names
+        region_name = "غير محدد"
+        if user.get("region_id"):
+            region = await db.regions.find_one({"id": user["region_id"]})
+            if region:
+                region_name = region["name"]
+        
+        direct_manager = None
+        if user.get("direct_manager_id"):
+            manager = await db.users.find_one({"id": user["direct_manager_id"]})
+            if manager:
+                direct_manager = {
+                    "name": manager["full_name"],
+                    "role": manager["role"],
+                    "phone": manager.get("phone", ""),
+                    "email": manager.get("email", "")
+                }
+        
+        profile_data = {
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "full_name": user["full_name"],
+                "email": user.get("email", ""),
+                "phone": user.get("phone", ""),
+                "role": user["role"],
+                "region": region_name,
+                "direct_manager": direct_manager,
+                "hire_date": user.get("hire_date", ""),
+                "profile_photo": user.get("profile_photo", ""),
+                "is_active": user.get("is_active", True),
+                "last_seen": user.get("last_seen", "")
+            },
+            "sales_activity": sales_activity,
+            "debt_info": debt_info,
+            "territory_info": territory_info,
+            "team_info": team_info
+        }
+        
+        return profile_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def get_user_sales_activity(user_id: str) -> Dict[str, Any]:
+    """Get user's sales activity data"""
+    try:
+        # Get orders for the user
+        orders = await db.orders.find({"created_by": user_id}).to_list(1000)
+        
+        # Get invoices for the user
+        invoices = await db.invoices.find({"created_by": user_id}).to_list(1000)
+        
+        # Calculate totals
+        total_orders = len(orders)
+        total_revenue = sum(order.get("total_amount", 0) for order in orders)
+        
+        # This month calculations
+        start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        this_month_orders = [order for order in orders if order.get("created_at", datetime.utcnow()) >= start_of_month]
+        this_month_revenue = sum(order.get("total_amount", 0) for order in this_month_orders)
+        
+        # Calculate averages
+        avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
+        
+        # Get top products
+        product_stats = {}
+        for order in orders:
+            for item in order.get("items", []):
+                product_id = item.get("product_id", "")
+                if product_id:
+                    if product_id not in product_stats:
+                        product_stats[product_id] = {
+                            "name": item.get("product_name", "منتج غير معروف"),
+                            "quantity": 0,
+                            "revenue": 0
+                        }
+                    product_stats[product_id]["quantity"] += item.get("quantity", 0)
+                    product_stats[product_id]["revenue"] += item.get("total", 0)
+        
+        top_products = sorted(product_stats.values(), key=lambda x: x["revenue"], reverse=True)[:3]
+        
+        # Monthly performance (last 3 months)
+        monthly_performance = []
+        for i in range(3):
+            month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_start = month_start.replace(month=month_start.month - i)
+            month_end = month_start.replace(month=month_start.month + 1) if month_start.month < 12 else month_start.replace(year=month_start.year + 1, month=1)
+            
+            month_orders = [order for order in orders if month_start <= order.get("created_at", datetime.utcnow()) < month_end]
+            month_revenue = sum(order.get("total_amount", 0) for order in month_orders)
+            
+            month_names = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", 
+                          "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+            
+            monthly_performance.append({
+                "month": month_names[month_start.month - 1],
+                "orders": len(month_orders),
+                "revenue": month_revenue
+            })
+        
+        return {
+            "total_orders": total_orders,
+            "total_revenue": total_revenue,
+            "this_month_orders": len(this_month_orders),
+            "this_month_revenue": this_month_revenue,
+            "avg_order_value": avg_order_value,
+            "conversion_rate": 75.0,  # Mock data for now
+            "top_products": top_products,
+            "monthly_performance": monthly_performance
+        }
+        
+    except Exception as e:
+        return {
+            "total_orders": 0,
+            "total_revenue": 0,
+            "this_month_orders": 0,
+            "this_month_revenue": 0,
+            "avg_order_value": 0,
+            "conversion_rate": 0,
+            "top_products": [],
+            "monthly_performance": []
+        }
+
+async def get_user_debt_info(user_id: str) -> Dict[str, Any]:
+    """Get user's debt information"""
+    try:
+        # Get pending invoices
+        pending_invoices = await db.invoices.find({"created_by": user_id, "status": "pending"}).to_list(1000)
+        
+        total_debt = sum(invoice.get("total_amount", 0) for invoice in pending_invoices)
+        
+        # Calculate overdue amount (invoices older than 30 days)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        overdue_invoices = [invoice for invoice in pending_invoices if invoice.get("created_at", datetime.utcnow()) < thirty_days_ago]
+        overdue_amount = sum(invoice.get("total_amount", 0) for invoice in overdue_invoices)
+        
+        # Current month debt
+        start_of_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_month_invoices = [invoice for invoice in pending_invoices if invoice.get("created_at", datetime.utcnow()) >= start_of_month]
+        current_month_debt = sum(invoice.get("total_amount", 0) for invoice in current_month_invoices)
+        
+        # Payment history (last 5 payments)
+        paid_invoices = await db.invoices.find({"created_by": user_id, "status": "paid"}).sort("updated_at", -1).to_list(5)
+        payment_history = []
+        for invoice in paid_invoices:
+            payment_history.append({
+                "date": invoice.get("updated_at", datetime.utcnow()).isoformat(),
+                "amount": invoice.get("total_amount", 0),
+                "status": "paid"
+            })
+        
+        return {
+            "total_debt": total_debt,
+            "overdue_amount": overdue_amount,
+            "current_month_debt": current_month_debt,
+            "payment_history": payment_history
+        }
+        
+    except Exception as e:
+        return {
+            "total_debt": 0,
+            "overdue_amount": 0,
+            "current_month_debt": 0,
+            "payment_history": []
+        }
+
+async def get_user_territory_info(user_id: str) -> Dict[str, Any]:
+    """Get user's territory information"""
+    try:
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            return {}
+        
+        region_name = "غير محدد"
+        if user.get("region_id"):
+            region = await db.regions.find_one({"id": user["region_id"]})
+            if region:
+                region_name = region["name"]
+        
+        # Get assigned clinics (mock data for now)
+        assigned_clinics = 25
+        active_clinics = 18
+        coverage_percentage = (active_clinics / assigned_clinics) * 100 if assigned_clinics > 0 else 0
+        
+        return {
+            "region_name": region_name,
+            "district_name": "مقاطعة تجريبية",
+            "assigned_clinics": assigned_clinics,
+            "active_clinics": active_clinics,
+            "coverage_percentage": coverage_percentage
+        }
+        
+    except Exception as e:
+        return {
+            "region_name": "غير محدد",
+            "district_name": "غير محدد",
+            "assigned_clinics": 0,
+            "active_clinics": 0,
+            "coverage_percentage": 0
+        }
+
+async def get_user_team_info(user_id: str) -> Dict[str, Any]:
+    """Get user's team information"""
+    try:
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            return {}
+        
+        # Get direct manager
+        direct_manager = None
+        if user.get("direct_manager_id"):
+            manager = await db.users.find_one({"id": user["direct_manager_id"]})
+            if manager:
+                direct_manager = {
+                    "name": manager["full_name"],
+                    "role": manager["role"],
+                    "phone": manager.get("phone", ""),
+                    "email": manager.get("email", "")
+                }
+        
+        # Get team members if user is a manager
+        team_members = []
+        if user["role"] in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
+            subordinates = await db.users.find({"direct_manager_id": user_id}).to_list(1000)
+            for subordinate in subordinates:
+                team_members.append({
+                    "name": subordinate["full_name"],
+                    "role": subordinate["role"],
+                    "performance": 85  # Mock performance score
+                })
+        
+        return {
+            "direct_manager": direct_manager,
+            "team_members": team_members
+        }
+        
+    except Exception as e:
+        return {
+            "direct_manager": None,
+            "team_members": []
+        }
+
 app.include_router(api_router)
 
 app.add_middleware(
