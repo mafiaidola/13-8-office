@@ -1,7 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from "react";
 import "./App.css";
 import axios from "axios";
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 // Simple Google Maps Component using direct Google Maps API
 const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
