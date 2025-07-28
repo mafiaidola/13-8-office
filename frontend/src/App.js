@@ -78,7 +78,7 @@ const EnhancedGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentL
               title="موقعك الحالي"
               icon={{
                 url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2NmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzAwN2NmZiIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzAwN2NmZiIvPgo8L3N2Zz4=',
-                scaledSize: new window.google?.maps?.Size(24, 24)
+                scaledSize: window.google && window.google.maps ? new window.google.maps.Size(24, 24) : undefined
               }}
             />
           )}
