@@ -8419,7 +8419,7 @@ const MiniProfile = ({ user, onClose }) => {
       <div className="modal-modern p-6 w-full max-w-6xl max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gradient">
-            الملف الشخصي - {profileData.user.full_name}
+            {t('miniProfile')} - {profileData.user.full_name}
           </h2>
           <button 
             onClick={onClose}
