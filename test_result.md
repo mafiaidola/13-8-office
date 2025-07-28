@@ -925,6 +925,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE ADMIN SETTINGS API EXCELLENT: Both GET and POST endpoints working perfectly. GET /api/admin/settings/comprehensive returns complete system overview with role_statistics (11 roles tracked), line_statistics (2 lines: line_1 and line_2), available_roles, available_lines, and total_users (55 users). POST /api/admin/settings/comprehensive successfully updates system settings including company_name, colors, theme, language, and role_permissions. All required sections present and functional for comprehensive system management."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE ADMIN SETTINGS API CONFIRMED WORKING: Conducted focused testing of Comprehensive Admin Settings API with 100% success rate (2/2 tests passed). ✅ WORKING PERFECTLY: 1) GET /api/admin/settings/comprehensive - All required sections present (role_statistics, line_statistics, available_roles, available_lines, total_users) with complete system overview 2) System Health Monitoring - GET /api/admin/system-health working correctly with system health data retrieval. ✅ AUTHENTICATION VERIFIED: Admin login (admin/admin123) working perfectly with full access to admin settings APIs. ✅ OVERALL ASSESSMENT: The Comprehensive Admin Settings API is fully functional and production-ready, providing complete system overview and health monitoring capabilities as designed."
 
   - task: "System Initialization API"
     implemented: true
