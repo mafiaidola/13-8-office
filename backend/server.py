@@ -1431,6 +1431,7 @@ async def create_product(product_data: ProductCreate, current_user: User = Depen
         unit=product_data.unit,
         image=product_data.image,
         currency="EGP",
+        line=product_data.line,  # إضافة حقل الخط
         created_by=current_user.id,
         approved_by=current_user.id  # Auto-approved when admin creates
     )
