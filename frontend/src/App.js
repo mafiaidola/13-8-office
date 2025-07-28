@@ -13083,11 +13083,11 @@ const ClinicRegistration = () => {
         rep_location_accuracy: userCurrentLocation.accuracy,
         // معلومات إضافية للتتبع
         registration_type: 'field_registration',
-        device_info: {
+        device_info: JSON.stringify({
           userAgent: navigator.userAgent,
           timestamp: new Date().toISOString(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        }
+        })
       };
 
       await axios.post(`${API}/clinic-requests`, requestData, {
