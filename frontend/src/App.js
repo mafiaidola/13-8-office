@@ -10044,7 +10044,6 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
   const { theme, changeTheme } = useTheme();
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showMiniProfile, setShowMiniProfile] = useState(false);
 
   const themes = [
