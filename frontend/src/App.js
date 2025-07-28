@@ -205,6 +205,18 @@ const translations = {
     
     // Profile System
     miniProfile: 'الملف الشخصي المصغر',
+    
+    // Maps and Locations
+    maps: 'الخرائط',
+    location: 'الموقع',
+    currentLocation: 'الموقعك الحالي',
+    selectLocation: 'اختر الموقع',
+    selectedLocation: 'الموقع المحدد',
+    registeredLocation: 'الموقع المسجل',
+    mapInstructions: 'انقر على الخريطة لتحديد الموقع',
+    locationRequired: 'الموقع مطلوب',
+    getLocation: 'الحصول على الموقع',
+    locationPermission: 'يرجى السماح بالوصول للموقع',
     salesActivity: 'نشاط المبيعات',
     debtInfo: 'معلومات المديونية',
     territoryInfo: 'معلومات المنطقة',
