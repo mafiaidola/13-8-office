@@ -15866,6 +15866,10 @@ const Dashboard = () => {
           <AdminClinicsManagement />
         )}
 
+        {activeTab === 'location-tracking' && canAccessTab('location-tracking') && (
+          <AdminLocationTracking />
+        )}
+
         {activeTab === 'order-creation' && user.role === 'sales_rep' && (
           <OrderCreation />
         )}
