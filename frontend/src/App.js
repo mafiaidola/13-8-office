@@ -7174,6 +7174,516 @@ const EnhancedInvoiceManagement = () => {
   );
 };
 
+// Invoice Modal Component
+const InvoiceModal = ({ invoice, canEdit, onClose, onSave }) => {
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({
+    customer_name: invoice.customer_name,
+    total_amount: invoice.total_amount,
+    status: invoice.status,
+    items: invoice.items || []
+  });
+
+  const handleSave = () => {
+    onSave(invoice.id, formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gradient">
+            فاتورة رقم: {invoice.id}
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Invoice Header */}
+          <div className="glass-effect p-4 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم العميل</label>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={formData.customer_name}
+                    onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
+                    className="form-modern w-full"
+                  />
+                ) : (
+                  <div className="p-2 bg-white bg-opacity-5 rounded">{invoice.customer_name}</div>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">الحالة</label>
+                {editMode ? (
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="form-modern w-full"
+                  >
+                    <option value="pending">معلقة</option>
+                    <option value="paid">مدفوعة</option>
+                    <option value="cancelled">ملغاة</option>
+                  </select>
+                ) : (
+                  <div className="p-2 bg-white bg-opacity-5 rounded">
+                    {invoice.status === 'paid' ? 'مدفوعة' :
+                     invoice.status === 'pending' ? 'معلقة' : 'ملغاة'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Items */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">تفاصيل الفاتورة</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white border-opacity-10">
+                    <th className="px-2 py-2 text-right text-sm">المنتج</th>
+                    <th className="px-2 py-2 text-right text-sm">الكمية</th>
+                    <th className="px-2 py-2 text-right text-sm">السعر</th>
+                    <th className="px-2 py-2 text-right text-sm">الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.items.map((item, index) => (
+                    <tr key={index} className="border-b border-white border-opacity-5">
+                      <td className="px-2 py-2 text-sm">{item.name}</td>
+                      <td className="px-2 py-2 text-sm">{item.quantity}</td>
+                      <td className="px-2 py-2 text-sm">{item.price} جنيه</td>
+                      <td className="px-2 py-2 text-sm">{item.total} جنيه</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mt-4 text-left">
+              <div className="text-lg font-bold">
+                الإجمالي: {invoice.total_amount} جنيه
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Info */}
+          <div className="glass-effect p-4 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <strong>تاريخ الإنشاء:</strong> {new Date(invoice.created_at).toLocaleString('ar-EG')}
+              </div>
+              <div>
+                <strong>المُنشئ:</strong> {invoice.created_by_name}
+              </div>
+              <div>
+                <strong>الخط:</strong> {invoice.line === 'line_1' ? 'الخط الأول' : 'الخط الثاني'}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            {canEdit && (
+              <>
+                {editMode ? (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="btn-primary flex-1"
+                    >
+                      حفظ التغييرات
+                    </button>
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="btn-secondary flex-1"
+                    >
+                      إلغاء
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="btn-primary flex-1"
+                  >
+                    تعديل الفاتورة
+                  </button>
+                )}
+              </>
+            )}
+            
+            <button
+              onClick={onClose}
+              className="btn-secondary flex-1"
+            >
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit History Modal Component
+const EditHistoryModal = ({ history, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gradient">
+            سجل التعديلات
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {history.map((edit, index) => (
+            <div key={index} className="glass-effect p-4 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-medium">{edit.edited_by_name}</div>
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {new Date(edit.edited_at).toLocaleString('ar-EG')}
+                </div>
+              </div>
+              
+              <div className="text-sm">
+                <div className="mb-2">
+                  <strong>التغييرات:</strong>
+                </div>
+                <div className="space-y-1">
+                  {edit.changes.map((change, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-red-400">-</span>
+                      <span>{change.field}: {change.old_value}</span>
+                      <span className="text-green-400">→</span>
+                      <span>{change.new_value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Order Creation Component
+const EnhancedOrderCreation = ({ user }) => {
+  const [products, setProducts] = useState([]);
+  const [orderItems, setOrderItems] = useState([]);
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    clinic_name: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [userLine, setUserLine] = useState('line_1');
+
+  useEffect(() => {
+    fetchProducts();
+    // Determine user's line
+    if (user.region_id) {
+      // Logic to determine line based on region
+      setUserLine(user.region_id.includes('line_2') ? 'line_2' : 'line_1');
+    }
+  }, [user]);
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/products/by-line/${userLine}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const addToOrder = (product) => {
+    const existingItem = orderItems.find(item => item.id === product.id);
+    if (existingItem) {
+      setOrderItems(orderItems.map(item => 
+        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+      ));
+    } else {
+      setOrderItems([...orderItems, { ...product, quantity: 1, selected_price_tier: '1' }]);
+    }
+  };
+
+  const updateQuantity = (productId, quantity) => {
+    if (quantity <= 0) {
+      setOrderItems(orderItems.filter(item => item.id !== productId));
+    } else {
+      setOrderItems(orderItems.map(item => 
+        item.id === productId ? { ...item, quantity } : item
+      ));
+    }
+  };
+
+  const updatePriceTier = (productId, tier) => {
+    setOrderItems(orderItems.map(item => 
+      item.id === productId ? { ...item, selected_price_tier: tier } : item
+    ));
+  };
+
+  const calculateItemTotal = (item) => {
+    const priceKey = `price_${item.selected_price_tier}`;
+    const unitPrice = item[priceKey] || item.price;
+    return unitPrice * item.quantity;
+  };
+
+  const calculateTotal = () => {
+    return orderItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+  };
+
+  const handleSubmitOrder = async () => {
+    if (orderItems.length === 0) {
+      alert('يرجى إضافة منتجات للطلب');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const orderData = {
+        customer_info: customerInfo,
+        items: orderItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          price_tier: item.selected_price_tier,
+          unit_price: item[`price_${item.selected_price_tier}`] || item.price,
+          total: calculateItemTotal(item)
+        })),
+        total_amount: calculateTotal(),
+        line: userLine
+      };
+
+      await axios.post(`${API}/orders/create`, orderData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert('تم إنشاء الطلب والفاتورة بنجاح');
+      setOrderItems([]);
+      setCustomerInfo({ name: '', phone: '', address: '', clinic_name: '' });
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('حدث خطأ في إنشاء الطلب');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gradient">إنشاء طلب جديد</h2>
+
+      {/* Customer Information */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-lg font-bold mb-4">معلومات العميل</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">اسم العميل *</label>
+            <input
+              type="text"
+              value={customerInfo.name}
+              onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+              className="form-modern w-full"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
+            <input
+              type="tel"
+              value={customerInfo.phone}
+              onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+              className="form-modern w-full"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">اسم العيادة</label>
+            <input
+              type="text"
+              value={customerInfo.clinic_name}
+              onChange={(e) => setCustomerInfo({...customerInfo, clinic_name: e.target.value})}
+              className="form-modern w-full"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">العنوان</label>
+            <input
+              type="text"
+              value={customerInfo.address}
+              onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
+              className="form-modern w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Products by Line */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h3 className="text-lg font-bold mb-4">
+          المنتجات المتاحة - {userLine === 'line_1' ? 'الخط الأول' : 'الخط الثاني'}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.map((product) => (
+            <div key={product.id} className="bg-white bg-opacity-5 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium">{product.name}</h4>
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {product.category}
+                </span>
+              </div>
+              
+              <div className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                <div>المخزون: {product.current_stock}</div>
+                <div>الوحدة: {product.unit}</div>
+              </div>
+              
+              {/* Price Tiers */}
+              <div className="text-xs mb-3">
+                <div className="grid grid-cols-2 gap-1">
+                  <div>1 قطعة: {product.price_1}ج</div>
+                  <div>10 قطع: {product.price_10}ج</div>
+                  <div>25 قطعة: {product.price_25}ج</div>
+                  <div>50 قطعة: {product.price_50}ج</div>
+                  <div>100 قطعة: {product.price_100}ج</div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => addToOrder(product)}
+                className="btn-primary w-full text-sm"
+                disabled={product.current_stock <= 0}
+              >
+                {product.current_stock <= 0 ? 'غير متوفر' : 'إضافة للطلب'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Order Items */}
+      {orderItems.length > 0 && (
+        <div className="glass-effect p-6 rounded-xl">
+          <h3 className="text-lg font-bold mb-4">الطلب الحالي</h3>
+          
+          <div className="space-y-3">
+            {orderItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+                <div className="flex-1">
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {item.category}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div>
+                    <label className="block text-xs mb-1">الكمية</label>
+                    <select
+                      value={item.selected_price_tier}
+                      onChange={(e) => updatePriceTier(item.id, e.target.value)}
+                      className="form-modern text-xs"
+                    >
+                      <option value="1">1 قطعة ({item.price_1}ج)</option>
+                      <option value="10">10 قطع ({item.price_10}ج)</option>
+                      <option value="25">25 قطعة ({item.price_25}ج)</option>
+                      <option value="50">50 قطعة ({item.price_50}ج)</option>
+                      <option value="100">100 قطعة ({item.price_100}ج)</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="btn-secondary text-xs px-2 py-1"
+                    >
+                      -
+                    </button>
+                    <span className="text-sm font-medium">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="btn-secondary text-xs px-2 py-1"
+                    >
+                      +
+                    </button>
+                  </div>
+                  
+                  <div className="text-sm font-medium">
+                    {calculateItemTotal(item)}ج
+                  </div>
+                  
+                  <button
+                    onClick={() => updateQuantity(item.id, 0)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-white border-opacity-10">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold">الإجمالي:</span>
+              <span className="text-xl font-bold text-green-400">{calculateTotal()}ج</span>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex gap-4">
+            <button
+              onClick={handleSubmitOrder}
+              disabled={loading}
+              className="btn-primary flex-1"
+            >
+              {loading ? 'جاري الإنشاء...' : 'إنشاء الطلب والفاتورة'}
+            </button>
+            
+            <button
+              onClick={() => setOrderItems([])}
+              className="btn-secondary"
+            >
+              إلغاء الطلب
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
