@@ -11225,7 +11225,7 @@ async def get_stock_dashboard(current_user: User = Depends(get_current_user)):
 
 # Enhanced Invoice Management APIs
 @api_router.post("/orders/create", response_model=Dict[str, Any])
-async def create_order_with_invoice(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
+async def create_order_with_invoice(order_data: OrderCreateWithInvoice, current_user: User = Depends(get_current_user)):
     """Create order and auto-generate invoice"""
     try:
         # Create order
