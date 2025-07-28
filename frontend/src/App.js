@@ -12266,12 +12266,47 @@ const ClinicRegistration = () => {
               )}
             </div>
             
-            {/* Placeholder for Google Maps */}
-            <div className="mt-6 h-48 glass-effect rounded-xl flex items-center justify-center">
-              <div className="text-center">
-                <span className="text-4xl mb-2 block">🗺️</span>
-                <p className="font-bold">خريطة Google Maps</p>
-                <p className="text-sm opacity-75">سيتم عرض الموقع هنا بعد إضافة مفتاح الخرائط</p>
+            {/* Google Maps Integration */}
+            <div className="mt-6">
+              <h4 className="font-bold mb-4 flex items-center gap-2">
+                <span>🗺️</span>
+                تحديد الموقع على الخريطة
+              </h4>
+              {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
+                <GoogleMapComponent
+                  latitude={clinicLocation.latitude}
+                  longitude={clinicLocation.longitude}
+                  showCurrentLocation={true}
+                  onLocationSelect={(location) => {
+                    setClinicLocation({
+                      latitude: location.lat,
+                      longitude: location.lng
+                    });
+                  }}
+                />
+              ) : (
+                <div className="h-64 glass-effect rounded-xl flex items-center justify-center">
+                  <div className="text-center">
+                    <span className="text-4xl mb-2 block">🗺️</span>
+                    <p className="font-bold">خريطة Google Maps</p>
+                    <p className="text-sm opacity-75">يتطلب إضافة مفتاح Google Maps API</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-3 text-sm text-center">
+                <p className="text-blue-400">
+                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                  الأزرق: موقعك الحالي
+                </p>
+                <p className="text-red-400">
+                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                  الأحمر: الموقع المحدد للعيادة
+                </p>
+                <p className="text-green-400">
+                  <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                  الأخضر: موقع العيادة المسجل
+                </p>
               </div>
             </div>
           </div>
