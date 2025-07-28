@@ -8156,9 +8156,13 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
               </h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-xl"
+                className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+                title={language === 'ar' ? 'إغلاق' : 'Close'}
               >
-                ✕
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
               </button>
             </div>
             
