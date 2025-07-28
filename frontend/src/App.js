@@ -10044,7 +10044,6 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen, onProfileOpen }) => {
   const { theme, changeTheme } = useTheme();
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMiniProfile, setShowMiniProfile] = useState(false);
 
   const themes = [
     { id: 'dark', name: t('themeDark'), icon: '🌙' },
