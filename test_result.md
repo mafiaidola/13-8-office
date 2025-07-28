@@ -57,8 +57,8 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -agent: "main"
+##     -message: "Fixed MiniProfile integration issue: Moved MiniProfile component display from AppContent to Dashboard where showMiniProfile state is properly updated when clicking Profile in header. Added MiniProfile modal after GlobalSearch in Dashboard and removed duplicate from AppContent to avoid conflicts. Ready for backend testing of enhanced user profile API (/api/users/profile/{user_id}) to verify all profile data is returned correctly (sales, debt, region, team info). Backend testing needed to ensure API works correctly before frontend testing."
 
 # Protocol Guidelines for Main agent
 #
