@@ -15047,6 +15047,16 @@ const Dashboard = () => {
                 {language === 'ar' ? 'تسجيل زيارة' : 'Visit Registration'}
               </button>
             )}
+
+            {canAccessTab('my-plan') && (
+              <button
+                onClick={() => setActiveTab('my-plan')}
+                className={`nav-item ${activeTab === 'my-plan' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📅</span>
+                {language === 'ar' ? 'إدارة خطتي' : 'My Plan'}
+              </button>
+            )}
             
             {canAccessTab('visit') && (
               <button
