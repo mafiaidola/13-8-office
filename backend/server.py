@@ -11753,6 +11753,184 @@ async def get_user_team_info(user_id: str) -> Dict[str, Any]:
             "team_members": []
         }
 
+# Monthly Planning System APIs
+class MonthlyPlan(BaseModel):
+    id: Optional[str] = None
+    month: str
+    rep_id: str
+    clinic_visits: List[Dict[str, Any]]
+    targets: Dict[str, Any]
+    notes: Optional[str] = ""
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+@api_router.get("/planning/monthly")
+async def get_monthly_plans(
+    month: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get monthly plans for current user or team"""
+    try:
+        # Build query
+        query = {}
+        
+        # Filter by month if provided
+        if month:
+            query["month"] = month
+        
+        # Filter by user role
+        if current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP]:
+            # Sales reps can only see their own plans
+            query["rep_id"] = current_user.id
+        elif current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER, UserRole.GM]:
+            # Managers can see plans for their team members
+            team_members = await db.users.find({"direct_manager_id": current_user.id}).to_list(1000)
+            member_ids = [member["id"] for member in team_members]
+            if current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP]:
+                member_ids.append(current_user.id)
+            query["rep_id"] = {"$in": member_ids}
+        # Admin can see all plans
+        
+        plans = await db.monthly_plans.find(query).to_list(1000)
+        
+        # Convert ObjectId to string and add user details
+        for plan in plans:
+            plan["_id"] = str(plan["_id"])
+            plan["id"] = str(plan["_id"])
+            
+            # Get sales rep details
+            sales_rep = await db.users.find_one({"id": plan["rep_id"]})
+            if sales_rep:
+                plan["rep_name"] = sales_rep["full_name"]
+                plan["rep_role"] = sales_rep["role"]
+        
+        return plans
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching monthly plans: {str(e)}")
+
+@api_router.post("/planning/monthly")
+async def create_monthly_plan(
+    plan_data: MonthlyPlan,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new monthly plan"""
+    try:
+        # Check permissions
+        if not current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP, UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER, UserRole.GM, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Not authorized to create plans")
+        
+        # For non-admin users, ensure they can only create plans for themselves or their team
+        if current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP]:
+            plan_data.rep_id = current_user.id
+        
+        # Create plan document
+        plan_doc = {
+            "id": str(uuid.uuid4()),
+            "month": plan_data.month,
+            "rep_id": plan_data.rep_id,
+            "clinic_visits": plan_data.clinic_visits,
+            "targets": plan_data.targets,
+            "notes": plan_data.notes or "",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user.id
+        }
+        
+        # Check if plan already exists for this month and rep
+        existing_plan = await db.monthly_plans.find_one({
+            "month": plan_data.month,
+            "rep_id": plan_data.rep_id
+        })
+        
+        if existing_plan:
+            raise HTTPException(status_code=400, detail="Plan already exists for this month")
+        
+        result = await db.monthly_plans.insert_one(plan_doc)
+        plan_doc["_id"] = str(result.inserted_id)
+        
+        return {"message": "Monthly plan created successfully", "plan_id": plan_doc["id"]}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating monthly plan: {str(e)}")
+
+@api_router.put("/planning/monthly/{plan_id}")
+async def update_monthly_plan(
+    plan_id: str,
+    plan_data: MonthlyPlan,
+    current_user: User = Depends(get_current_user)
+):
+    """Update an existing monthly plan"""
+    try:
+        # Find the plan
+        existing_plan = await db.monthly_plans.find_one({"id": plan_id})
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="Plan not found")
+        
+        # Check permissions
+        if current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP]:
+            if existing_plan["rep_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only edit your own plans")
+        elif current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
+            # Check if the plan belongs to a team member
+            team_member = await db.users.find_one({"id": existing_plan["rep_id"], "direct_manager_id": current_user.id})
+            if not team_member and existing_plan["rep_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only edit plans for your team members")
+        
+        # Update plan
+        update_data = {
+            "clinic_visits": plan_data.clinic_visits,
+            "targets": plan_data.targets,
+            "notes": plan_data.notes or "",
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        
+        await db.monthly_plans.update_one(
+            {"id": plan_id},
+            {"$set": update_data}
+        )
+        
+        return {"message": "Monthly plan updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating monthly plan: {str(e)}")
+
+@api_router.delete("/planning/monthly/{plan_id}")
+async def delete_monthly_plan(
+    plan_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a monthly plan"""
+    try:
+        # Find the plan
+        existing_plan = await db.monthly_plans.find_one({"id": plan_id})
+        if not existing_plan:
+            raise HTTPException(status_code=404, detail="Plan not found")
+        
+        # Check permissions
+        if current_user.role in [UserRole.SALES_REP, UserRole.MEDICAL_REP]:
+            if existing_plan["rep_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only delete your own plans")
+        elif current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
+            # Check if the plan belongs to a team member
+            team_member = await db.users.find_one({"id": existing_plan["rep_id"], "direct_manager_id": current_user.id})
+            if not team_member and existing_plan["rep_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only delete plans for your team members")
+        
+        await db.monthly_plans.delete_one({"id": plan_id})
+        
+        return {"message": "Monthly plan deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting monthly plan: {str(e)}")
+
 app.include_router(api_router)
 
 app.add_middleware(
