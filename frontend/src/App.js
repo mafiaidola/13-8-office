@@ -14911,7 +14911,8 @@ const Dashboard = () => {
       regions: ['admin', 'gm', 'line_manager', 'area_manager'],
       comprehensive: ['admin', 'gm'],
       clinic: ['admin'], // تسجيل العيادة متاح للأدمن فقط
-      'clinics-management': ['admin'] // إدارة العيادات متاحة للأدمن فقط
+      'clinics-management': ['admin'], // إدارة العيادات متاحة للأدمن فقط
+      'my-plan': ['sales_rep', 'medical_rep'] // إدارة الخطة للمندوبين
     };
     
     return permissions[tabName]?.includes(user.role) || false;
