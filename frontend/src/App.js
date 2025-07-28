@@ -8609,9 +8609,38 @@ const MiniProfile = ({ user, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="modal-modern p-6 w-full max-w-6xl max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gradient">
-            {t('miniProfile')} - {profileData.user.full_name}
-          </h2>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-gradient mb-3">
+              {t('miniProfile')} - {profileData.user.full_name}
+            </h2>
+            
+            {/* Team Member Selector for Managers */}
+            {isManager && teamMembers.length > 0 && (
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium opacity-75">
+                  {language === 'ar' ? 'اختر المندوب:' : 'Select Rep:'}
+                </label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => {
+                    setSelectedUserId(e.target.value);
+                    setLoading(true);
+                  }}
+                  className="form-modern text-sm min-w-48"
+                >
+                  <option value={user.id}>
+                    {language === 'ar' ? 'ملفي الشخصي' : 'My Profile'} - {user.full_name}
+                  </option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name} ({member.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+          
           <button 
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
