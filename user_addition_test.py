@@ -173,12 +173,15 @@ class UserAdditionTester:
         try:
             headers = {"Authorization": f"Bearer {self.admin_token}"}
             
+            # Use unique username to avoid conflicts
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
             # Test with empty optional fields as mentioned in the review
             user_data = {
-                "username": "testuser2",
+                "username": f"testuser2_{timestamp}",
                 "password": "123456",
                 "full_name": "مستخدم تجريبي ثاني",
-                "email": "test2@example.com",
+                "email": f"test2_{timestamp}@example.com",
                 "phone": "01234567891",
                 "role": "medical_rep",
                 "region_id": "",  # Empty as mentioned in review
