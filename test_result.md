@@ -611,9 +611,9 @@ backend:
 
   - task: "Enhanced Mini Profile System"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -623,6 +623,9 @@ backend:
       - working: true
         agent: "frontend_testing"
         comment: "🎉 نظام الملف الشخصي المصغر يعمل بشكل مثالي! تم اختبار جميع الوظائف بنجاح: 1) تسجيل الدخول admin/admin123 ✅ 2) التنقل لإدارة المستخدمين ✅ 3) وجود 86 زر ملف شخصي ✅ 4) فتح نافذة الملف الشخصي ✅ 5) عرض البيانات الشاملة ✅ 6) دعم اللغة العربية الممتاز ✅ 7) التصميم المتجاوب ✅ 8) التنقل بين 5 تبويبات ✅. النظام جاهز للإنتاج!"
+      - working: false
+        agent: "testing"
+        comment: "❌ MINI PROFILE SYSTEM NOT WORKING AS EXPECTED: Comprehensive testing revealed that the mini profile system from header is not functioning correctly. ✅ WORKING COMPONENTS: 1) Admin login (admin/admin123) successful 2) Dashboard loads correctly 3) Username/profile element found in header 4) Dropdown menu opens when clicked 5) Profile option found in dropdown menu. ❌ CRITICAL ISSUE: When clicking on 'Profile' option from header dropdown, instead of opening the expected mini profile modal/window with user data and tabs (الملخص، المبيعات، المديونية، المنطقة، الفريق), the system shows a 'Facebook Profile' link at the bottom of the page. This indicates the profile system is not properly implemented according to the Arabic review requirements. The system should open a mini profile window directly from the header showing current user's data (admin) with navigation tabs, but this functionality is missing. RECOMMENDATION: The mini profile modal component needs to be properly implemented and connected to the header profile dropdown."
 
   - task: "Language System Enhancement"
     implemented: true
