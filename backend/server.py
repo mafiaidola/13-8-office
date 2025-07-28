@@ -11931,6 +11931,148 @@ async def delete_monthly_plan(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting monthly plan: {str(e)}")
 
+# Secret Location Tracking APIs (Admin Only)
+@api_router.get("/admin/clinic-registrations-with-locations")
+async def get_clinic_registrations_with_locations(current_user: User = Depends(get_current_user)):
+    """Get clinic registrations with rep and clinic locations for admin tracking"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access location tracking")
+    
+    try:
+        # Get clinic registrations with location data
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "created_by",
+                    "foreignField": "id",
+                    "as": "rep_info"
+                }
+            },
+            {
+                "$unwind": "$rep_info"
+            },
+            {
+                "$project": {
+                    "id": 1,
+                    "clinic_name": 1,
+                    "clinic_phone": 1,
+                    "doctor_name": 1,
+                    "address": 1,
+                    "clinic_latitude": 1,
+                    "clinic_longitude": 1,
+                    "rep_current_latitude": 1,
+                    "rep_current_longitude": 1,
+                    "rep_location_timestamp": 1,
+                    "rep_location_accuracy": 1,
+                    "registration_type": 1,
+                    "device_info": 1,
+                    "created_at": 1,
+                    "rep_name": "$rep_info.full_name",
+                    "rep_role": "$rep_info.role",
+                    "rep_id": "$rep_info.id"
+                }
+            },
+            {
+                "$sort": {"created_at": -1}
+            }
+        ]
+        
+        clinics = await db.clinic_requests.aggregate(pipeline).to_list(1000)
+        
+        # Convert ObjectId to string
+        for clinic in clinics:
+            clinic["_id"] = str(clinic["_id"])
+            
+        return clinics
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching clinic locations: {str(e)}")
+
+@api_router.get("/admin/orders-with-locations")
+async def get_orders_with_locations(current_user: User = Depends(get_current_user)):
+    """Get orders with rep and clinic locations for admin tracking"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can access location tracking")
+    
+    try:
+        # Get orders with location data
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "created_by",
+                    "foreignField": "id",
+                    "as": "rep_info"
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "clinics",
+                    "localField": "clinic_id",
+                    "foreignField": "id",
+                    "as": "clinic_info"
+                }
+            },
+            {
+                "$unwind": "$rep_info"
+            },
+            {
+                "$unwind": {
+                    "path": "$clinic_info",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$project": {
+                    "id": 1,
+                    "order_type": 1,
+                    "status": 1,
+                    "total_amount": 1,
+                    "rep_current_latitude": 1,
+                    "rep_current_longitude": 1,
+                    "rep_location_timestamp": 1,
+                    "rep_location_accuracy": 1,
+                    "target_clinic_latitude": 1,
+                    "target_clinic_longitude": 1,
+                    "order_source": 1,
+                    "device_info": 1,
+                    "created_at": 1,
+                    "rep_name": "$rep_info.full_name",
+                    "rep_role": "$rep_info.role",
+                    "rep_id": "$rep_info.id",
+                    "clinic_name": "$clinic_info.name",
+                    "clinic_address": "$clinic_info.address"
+                }
+            },
+            {
+                "$sort": {"created_at": -1}
+            }
+        ]
+        
+        orders = await db.orders.aggregate(pipeline).to_list(1000)
+        
+        # Convert ObjectId to string and calculate total amount if needed
+        for order in orders:
+            order["_id"] = str(order["_id"])
+            
+            # Calculate total amount if not present
+            if not order.get("total_amount"):
+                # Get order items and calculate total
+                order_items = await db.order_items.find({"order_id": order["id"]}).to_list(1000)
+                total = 0
+                for item in order_items:
+                    # Get product price
+                    product = await db.products.find_one({"id": item["product_id"]})
+                    if product:
+                        total += item.get("quantity", 0) * product.get("price", 0)
+                order["total_amount"] = total
+            
+        return orders
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching order locations: {str(e)}")
+
 app.include_router(api_router)
 
 app.add_middleware(
