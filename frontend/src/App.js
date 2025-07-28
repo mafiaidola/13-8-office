@@ -10209,25 +10209,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
         </div>
       </header>
 
-      {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 glass-effect">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
-              </h3>
-              <button 
-                onClick={() => setShowProfileModal(false)}
-                className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
-                title={language === 'ar' ? 'إغلاق' : 'Close'}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
+
             
             <div className="space-y-4">
               {/* Profile Picture */}
