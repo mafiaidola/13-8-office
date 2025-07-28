@@ -615,7 +615,7 @@ backend:
     file: "/app/frontend/src/App.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -626,6 +626,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ MINI PROFILE SYSTEM NOT WORKING AS EXPECTED: Comprehensive testing revealed that the mini profile system from header is not functioning correctly. ✅ WORKING COMPONENTS: 1) Admin login (admin/admin123) successful 2) Dashboard loads correctly 3) Username/profile element found in header 4) Dropdown menu opens when clicked 5) Profile option found in dropdown menu. ❌ CRITICAL ISSUE: When clicking on 'Profile' option from header dropdown, instead of opening the expected mini profile modal/window with user data and tabs (الملخص، المبيعات، المديونية، المنطقة، الفريق), the system shows a 'Facebook Profile' link at the bottom of the page. This indicates the profile system is not properly implemented according to the Arabic review requirements. The system should open a mini profile window directly from the header showing current user's data (admin) with navigation tabs, but this functionality is missing. RECOMMENDATION: The mini profile modal component needs to be properly implemented and connected to the header profile dropdown."
+      - working: "NA"
+        agent: "main"
+        comment: "إصلاح مشكلة عدم عمل MiniProfile من الرأس: تم نقل عرض MiniProfile من AppContent إلى Dashboard حيث يتم تحديث showMiniProfile بشكل صحيح عند النقر على Profile في الرأس. تم إضافة MiniProfile modal بعد GlobalSearch مباشرة في Dashboard وحذفه من AppContent لتجنب التضارب."
 
   - task: "Language System Enhancement"
     implemented: true
