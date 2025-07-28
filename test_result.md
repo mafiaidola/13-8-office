@@ -1540,6 +1540,21 @@ frontend:
         agent: "testing"
         comment: "✅ MOBILE RESPONSIVENESS CONFIRMED: All Phase 1 features properly responsive on mobile devices (390x844 viewport tested), navigation elements accessible on mobile (12 navigation elements found), theme toggle working on mobile, statistics cards responsive, Arabic text rendering properly on smaller screens, Tailwind CSS responsive classes working effectively."
 
+  - task: "Enhanced Invoice and Product System with Price Tiers"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented enhanced invoice system with price tiers and cashback functionality. Added ProductTier model with multiple price points (price_1, price_10, price_25, price_50, price_100) and corresponding cashback percentages. Created invoice management APIs with edit tracking."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL BACKEND ISSUES IDENTIFIED: Comprehensive testing of the new invoice and product system reveals multiple backend code conflicts and bugs. ✅ WORKING COMPONENTS (5/8 tests passed - 62.5%): 1) Admin Authentication (admin/admin123) ✅ 2) Product Creation with Price Tiers ✅ - Successfully created product with all price tiers (price_1: 100, price_10: 90, price_25: 80, price_50: 70, price_100: 60) and cashback percentages (0%, 2%, 5%, 8%, 10%) 3) GET /api/products/by-line/line_1 ✅ - Returns products with price tier structure correctly 4) GET /api/admin/invoices ✅ - Invoice listing API working 5) Cashback Calculation ✅ - All price tiers and cashback values properly stored and retrieved. ❌ CRITICAL ISSUES REQUIRING MAIN AGENT ATTENTION: 1) DUPLICATE MODEL DEFINITIONS: Multiple conflicting OrderCreate models defined (lines 285, 496, 721) causing Python to use wrong model definition 2) BACKEND CODE BUG: Invoice creation fails with KeyError: 'price' at line 10356 - code expects product['price'] but new ProductTier model uses price_1, price_10, etc. 3) API ENDPOINT CONFLICTS: /api/orders/create endpoint implementation tries to access order_data.customer_info but actual OrderCreate model doesn't have this field 4) MODEL-ENDPOINT MISMATCH: Endpoint code written for one OrderCreate model but Pydantic uses different model definition. 🔧 TECHNICAL ROOT CAUSE: The backend has evolved to use price tiers but some code still expects single price field. Multiple model definitions with same name cause conflicts. 📋 RECOMMENDATION: Main agent needs to: 1) Remove duplicate OrderCreate model definitions 2) Update invoice creation code to handle price tiers instead of single price 3) Align endpoint implementations with actual model definitions 4) Test invoice creation workflow end-to-end. The price tier and cashback system is correctly implemented in the models and product creation, but invoice generation has compatibility issues with the new pricing structure."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
