@@ -10210,68 +10210,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
       </header>
 
 
-            
-            <div className="space-y-4">
-              {/* Profile Picture */}
-              <div className="flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl">
-                  {user.full_name?.charAt(0) || user.username?.charAt(0) || 'U'}
-                </div>
-              </div>
-              
-              {/* User Info */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                    {language === 'ar' ? 'الاسم الكامل' : 'Full Name'}
-                  </label>
-                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
-                    {user.full_name || user.username}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                    {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
-                  </label>
-                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
-                    {user.email}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                    {language === 'ar' ? 'الدور' : 'Role'}
-                  </label>
-                  <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
-                    {t(user.role || 'user')}
-                  </p>
-                </div>
-                
-                {user.phone && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-                      {language === 'ar' ? 'رقم الهاتف' : 'Phone'}
-                    </label>
-                    <p className="text-sm p-2 bg-gray-100 rounded-lg" style={{ color: 'var(--text-primary)' }}>
-                      {user.phone}
-                    </p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <button 
-                  onClick={() => setShowProfileModal(false)}
-                  className="flex-1 btn-primary-compact"
-                >
-                  {language === 'ar' ? 'إغلاق' : 'Close'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 };
