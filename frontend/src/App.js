@@ -12997,6 +12997,8 @@ const ClinicRegistration = () => {
   });
   const [location, setLocation] = useState(null);
   const [locationAddress, setLocationAddress] = useState('');
+  const [clinicLocation, setClinicLocation] = useState(null);
+  const [userCurrentLocation, setUserCurrentLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
