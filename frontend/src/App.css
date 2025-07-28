@@ -166,17 +166,17 @@ input::placeholder, textarea::placeholder {
 }
 
 [data-theme="ocean"] {
-  --primary-bg: #006994;
-  --secondary-bg: #0080b7;
-  --accent-bg: #3399cc;
-  --card-bg: rgba(0, 128, 183, 0.95);
-  --glass-bg: rgba(0, 105, 148, 0.8);
+  --primary-bg: #0a1a2e;
+  --secondary-bg: #16213e;
+  --accent-bg: #1e2a4a;
+  --card-bg: rgba(22, 33, 62, 0.95);
+  --glass-bg: rgba(10, 26, 46, 0.8);
   --text-primary: #ffffff;
-  --text-secondary: #e6f3ff;
-  --text-muted: #b3d9ff;
-  --input-bg: #0080b7;
-  --input-border: #3399cc;
-  --input-focus: #66b3ff;
+  --text-secondary: #b8d4f0;
+  --text-muted: #8fb8e0;
+  --input-bg: #16213e;
+  --input-border: #1e2a4a;
+  --input-focus: #0ea5e9;
 }
 
 [data-theme="forest"] {
