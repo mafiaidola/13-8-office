@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from "react";
 import "./App.css";
 import axios from "axios";
+import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
