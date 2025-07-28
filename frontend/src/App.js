@@ -13388,6 +13388,16 @@ const Dashboard = () => {
                 {t('invoiceManagement') || 'إدارة الفواتير'}
               </button>
             )}
+
+            {user.role === 'admin' && (
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`nav-item ${activeTab === 'products' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📦</span>
+                إدارة المنتجات
+              </button>
+            )}
             
             {canAccessTab('visit') && (
               <button
