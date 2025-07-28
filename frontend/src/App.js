@@ -13898,6 +13898,7 @@ const Dashboard = () => {
   };
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showMiniProfile, setShowMiniProfile] = useState(false);
   
   return (
     <>
