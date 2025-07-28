@@ -1785,12 +1785,11 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2">المنطقة *:</label>
+                <label className="block text-sm font-bold mb-2">المنطقة:</label>
                 <select
                   value={formData.region_id}
                   onChange={(e) => setFormData({...formData, region_id: e.target.value})}
                   className="form-modern w-full"
-                  required
                 >
                   <option value="">اختر المنطقة</option>
                   {regions.map(region => (
