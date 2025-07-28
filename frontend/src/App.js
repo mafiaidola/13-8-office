@@ -10331,16 +10331,27 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen, onProfileOpen }) => {
                   </div>
                   
                   <div className="py-2 space-y-1">
-                    <button 
-                      onClick={handleProfileClick}
-                      className="menu-item w-full text-left px-3 py-2 hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                      </svg>
-                      <span>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
-                    </button>
+                    {(['admin', 'gm', 'manager', 'line_manager', 'area_manager', 'district_manager', 'warehouse_manager'].includes(user.role)) ? (
+                      <button 
+                        onClick={handleProfileClick}
+                        className="menu-item w-full text-left px-3 py-2 hover:bg-white hover:bg-opacity-10 transition-colors flex items-center gap-3 text-sm"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        <span>{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
+                      </button>
+                    ) : (
+                      <div className="menu-item w-full text-left px-3 py-2 text-xs opacity-60 flex items-center gap-3">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="opacity-50">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          {language === 'ar' ? 'الملف الشخصي (للمديرين فقط)' : 'Profile (Managers Only)'}
+                        </span>
+                      </div>
+                    )}
                     
                     <button 
                       onClick={handleSettingsClick}
