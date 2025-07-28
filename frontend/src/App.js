@@ -1711,13 +1711,12 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-2">البريد الإلكتروني *:</label>
+                <label className="block text-sm font-bold mb-2">البريد الإلكتروني:</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="form-modern w-full"
-                  required
                 />
               </div>
               <div>
