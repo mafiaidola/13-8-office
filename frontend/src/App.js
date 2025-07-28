@@ -13577,6 +13577,10 @@ const Dashboard = () => {
           <WarehouseKeeperDashboard />
         )}
 
+        {activeTab === 'products' && user.role === 'admin' && (
+          <EnhancedProductManagement />
+        )}
+
         {activeTab === 'approvals' && (user.role === 'accounting' || user.role === 'warehouse_keeper' || user.role === 'admin') && (
           <AdvancedApprovalSystem />
         )}
