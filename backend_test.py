@@ -82,8 +82,11 @@ class BackendTester:
         
         if response and response.status_code == 200:
             data = response.json()
-            self.admin_token = data.get("access_token")
-            self.log_test("Admin Login (admin/admin123)", True, f"Token received: {self.admin_token[:20]}...")
+            self.admin_token = data.get("access_token") or data.get("token")
+            if self.admin_token:
+                self.log_test("Admin Login (admin/admin123)", True, f"Token received: {self.admin_token[:20]}...")
+            else:
+                self.log_test("Admin Login (admin/admin123)", False, f"No token in response: {data}")
         else:
             self.log_test("Admin Login (admin/admin123)", False, f"Status: {response.status_code if response else 'No response'}")
             
