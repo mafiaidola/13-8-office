@@ -1801,14 +1801,13 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2">المدير المباشر *:</label>
+                <label className="block text-sm font-bold mb-2">المدير المباشر:</label>
                 <select
                   value={formData.direct_manager_id}
                   onChange={(e) => setFormData({...formData, direct_manager_id: e.target.value})}
                   className="form-modern w-full"
-                  required
                 >
-                  <option value="">اختر المدير المباشر</option>
+                  <option value="">لا يوجد مدير مباشر</option>
                   {availableManagers.map(manager => (
                     <option key={manager.id} value={manager.id}>
                       {manager.name} ({manager.role})
