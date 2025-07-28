@@ -21833,6 +21833,15 @@ const EnhancedUserManagementV2 = () => {
                   تعديل
                 </button>
                 <button
+                  onClick={() => {
+                    setSelectedUserProfile(user);
+                    setShowMiniProfile(true);
+                  }}
+                  className="btn-secondary flex-1 text-xs py-2"
+                >
+                  📊 الملف الشخصي
+                </button>
+                <button
                   onClick={() => handleToggleUserStatus(user.id, user.is_active)}
                   className={`flex-1 text-xs py-2 ${
                     user.is_active ? 'btn-danger' : 'btn-success'
