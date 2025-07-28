@@ -98,12 +98,15 @@ class UserAdditionTester:
         try:
             headers = {"Authorization": f"Bearer {self.admin_token}"}
             
+            # Use unique username to avoid conflicts
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
             # Use the exact test data from the Arabic review request
             user_data = {
-                "username": "testuser",
+                "username": f"testuser_{timestamp}",
                 "password": "123456",
                 "full_name": "مستخدم تجريبي",
-                "email": "test@example.com",
+                "email": f"test_{timestamp}@example.com",
                 "phone": "01234567890",
                 "role": "medical_rep",
                 "region_id": regions[0]["id"] if regions else "",  # Use first available region
