@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Enhanced User Management System Testing
-Testing the specific APIs mentioned in the review request after fixing duplicate User model issue
+Comprehensive Backend Testing for Current Focus Tasks
+Testing Enhanced Invoice and Product System with Price Tiers, Monthly Planning System Integration, and Comprehensive Admin Settings API
 """
 
 import requests
