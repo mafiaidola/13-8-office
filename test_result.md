@@ -640,9 +640,9 @@ backend:
 
   - task: "Google Maps Integration & UI Improvements"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -655,6 +655,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "🗺️ GOOGLE MAPS INTEGRATION BACKEND TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of Google Maps integration and location-related backend APIs with outstanding results (90% success rate for core functionality, 87.5% for additional location APIs). ✅ GOOGLE MAPS API KEY VERIFIED: API Key properly configured in frontend/.env (AIzaSyDzxZjDxPdcrnGKb66mT5BIvQzQWcnLp70) and accessible for frontend integration. ✅ LOCATION BACKEND APIs FULLY FUNCTIONAL: 1) Clinic registration with GPS coordinates working perfectly - clinics created with accurate lat/lng storage (tested with Cairo coordinates 30.0444, 31.2357) 2) GPS geofencing validation working correctly - visits within 20m accepted, visits outside 20m properly rejected with distance information 3) Distance calculation API accurate and functional using Haversine formula 4) Location data properly stored in database and retrievable via APIs 5) Clinic requests system working with GPS coordinates 6) Visit location validation enforcing 20m geofencing rules 7) Dashboard statistics include location-based data (2 clinics, 3 visits tracked) 8) Global search includes location data for clinics 9) Offline sync supports location data 10) Real-time analytics working with location-based visit data. ✅ MINOR ISSUES IDENTIFIED: QR code generation for clinics has a lookup issue (500 error), and some advanced reports missing chart data. These are non-critical issues that don't affect core Google Maps functionality. ✅ OVERALL ASSESSMENT: Google Maps integration is production-ready with excellent backend support for GPS coordinates, geofencing, and location-based features. The system successfully handles clinic registration, visit validation, and location data storage as required for the enhanced maps integration."
+      - working: false
+        agent: "testing"
+        comment: "❌ GOOGLE MAPS FRONTEND INTEGRATION CRITICAL ISSUES IDENTIFIED: Conducted comprehensive frontend testing of Google Maps integration with concerning results. 🔍 CRITICAL FINDINGS: 1) ❌ Google Maps Script NOT LOADING: No Google Maps JavaScript API script found in DOM, window.google object undefined, Google Maps API not initialized 2) ❌ CLINIC REGISTRATION ACCESS BLOCKED: Unable to access clinic registration page as admin or sales rep - authentication issues prevent testing the actual maps integration 3) ❌ GOOGLE MAPS COMPONENTS NOT RENDERING: Despite API key being configured (AIzaSyDzxZjDxPdcrnGKb66mT5BIvQzQWcnLp70), no Google Maps React components are loading or rendering 4) ❌ MAP LEGEND MISSING: No marker legend elements found (blue/red/green markers for current/selected/registered locations) 5) ❌ THEME TOGGLE MISSING: Theme toggle button not found in header, cannot verify single toggle requirement 6) ✅ INPUT VISIBILITY: Input fields are visible and readable across themes 7) ✅ LOCATION SERVICES: Browser geolocation API available. 🚨 ROOT CAUSE: The Google Maps integration exists in code but is not loading in the browser. The google-maps-react library may not be properly initialized, or the API key is not being passed correctly to the Google Maps service. The clinic registration page (where maps should appear) is not accessible due to role-based restrictions. 📊 SUCCESS RATE: 25% (2/8 core features working). RECOMMENDATION: Fix Google Maps script loading, resolve clinic registration access, and ensure proper component initialization."
 
   - task: "Enhanced Mini Profile System - Frontend Integration"
     implemented: true
