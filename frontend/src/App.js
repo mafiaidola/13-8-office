@@ -14663,8 +14663,12 @@ const Dashboard = () => {
           <EnhancedStatisticsDashboard stats={stats} user={user} />
         )}
 
-        {activeTab === 'clinic-registration' && user.role === 'sales_rep' && (
+        {activeTab === 'clinic-registration' && canAccessTab('clinic') && (
           <ClinicRegistration />
+        )}
+
+        {activeTab === 'clinics-management' && canAccessTab('clinics-management') && (
+          <AdminClinicsManagement />
         )}
 
         {activeTab === 'order-creation' && user.role === 'sales_rep' && (
