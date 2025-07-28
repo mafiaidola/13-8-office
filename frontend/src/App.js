@@ -12342,7 +12342,7 @@ const ClinicRegistration = () => {
                 تحديد الموقع على الخريطة
               </h4>
               {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
-                <EnhancedGoogleMap
+                <SimpleGoogleMap
                   latitude={location?.latitude}
                   longitude={location?.longitude}
                   showCurrentLocation={true}
