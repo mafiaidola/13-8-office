@@ -244,9 +244,9 @@ class InvoiceProductTester:
             return False
 
     def test_get_invoices_list(self):
-        """Test GET /api/invoices/list"""
+        """Test GET /api/admin/invoices"""
         try:
-            response = self.session.get(f"{API_BASE}/invoices/list")
+            response = self.session.get(f"{API_BASE}/admin/invoices")
             
             if response.status_code == 200:
                 invoices = response.json()
