@@ -12998,7 +12998,7 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'invoices' && canAccessTab('warehouse') && (
-          <InvoiceManagement />
+          <EnhancedInvoiceManagement />
         )}
 
         {activeTab === 'visit' && user.role === 'sales_rep' && (
