@@ -13465,7 +13465,7 @@ const OrderCreation = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [orderData, setOrderData] = useState({
     doctor_id: '',
-    order_type: 'DEMO',
+    order_type: 'DEMO', 
     warehouse_id: '',
     notes: '',
     items: []
@@ -13474,6 +13474,40 @@ const OrderCreation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [userCurrentLocation, setUserCurrentLocation] = useState(null); // موقع المندوب السري
+  const [selectedClinic, setSelectedClinic] = useState(null); // العيادة المختارة
+
+  useEffect(() => {
+    getCurrentUserLocation();
+    fetchDoctors();
+    fetchProducts();
+    fetchWarehouses();
+  }, []);
+
+  // الحصول على الموقع الحالي للمندوب (سري)
+  const getCurrentUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const currentLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            timestamp: new Date().toISOString(),
+            accuracy: position.coords.accuracy
+          };
+          setUserCurrentLocation(currentLocation);
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      );
+    }
+  };
 
   useEffect(() => {
     fetchDoctors();
