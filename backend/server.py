@@ -72,7 +72,11 @@ class UserRole:
         "key_account": 2,
         "medical_rep": 1,
         "warehouse_keeper": 3,
-        "accounting": 3
+        "accounting": 3,
+        # Legacy roles for backward compatibility
+        "manager": 4,
+        "warehouse_manager": 3,
+        "sales_rep": 1
     }
     
     # Lines Assignment
