@@ -1681,7 +1681,7 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
                   تغيير الصورة
                 </label>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                  الصورة الشخصية إجبارية
+                  الصورة الشخصية اختيارية
                 </p>
               </div>
               
