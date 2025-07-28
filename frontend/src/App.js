@@ -15683,6 +15683,16 @@ const Dashboard = () => {
                 {language === 'ar' ? 'إدارة العيادات' : 'Clinics Management'}
               </button>
             )}
+
+            {canAccessTab('location-tracking') && (
+              <button
+                onClick={() => setActiveTab('location-tracking')}
+                className={`nav-item ${activeTab === 'location-tracking' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🕵️‍♂️</span>
+                {language === 'ar' ? 'تتبع المواقع السري' : 'Secret Location Tracking'}
+              </button>
+            )}
             
             {canAccessTab('visit') && (
               <button
