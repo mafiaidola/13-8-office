@@ -241,6 +241,81 @@ class ProductCreate(BaseModel):
     image: Optional[str] = None
     line: str  # Required field - must specify line
 
+# Enhanced Invoice System Models
+class InvoiceItem(BaseModel):
+    product_id: str
+    product_name: str
+    quantity: int
+    unit_price: float
+    price_tier: str  # "1", "10", "25", "50", "100"
+    discount_percentage: float = 0.0
+    cashback_amount: float = 0.0
+    total: float
+
+class Invoice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    order_id: str
+    customer_name: str
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    clinic_name: Optional[str] = None
+    items: List[InvoiceItem]
+    subtotal: float
+    discount_amount: float = 0.0
+    cashback_amount: float = 0.0
+    total_amount: float
+    tax_amount: float = 0.0
+    status: str = "pending"  # pending, paid, cancelled
+    line: str  # line_1 or line_2
+    created_by: str
+    created_by_name: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    payment_method: Optional[str] = None
+    notes: Optional[str] = None
+
+class InvoiceEdit(BaseModel):
+    id: str
+    edited_by: str
+    edited_by_name: str
+    edited_at: datetime = Field(default_factory=datetime.utcnow)
+    changes: List[Dict[str, Any]]
+    reason: Optional[str] = None
+
+class OrderCreate(BaseModel):
+    customer_info: Dict[str, Any]
+    items: List[Dict[str, Any]]
+    total_amount: float
+    line: str
+    notes: Optional[str] = None
+
+# Enhanced Product with Price Tiers
+class ProductTier(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    category: str
+    unit: str
+    image: Optional[str] = None
+    line: str
+    # Price tiers with cashback
+    price_1: float      # 1 piece
+    price_10: float     # 10 pieces
+    price_25: float     # 25 pieces
+    price_50: float     # 50 pieces
+    price_100: float    # 100 pieces
+    # Cashback percentages
+    cashback_1: float = 0.0
+    cashback_10: float = 0.0
+    cashback_25: float = 0.0
+    cashback_50: float = 0.0
+    cashback_100: float = 0.0
+    current_stock: int = 0
+    min_stock: int = 10
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
 class Warehouse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
