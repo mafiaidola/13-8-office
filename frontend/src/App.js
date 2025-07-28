@@ -13115,21 +13115,8 @@ const ClinicRegistration = () => {
       setIsLoading(false);
     }
   };
-        clinic_phone: '',
-        doctor_name: '',
-        clinic_class: '',
-        doctor_address: '',
-        clinic_manager_name: '',
-        address: '',
-        notes: '',
-        clinic_image: ''
-      });
-    } catch (error) {
-      setError(error.response?.data?.detail || 'حدث خطأ في إرسال الطلب');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+  const { language } = useLanguage();
 
   return (
     <>
