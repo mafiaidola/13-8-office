@@ -6871,6 +6871,309 @@ const AdminSystemControl = () => {
 };
 
 // Enhanced User Management Component
+// Enhanced Invoice Management System
+const EnhancedInvoiceManagement = () => {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [editHistory, setEditHistory] = useState([]);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices/list`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInvoices(response.data);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      // Mock data for development
+      setInvoices([
+        {
+          id: 'INV-001',
+          order_id: 'ORD-001',
+          customer_name: 'د. أحمد محمد',
+          total_amount: 1500.00,
+          status: 'paid',
+          created_at: '2024-01-15T10:30:00Z',
+          created_by: 'user123',
+          created_by_name: 'محمد السيد',
+          line: 'line_1',
+          items: [
+            { name: 'دواء أ', quantity: 2, price: 500, total: 1000 },
+            { name: 'دواء ب', quantity: 1, price: 500, total: 500 }
+          ],
+          edit_history: []
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchEditHistory = async (invoiceId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices/${invoiceId}/history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEditHistory(response.data);
+    } catch (error) {
+      console.error('Error fetching edit history:', error);
+      setEditHistory([]);
+    }
+  };
+
+  const canEditInvoice = (invoice) => {
+    if (user.role === 'admin') return true;
+    if (['gm', 'line_manager', 'area_manager', 'district_manager'].includes(user.role)) return true;
+    return invoice.created_by === user.id;
+  };
+
+  const handleEditInvoice = async (invoiceId, changes) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/invoices/${invoiceId}`, {
+        ...changes,
+        edited_by: user.id,
+        edited_at: new Date().toISOString()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchInvoices();
+      setShowInvoiceModal(false);
+    } catch (error) {
+      console.error('Error editing invoice:', error);
+    }
+  };
+
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || invoice.status === filterStatus;
+    
+    // Role-based filtering
+    if (user.role === 'medical_rep' || user.role === 'sales_rep') {
+      return matchesSearch && matchesStatus && invoice.created_by === user.id;
+    }
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-spinner-enhanced"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gradient">
+          إدارة الفواتير
+        </h2>
+      </div>
+
+      {/* Filters */}
+      <div className="glass-effect p-4 rounded-xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">البحث</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-modern w-full"
+              placeholder="البحث برقم الفاتورة أو اسم العميل..."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">الحالة</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">جميع الحالات</option>
+              <option value="pending">معلقة</option>
+              <option value="paid">مدفوعة</option>
+              <option value="cancelled">ملغاة</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={fetchInvoices}
+              className="btn-primary w-full"
+            >
+              🔄 تحديث
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-blue-400">
+            {filteredInvoices.length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي الفواتير
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-green-400">
+            {filteredInvoices.filter(i => i.status === 'paid').length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            مدفوعة
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-yellow-400">
+            {filteredInvoices.filter(i => i.status === 'pending').length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            معلقة
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-purple-400">
+            {filteredInvoices.reduce((sum, i) => sum + i.total_amount, 0).toFixed(2)}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي المبلغ
+          </div>
+        </div>
+      </div>
+
+      {/* Invoices Table */}
+      <div className="glass-effect rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white border-opacity-10">
+                <th className="px-4 py-3 text-right text-sm font-medium">رقم الفاتورة</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">العميل</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">المبلغ</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الحالة</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">المُنشئ</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">التاريخ</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice.id} className="border-b border-white border-opacity-5 hover:bg-white hover:bg-opacity-5">
+                  <td className="px-4 py-3 text-sm font-medium">
+                    {invoice.id}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {invoice.customer_name}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {invoice.total_amount} جنيه
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-block px-2 py-1 rounded text-xs ${
+                      invoice.status === 'paid' ? 'bg-green-500 bg-opacity-20 text-green-400' :
+                      invoice.status === 'pending' ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' :
+                      'bg-red-500 bg-opacity-20 text-red-400'
+                    }`}>
+                      {invoice.status === 'paid' ? 'مدفوعة' :
+                       invoice.status === 'pending' ? 'معلقة' : 'ملغاة'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {invoice.created_by_name}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {new Date(invoice.created_at).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setShowInvoiceModal(true);
+                        }}
+                        className="text-blue-400 hover:text-blue-300"
+                        title="عرض"
+                      >
+                        👁️
+                      </button>
+                      
+                      {canEditInvoice(invoice) && (
+                        <button
+                          onClick={() => {
+                            setSelectedInvoice(invoice);
+                            setShowInvoiceModal(true);
+                          }}
+                          className="text-green-400 hover:text-green-300"
+                          title="تعديل"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                      
+                      {user.role === 'admin' && (
+                        <button
+                          onClick={() => {
+                            fetchEditHistory(invoice.id);
+                          }}
+                          className="text-purple-400 hover:text-purple-300"
+                          title="سجل التعديلات"
+                        >
+                          📋
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Invoice Modal */}
+      {showInvoiceModal && selectedInvoice && (
+        <InvoiceModal
+          invoice={selectedInvoice}
+          canEdit={canEditInvoice(selectedInvoice)}
+          onClose={() => setShowInvoiceModal(false)}
+          onSave={handleEditInvoice}
+        />
+      )}
+
+      {/* Edit History Modal */}
+      {editHistory.length > 0 && (
+        <EditHistoryModal
+          history={editHistory}
+          onClose={() => setEditHistory([])}
+        />
+      )}
+    </div>
+  );
+};
+
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
