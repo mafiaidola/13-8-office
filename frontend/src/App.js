@@ -14185,7 +14185,7 @@ const Dashboard = () => {
               </button>
             )}
             
-            {canAccessTab('visit') && (
+            {canAccessTab('clinic') && (
               <button
                 onClick={() => setActiveTab('clinic-registration')}
                 className={`nav-item ${activeTab === 'clinic-registration' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
