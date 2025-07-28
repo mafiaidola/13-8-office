@@ -198,12 +198,8 @@ class InvoiceProductTester:
             warehouse_id = warehouses[0]["id"]
             
             order_data = {
-                "customer_info": {
-                    "name": "د. أحمد محمد",
-                    "phone": "01234567890",
-                    "address": "القاهرة",
-                    "clinic_name": "عيادة الأمل"
-                },
+                "clinic_id": clinic_id,
+                "warehouse_id": warehouse_id,
                 "items": [
                     {
                         "product_id": self.created_product_id,
@@ -213,10 +209,8 @@ class InvoiceProductTester:
                         "total": 180.0
                     }
                 ],
-                "total_amount": 180.0,
                 "line": "line_1",
-                "clinic_id": clinic_id,
-                "warehouse_id": warehouse_id
+                "notes": "Test order for د. أحمد محمد - عيادة الأمل"
             }
             
             response = self.session.post(f"{API_BASE}/orders/create", json=order_data)
