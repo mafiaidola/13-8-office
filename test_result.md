@@ -151,6 +151,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ CLINIC MANAGEMENT FULLY FUNCTIONAL: Clinic creation with GPS coordinates working, clinic listing working (fixed MongoDB ObjectId serialization issue), admin approval workflow working correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ CLINIC MANAGEMENT WITH LOCATION COORDINATES VERIFIED: Additional testing confirms clinic management system fully supports GPS coordinates. Clinic registration with GPS coordinates working perfectly (tested with Cairo coordinates 30.0444, 31.2357), location data properly stored in database and retrievable via APIs, clinic requests system working with GPS coordinates, and location-based search functionality operational. The system successfully handles all location-related clinic operations as required for Google Maps integration."
 
   - task: "Doctor management with clinic association"
     implemented: true
