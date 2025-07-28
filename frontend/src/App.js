@@ -8481,35 +8481,65 @@ const MiniProfile = ({ user, onClose }) => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('summary');
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(user.id);
+  const [selectedUser, setSelectedUser] = useState(user);
+
+  const isManager = ['admin', 'gm', 'manager', 'line_manager', 'area_manager', 'district_manager', 'warehouse_manager'].includes(user.role);
 
   useEffect(() => {
+    if (isManager) {
+      fetchTeamMembers();
+    }
     fetchProfileData();
-  }, [user]);
+  }, [selectedUserId]);
+
+  const fetchTeamMembers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/team`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTeamMembers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      setTeamMembers([]);
+    }
+  };
 
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/users/${user.id}/profile`, {
+      const response = await axios.get(`${API}/users/${selectedUserId}/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfileData(response.data);
+      // Find selected user details
+      if (selectedUserId !== user.id) {
+        const selectedMember = teamMembers.find(member => member.id === selectedUserId);
+        if (selectedMember) {
+          setSelectedUser(selectedMember);
+        }
+      } else {
+        setSelectedUser(user);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       // Mock data for development
       setProfileData({
         user: {
-          id: user.id,
-          username: user.username,
-          full_name: user.full_name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          region: user.region,
-          direct_manager: user.direct_manager,
-          hire_date: user.hire_date,
-          profile_photo: user.profile_photo,
-          is_active: user.is_active,
-          last_seen: user.last_seen
+          id: selectedUser.id,
+          username: selectedUser.username,
+          full_name: selectedUser.full_name,
+          email: selectedUser.email,
+          phone: selectedUser.phone,
+          role: selectedUser.role,
+          region: selectedUser.region,
+          direct_manager: selectedUser.direct_manager,
+          hire_date: selectedUser.hire_date,
+          profile_photo: selectedUser.profile_photo,
+          is_active: selectedUser.is_active,
+          last_seen: selectedUser.last_seen
         },
         sales_activity: {
           total_orders: 45,
