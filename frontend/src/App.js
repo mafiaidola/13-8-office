@@ -8486,11 +8486,11 @@ const MiniProfile = ({ user, onClose }) => {
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-6 overflow-x-auto">
           {[
-            { id: 'summary', label: 'الملخص', icon: '📊' },
-            { id: 'sales', label: 'المبيعات', icon: '💰' },
-            { id: 'debt', label: 'المديونية', icon: '💳' },
-            { id: 'territory', label: 'المنطقة', icon: '🗺️' },
-            { id: 'team', label: 'الفريق', icon: '👥' }
+            { id: 'summary', label: t('summary'), icon: '📊' },
+            { id: 'sales', label: t('salesActivity'), icon: '💰' },
+            { id: 'debt', label: t('debtInfo'), icon: '💳' },
+            { id: 'territory', label: t('territoryInfo'), icon: '🗺️' },
+            { id: 'team', label: t('teamInfo'), icon: '👥' }
           ].map((tab) => (
             <button
               key={tab.id}
