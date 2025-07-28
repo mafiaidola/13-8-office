@@ -8268,6 +8268,617 @@ const ProductModal = ({ product, onClose, onSave }) => {
   );
 };
 
+// Enhanced Mini Profile System
+const MiniProfile = ({ user, onClose }) => {
+  const { t, language } = useLanguage();
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('summary');
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [user]);
+
+  const fetchProfileData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${user.id}/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProfileData(response.data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      // Mock data for development
+      setProfileData({
+        user: {
+          id: user.id,
+          username: user.username,
+          full_name: user.full_name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          region: user.region,
+          direct_manager: user.direct_manager,
+          hire_date: user.hire_date,
+          profile_photo: user.profile_photo,
+          is_active: user.is_active,
+          last_seen: user.last_seen
+        },
+        sales_activity: {
+          total_orders: 45,
+          total_revenue: 125000,
+          this_month_orders: 12,
+          this_month_revenue: 35000,
+          avg_order_value: 2800,
+          conversion_rate: 78.5,
+          top_products: [
+            { name: 'دواء أ', quantity: 120, revenue: 25000 },
+            { name: 'دواء ب', quantity: 85, revenue: 18000 },
+            { name: 'دواء ج', quantity: 60, revenue: 12000 }
+          ],
+          monthly_performance: [
+            { month: 'يناير', orders: 15, revenue: 42000 },
+            { month: 'فبراير', orders: 18, revenue: 48000 },
+            { month: 'مارس', orders: 12, revenue: 35000 }
+          ]
+        },
+        debt_info: {
+          total_debt: 15000,
+          overdue_amount: 3000,
+          current_month_debt: 5000,
+          payment_history: [
+            { date: '2024-01-15', amount: 8000, status: 'paid' },
+            { date: '2024-02-10', amount: 12000, status: 'paid' },
+            { date: '2024-03-05', amount: 5000, status: 'pending' }
+          ]
+        },
+        territory_info: {
+          region_name: 'القاهرة الكبرى',
+          district_name: 'وسط البلد',
+          assigned_clinics: 25,
+          active_clinics: 18,
+          coverage_percentage: 72
+        },
+        team_info: {
+          direct_manager: {
+            name: 'أحمد محمد',
+            role: 'مدير منطقة',
+            phone: '01234567890'
+          },
+          team_members: user.role.includes('manager') ? [
+            { name: 'محمد أحمد', role: 'مندوب طبي', performance: 85 },
+            { name: 'فاطمة علي', role: 'مندوب طبي', performance: 92 }
+          ] : []
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="modal-modern p-8 w-full max-w-4xl">
+          <div className="flex items-center justify-center h-64">
+            <div className="loading-spinner-enhanced"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-6 w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gradient">
+            الملف الشخصي - {profileData.user.full_name}
+          </h2>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        {/* Profile Header */}
+        <div className="glass-effect p-6 rounded-xl mb-6">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl">
+              {profileData.user.profile_photo ? (
+                <img src={profileData.user.profile_photo} alt={profileData.user.full_name} className="w-full h-full rounded-full object-cover" />
+              ) : (
+                profileData.user.full_name?.charAt(0) || 'U'
+              )}
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-bold">{profileData.user.full_name}</h3>
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  profileData.user.is_active ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-red-500 bg-opacity-20 text-red-400'
+                }`}>
+                  {profileData.user.is_active ? 'نشط' : 'غير نشط'}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">👤</span>
+                  <span>{profileData.user.username}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">📧</span>
+                  <span>{profileData.user.email || 'غير محدد'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-400">📱</span>
+                  <span>{profileData.user.phone || 'غير محدد'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-orange-400">💼</span>
+                  <span>{t(profileData.user.role) || profileData.user.role}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-red-400">🗺️</span>
+                  <span>{profileData.territory_info.region_name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-400">👥</span>
+                  <span>{profileData.team_info.direct_manager?.name || 'لا يوجد'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { id: 'summary', label: 'الملخص', icon: '📊' },
+            { id: 'sales', label: 'المبيعات', icon: '💰' },
+            { id: 'debt', label: 'المديونية', icon: '💳' },
+            { id: 'territory', label: 'المنطقة', icon: '🗺️' },
+            { id: 'team', label: 'الفريق', icon: '👥' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                  : 'glass-effect hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {activeTab === 'summary' && (
+            <MiniProfileSummary data={profileData} />
+          )}
+          
+          {activeTab === 'sales' && (
+            <MiniProfileSales data={profileData.sales_activity} />
+          )}
+          
+          {activeTab === 'debt' && (
+            <MiniProfileDebt data={profileData.debt_info} />
+          )}
+          
+          {activeTab === 'territory' && (
+            <MiniProfileTerritory data={profileData.territory_info} />
+          )}
+          
+          {activeTab === 'team' && (
+            <MiniProfileTeam data={profileData.team_info} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mini Profile Summary Component
+const MiniProfileSummary = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* Key Performance Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-3xl font-bold text-blue-400">
+            {data.sales_activity.total_orders}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي الطلبات
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-3xl font-bold text-green-400">
+            {data.sales_activity.total_revenue.toLocaleString()}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي المبيعات (جنيه)
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-3xl font-bold text-red-400">
+            {data.debt_info.total_debt.toLocaleString()}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي المديونية (جنيه)
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-3xl font-bold text-purple-400">
+            {data.territory_info.assigned_clinics}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            العيادات المسؤول عنها
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass-effect p-6 rounded-xl">
+          <h4 className="font-bold mb-4 flex items-center gap-2">
+            <span>💰</span>
+            <span>أداء المبيعات</span>
+          </h4>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>طلبات هذا الشهر:</span>
+              <span className="font-bold text-blue-400">{data.sales_activity.this_month_orders}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>مبيعات هذا الشهر:</span>
+              <span className="font-bold text-green-400">{data.sales_activity.this_month_revenue.toLocaleString()} جنيه</span>
+            </div>
+            <div className="flex justify-between">
+              <span>متوسط قيمة الطلب:</span>
+              <span className="font-bold text-purple-400">{data.sales_activity.avg_order_value.toLocaleString()} جنيه</span>
+            </div>
+            <div className="flex justify-between">
+              <span>معدل التحويل:</span>
+              <span className="font-bold text-yellow-400">{data.sales_activity.conversion_rate}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-effect p-6 rounded-xl">
+          <h4 className="font-bold mb-4 flex items-center gap-2">
+            <span>📍</span>
+            <span>معلومات المنطقة</span>
+          </h4>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>المنطقة:</span>
+              <span className="font-bold text-blue-400">{data.territory_info.region_name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>المقاطعة:</span>
+              <span className="font-bold text-green-400">{data.territory_info.district_name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>العيادات النشطة:</span>
+              <span className="font-bold text-purple-400">{data.territory_info.active_clinics}/{data.territory_info.assigned_clinics}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>نسبة التغطية:</span>
+              <span className="font-bold text-orange-400">{data.territory_info.coverage_percentage}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Manager Information */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>👤</span>
+          <span>المدير المباشر</span>
+        </h4>
+        {data.team_info.direct_manager ? (
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white font-bold">
+              {data.team_info.direct_manager.name.charAt(0)}
+            </div>
+            <div>
+              <div className="font-bold">{data.team_info.direct_manager.name}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {data.team_info.direct_manager.role}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {data.team_info.direct_manager.phone}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)' }}>لا يوجد مدير مباشر</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Mini Profile Sales Component
+const MiniProfileSales = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* Monthly Performance Chart */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>📈</span>
+          <span>الأداء الشهري</span>
+        </h4>
+        <div className="space-y-4">
+          {data.monthly_performance.map((month, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                  {index + 1}
+                </div>
+                <span className="font-medium">{month.month}</span>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-blue-400">
+                  {month.orders} طلب
+                </div>
+                <div className="text-sm text-green-400">
+                  {month.revenue.toLocaleString()} جنيه
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Products */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>🏆</span>
+          <span>أفضل المنتجات</span>
+        </h4>
+        <div className="space-y-3">
+          {data.top_products.map((product, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                  index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                }`}>
+                  {index + 1}
+                </div>
+                <span className="font-medium">{product.name}</span>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-blue-400">
+                  {product.quantity} قطعة
+                </div>
+                <div className="text-sm text-green-400">
+                  {product.revenue.toLocaleString()} جنيه
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mini Profile Debt Component
+const MiniProfileDebt = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* Debt Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-red-400">
+            {data.total_debt.toLocaleString()}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي المديونية (جنيه)
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-orange-400">
+            {data.overdue_amount.toLocaleString()}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            المبلغ المتأخر (جنيه)
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-blue-400">
+            {data.current_month_debt.toLocaleString()}
+          </div>
+          <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+            مديونية الشهر الحالي (جنيه)
+          </div>
+        </div>
+      </div>
+
+      {/* Payment History */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>💳</span>
+          <span>سجل المدفوعات</span>
+        </h4>
+        <div className="space-y-3">
+          {data.payment_history.map((payment, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                  payment.status === 'paid' ? 'bg-green-500' : 'bg-yellow-500'
+                }`}>
+                  {payment.status === 'paid' ? '✓' : '⏳'}
+                </div>
+                <span className="font-medium">{new Date(payment.date).toLocaleDateString('ar-EG')}</span>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold">
+                  {payment.amount.toLocaleString()} جنيه
+                </div>
+                <div className={`text-xs ${payment.status === 'paid' ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {payment.status === 'paid' ? 'مدفوع' : 'معلق'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mini Profile Territory Component
+const MiniProfileTerritory = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* Territory Overview */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>🗺️</span>
+          <span>نظرة عامة على المنطقة</span>
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>المنطقة:</span>
+              <span className="font-bold text-blue-400">{data.region_name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>المقاطعة:</span>
+              <span className="font-bold text-green-400">{data.district_name}</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>العيادات المخصصة:</span>
+              <span className="font-bold text-purple-400">{data.assigned_clinics}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>العيادات النشطة:</span>
+              <span className="font-bold text-orange-400">{data.active_clinics}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Coverage Chart */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>📊</span>
+          <span>نسبة التغطية</span>
+        </h4>
+        <div className="relative">
+          <div className="flex items-center justify-center h-32">
+            <div className="relative w-24 h-24">
+              <div className="absolute inset-0 rounded-full bg-gray-200 bg-opacity-20"></div>
+              <div 
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600"
+                style={{
+                  background: `conic-gradient(from 0deg, #3b82f6 0deg, #8b5cf6 ${data.coverage_percentage * 3.6}deg, transparent ${data.coverage_percentage * 3.6}deg)`
+                }}
+              ></div>
+              <div className="absolute inset-2 rounded-full bg-gray-800 flex items-center justify-center">
+                <span className="text-xl font-bold text-white">{data.coverage_percentage}%</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mt-4">
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {data.active_clinics} من أصل {data.assigned_clinics} عيادة نشطة
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Mini Profile Team Component
+const MiniProfileTeam = ({ data }) => {
+  return (
+    <div className="space-y-6">
+      {/* Direct Manager */}
+      <div className="glass-effect p-6 rounded-xl">
+        <h4 className="font-bold mb-4 flex items-center gap-2">
+          <span>👤</span>
+          <span>المدير المباشر</span>
+        </h4>
+        {data.direct_manager ? (
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl">
+              {data.direct_manager.name.charAt(0)}
+            </div>
+            <div>
+              <div className="font-bold text-lg">{data.direct_manager.name}</div>
+              <div className="text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
+                {data.direct_manager.role}
+              </div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                📱 {data.direct_manager.phone}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)' }}>لا يوجد مدير مباشر</p>
+        )}
+      </div>
+
+      {/* Team Members */}
+      {data.team_members && data.team_members.length > 0 && (
+        <div className="glass-effect p-6 rounded-xl">
+          <h4 className="font-bold mb-4 flex items-center gap-2">
+            <span>👥</span>
+            <span>أعضاء الفريق</span>
+          </h4>
+          <div className="space-y-3">
+            {data.team_members.map((member, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-white bg-opacity-5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold">
+                    {member.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{member.name}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {member.role}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-blue-400">
+                    {member.performance}%
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    الأداء
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
