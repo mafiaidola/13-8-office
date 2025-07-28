@@ -122,9 +122,12 @@ class BackendTester:
             
             if response and response.status_code == 200:
                 data = response.json()
-                token = data.get("access_token")
-                self.test_tokens[username] = token
-                self.log_test(f"New User Login ({username}/{password})", True, f"Token received")
+                token = data.get("access_token") or data.get("token")
+                if token:
+                    self.test_tokens[username] = token
+                    self.log_test(f"New User Login ({username}/{password})", True, f"Token received")
+                else:
+                    self.log_test(f"New User Login ({username}/{password})", False, f"No token in response: {data}")
             else:
                 self.log_test(f"New User Login ({username}/{password})", False, 
                             f"Status: {response.status_code if response else 'No response'} - User may not exist yet")
