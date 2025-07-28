@@ -13437,7 +13437,7 @@ const ClinicRegistration = () => {
 
           <button
             type="submit"
-            disabled={isLoading || !location}
+            disabled={isLoading || !clinicLocation}
             className="w-full btn-primary text-xl py-4 neon-glow"
           >
             {isLoading ? (
