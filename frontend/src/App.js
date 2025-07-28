@@ -10073,7 +10073,7 @@ const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
 
   const handleProfileClick = () => {
     setShowUserMenu(false);
-    setShowProfileModal(true);
+    setShowMiniProfile(true);
   };
 
   return (
