@@ -16427,14 +16427,6 @@ const AppContent = () => {
           language={language}
         />
       )}
-
-      {/* Mini Profile Modal */}
-      {showMiniProfile && (
-        <MiniProfile
-          user={user}
-          onClose={() => setShowMiniProfile(false)}
-        />
-      )}
     </div>
   );
 };
