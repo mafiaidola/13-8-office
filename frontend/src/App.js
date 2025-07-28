@@ -7684,6 +7684,590 @@ const EnhancedOrderCreation = ({ user }) => {
   );
 };
 
+// Enhanced Product Management for Admin
+const EnhancedProductManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterLine, setFilterLine] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      // Mock data for development
+      setProducts([
+        {
+          id: 'prod-001',
+          name: 'دواء أ',
+          description: 'دواء فعال للعلاج',
+          category: 'أدوية',
+          unit: 'علبة',
+          line: 'line_1',
+          price_1: 100,
+          price_10: 90,
+          price_25: 80,
+          price_50: 70,
+          price_100: 60,
+          cashback_1: 0,
+          cashback_10: 2,
+          cashback_25: 5,
+          cashback_50: 8,
+          cashback_100: 10,
+          current_stock: 150,
+          is_active: true,
+          created_at: '2024-01-01T10:00:00Z'
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateProduct = async (productData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/products/admin/create`, productData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProducts();
+      setShowProductModal(false);
+      alert('تم إنشاء المنتج بنجاح');
+    } catch (error) {
+      console.error('Error creating product:', error);
+      alert('حدث خطأ أثناء إنشاء المنتج');
+    }
+  };
+
+  const handleUpdateProduct = async (productId, productData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/products/${productId}/admin`, productData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProducts();
+      setShowProductModal(false);
+      alert('تم تحديث المنتج بنجاح');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert('حدث خطأ أثناء تحديث المنتج');
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API}/products/${productId}/admin`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchProducts();
+        alert('تم حذف المنتج بنجاح');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('حدث خطأ أثناء حذف المنتج');
+      }
+    }
+  };
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLine = filterLine === 'all' || product.line === filterLine;
+    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
+    
+    return matchesSearch && matchesLine && matchesCategory;
+  });
+
+  const categories = [...new Set(products.map(p => p.category))];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-spinner-enhanced"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gradient">
+          إدارة المنتجات
+        </h2>
+        <button
+          onClick={() => {
+            setSelectedProduct(null);
+            setShowProductModal(true);
+          }}
+          className="btn-primary"
+        >
+          ➕ إضافة منتج جديد
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="glass-effect p-4 rounded-xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">البحث</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="form-modern w-full"
+              placeholder="البحث في المنتجات..."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">الخط</label>
+            <select
+              value={filterLine}
+              onChange={(e) => setFilterLine(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">جميع الخطوط</option>
+              <option value="line_1">الخط الأول</option>
+              <option value="line_2">الخط الثاني</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">الفئة</label>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="form-modern w-full"
+            >
+              <option value="all">جميع الفئات</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={fetchProducts}
+              className="btn-primary w-full"
+            >
+              🔄 تحديث
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-blue-400">
+            {filteredProducts.length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            إجمالي المنتجات
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-green-400">
+            {filteredProducts.filter(p => p.is_active).length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            منتجات نشطة
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-red-400">
+            {filteredProducts.filter(p => p.current_stock < 10).length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            منتجات قليلة المخزون
+          </div>
+        </div>
+        
+        <div className="glass-effect p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-purple-400">
+            {categories.length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            الفئات المتاحة
+          </div>
+        </div>
+      </div>
+
+      {/* Products Table */}
+      <div className="glass-effect rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white border-opacity-10">
+                <th className="px-4 py-3 text-right text-sm font-medium">المنتج</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الفئة</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الخط</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الأسعار</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">المخزون</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الحالة</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id} className="border-b border-white border-opacity-5 hover:bg-white hover:bg-opacity-5">
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {product.description}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {product.category}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {product.line === 'line_1' ? 'الخط الأول' : 'الخط الثاني'}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="space-y-1">
+                      <div>1: {product.price_1}ج</div>
+                      <div>10: {product.price_10}ج</div>
+                      <div>25: {product.price_25}ج</div>
+                      <div>50: {product.price_50}ج</div>
+                      <div>100: {product.price_100}ج</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-block px-2 py-1 rounded text-xs ${
+                      product.current_stock < 10 ? 'bg-red-500 bg-opacity-20 text-red-400' :
+                      product.current_stock < 50 ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' :
+                      'bg-green-500 bg-opacity-20 text-green-400'
+                    }`}>
+                      {product.current_stock} {product.unit}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className={`inline-block px-2 py-1 rounded text-xs ${
+                      product.is_active ? 'bg-green-500 bg-opacity-20 text-green-400' :
+                      'bg-red-500 bg-opacity-20 text-red-400'
+                    }`}>
+                      {product.is_active ? 'نشط' : 'غير نشط'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowProductModal(true);
+                        }}
+                        className="text-blue-400 hover:text-blue-300"
+                        title="تعديل"
+                      >
+                        ✏️
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-400 hover:text-red-300"
+                        title="حذف"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Product Modal */}
+      {showProductModal && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setShowProductModal(false)}
+          onSave={selectedProduct ? handleUpdateProduct : handleCreateProduct}
+        />
+      )}
+    </div>
+  );
+};
+
+// Product Modal Component
+const ProductModal = ({ product, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: product?.name || '',
+    description: product?.description || '',
+    category: product?.category || '',
+    unit: product?.unit || '',
+    line: product?.line || 'line_1',
+    price_1: product?.price_1 || 0,
+    price_10: product?.price_10 || 0,
+    price_25: product?.price_25 || 0,
+    price_50: product?.price_50 || 0,
+    price_100: product?.price_100 || 0,
+    cashback_1: product?.cashback_1 || 0,
+    cashback_10: product?.cashback_10 || 0,
+    cashback_25: product?.cashback_25 || 0,
+    cashback_50: product?.cashback_50 || 0,
+    cashback_100: product?.cashback_100 || 0,
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (product) {
+      onSave(product.id, formData);
+    } else {
+      onSave(formData);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="modal-modern p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gradient">
+            {product ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">معلومات أساسية</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم المنتج *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">الفئة *</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">الوحدة *</label>
+                <input
+                  type="text"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                  placeholder="علبة، زجاجة، حبة..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">الخط *</label>
+                <select
+                  value={formData.line}
+                  onChange={(e) => setFormData({...formData, line: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="line_1">الخط الأول</option>
+                  <option value="line_2">الخط الثاني</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">الوصف</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="form-modern w-full"
+                rows="3"
+              />
+            </div>
+          </div>
+
+          {/* Price Tiers */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">الأسعار المتدرجة</h4>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">1 قطعة</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price_1}
+                  onChange={(e) => setFormData({...formData, price_1: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">10 قطع</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price_10}
+                  onChange={(e) => setFormData({...formData, price_10: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">25 قطعة</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price_25}
+                  onChange={(e) => setFormData({...formData, price_25: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">50 قطعة</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price_50}
+                  onChange={(e) => setFormData({...formData, price_50: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">100 قطعة</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.price_100}
+                  onChange={(e) => setFormData({...formData, price_100: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Cashback System */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">نظام الكاش باك (%)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">1 قطعة</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.cashback_1}
+                  onChange={(e) => setFormData({...formData, cashback_1: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">10 قطع</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.cashback_10}
+                  onChange={(e) => setFormData({...formData, cashback_10: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">25 قطعة</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.cashback_25}
+                  onChange={(e) => setFormData({...formData, cashback_25: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">50 قطعة</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.cashback_50}
+                  onChange={(e) => setFormData({...formData, cashback_50: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">100 قطعة</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.cashback_100}
+                  onChange={(e) => setFormData({...formData, cashback_100: parseFloat(e.target.value)})}
+                  className="form-modern w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              className="btn-primary flex-1"
+            >
+              {product ? 'تحديث المنتج' : 'إضافة المنتج'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary flex-1"
+            >
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced User Management Component with Photos, Last Seen, and KPIs
 const EnhancedUserManagement = () => {
   const [users, setUsers] = useState([]);
