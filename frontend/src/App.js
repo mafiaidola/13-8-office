@@ -13909,6 +13909,7 @@ const Dashboard = () => {
           user={user}
           onLogout={logout}
           onSearchOpen={() => setShowGlobalSearch(true)}
+          onProfileOpen={() => setShowMiniProfile(true)}
         />
         
         {/* Global Search Modal */}
