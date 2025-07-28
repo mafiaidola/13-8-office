@@ -13013,9 +13013,12 @@ const ClinicRegistration = () => {
         async (position) => {
           const newLocation = {
             latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            longitude: position.coords.longitude,
+            timestamp: Date.now(),
+            accuracy: position.coords.accuracy
           };
           setLocation(newLocation);
+          setUserCurrentLocation(newLocation);
           
           // Convert coordinates to address (placeholder - will be enhanced with Google Maps)
           try {
@@ -13036,6 +13039,10 @@ const ClinicRegistration = () => {
     } else {
       setError('المتصفح لا يدعم تحديد الموقع');
     }
+  };
+
+  const getCurrentUserLocation = () => {
+    getCurrentLocation();
   };
 
   const handleImageUpload = (e) => {
