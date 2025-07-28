@@ -12681,6 +12681,525 @@ const SalesRepPlanManagement = ({ user }) => {
   );
 };
 
+// Admin Location Tracking Component
+const AdminLocationTracking = () => {
+  const [clinics, setClinics] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('clinics');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+  const { language } = useLanguage();
+
+  const t = language === 'ar' ? {
+    title: 'تتبع المواقع السري',
+    clinicRegistrations: 'تسجيلات العيادات',
+    orderLocations: 'مواقع الطلبات',
+    clinicName: 'اسم العيادة',
+    repName: 'اسم المندوب',
+    registrationDate: 'تاريخ التسجيل',
+    orderDate: 'تاريخ الطلب',
+    clinicLocation: 'موقع العيادة',
+    repLocation: 'موقع المندوب',
+    distance: 'المسافة',
+    viewOnMap: 'عرض على الخريطة',
+    orderTotal: 'إجمالي الطلب',
+    noData: 'لا توجد بيانات',
+    loading: 'جاري التحميل...',
+    close: 'إغلاق',
+    meters: 'متر',
+    kilometers: 'كيلومتر'
+  } : {
+    title: 'Secret Location Tracking',
+    clinicRegistrations: 'Clinic Registrations',
+    orderLocations: 'Order Locations',
+    clinicName: 'Clinic Name',
+    repName: 'Rep Name',
+    registrationDate: 'Registration Date',
+    orderDate: 'Order Date',
+    clinicLocation: 'Clinic Location',
+    repLocation: 'Rep Location',
+    distance: 'Distance',
+    viewOnMap: 'View on Map',
+    orderTotal: 'Order Total',
+    noData: 'No data available',
+    loading: 'Loading...',
+    close: 'Close',
+    meters: 'meters',
+    kilometers: 'kilometers'
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (activeTab === 'clinics') {
+        const response = await axios.get(`${API}/admin/clinic-registrations-with-locations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setClinics(response.data || []);
+      } else {
+        const response = await axios.get(`${API}/admin/orders-with-locations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setOrders(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching location data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // حساب المسافة بين نقطتين
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c * 1000; // المسافة بالمتر
+    
+    return distance;
+  };
+
+  const formatDistance = (distance) => {
+    if (!distance && distance !== 0) return '-';
+    if (distance < 1000) {
+      return `${Math.round(distance)} ${t.meters}`;
+    } else {
+      return `${(distance / 1000).toFixed(2)} ${t.kilometers}`;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getDistanceColor = (distance) => {
+    if (!distance && distance !== 0) return 'text-gray-400';
+    if (distance < 50) return 'text-green-600'; // أقل من 50 متر
+    if (distance < 200) return 'text-yellow-600'; // أقل من 200 متر
+    return 'text-red-600'; // أكثر من 200 متر
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="mr-3">{t.loading}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gradient flex items-center gap-3">
+          <span>🕵️‍♂️</span>
+          {t.title}
+        </h2>
+        <div className="text-sm opacity-75 bg-red-100 text-red-800 px-3 py-1 rounded-full">
+          🔒 للأدمن فقط - معلومات سرية
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <button
+          onClick={() => setActiveTab('clinics')}
+          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'clinics'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          🏥 {t.clinicRegistrations}
+        </button>
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'orders'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          📦 {t.orderLocations}
+        </button>
+      </div>
+
+      {/* Clinics Table */}
+      {activeTab === 'clinics' && (
+        <div className="glass-effect rounded-xl overflow-hidden">
+          {clinics.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl mb-4 block">🏥</span>
+              <p className="text-lg font-semibold">{t.noData}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.clinicName}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.repName}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.registrationDate}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.clinicLocation}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.repLocation}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.distance}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clinics.map((clinic) => {
+                    const distance = calculateDistance(
+                      clinic.clinic_latitude,
+                      clinic.clinic_longitude,
+                      clinic.rep_current_latitude,
+                      clinic.rep_current_longitude
+                    );
+                    
+                    return (
+                      <tr key={clinic.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors border-b border-gray-800">
+                        <td className="px-4 py-3">
+                          <div className="font-medium">{clinic.clinic_name}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm">{clinic.rep_name}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm">{formatDate(clinic.created_at)}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-xs">
+                            📍 {clinic.clinic_latitude?.toFixed(4)}, {clinic.clinic_longitude?.toFixed(4)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-xs">
+                            👤 {clinic.rep_current_latitude?.toFixed(4)}, {clinic.rep_current_longitude?.toFixed(4)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className={`text-sm font-medium ${getDistanceColor(distance)}`}>
+                            {formatDistance(distance)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => {
+                              setSelectedItem({
+                                type: 'clinic',
+                                data: clinic,
+                                distance: distance
+                              });
+                              setShowMap(true);
+                            }}
+                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-colors"
+                          >
+                            🗺️ {t.viewOnMap}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Orders Table */}
+      {activeTab === 'orders' && (
+        <div className="glass-effect rounded-xl overflow-hidden">
+          {orders.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl mb-4 block">📦</span>
+              <p className="text-lg font-semibold">{t.noData}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">رقم الطلب</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.clinicName}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.repName}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.orderDate}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.orderTotal}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.distance}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => {
+                    const distance = calculateDistance(
+                      order.target_clinic_latitude,
+                      order.target_clinic_longitude,
+                      order.rep_current_latitude,
+                      order.rep_current_longitude
+                    );
+                    
+                    return (
+                      <tr key={order.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors border-b border-gray-800">
+                        <td className="px-4 py-3">
+                          <div className="font-medium">#{order.id?.slice(-6)}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">{order.clinic_name}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm">{order.rep_name}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm">{formatDate(order.created_at)}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium">{order.total_amount} ج.م</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className={`text-sm font-medium ${getDistanceColor(distance)}`}>
+                            {formatDistance(distance)}
+                            {distance > 200 && (
+                              <div className="text-xs text-red-500">⚠️ بعيد عن العيادة</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => {
+                              setSelectedItem({
+                                type: 'order',
+                                data: order,
+                                distance: distance
+                              });
+                              setShowMap(true);
+                            }}
+                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-colors"
+                          >
+                            🗺️ {t.viewOnMap}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Map Modal */}
+      {showMap && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="glass-effect rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold">
+                  {selectedItem.type === 'clinic' ? '🏥 موقع تسجيل العيادة' : '📦 موقع إنشاء الطلب'}
+                </h3>
+                <button
+                  onClick={() => setShowMap(false)}
+                  className="text-red-400 hover:text-red-300 transition-colors text-xl"
+                >
+                  ✕ {t.close}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* معلومات تفصيلية */}
+                <div className="space-y-4">
+                  <h4 className="font-bold text-lg border-b border-gray-700 pb-2">التفاصيل</h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium opacity-75">
+                        {selectedItem.type === 'clinic' ? 'اسم العيادة' : 'رقم الطلب'}
+                      </label>
+                      <div className="text-lg font-semibold">
+                        {selectedItem.type === 'clinic' 
+                          ? selectedItem.data.clinic_name 
+                          : `#${selectedItem.data.id?.slice(-6)}`}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium opacity-75">اسم المندوب</label>
+                      <div>{selectedItem.data.rep_name}</div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium opacity-75">التاريخ والوقت</label>
+                      <div>{formatDate(selectedItem.data.created_at)}</div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium opacity-75">المسافة بين المواقع</label>
+                      <div className={`text-lg font-bold ${getDistanceColor(selectedItem.distance)}`}>
+                        {formatDistance(selectedItem.distance)}
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <h5 className="font-bold text-yellow-800 mb-2">📍 إحداثيات الموقع</h5>
+                      <div className="text-sm space-y-1">
+                        <div>
+                          <strong>موقع {selectedItem.type === 'clinic' ? 'العيادة' : 'الطلب'}:</strong><br/>
+                          {selectedItem.type === 'clinic' 
+                            ? `${selectedItem.data.clinic_latitude?.toFixed(6)}, ${selectedItem.data.clinic_longitude?.toFixed(6)}`
+                            : `${selectedItem.data.target_clinic_latitude?.toFixed(6)}, ${selectedItem.data.target_clinic_longitude?.toFixed(6)}`
+                          }
+                        </div>
+                        <div>
+                          <strong>موقع المندوب:</strong><br/>
+                          {selectedItem.data.rep_current_latitude?.toFixed(6)}, {selectedItem.data.rep_current_longitude?.toFixed(6)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedItem.distance > 200 && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-red-800">
+                          <span>⚠️</span>
+                          <strong>تنبيه: المندوب كان بعيداً عن الموقع المستهدف</strong>
+                        </div>
+                        <p className="text-sm text-red-600 mt-1">
+                          المسافة تزيد عن 200 متر مما قد يشير إلى عدم تواجد المندوب في الموقع الصحيح
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* الخريطة */}
+                <div className="space-y-4">
+                  <h4 className="font-bold text-lg border-b border-gray-700 pb-2">الموقع على الخريطة</h4>
+                  
+                  {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
+                    <LocationComparisonMap
+                      location1={{
+                        lat: selectedItem.type === 'clinic' 
+                          ? selectedItem.data.clinic_latitude 
+                          : selectedItem.data.target_clinic_latitude,
+                        lng: selectedItem.type === 'clinic'
+                          ? selectedItem.data.clinic_longitude
+                          : selectedItem.data.target_clinic_longitude,
+                        title: selectedItem.type === 'clinic' ? 'موقع العيادة' : 'موقع الطلب',
+                        color: 'green'
+                      }}
+                      location2={{
+                        lat: selectedItem.data.rep_current_latitude,
+                        lng: selectedItem.data.rep_current_longitude,
+                        title: 'موقع المندوب',
+                        color: 'red'
+                      }}
+                      distance={selectedItem.distance}
+                    />
+                  ) : (
+                    <div className="h-64 glass-effect rounded-xl flex items-center justify-center">
+                      <div className="text-center">
+                        <span className="text-4xl mb-2 block">🗺️</span>
+                        <p>خريطة Google Maps غير متاحة</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// خريطة مقارنة المواقع
+const LocationComparisonMap = ({ location1, location2, distance }) => {
+  const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
+
+  useEffect(() => {
+    if (window.google && window.google.maps && mapRef.current && !map) {
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(new window.google.maps.LatLng(location1.lat, location1.lng));
+      bounds.extend(new window.google.maps.LatLng(location2.lat, location2.lng));
+
+      const newMap = new window.google.maps.Map(mapRef.current, {
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true,
+      });
+
+      // إضافة المؤشرات
+      new window.google.maps.Marker({
+        position: { lat: location1.lat, lng: location1.lng },
+        map: newMap,
+        title: location1.title,
+        icon: {
+          url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+          scaledSize: new window.google.maps.Size(32, 32)
+        }
+      });
+
+      new window.google.maps.Marker({
+        position: { lat: location2.lat, lng: location2.lng },
+        map: newMap,
+        title: location2.title,
+        icon: {
+          url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+          scaledSize: new window.google.maps.Size(32, 32)
+        }
+      });
+
+      // رسم خط بين النقطتين
+      const line = new window.google.maps.Polyline({
+        path: [
+          { lat: location1.lat, lng: location1.lng },
+          { lat: location2.lat, lng: location2.lng }
+        ],
+        geodesic: true,
+        strokeColor: distance > 200 ? '#ef4444' : '#10b981',
+        strokeOpacity: 1.0,
+        strokeWeight: 3
+      });
+      line.setMap(newMap);
+
+      newMap.fitBounds(bounds);
+      const padding = { top: 50, right: 50, bottom: 50, left: 50 };
+      newMap.fitBounds(bounds, padding);
+
+      setMap(newMap);
+    }
+  }, [location1, location2, distance, map]);
+
+  return (
+    <div className="w-full rounded-xl overflow-hidden">
+      <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
+    </div>
+  );
+};
+
 const AdminClinicsManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
