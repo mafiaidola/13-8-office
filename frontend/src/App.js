@@ -461,6 +461,21 @@ const translations = {
     lineStatistics: 'Line Statistics',
     initializeSystem: 'Initialize System',
     
+    // Profile System
+    miniProfile: 'Mini Profile',
+    
+    // Maps and Locations
+    maps: 'Maps',
+    location: 'Location',
+    currentLocation: 'Your Current Location',
+    selectLocation: 'Select Location',
+    selectedLocation: 'Selected Location',
+    registeredLocation: 'Registered Location',
+    mapInstructions: 'Click on the map to select location',
+    locationRequired: 'Location is required',
+    getLocation: 'Get Location',
+    locationPermission: 'Please allow location access',
+    
     // Warehouse
     warehouseName: 'Warehouse Name',
     location: 'Location',
