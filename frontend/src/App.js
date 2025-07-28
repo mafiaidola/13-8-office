@@ -1651,9 +1651,21 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="modal-modern p-8 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
-        <h3 className="text-2xl font-bold mb-6 text-gradient">
-          {mode === 'add' ? 'إضافة مستخدم جديد' : `تعديل: ${user?.full_name}`}
-        </h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gradient">
+            {mode === 'add' ? 'إضافة مستخدم جديد' : `تعديل: ${user?.full_name}`}
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 text-red-400 hover:text-red-300 transition-all duration-200"
+            title="إغلاق"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
