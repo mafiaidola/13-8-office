@@ -95,6 +95,9 @@ const GoogleMapComponent = GoogleApiWrapper({
   apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY
 })(EnhancedGoogleMap);
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
