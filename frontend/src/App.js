@@ -14088,7 +14088,8 @@ const Dashboard = () => {
       reports: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager', 'accounting'],
       accounting: ['admin', 'gm', 'accounting', 'manager', 'line_manager'],
       regions: ['admin', 'gm', 'line_manager', 'area_manager'],
-      comprehensive: ['admin', 'gm']
+      comprehensive: ['admin', 'gm'],
+      clinic: ['admin'] // تسجيل العيادة متاح للأدمن فقط
     };
     
     return permissions[tabName]?.includes(user.role) || false;
