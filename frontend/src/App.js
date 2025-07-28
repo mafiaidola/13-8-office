@@ -1767,7 +1767,7 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
             <h4 className="text-lg font-bold mb-4">معلومات العمل</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-2">الدور *:</label>
+                <label className="block text-sm font-bold mb-2">المسمى الوظيفي *:</label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
