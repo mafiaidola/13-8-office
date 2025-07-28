@@ -13054,8 +13054,14 @@ const ClinicRegistration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!location) {
-      setError('لا يمكن تسجيل العيادة بدون تحديد الموقع');
+    if (!clinicLocation) {
+      setError('لا يمكن تسجيل العيادة بدون تحديد موقع العيادة على الخريطة');
+      return;
+    }
+
+    if (!userCurrentLocation) {
+      setError('جاري تحديد موقعك الحالي...');
+      getCurrentUserLocation();
       return;
     }
 
@@ -13066,9 +13072,22 @@ const ClinicRegistration = () => {
       const token = localStorage.getItem('token');
       const requestData = {
         ...formData,
-        doctor_specialty: formData.clinic_class, // Map clinic_class to doctor_specialty for backend
-        latitude: location.latitude,
-        longitude: location.longitude
+        doctor_specialty: formData.clinic_class,
+        // موقع العيادة المحدد على الخريطة
+        clinic_latitude: clinicLocation.latitude,
+        clinic_longitude: clinicLocation.longitude,
+        // موقع المندوب الحالي (سري - للأدمن فقط)
+        rep_current_latitude: userCurrentLocation.latitude,
+        rep_current_longitude: userCurrentLocation.longitude,
+        rep_location_timestamp: userCurrentLocation.timestamp,
+        rep_location_accuracy: userCurrentLocation.accuracy,
+        // معلومات إضافية للتتبع
+        registration_type: 'field_registration',
+        device_info: {
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        }
       };
 
       await axios.post(`${API}/clinic-requests`, requestData, {
@@ -13078,6 +13097,24 @@ const ClinicRegistration = () => {
       setSuccess('تم إرسال طلب تسجيل العيادة بنجاح. في انتظار موافقة المدير');
       setFormData({
         clinic_name: '',
+        clinic_phone: '',
+        doctor_name: '',
+        clinic_class: '',
+        doctor_address: '',
+        clinic_manager_name: '',
+        address: '',
+        notes: '',
+        clinic_image: ''
+      });
+      setClinicLocation(null);
+      // لا نعيد تعيين userCurrentLocation لأنه قد يُستخدم مرة أخرى
+    } catch (error) {
+      console.error('Error submitting clinic request:', error);
+      setError('حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى');
+    } finally {
+      setIsLoading(false);
+    }
+  };
         clinic_phone: '',
         doctor_name: '',
         clinic_class: '',
