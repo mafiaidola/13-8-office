@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from "react";
 import "./App.css";
 import axios from "axios";
-import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 // Enhanced Google Maps Component
 const EnhancedGoogleMap = ({ google, latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
