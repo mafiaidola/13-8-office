@@ -1664,8 +1664,7 @@ test_plan:
     - "Enhanced Invoice and Product System with Price Tiers"
     - "Monthly Planning System Integration"
     - "Comprehensive Admin Settings API"
-  stuck_tasks:
-    - "Enhanced Invoice and Product System with Price Tiers"
+  stuck_tasks: []
   completed_tasks:
     - "Comprehensive Accounting System - Overview API"
     - "Comprehensive Accounting System - Invoices API"
