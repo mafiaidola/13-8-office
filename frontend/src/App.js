@@ -13001,6 +13001,10 @@ const Dashboard = () => {
           <EnhancedInvoiceManagement />
         )}
 
+        {activeTab === 'order-creation' && canAccessTab('visit') && (
+          <EnhancedOrderCreation user={user} />
+        )}
+
         {activeTab === 'visit' && user.role === 'sales_rep' && (
           <VisitRegistration />
         )}
