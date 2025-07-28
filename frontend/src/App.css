@@ -68,24 +68,30 @@
   --input-focus: #0ea5e9;
 }
 
-/* Input styling for all themes */
+/* Input styling for all themes - Enhanced visibility */
 input, textarea, select {
   background: var(--input-bg) !important;
   border: 1px solid var(--input-border) !important;
   color: var(--text-primary) !important;
   border-radius: 8px !important;
-  padding: 8px 12px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
   transition: all 0.3s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none !important;
   border-color: var(--input-focus) !important;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1) !important;
+  background: var(--input-bg) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 input::placeholder, textarea::placeholder {
   color: var(--text-muted) !important;
+  font-weight: 400 !important;
+  opacity: 0.8 !important;
 }
 
 /* Additional theme support */
