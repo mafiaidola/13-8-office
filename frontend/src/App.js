@@ -10040,7 +10040,7 @@ const useRealTimeAnalytics = () => {
 
 // Enhanced Header Component with comprehensive language support
 // Enhanced Header Component with comprehensive language support and improved design
-const EnhancedHeader = ({ user, onLogout, onSearchOpen }) => {
+const EnhancedHeader = ({ user, onLogout, onSearchOpen, onProfileOpen }) => {
   const { theme, changeTheme } = useTheme();
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const [showUserMenu, setShowUserMenu] = useState(false);
