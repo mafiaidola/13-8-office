@@ -16353,7 +16353,6 @@ const AppContent = () => {
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showMiniProfile, setShowMiniProfile] = useState(false);
   const { language } = useLanguage();
 
   const handleQRScan = async (qrData) => {
