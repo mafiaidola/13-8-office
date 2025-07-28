@@ -111,6 +111,52 @@ const translations = {
     lineStatistics: 'إحصائيات الخطوط',
     initializeSystem: 'تهيئة النظام',
     
+    // Profile System
+    miniProfile: 'الملف الشخصي المصغر',
+    salesActivity: 'نشاط المبيعات',
+    debtInfo: 'معلومات المديونية',
+    territoryInfo: 'معلومات المنطقة',
+    teamInfo: 'معلومات الفريق',
+    summary: 'الملخص',
+    totalOrders: 'إجمالي الطلبات',
+    totalRevenue: 'إجمالي المبيعات',
+    totalDebt: 'إجمالي المديونية',
+    directManager: 'المدير المباشر',
+    region: 'المنطقة',
+    assignedClinics: 'العيادات المسؤول عنها',
+    profilePhoto: 'الصورة الشخصية',
+    lastSeen: 'آخر ظهور',
+    
+    // Products Enhanced
+    productManagement: 'إدارة المنتجات',
+    addProduct: 'إضافة منتج',
+    editProduct: 'تعديل منتج',
+    deleteProduct: 'حذف منتج',
+    category: 'الفئة',
+    unit: 'الوحدة',
+    price: 'السعر',
+    stock: 'المخزون',
+    priceTiers: 'الأسعار المتدرجة',
+    cashback: 'كاش باك',
+    
+    // Invoices Enhanced
+    invoiceManagement: 'إدارة الفواتير',
+    invoice: 'فاتورة',
+    customer: 'العميل',
+    amount: 'المبلغ',
+    date: 'التاريخ',
+    paid: 'مدفوع',
+    pending: 'معلق',
+    cancelled: 'ملغي',
+    editHistory: 'سجل التعديلات',
+    
+    // Orders Enhanced
+    orderCreation: 'إنشاء طلب',
+    order: 'طلب',
+    createOrder: 'إنشاء طلب',
+    quantity: 'الكمية',
+    total: 'الإجمالي',
+    
     // Warehouse
     warehouseName: 'اسم المخزن',
     location: 'الموقع',
