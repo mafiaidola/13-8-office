@@ -13902,7 +13902,6 @@ const Dashboard = () => {
   
   return (
     <>
-      <ThemeToggle />
       <div className="min-h-screen page-transition flex flex-col">
         {/* Enhanced Header */}
         <EnhancedHeader 
