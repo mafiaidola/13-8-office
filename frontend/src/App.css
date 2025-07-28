@@ -143,12 +143,12 @@ input::placeholder, textarea::placeholder {
   --accent-bg: #2a2a2a;
   --card-bg: rgba(26, 26, 26, 0.95);
   --glass-bg: rgba(10, 10, 10, 0.8);
-  --text-primary: #00ff00;
-  --text-secondary: #00cc00;
-  --text-muted: #009900;
+  --text-primary: #00ff88;
+  --text-secondary: #00cc66;
+  --text-muted: #00aa55;
   --input-bg: #1a1a1a;
   --input-border: #2a2a2a;
-  --input-focus: #00ff00;
+  --input-focus: #00ff88;
 }
 
 [data-theme="sunset"] {
