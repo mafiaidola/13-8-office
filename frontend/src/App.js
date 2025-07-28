@@ -3,10 +3,12 @@ import "./App.css";
 import axios from "axios";
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
-// Enhanced Google Maps Component using @react-google-maps/api
-const EnhancedGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
+// Simple Google Maps Component using direct Google Maps API
+const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
+  const mapRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [map, setMap] = useState(null);
 
   useEffect(() => {
     if (showCurrentLocation && navigator.geolocation) {
@@ -24,90 +26,114 @@ const EnhancedGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentL
     }
   }, [showCurrentLocation]);
 
-  const handleMapClick = (event) => {
-    const location = {
-      lat: event.latLng.lat(),
-      lng: event.latLng.lng()
-    };
-    setSelectedLocation(location);
-    if (onLocationSelect) {
-      onLocationSelect(location);
+  useEffect(() => {
+    // Initialize map when Google Maps API is loaded
+    if (window.google && window.google.maps && mapRef.current && !map) {
+      const mapCenter = {
+        lat: latitude || currentLocation?.lat || 30.0444, // Cairo coordinates as default
+        lng: longitude || currentLocation?.lng || 31.2357
+      };
+
+      const newMap = new window.google.maps.Map(mapRef.current, {
+        zoom: 15,
+        center: mapCenter,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
+      });
+
+      // Add click listener
+      newMap.addListener('click', (event) => {
+        const location = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        setSelectedLocation(location);
+        if (onLocationSelect) {
+          onLocationSelect(location);
+        }
+      });
+
+      setMap(newMap);
     }
-  };
+  }, [latitude, longitude, currentLocation, map, onLocationSelect]);
 
-  const mapCenter = {
-    lat: latitude || currentLocation?.lat || 30.0444, // Cairo coordinates as default
-    lng: longitude || currentLocation?.lng || 31.2357
-  };
-
-  const mapContainerStyle = {
-    width: '100%',
-    height: '320px'
-  };
-
-  const mapOptions = {
-    zoom: 15,
-    center: mapCenter,
-    mapTypeControl: false,
-    streetViewControl: false,
-    fullscreenControl: true,
-    zoomControl: true,
-    styles: [
-      {
-        featureType: "poi",
-        elementType: "labels",
-        stylers: [{ visibility: "off" }]
+  // Add markers when map or locations change
+  useEffect(() => {
+    if (map && window.google) {
+      // Clear existing markers
+      if (map.markers) {
+        map.markers.forEach(marker => marker.setMap(null));
       }
-    ]
-  };
+      map.markers = [];
+
+      // Current location marker (blue)
+      if (currentLocation) {
+        const marker = new window.google.maps.Marker({
+          position: currentLocation,
+          map: map,
+          title: "موقعك الحالي",
+          icon: {
+            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2NmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzAwN2NmZiIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzAwN2NmZiIvPgo8L3N2Zz4=',
+            scaledSize: new window.google.maps.Size(24, 24)
+          }
+        });
+        map.markers.push(marker);
+      }
+
+      // Selected location marker (red)
+      if (selectedLocation) {
+        const marker = new window.google.maps.Marker({
+          position: selectedLocation,
+          map: map,
+          title: "الموقع المحدد",
+          icon: {
+            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+            scaledSize: new window.google.maps.Size(32, 32)
+          }
+        });
+        map.markers.push(marker);
+      }
+
+      // Existing location marker (green)
+      if (latitude && longitude && !selectedLocation) {
+        const marker = new window.google.maps.Marker({
+          position: { lat: latitude, lng: longitude },
+          map: map,
+          title: "الموقع المسجل",
+          icon: {
+            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
+            scaledSize: new window.google.maps.Size(32, 32)
+          }
+        });
+        map.markers.push(marker);
+      }
+    }
+  }, [map, currentLocation, selectedLocation, latitude, longitude]);
+
+  if (!window.google || !window.google.maps) {
+    return (
+      <div className="h-80 glass-effect rounded-xl flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="font-bold">جاري تحميل الخريطة...</p>
+          <p className="text-sm opacity-75">Google Maps API</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full rounded-xl overflow-hidden">
-      <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={mapCenter}
-          zoom={15}
-          options={mapOptions}
-          onClick={handleMapClick}
-        >
-          {/* Current location marker */}
-          {currentLocation && (
-            <Marker
-              position={currentLocation}
-              title="موقعك الحالي"
-              icon={{
-                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2NmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzAwN2NmZiIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzAwN2NmZiIvPgo8L3N2Zz4=',
-                scaledSize: window.google && window.google.maps ? new window.google.maps.Size(24, 24) : undefined
-              }}
-            />
-          )}
-          
-          {/* Selected location marker */}
-          {selectedLocation && (
-            <Marker
-              position={selectedLocation}
-              title="الموقع المحدد"
-              icon={{
-                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
-                scaledSize: window.google && window.google.maps ? new window.google.maps.Size(32, 32) : undefined
-              }}
-            />
-          )}
-          
-          {/* Existing location marker */}
-          {latitude && longitude && !selectedLocation && (
-            <Marker
-              position={{ lat: latitude, lng: longitude }}
-              title="الموقع المسجل"
-              icon={{
-                url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
-                scaledSize: window.google && window.google.maps ? new window.google.maps.Size(32, 32) : undefined
-              }}
-            />
-          )}
-        </GoogleMap>
-      </LoadScript>
+      <div ref={mapRef} style={{ width: '100%', height: '320px' }} />
     </div>
   );
 };
