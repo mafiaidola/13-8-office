@@ -21444,6 +21444,8 @@ const EnhancedUserManagementV2 = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [showMiniProfile, setShowMiniProfile] = useState(false);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filterRegion, setFilterRegion] = useState('all');
   const [filterRole, setFilterRole] = useState('all');
