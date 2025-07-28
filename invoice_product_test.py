@@ -280,7 +280,7 @@ class InvoiceProductTester:
             return False
 
     def test_update_invoice(self):
-        """Test PUT /api/invoices/{invoice_id}"""
+        """Test PATCH /api/admin/invoices/{invoice_id}"""
         try:
             if not self.created_invoice_id:
                 self.log_test(
@@ -292,16 +292,11 @@ class InvoiceProductTester:
                 return False
             
             update_data = {
-                "customer_info": {
-                    "name": "د. أحمد محمد المحدث",
-                    "phone": "01234567890",
-                    "address": "القاهرة الجديدة",
-                    "clinic_name": "عيادة الأمل المحدثة"
-                },
-                "notes": "تم تحديث الفاتورة للاختبار"
+                "notes": "تم تحديث الفاتورة للاختبار - معلومات محدثة",
+                "discount_percentage": 5.0
             }
             
-            response = self.session.put(f"{API_BASE}/invoices/{self.created_invoice_id}", json=update_data)
+            response = self.session.patch(f"{API_BASE}/admin/invoices/{self.created_invoice_id}", json=update_data)
             
             if response.status_code == 200:
                 data = response.json()
