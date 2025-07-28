@@ -98,8 +98,11 @@ class BackendTester:
         
         if response and response.status_code == 200:
             data = response.json()
-            self.gm_token = data.get("access_token")
-            self.log_test("GM Login (gm/gm123456)", True, f"Token received: {self.gm_token[:20]}...")
+            self.gm_token = data.get("access_token") or data.get("token")
+            if self.gm_token:
+                self.log_test("GM Login (gm/gm123456)", True, f"Token received: {self.gm_token[:20]}...")
+            else:
+                self.log_test("GM Login (gm/gm123456)", False, f"No token in response: {data}")
         else:
             self.log_test("GM Login (gm/gm123456)", False, f"Status: {response.status_code if response else 'No response'}")
         
