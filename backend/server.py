@@ -57,6 +57,11 @@ class UserRole:
     WAREHOUSE_KEEPER = "warehouse_keeper"  # Warehouse operations
     ACCOUNTING = "accounting"  # Accounting operations
     
+    # Legacy role for backward compatibility
+    MANAGER = "manager"  # Legacy manager role
+    WAREHOUSE_MANAGER = "warehouse_manager"  # Legacy warehouse manager role
+    SALES_REP = "sales_rep"  # Legacy sales rep role
+    
     # Role hierarchy for permissions (approval levels)
     ROLE_HIERARCHY = {
         "admin": 7,
