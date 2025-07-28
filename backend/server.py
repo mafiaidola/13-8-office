@@ -11223,6 +11223,259 @@ async def get_stock_dashboard(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Enhanced Invoice Management APIs
+@api_router.post("/orders/create", response_model=Dict[str, Any])
+async def create_order_with_invoice(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
+    """Create order and auto-generate invoice"""
+    try:
+        # Create order
+        order_id = str(uuid.uuid4())
+        order = {
+            "id": order_id,
+            "customer_info": order_data.customer_info,
+            "items": order_data.items,
+            "total_amount": order_data.total_amount,
+            "line": order_data.line,
+            "notes": order_data.notes,
+            "created_by": current_user.id,
+            "created_by_name": current_user.full_name,
+            "created_at": datetime.utcnow(),
+            "status": "pending"
+        }
+        
+        await db.orders.insert_one(order)
+        
+        # Create invoice
+        invoice_items = []
+        for item in order_data.items:
+            # Get product info
+            product = await db.products.find_one({"id": item["product_id"]})
+            if not product:
+                continue
+                
+            # Calculate cashback
+            cashback_key = f"cashback_{item['price_tier']}"
+            cashback_percentage = product.get(cashback_key, 0.0)
+            cashback_amount = item["total"] * (cashback_percentage / 100)
+            
+            invoice_items.append({
+                "product_id": item["product_id"],
+                "product_name": product["name"],
+                "quantity": item["quantity"],
+                "unit_price": item["unit_price"],
+                "price_tier": item["price_tier"],
+                "cashback_amount": cashback_amount,
+                "total": item["total"]
+            })
+        
+        invoice = {
+            "id": str(uuid.uuid4()),
+            "order_id": order_id,
+            "customer_name": order_data.customer_info.get("name", ""),
+            "customer_phone": order_data.customer_info.get("phone", ""),
+            "customer_address": order_data.customer_info.get("address", ""),
+            "clinic_name": order_data.customer_info.get("clinic_name", ""),
+            "items": invoice_items,
+            "subtotal": order_data.total_amount,
+            "cashback_amount": sum(item["cashback_amount"] for item in invoice_items),
+            "total_amount": order_data.total_amount,
+            "status": "pending",
+            "line": order_data.line,
+            "created_by": current_user.id,
+            "created_by_name": current_user.full_name,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.invoices.insert_one(invoice)
+        
+        return {"message": "Order and invoice created successfully", "order_id": order_id, "invoice_id": invoice["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/invoices/list", response_model=List[Dict[str, Any]])
+async def get_invoices(current_user: User = Depends(get_current_user)):
+    """Get invoices based on user role"""
+    query = {}
+    
+    if current_user.role in [UserRole.MEDICAL_REP, UserRole.SALES_REP]:
+        # Medical reps see only their invoices
+        query = {"created_by": current_user.id}
+    elif current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
+        # Managers see team invoices
+        subordinates = await db.users.find({"direct_manager_id": current_user.id}).to_list(1000)
+        subordinate_ids = [sub["id"] for sub in subordinates] + [current_user.id]
+        query = {"created_by": {"$in": subordinate_ids}}
+    # Admin sees all invoices
+    
+    invoices = await db.invoices.find(query, {"_id": 0}).to_list(1000)
+    
+    # Sort by creation date (newest first)
+    invoices.sort(key=lambda x: x["created_at"], reverse=True)
+    
+    return invoices
+
+@api_router.put("/invoices/{invoice_id}", response_model=Dict[str, Any])
+async def update_invoice(invoice_id: str, invoice_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Update invoice with edit tracking"""
+    try:
+        # Get existing invoice
+        existing_invoice = await db.invoices.find_one({"id": invoice_id})
+        if not existing_invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Check permissions
+        can_edit = False
+        if current_user.role == UserRole.ADMIN:
+            can_edit = True
+        elif current_user.role in [UserRole.GM, UserRole.LINE_MANAGER, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER]:
+            can_edit = True
+        elif existing_invoice["created_by"] == current_user.id:
+            can_edit = True
+        
+        if not can_edit:
+            raise HTTPException(status_code=403, detail="Not authorized to edit this invoice")
+        
+        # Track changes
+        changes = []
+        for key, new_value in invoice_data.items():
+            if key in existing_invoice and existing_invoice[key] != new_value:
+                changes.append({
+                    "field": key,
+                    "old_value": existing_invoice[key],
+                    "new_value": new_value
+                })
+        
+        # Update invoice
+        update_data = {
+            **invoice_data,
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.invoices.update_one({"id": invoice_id}, {"$set": update_data})
+        
+        # Record edit history
+        edit_record = {
+            "id": str(uuid.uuid4()),
+            "invoice_id": invoice_id,
+            "edited_by": current_user.id,
+            "edited_by_name": current_user.full_name,
+            "edited_at": datetime.utcnow(),
+            "changes": changes,
+            "reason": invoice_data.get("edit_reason", "")
+        }
+        
+        await db.invoice_edits.insert_one(edit_record)
+        
+        return {"message": "Invoice updated successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/invoices/{invoice_id}/history", response_model=List[Dict[str, Any]])
+async def get_invoice_history(invoice_id: str, current_user: User = Depends(get_current_user)):
+    """Get edit history for invoice (admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can view edit history")
+    
+    history = await db.invoice_edits.find({"invoice_id": invoice_id}, {"_id": 0}).to_list(1000)
+    history.sort(key=lambda x: x["edited_at"], reverse=True)
+    
+    return history
+
+@api_router.get("/products/by-line/{line}", response_model=List[Dict[str, Any]])
+async def get_products_by_line(line: str, current_user: User = Depends(get_current_user)):
+    """Get products by line with price tiers"""
+    products = await db.products.find({"line": line, "is_active": True}, {"_id": 0}).to_list(1000)
+    
+    # Add stock information from inventory
+    for product in products:
+        stock_info = await db.inventory.find_one({"product_id": product["id"]})
+        if stock_info:
+            product["current_stock"] = stock_info.get("quantity", 0)
+        else:
+            product["current_stock"] = 0
+    
+    return products
+
+@api_router.post("/products/admin/create", response_model=Dict[str, Any])
+async def admin_create_product(product_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Admin creates product with price tiers"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can create products")
+    
+    product = {
+        "id": str(uuid.uuid4()),
+        "name": product_data["name"],
+        "description": product_data.get("description", ""),
+        "category": product_data["category"],
+        "unit": product_data["unit"],
+        "line": product_data["line"],
+        "price_1": product_data["price_1"],
+        "price_10": product_data["price_10"],
+        "price_25": product_data["price_25"],
+        "price_50": product_data["price_50"],
+        "price_100": product_data["price_100"],
+        "cashback_1": product_data.get("cashback_1", 0.0),
+        "cashback_10": product_data.get("cashback_10", 0.0),
+        "cashback_25": product_data.get("cashback_25", 0.0),
+        "cashback_50": product_data.get("cashback_50", 0.0),
+        "cashback_100": product_data.get("cashback_100", 0.0),
+        "is_active": True,
+        "created_by": current_user.id,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.products.insert_one(product)
+    
+    return {"message": "Product created successfully", "product_id": product["id"]}
+
+@api_router.put("/products/{product_id}/admin", response_model=Dict[str, Any])
+async def admin_update_product(product_id: str, product_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Admin updates product"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can update products")
+    
+    await db.products.update_one(
+        {"id": product_id},
+        {"$set": {**product_data, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Product updated successfully"}
+
+@api_router.put("/products/{product_id}/stock", response_model=Dict[str, Any])
+async def update_product_stock(product_id: str, stock_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Warehouse keeper updates stock"""
+    if current_user.role != UserRole.WAREHOUSE_KEEPER:
+        raise HTTPException(status_code=403, detail="Only warehouse keepers can update stock")
+    
+    # Update inventory
+    await db.inventory.update_one(
+        {"product_id": product_id},
+        {"$set": {
+            "quantity": stock_data["quantity"],
+            "updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Stock updated successfully"}
+
+@api_router.delete("/products/{product_id}/admin", response_model=Dict[str, Any])
+async def admin_delete_product(product_id: str, current_user: User = Depends(get_current_user)):
+    """Admin deletes product"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can delete products")
+    
+    await db.products.update_one(
+        {"id": product_id},
+        {"$set": {"is_active": False, "deleted_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Product deleted successfully"}
+
 app.include_router(api_router)
 
 app.add_middleware(
