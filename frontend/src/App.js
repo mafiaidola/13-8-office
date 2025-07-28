@@ -13582,6 +13582,12 @@ const OrderCreation = () => {
       return;
     }
 
+    if (!userCurrentLocation) {
+      setError('جاري تحديد موقعك الحالي...');
+      getCurrentUserLocation();
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -13595,7 +13601,22 @@ const OrderCreation = () => {
         items: selectedProducts.map(p => ({
           product_id: p.id,
           quantity: p.quantity
-        }))
+        })),
+        // موقع المندوب الحالي (سري - للأدمن فقط)
+        rep_current_latitude: userCurrentLocation.latitude,
+        rep_current_longitude: userCurrentLocation.longitude,
+        rep_location_timestamp: userCurrentLocation.timestamp,
+        rep_location_accuracy: userCurrentLocation.accuracy,
+        // معلومات العيادة المستهدفة
+        target_clinic_latitude: doctor.latitude,
+        target_clinic_longitude: doctor.longitude,
+        // معلومات إضافية للتتبع
+        order_source: 'field_order',
+        device_info: JSON.stringify({
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
       };
 
       await axios.post(`${API}/orders`, requestData, {
