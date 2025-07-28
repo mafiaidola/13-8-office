@@ -12274,14 +12274,15 @@ const ClinicRegistration = () => {
               </h4>
               {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
                 <GoogleMapComponent
-                  latitude={clinicLocation.latitude}
-                  longitude={clinicLocation.longitude}
+                  latitude={location?.latitude}
+                  longitude={location?.longitude}
                   showCurrentLocation={true}
-                  onLocationSelect={(location) => {
-                    setClinicLocation({
-                      latitude: location.lat,
-                      longitude: location.lng
+                  onLocationSelect={(selectedLocation) => {
+                    setLocation({
+                      latitude: selectedLocation.lat,
+                      longitude: selectedLocation.lng
                     });
+                    setLocationAddress(`الموقع: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`);
                   }}
                 />
               ) : (
