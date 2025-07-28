@@ -1720,13 +1720,12 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2">رقم الهاتف *:</label>
+                <label className="block text-sm font-bold mb-2">رقم الهاتف:</label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   className="form-modern w-full"
-                  required
                 />
               </div>
               <div>
