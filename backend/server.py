@@ -955,11 +955,20 @@ class ClinicRequestCreate(BaseModel):
     doctor_specialty: str
     doctor_address: str
     clinic_manager_name: str
-    latitude: float
-    longitude: float
+    # موقع العيادة المحدد
+    clinic_latitude: Optional[float] = None
+    clinic_longitude: Optional[float] = None
     address: str
     clinic_image: Optional[str] = None
     notes: str
+    # موقع المندوب الحالي (سري)
+    rep_current_latitude: Optional[float] = None
+    rep_current_longitude: Optional[float] = None
+    rep_location_timestamp: Optional[str] = None
+    rep_location_accuracy: Optional[float] = None
+    # معلومات إضافية للتتبع
+    registration_type: Optional[str] = "field_registration"
+    device_info: Optional[str] = ""
 
 class RegionCreate(BaseModel):
     name: str
