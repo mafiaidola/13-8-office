@@ -12235,6 +12235,452 @@ const SalesRepDashboard = ({ stats, user }) => {
 
 // Clinic Registration Component
 // Admin Clinics Management Component
+// Sales Rep Plan Management Component
+const SalesRepPlanManagement = ({ user }) => {
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddPlan, setShowAddPlan] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const { language } = useLanguage();
+
+  const t = language === 'ar' ? {
+    title: 'إدارة خطتي',
+    addPlan: 'إضافة خطة جديدة',
+    editPlan: 'تعديل الخطة',
+    month: 'الشهر',
+    clinicVisits: 'زيارات العيادات',
+    targets: 'الأهداف',
+    notes: 'ملاحظات',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    delete: 'حذف',
+    edit: 'تعديل',
+    noPlans: 'لا توجد خطط للشهر المحدد',
+    loading: 'جاري التحميل...',
+    selectClinic: 'اختر العيادة',
+    visitDate: 'تاريخ الزيارة',
+    visitTime: 'وقت الزيارة',
+    targetSales: 'هدف المبيعات',
+    targetVisits: 'عدد الزيارات المستهدفة',
+    addVisit: 'إضافة زيارة',
+    removeVisit: 'إزالة الزيارة'
+  } : {
+    title: 'My Plan Management',
+    addPlan: 'Add New Plan',
+    editPlan: 'Edit Plan',
+    month: 'Month',
+    clinicVisits: 'Clinic Visits',
+    targets: 'Targets',
+    notes: 'Notes',
+    save: 'Save',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    edit: 'Edit',
+    noPlans: 'No plans for selected month',
+    loading: 'Loading...',
+    selectClinic: 'Select Clinic',
+    visitDate: 'Visit Date',
+    visitTime: 'Visit Time',
+    targetSales: 'Sales Target',
+    targetVisits: 'Target Visits',
+    addVisit: 'Add Visit',
+    removeVisit: 'Remove Visit'
+  };
+
+  const [formData, setFormData] = useState({
+    month: selectedMonth,
+    clinic_visits: [{ clinic_id: '', visit_date: '', visit_time: '', notes: '' }],
+    targets: {
+      sales_target: 0,
+      visits_target: 0,
+    },
+    notes: ''
+  });
+
+  const [clinics, setClinics] = useState([]);
+
+  useEffect(() => {
+    fetchPlans();
+    fetchClinics();
+  }, [selectedMonth]);
+
+  const fetchPlans = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/planning/monthly?month=${selectedMonth}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlans(response.data || []);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClinics = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/clinics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClinics(response.data || []);
+    } catch (error) {
+      console.error('Error fetching clinics:', error);
+      setClinics([]);
+    }
+  };
+
+  const handleSavePlan = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const planData = {
+        ...formData,
+        rep_id: user.id,
+        month: selectedMonth
+      };
+
+      if (editingPlan) {
+        await axios.put(`${API}/planning/monthly/${editingPlan.id}`, planData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        await axios.post(`${API}/planning/monthly`, planData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      setShowAddPlan(false);
+      setEditingPlan(null);
+      resetForm();
+      fetchPlans();
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      alert(language === 'ar' ? 'حدث خطأ في حفظ الخطة' : 'Error saving plan');
+    }
+  };
+
+  const handleDeletePlan = async (planId) => {
+    if (window.confirm(language === 'ar' ? 'هل تريد حذف هذه الخطة؟' : 'Are you sure you want to delete this plan?')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API}/planning/monthly/${planId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchPlans();
+      } catch (error) {
+        console.error('Error deleting plan:', error);
+        alert(language === 'ar' ? 'حدث خطأ في حذف الخطة' : 'Error deleting plan');
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      month: selectedMonth,
+      clinic_visits: [{ clinic_id: '', visit_date: '', visit_time: '', notes: '' }],
+      targets: {
+        sales_target: 0,
+        visits_target: 0,
+      },
+      notes: ''
+    });
+  };
+
+  const addVisit = () => {
+    setFormData({
+      ...formData,
+      clinic_visits: [...formData.clinic_visits, { clinic_id: '', visit_date: '', visit_time: '', notes: '' }]
+    });
+  };
+
+  const removeVisit = (index) => {
+    setFormData({
+      ...formData,
+      clinic_visits: formData.clinic_visits.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateVisit = (index, field, value) => {
+    const updatedVisits = [...formData.clinic_visits];
+    updatedVisits[index][field] = value;
+    setFormData({
+      ...formData,
+      clinic_visits: updatedVisits
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="mr-3">{t.loading}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gradient">{t.title}</h2>
+        <div className="flex items-center gap-4">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="form-modern"
+          />
+          <button
+            onClick={() => {
+              resetForm();
+              setShowAddPlan(true);
+            }}
+            className="btn-modern btn-primary"
+          >
+            + {t.addPlan}
+          </button>
+        </div>
+      </div>
+
+      {/* Plans List */}
+      {plans.length === 0 ? (
+        <div className="text-center py-12">
+          <span className="text-4xl mb-4 block">📅</span>
+          <p className="text-lg font-semibold">{t.noPlans}</p>
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {plans.map((plan) => (
+            <div key={plan.id} className="glass-effect rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">
+                  {language === 'ar' ? 'خطة شهر' : 'Plan for'} {plan.month}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingPlan(plan);
+                      setFormData(plan);
+                      setShowAddPlan(true);
+                    }}
+                    className="btn-modern btn-secondary text-sm"
+                  >
+                    {t.edit}
+                  </button>
+                  <button
+                    onClick={() => handleDeletePlan(plan.id)}
+                    className="btn-modern btn-danger text-sm"
+                  >
+                    {t.delete}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-bold mb-3">{t.clinicVisits}</h4>
+                  <div className="space-y-2">
+                    {plan.clinic_visits?.map((visit, index) => (
+                      <div key={index} className="p-3 bg-opacity-20 bg-gray-500 rounded-lg">
+                        <div className="text-sm">
+                          <strong>العيادة:</strong> {visit.clinic_name || visit.clinic_id}
+                        </div>
+                        <div className="text-sm">
+                          <strong>التاريخ:</strong> {visit.visit_date} {visit.visit_time && `في ${visit.visit_time}`}
+                        </div>
+                        {visit.notes && (
+                          <div className="text-sm">
+                            <strong>ملاحظات:</strong> {visit.notes}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-bold mb-3">{t.targets}</h4>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <strong>{t.targetSales}:</strong> {plan.targets?.sales_target || 0}
+                    </div>
+                    <div>
+                      <strong>{t.targetVisits}:</strong> {plan.targets?.visits_target || 0}
+                    </div>
+                  </div>
+                  
+                  {plan.notes && (
+                    <div className="mt-4">
+                      <h4 className="font-bold mb-2">{t.notes}</h4>
+                      <p className="text-sm opacity-75">{plan.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit Plan Modal */}
+      {showAddPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="glass-effect rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">
+                {editingPlan ? t.editPlan : t.addPlan}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddPlan(false);
+                  setEditingPlan(null);
+                }}
+                className="text-red-400 hover:text-red-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Clinic Visits */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold">{t.clinicVisits}</h4>
+                  <button
+                    onClick={addVisit}
+                    className="btn-modern btn-primary text-sm"
+                  >
+                    + {t.addVisit}
+                  </button>
+                </div>
+
+                {formData.clinic_visits.map((visit, index) => (
+                  <div key={index} className="glass-effect p-4 rounded-lg mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-medium">زيارة {index + 1}</span>
+                      {formData.clinic_visits.length > 1 && (
+                        <button
+                          onClick={() => removeVisit(index)}
+                          className="text-red-400 hover:text-red-300 text-sm"
+                        >
+                          {t.removeVisit}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <select
+                        value={visit.clinic_id}
+                        onChange={(e) => updateVisit(index, 'clinic_id', e.target.value)}
+                        className="form-modern"
+                      >
+                        <option value="">{t.selectClinic}</option>
+                        {clinics.map((clinic) => (
+                          <option key={clinic.id} value={clinic.id}>
+                            {clinic.name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        type="date"
+                        value={visit.visit_date}
+                        onChange={(e) => updateVisit(index, 'visit_date', e.target.value)}
+                        className="form-modern"
+                        placeholder={t.visitDate}
+                      />
+
+                      <input
+                        type="time"
+                        value={visit.visit_time}
+                        onChange={(e) => updateVisit(index, 'visit_time', e.target.value)}
+                        className="form-modern"
+                        placeholder={t.visitTime}
+                      />
+
+                      <input
+                        type="text"
+                        value={visit.notes}
+                        onChange={(e) => updateVisit(index, 'notes', e.target.value)}
+                        className="form-modern"
+                        placeholder={t.notes}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Targets */}
+              <div>
+                <h4 className="font-bold mb-4">{t.targets}</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t.targetSales}</label>
+                    <input
+                      type="number"
+                      value={formData.targets.sales_target}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        targets: { ...formData.targets, sales_target: parseFloat(e.target.value) || 0 }
+                      })}
+                      className="form-modern w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t.targetVisits}</label>
+                    <input
+                      type="number"
+                      value={formData.targets.visits_target}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        targets: { ...formData.targets, visits_target: parseInt(e.target.value) || 0 }
+                      })}
+                      className="form-modern w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.notes}</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="form-modern w-full h-24"
+                  placeholder={t.notes}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddPlan(false);
+                    setEditingPlan(null);
+                  }}
+                  className="btn-modern btn-secondary"
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  onClick={handleSavePlan}
+                  className="btn-modern btn-primary"
+                >
+                  {t.save}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AdminClinicsManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
