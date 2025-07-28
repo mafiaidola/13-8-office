@@ -19515,13 +19515,15 @@ const EnhancedUserManagementV2 = () => {
   const handleAddUser = async (userData) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/users/create`, userData, {
+      await axios.post(`${API}/auth/register`, userData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await loadUserData();
       setShowAddUserModal(false);
+      alert('تم إضافة المستخدم بنجاح');
     } catch (error) {
       console.error('Error adding user:', error);
+      alert('حدث خطأ أثناء إضافة المستخدم: ' + (error.response?.data?.detail || error.message));
     }
   };
 
