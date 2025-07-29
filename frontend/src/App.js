@@ -26736,6 +26736,321 @@ const RepClinicRegistration = ({ user }) => {
   );
 };
 
+// Admin Clinics Management with Tracking Information
+const AdminClinicsWithTracking = () => {
+  const { t } = useLanguage();
+  const [clinics, setClinics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedClinic, setSelectedClinic] = useState(null);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchClinicsWithTracking();
+  }, []);
+
+  const fetchClinicsWithTracking = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/clinics-with-tracking`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClinics(response.data.clinics || []);
+    } catch (error) {
+      console.error('Error fetching clinics with tracking:', error);
+      setError('فشل في تحميل بيانات العيادات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openTrackingModal = (clinic) => {
+    setSelectedClinic(clinic);
+    setShowTrackingModal(true);
+  };
+
+  const filteredClinics = clinics.filter(clinic =>
+    clinic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.tracking_info?.registered_by_user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getStatusColor = (status) => {
+    const colors = {
+      approved: 'bg-green-100 text-green-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      rejected: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const formatDistance = (distance) => {
+    if (!distance) return 'غير محدد';
+    if (distance < 1) return `${Math.round(distance * 1000)}م`;
+    return `${distance.toFixed(2)} كم`;
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="loading-shimmer w-20 h-20 rounded-full mx-auto mb-4"></div>
+          <p>جاري تحميل العيادات مع معلومات التتبع...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">🏥📊 إدارة العيادات مع التتبع</h1>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          عرض جميع العيادات مع معلومات التتبع التفصيلية (للأدمن فقط)
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* شريط البحث */}
+      <div className="mb-6">
+        <div className="flex gap-4 items-center">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="البحث في العيادات (الاسم، الطبيب، العنوان، المسجل)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-glass w-full"
+            />
+          </div>
+          <button
+            onClick={fetchClinicsWithTracking}
+            className="btn-secondary px-4 py-2"
+          >
+            🔄 تحديث
+          </button>
+        </div>
+      </div>
+
+      {/* إحصائيات سريعة */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="glass-effect p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-blue-500">{clinics.length}</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>إجمالي العيادات</div>
+        </div>
+        <div className="glass-effect p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-green-500">
+            {clinics.filter(c => c.added_by).length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مسجلة بواسطة مناديب</div>
+        </div>
+        <div className="glass-effect p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-purple-500">
+            {clinics.filter(c => c.rep_location_at_registration).length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>بها معلومات تتبع</div>
+        </div>
+        <div className="glass-effect p-4 rounded-lg text-center">
+          <div className="text-2xl font-bold text-orange-500">
+            {clinics.filter(c => c.status === 'approved').length}
+          </div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>معتمدة</div>
+        </div>
+      </div>
+
+      {/* جدول العيادات */}
+      <div className="glass-effect rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-right text-sm font-semibold">العيادة</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">الطبيب</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">مسجلة بواسطة</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">تاريخ التسجيل</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">الحالة</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">معلومات التتبع</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredClinics.map((clinic, index) => (
+                <tr key={clinic.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-4 py-3">
+                    <div>
+                      <div className="font-medium">{clinic.name}</div>
+                      <div className="text-xs text-gray-500">{clinic.address}</div>
+                      <div className="text-xs text-blue-600">{clinic.phone}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="font-medium">{clinic.doctor_name || 'غير محدد'}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>
+                      <div className="font-medium">
+                        {clinic.tracking_info?.registered_by_user?.name || 'غير محدد'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {clinic.tracking_info?.registered_by_user?.role || 'غير محدد'}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm">
+                      {clinic.created_at ? new Date(clinic.created_at).toLocaleDateString('ar-EG') : 'غير محدد'}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(clinic.status)}`}>
+                      {clinic.status === 'approved' ? 'معتمدة' : clinic.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-xs space-y-1">
+                      {clinic.rep_location_at_registration ? (
+                        <>
+                          <div className="text-green-600">✅ متوفر</div>
+                          <div>المسافة: {formatDistance(clinic.registration_metadata?.distance_between_locations)}</div>
+                        </>
+                      ) : (
+                        <div className="text-gray-500">❌ غير متوفر</div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openTrackingModal(clinic)}
+                        className="btn-secondary text-xs px-2 py-1"
+                        title="عرض معلومات التتبع التفصيلية"
+                      >
+                        🔍 تتبع
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredClinics.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-4">🏥</div>
+            <h3 className="text-lg font-semibold mb-2">لا توجد عيادات</h3>
+            <p className="text-gray-600">لم يتم العثور على عيادات مطابقة للبحث</p>
+          </div>
+        )}
+      </div>
+
+      {/* مودال معلومات التتبع */}
+      {showTrackingModal && selectedClinic && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-90vh overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">📊 معلومات التتبع التفصيلية</h2>
+                <button
+                  onClick={() => setShowTrackingModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* معلومات العيادة */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-800 mb-3">🏥 معلومات العيادة</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>الاسم:</strong> {selectedClinic.name}</div>
+                    <div><strong>الطبيب:</strong> {selectedClinic.doctor_name}</div>
+                    <div><strong>العنوان:</strong> {selectedClinic.address}</div>
+                    <div><strong>الهاتف:</strong> {selectedClinic.phone}</div>
+                    <div><strong>التصنيف:</strong> {selectedClinic.classification}</div>
+                  </div>
+                </div>
+
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800 mb-3">👤 معلومات المسجل</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>الاسم:</strong> {selectedClinic.tracking_info?.registered_by_user?.name}</div>
+                    <div><strong>المستخدم:</strong> {selectedClinic.tracking_info?.registered_by_user?.username}</div>
+                    <div><strong>الدور:</strong> {selectedClinic.tracking_info?.registered_by_user?.role}</div>
+                    <div><strong>وقت التسجيل:</strong> {selectedClinic.created_at ? new Date(selectedClinic.created_at).toLocaleString('ar-EG') : 'غير محدد'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* معلومات الموقع */}
+              {selectedClinic.rep_location_at_registration && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-purple-800 mb-3">📍 موقع المندوب أثناء التسجيل</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><strong>خط العرض:</strong> {selectedClinic.rep_location_at_registration.latitude?.toFixed(6)}</div>
+                      <div><strong>خط الطول:</strong> {selectedClinic.rep_location_at_registration.longitude?.toFixed(6)}</div>
+                      <div><strong>الدقة:</strong> {selectedClinic.rep_location_at_registration.accuracy}م</div>
+                      <div><strong>الوقت:</strong> {new Date(selectedClinic.rep_location_at_registration.timestamp).toLocaleString('ar-EG')}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-orange-800 mb-3">🏥 موقع العيادة المختار</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><strong>خط العرض:</strong> {selectedClinic.latitude?.toFixed(6)}</div>
+                      <div><strong>خط الطول:</strong> {selectedClinic.longitude?.toFixed(6)}</div>
+                      <div><strong>المسافة من المندوب:</strong> {formatDistance(selectedClinic.registration_metadata?.distance_between_locations)}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* خريطة المواقع */}
+              {selectedClinic.rep_location_at_registration && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-3">🗺️ خريطة المواقع</h3>
+                  <div className="bg-gray-100 rounded-lg h-64">
+                    <SimpleGoogleMap
+                      latitude={selectedClinic.latitude}
+                      longitude={selectedClinic.longitude}
+                      repLocation={selectedClinic.rep_location_at_registration}
+                      showBothLocations={true}
+                    />
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600 flex gap-4">
+                    <div>🏥 <strong>أزرق:</strong> موقع العيادة</div>
+                    <div>👤 <strong>أحمر:</strong> موقع المندوب أثناء التسجيل</div>
+                  </div>
+                </div>
+              )}
+
+              {/* معلومات إضافية */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold mb-3">ℹ️ معلومات إضافية</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div><strong>مصدر التسجيل:</strong> {selectedClinic.tracking_info?.registered_via || 'غير محدد'}</div>
+                  <div><strong>يمكن للمندوب الحذف:</strong> {selectedClinic.registration_metadata?.can_be_deleted_by_rep ? 'نعم' : 'لا'}</div>
+                  <div><strong>ID العيادة:</strong> {selectedClinic.id}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Create Plan Modal Component
 const CreatePlanModal = ({ salesReps, clinics, selectedMonth, onClose, onSave }) => {
   const [formData, setFormData] = useState({
