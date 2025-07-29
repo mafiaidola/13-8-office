@@ -7766,10 +7766,10 @@ const EnhancedInvoiceManagement = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="form-modern w-full"
             >
-              <option value="all">جميع الحالات</option>
-              <option value="pending">معلقة</option>
-              <option value="paid">مدفوعة</option>
-              <option value="cancelled">ملغاة</option>
+              <option value="all">{t('allStatuses')}</option>
+              <option value="pending">{t('pending')}</option>
+              <option value="paid">{t('paid')}</option>
+              <option value="cancelled">{t('cancelled')}</option>
             </select>
           </div>
           
