@@ -824,11 +824,11 @@ class SystemSettings(BaseModel):
     role_permissions: Dict[str, List[str]] = {
         "admin": ["all"],
         "gm": ["all"],
-        "line_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
-        "area_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve"],
-        "district_manager": ["visits.view", "doctors.approve", "orders.approve"],
-        "key_account": ["visits.create", "doctors.create", "orders.create"],
-        "medical_rep": ["visits.create", "doctors.create", "orders.create"],
+        "line_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve", "lines.manage"],
+        "area_manager": ["users.view", "visits.view", "doctors.approve", "orders.approve", "areas.manage"],
+        "district_manager": ["visits.view", "doctors.approve", "orders.approve", "districts.manage"],
+        "key_account": ["visits.create", "doctors.create", "orders.create", "clinics.create"],
+        "medical_rep": ["visits.create", "doctors.create", "orders.create", "clinics.create"],
         "warehouse_keeper": ["inventory.manage", "orders.fulfill"],
         "accounting": ["reports.view", "financial.view", "orders.approve"]
     }
