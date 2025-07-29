@@ -15538,11 +15538,11 @@ const OrderCreation = () => {
   };
 
   // تصفية العيادات حسب البحث
-  const filteredClinics = clinics.filter(clinic =>
+  const filteredClinics = Array.isArray(clinics) ? clinics.filter(clinic =>
     clinic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     clinic.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     clinic.address?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   // تصفية المنتجات حسب البحث
   const filteredProducts = products.filter(product =>
