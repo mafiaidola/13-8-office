@@ -17812,6 +17812,10 @@ const Dashboard = () => {
           <VisitRegistration />
         )}
 
+        {activeTab === 'visit' && user.role === 'medical_rep' && (
+          <VisitRegistration />
+        )}
+
         {activeTab === 'my-plan' && canAccessTab('my-plan') && (
           <SalesRepPlanManagement user={user} />
         )}
