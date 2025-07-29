@@ -17203,6 +17203,10 @@ const Dashboard = () => {
           <AdminLocationTracking />
         )}
 
+        {activeTab === 'daily-login-records' && canAccessTab('daily-login-records') && (
+          <AdminDailyLoginRecords />
+        )}
+
         {activeTab === 'order-creation' && user.role === 'sales_rep' && (
           <OrderCreation />
         )}
