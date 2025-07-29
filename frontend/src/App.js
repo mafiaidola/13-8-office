@@ -26313,20 +26313,7 @@ const MonthlyPlanningSystem = () => {
     </div>
   );
 };
-        }
-      ]);
-      
-      setSalesReps([
-        { id: 'rep-001', name: 'أحمد محمد', region: 'القاهرة' },
-        { id: 'rep-002', name: 'فاطمة أحمد', region: 'الجيزة' },
-        { id: 'rep-003', name: 'محمد سعد', region: 'الإسكندرية' }
-      ]);
-      
-      setClinics([
-        { id: 'clinic-001', name: 'عيادة النور', doctor_name: 'د. سعد علي', area: 'مدينة نصر' },
-        { id: 'clinic-002', name: 'مستشفى الرحمة', doctor_name: 'د. منى حسن', area: 'المعادي' },
-        { id: 'clinic-003', name: 'عيادة الشفاء', doctor_name: 'د. أحمد علي', area: 'الزمالك' }
-      ]);
+
     } finally {
       setLoading(false);
     }
