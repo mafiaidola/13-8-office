@@ -25654,19 +25654,80 @@ const EnhancedUserManagementV2 = () => {
   );
 };
 
-// Monthly Planning System for Managers
+// Enhanced Monthly Planning System - Comprehensive and Professional
 const MonthlyPlanningSystem = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('plans');
+  const [activeView, setActiveView] = useState('dashboard'); // dashboard, create, manage, analytics
   const [monthlyPlans, setMonthlyPlans] = useState([]);
   const [salesReps, setSalesReps] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false);
-  const [showPlanViewModal, setShowPlanViewModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  // Create Plan States
+  const [newPlan, setNewPlan] = useState({
+    rep_id: '',
+    month: new Date().toISOString().slice(0, 7),
+    objectives: [],
+    visits: [],
+    targets: {
+      total_visits: 0,
+      new_clients: 0,
+      demos: 0,
+      sales: 0
+    },
+    notes: ''
+  });
+  
+  // Analytics States
+  const [analytics, setAnalytics] = useState({
+    totalPlans: 0,
+    completedPlans: 0,
+    averageCompletion: 0,
+    topPerformers: [],
+    weeklyProgress: []
+  });
+
+  const [templates, setTemplates] = useState([
+    {
+      id: 'template-1',
+      name: 'خطة مندوب جديد',
+      description: 'خطة شاملة للمندوبين الجدد',
+      targets: {
+        total_visits: 15,
+        new_clients: 5,
+        demos: 10,
+        sales: 3
+      },
+      objectives: [
+        'التعرف على العيادات في المنطقة',
+        'بناء علاقات مع الأطباء',
+        'تقديم العينات المجانية',
+        'جمع معلومات السوق'
+      ]
+    },
+    {
+      id: 'template-2',
+      name: 'خطة مندوب متقدم',
+      description: 'خطة للمندوبين ذوي الخبرة',
+      targets: {
+        total_visits: 25,
+        new_clients: 8,
+        demos: 15,
+        sales: 12
+      },
+      objectives: [
+        'زيادة المبيعات في المنطقة',
+        'تطوير عملاء جدد',
+        'متابعة العملاء الحاليين',
+        'تحليل المنافسة وتقديم التقارير'
+      ]
+    }
+  ]);
 
   useEffect(() => {
     loadPlanningData();
@@ -25674,6 +25735,7 @@ const MonthlyPlanningSystem = () => {
 
   const loadPlanningData = async () => {
     setLoading(true);
+    setError('');
     try {
       const token = localStorage.getItem('token');
       
@@ -25682,72 +25744,747 @@ const MonthlyPlanningSystem = () => {
         headers: { Authorization: `Bearer ${token}` },
         params: { month: selectedMonth }
       });
-      setMonthlyPlans(plansResponse.data);
+      setMonthlyPlans(plansResponse.data || []);
       
-      // Load sales reps under this manager
-      const repsResponse = await axios.get(`${API}/users/sales-reps`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSalesReps(repsResponse.data);
+      // Load sales reps
+      let repsData = [];
+      if (user.role === 'admin' || user.role === 'gm') {
+        const repsResponse = await axios.get(`${API}/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        repsData = repsResponse.data.filter(u => u.role === 'medical_rep' || u.role === 'sales_rep');
+      } else {
+        // Manager sees only their reps
+        const repsResponse = await axios.get(`${API}/users/my-team`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        repsData = repsResponse.data || [];
+      }
+      setSalesReps(repsData);
       
       // Load clinics
-      const clinicsResponse = await axios.get(`${API}/clinics`, {
+      const clinicsResponse = await axios.get(`${API}/clinics/my-region`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setClinics(clinicsResponse.data);
+      setClinics(clinicsResponse.data?.clinics || []);
+      
+      // Calculate analytics
+      calculateAnalytics(plansResponse.data || []);
       
     } catch (error) {
       console.error('Error loading planning data:', error);
-      // Mock data for development
-      setMonthlyPlans([
-        {
-          id: 'plan-001',
-          rep_id: 'rep-001',
-          rep_name: 'أحمد محمد',
-          month: selectedMonth,
-          total_visits_planned: 25,
-          total_visits_completed: 18,
-          completion_rate: 72,
-          status: 'active',
-          created_by: user.id,
-          created_at: '2024-01-01',
-          visits: [
-            {
-              id: 'visit-001',
-              clinic_id: 'clinic-001',
-              clinic_name: 'عيادة النور',
-              doctor_name: 'د. سعد علي',
-              planned_date: '2024-01-15',
-              status: 'completed',
-              actual_date: '2024-01-15',
-              notes: 'زيارة ناجحة، تم تقديم العينات',
-              rep_notes: ''
-            },
-            {
-              id: 'visit-002',
-              clinic_id: 'clinic-002',
-              clinic_name: 'مستشفى الرحمة',
-              doctor_name: 'د. منى حسن',
-              planned_date: '2024-01-16',
-              status: 'pending',
-              actual_date: null,
-              notes: '',
-              rep_notes: 'الطبيب في إجازة، سيتم إعادة الجدولة'
-            }
-          ]
-        },
-        {
-          id: 'plan-002',
-          rep_id: 'rep-002',
-          rep_name: 'فاطمة أحمد',
-          month: selectedMonth,
-          total_visits_planned: 20,
-          total_visits_completed: 20,
-          completion_rate: 100,
-          status: 'completed',
-          created_by: user.id,
-          created_at: '2024-01-01',
-          visits: []
+      setError('فشل في تحميل بيانات التخطيط');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateAnalytics = (plans) => {
+    const totalPlans = plans.length;
+    const completedPlans = plans.filter(p => p.status === 'completed').length;
+    const averageCompletion = totalPlans > 0 ? 
+      plans.reduce((sum, p) => sum + (p.completion_rate || 0), 0) / totalPlans : 0;
+    
+    const topPerformers = plans
+      .sort((a, b) => (b.completion_rate || 0) - (a.completion_rate || 0))
+      .slice(0, 5)
+      .map(p => ({
+        name: p.rep_name,
+        completion: p.completion_rate || 0,
+        visits: p.total_visits_completed || 0
+      }));
+
+    setAnalytics({
+      totalPlans,
+      completedPlans,
+      averageCompletion: Math.round(averageCompletion),
+      topPerformers,
+      weeklyProgress: generateWeeklyProgress(plans)
+    });
+  };
+
+  const generateWeeklyProgress = (plans) => {
+    // Generate mock weekly data
+    const weeks = ['الأسبوع 1', 'الأسبوع 2', 'الأسبوع 3', 'الأسبوع 4'];
+    return weeks.map((week, index) => ({
+      week,
+      planned: Math.floor(Math.random() * 50) + 20,
+      completed: Math.floor(Math.random() * 40) + 15
+    }));
+  };
+
+  const applyTemplate = (template) => {
+    setNewPlan({
+      ...newPlan,
+      targets: template.targets,
+      objectives: template.objectives
+    });
+  };
+
+  const addObjective = () => {
+    setNewPlan({
+      ...newPlan,
+      objectives: [...newPlan.objectives, '']
+    });
+  };
+
+  const updateObjective = (index, value) => {
+    const updatedObjectives = [...newPlan.objectives];
+    updatedObjectives[index] = value;
+    setNewPlan({
+      ...newPlan,
+      objectives: updatedObjectives
+    });
+  };
+
+  const removeObjective = (index) => {
+    setNewPlan({
+      ...newPlan,
+      objectives: newPlan.objectives.filter((_, i) => i !== index)
+    });
+  };
+
+  const addVisitToPlan = () => {
+    const newVisit = {
+      id: `visit-${Date.now()}`,
+      clinic_id: '',
+      planned_date: '',
+      objectives: '',
+      expected_outcome: '',
+      priority: 'normal'
+    };
+    setNewPlan({
+      ...newPlan,
+      visits: [...newPlan.visits, newVisit]
+    });
+  };
+
+  const updateVisit = (visitId, field, value) => {
+    setNewPlan({
+      ...newPlan,
+      visits: newPlan.visits.map(visit => 
+        visit.id === visitId ? { ...visit, [field]: value } : visit
+      )
+    });
+  };
+
+  const removeVisit = (visitId) => {
+    setNewPlan({
+      ...newPlan,
+      visits: newPlan.visits.filter(visit => visit.id !== visitId)
+    });
+  };
+
+  const createMonthlyPlan = async () => {
+    if (!newPlan.rep_id) {
+      setError('يجب اختيار المندوب');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const planData = {
+        ...newPlan,
+        created_by: user.id,
+        status: 'active',
+        created_at: new Date().toISOString()
+      };
+
+      await axios.post(`${API}/planning/monthly`, planData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('تم إنشاء الخطة الشهرية بنجاح');
+      setActiveView('dashboard');
+      loadPlanningData();
+      
+      // Reset form
+      setNewPlan({
+        rep_id: '',
+        month: new Date().toISOString().slice(0, 7),
+        objectives: [],
+        visits: [],
+        targets: { total_visits: 0, new_clients: 0, demos: 0, sales: 0 },
+        notes: ''
+      });
+      
+    } catch (error) {
+      setError('فشل في إنشاء الخطة الشهرية');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && monthlyPlans.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="mr-3">جاري تحميل نظام التخطيط الشهري...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6 rounded-lg">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <span className="text-3xl">📊</span>
+              نظام التخطيط الشهري المتقدم
+            </h2>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              إدارة شاملة واحترافية للخطط الشهرية والأهداف
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">{monthlyPlans.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              خطة نشطة
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: 'dashboard', label: 'لوحة التحكم', icon: '📊' },
+            { id: 'create', label: 'إنشاء خطة', icon: '➕' },
+            { id: 'manage', label: 'إدارة الخطط', icon: '📋' },
+            { id: 'analytics', label: 'التحليلات', icon: '📈' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveView(tab.id)}
+              className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                activeView === tab.id
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 bg-opacity-20 hover:bg-gray-100 hover:bg-opacity-30'
+              }`}
+            >
+              <span className="text-lg mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Month Selector */}
+        <div className="mt-4 flex items-center gap-4">
+          <label className="text-sm font-bold">الشهر:</label>
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-300 border-opacity-30"
+          />
+        </div>
+      </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="bg-red-100 bg-opacity-30 border border-red-300 text-red-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">❌</span>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-100 bg-opacity-30 border border-green-300 text-green-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✅</span>
+            <span>{success}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Dashboard View */}
+      {activeView === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="glass-effect p-4 rounded-lg text-center">
+              <div className="text-3xl mb-2">📊</div>
+              <div className="text-2xl font-bold">{analytics.totalPlans}</div>
+              <div className="text-sm text-gray-600">إجمالي الخطط</div>
+            </div>
+            <div className="glass-effect p-4 rounded-lg text-center">
+              <div className="text-3xl mb-2">✅</div>
+              <div className="text-2xl font-bold">{analytics.completedPlans}</div>
+              <div className="text-sm text-gray-600">خطط مكتملة</div>
+            </div>
+            <div className="glass-effect p-4 rounded-lg text-center">
+              <div className="text-3xl mb-2">📈</div>
+              <div className="text-2xl font-bold">{analytics.averageCompletion}%</div>
+              <div className="text-sm text-gray-600">متوسط الإنجاز</div>
+            </div>
+            <div className="glass-effect p-4 rounded-lg text-center">
+              <div className="text-3xl mb-2">👥</div>
+              <div className="text-2xl font-bold">{salesReps.length}</div>
+              <div className="text-sm text-gray-600">المندوبين</div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">إجراءات سريعة</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => setActiveView('create')}
+                className="btn-primary p-4 text-center"
+              >
+                <div className="text-2xl mb-2">➕</div>
+                <div className="font-bold">إنشاء خطة جديدة</div>
+              </button>
+              <button
+                onClick={() => setActiveView('analytics')}
+                className="btn-secondary p-4 text-center"
+              >
+                <div className="text-2xl mb-2">📈</div>
+                <div className="font-bold">عرض التحليلات</div>
+              </button>
+              <button
+                onClick={loadPlanningData}
+                className="btn-secondary p-4 text-center"
+              >
+                <div className="text-2xl mb-2">🔄</div>
+                <div className="font-bold">تحديث البيانات</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Recent Plans */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">الخطط الحديثة</h3>
+            {monthlyPlans.length > 0 ? (
+              <div className="space-y-3">
+                {monthlyPlans.slice(0, 5).map((plan) => (
+                  <div key={plan.id} className="flex items-center justify-between p-3 bg-gray-100 bg-opacity-20 rounded-lg">
+                    <div>
+                      <div className="font-bold">{plan.rep_name}</div>
+                      <div className="text-sm text-gray-600">
+                        {plan.total_visits_completed || 0} / {plan.total_visits_planned || 0} زيارة
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{plan.completion_rate || 0}%</div>
+                      <div className={`text-sm px-2 py-1 rounded ${
+                        (plan.completion_rate || 0) >= 80 ? 'bg-green-100 text-green-600' :
+                        (plan.completion_rate || 0) >= 60 ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-red-100 text-red-600'
+                      }`}>
+                        {plan.status === 'completed' ? 'مكتمل' :
+                         plan.status === 'active' ? 'نشط' : 'معلق'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500">
+                لا توجد خطط شهرية متاحة
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Create Plan View */}
+      {activeView === 'create' && (
+        <div className="space-y-6">
+          {/* Templates */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">قوالب الخطط الجاهزة</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {templates.map((template) => (
+                <div key={template.id} className="p-4 border border-gray-300 border-opacity-30 rounded-lg">
+                  <div className="font-bold mb-2">{template.name}</div>
+                  <div className="text-sm text-gray-600 mb-3">{template.description}</div>
+                  <div className="text-xs space-y-1 mb-3">
+                    <div>الزيارات: {template.targets.total_visits}</div>
+                    <div>عملاء جدد: {template.targets.new_clients}</div>
+                    <div>ديمو: {template.targets.demos}</div>
+                    <div>مبيعات: {template.targets.sales}</div>
+                  </div>
+                  <button
+                    onClick={() => applyTemplate(template)}
+                    className="btn-secondary text-sm px-3 py-1 w-full"
+                  >
+                    تطبيق القالب
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Plan Creation Form */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">إنشاء خطة شهرية جديدة</h3>
+            
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">اختيار المندوب</label>
+                  <select
+                    value={newPlan.rep_id}
+                    onChange={(e) => setNewPlan({...newPlan, rep_id: e.target.value})}
+                    className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+                  >
+                    <option value="">-- اختر المندوب --</option>
+                    {salesReps.map((rep) => (
+                      <option key={rep.id} value={rep.id}>
+                        {rep.full_name} - {rep.region_id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2">الشهر</label>
+                  <input
+                    type="month"
+                    value={newPlan.month}
+                    onChange={(e) => setNewPlan({...newPlan, month: e.target.value})}
+                    className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+                  />
+                </div>
+              </div>
+
+              {/* Targets */}
+              <div>
+                <h4 className="font-bold mb-3">الأهداف الرقمية</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm mb-1">إجمالي الزيارات</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPlan.targets.total_visits}
+                      onChange={(e) => setNewPlan({
+                        ...newPlan,
+                        targets: {...newPlan.targets, total_visits: parseInt(e.target.value) || 0}
+                      })}
+                      className="w-full p-2 rounded border border-gray-300 border-opacity-30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">عملاء جدد</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPlan.targets.new_clients}
+                      onChange={(e) => setNewPlan({
+                        ...newPlan,
+                        targets: {...newPlan.targets, new_clients: parseInt(e.target.value) || 0}
+                      })}
+                      className="w-full p-2 rounded border border-gray-300 border-opacity-30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">عروض توضيحية</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPlan.targets.demos}
+                      onChange={(e) => setNewPlan({
+                        ...newPlan,
+                        targets: {...newPlan.targets, demos: parseInt(e.target.value) || 0}
+                      })}
+                      className="w-full p-2 rounded border border-gray-300 border-opacity-30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">المبيعات المستهدفة</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newPlan.targets.sales}
+                      onChange={(e) => setNewPlan({
+                        ...newPlan,
+                        targets: {...newPlan.targets, sales: parseInt(e.target.value) || 0}
+                      })}
+                      className="w-full p-2 rounded border border-gray-300 border-opacity-30"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Objectives */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold">الأهداف النوعية</h4>
+                  <button
+                    onClick={addObjective}
+                    className="btn-secondary text-sm px-3 py-1"
+                  >
+                    ➕ إضافة هدف
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {newPlan.objectives.map((objective, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={objective}
+                        onChange={(e) => updateObjective(index, e.target.value)}
+                        placeholder="اكتب الهدف..."
+                        className="flex-1 p-2 rounded border border-gray-300 border-opacity-30"
+                      />
+                      <button
+                        onClick={() => removeObjective(index)}
+                        className="text-red-500 hover:text-red-700 px-2"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Planned Visits */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold">الزيارات المخططة</h4>
+                  <button
+                    onClick={addVisitToPlan}
+                    className="btn-secondary text-sm px-3 py-1"
+                  >
+                    ➕ إضافة زيارة
+                  </button>
+                </div>
+                {newPlan.visits.length > 0 && (
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {newPlan.visits.map((visit) => (
+                      <div key={visit.id} className="p-3 bg-gray-100 bg-opacity-20 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs mb-1">العيادة</label>
+                            <select
+                              value={visit.clinic_id}
+                              onChange={(e) => updateVisit(visit.id, 'clinic_id', e.target.value)}
+                              className="w-full p-2 text-sm rounded border border-gray-300 border-opacity-30"
+                            >
+                              <option value="">-- اختر العيادة --</option>
+                              {clinics.map((clinic) => (
+                                <option key={clinic.id} value={clinic.id}>
+                                  {clinic.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs mb-1">التاريخ المخطط</label>
+                            <input
+                              type="date"
+                              value={visit.planned_date}
+                              onChange={(e) => updateVisit(visit.id, 'planned_date', e.target.value)}
+                              className="w-full p-2 text-sm rounded border border-gray-300 border-opacity-30"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs mb-1">الأولوية</label>
+                            <select
+                              value={visit.priority}
+                              onChange={(e) => updateVisit(visit.id, 'priority', e.target.value)}
+                              className="w-full p-2 text-sm rounded border border-gray-300 border-opacity-30"
+                            >
+                              <option value="normal">عادية</option>
+                              <option value="high">مهمة</option>
+                              <option value="urgent">عاجلة</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex justify-between items-center">
+                          <input
+                            type="text"
+                            value={visit.objectives}
+                            onChange={(e) => updateVisit(visit.id, 'objectives', e.target.value)}
+                            placeholder="أهداف الزيارة..."
+                            className="flex-1 p-2 text-sm rounded border border-gray-300 border-opacity-30"
+                          />
+                          <button
+                            onClick={() => removeVisit(visit.id)}
+                            className="text-red-500 hover:text-red-700 px-2 ml-2"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-bold mb-2">ملاحظات إضافية</label>
+                <textarea
+                  value={newPlan.notes}
+                  onChange={(e) => setNewPlan({...newPlan, notes: e.target.value})}
+                  rows={3}
+                  className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+                  placeholder="أضف أي ملاحظات أو تعليمات خاصة..."
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex gap-4">
+                <button
+                  onClick={createMonthlyPlan}
+                  disabled={loading || !newPlan.rep_id}
+                  className="btn-primary px-6 py-3 flex-1 disabled:opacity-50"
+                >
+                  {loading ? 'جاري الإنشاء...' : 'إنشاء الخطة الشهرية'}
+                </button>
+                <button
+                  onClick={() => setActiveView('dashboard')}
+                  className="btn-secondary px-6 py-3"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Plans View */}
+      {activeView === 'manage' && (
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4">إدارة الخطط الشهرية</h3>
+          {monthlyPlans.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-300 border-opacity-30">
+                    <th className="py-3 px-4 text-right">المندوب</th>
+                    <th className="py-3 px-4 text-right">الشهر</th>
+                    <th className="py-3 px-4 text-right">الزيارات</th>
+                    <th className="py-3 px-4 text-right">معدل الإنجاز</th>
+                    <th className="py-3 px-4 text-right">الحالة</th>
+                    <th className="py-3 px-4 text-right">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyPlans.map((plan) => (
+                    <tr key={plan.id} className="border-b border-gray-300 border-opacity-20">
+                      <td className="py-3 px-4">{plan.rep_name}</td>
+                      <td className="py-3 px-4">{plan.month}</td>
+                      <td className="py-3 px-4">
+                        {plan.total_visits_completed || 0} / {plan.total_visits_planned || 0}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-500 h-2 rounded-full"
+                              style={{ width: `${Math.min(100, plan.completion_rate || 0)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm">{plan.completion_rate || 0}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          plan.status === 'completed' ? 'bg-green-100 text-green-600' :
+                          plan.status === 'active' ? 'bg-blue-100 text-blue-600' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {plan.status === 'completed' ? 'مكتمل' :
+                           plan.status === 'active' ? 'نشط' : 'معلق'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => setSelectedPlan(plan)}
+                          className="btn-primary text-xs px-3 py-1 mr-2"
+                        >
+                          عرض
+                        </button>
+                        <button className="btn-secondary text-xs px-3 py-1">
+                          تعديل
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              لا توجد خطط شهرية للعرض
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Analytics View */}
+      {activeView === 'analytics' && (
+        <div className="space-y-6">
+          {/* Top Performers */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">أفضل المؤدين</h3>
+            {analytics.topPerformers.length > 0 ? (
+              <div className="space-y-3">
+                {analytics.topPerformers.map((performer, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-100 bg-opacity-20 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                        index === 0 ? 'bg-yellow-500' :
+                        index === 1 ? 'bg-gray-400' :
+                        index === 2 ? 'bg-orange-500' : 'bg-blue-500'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-bold">{performer.name}</div>
+                        <div className="text-sm text-gray-600">{performer.visits} زيارة</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{performer.completion}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                لا توجد بيانات أداء متاحة
+              </div>
+            )}
+          </div>
+
+          {/* Weekly Progress */}
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4">التقدم الأسبوعي</h3>
+            <div className="space-y-3">
+              {analytics.weeklyProgress.map((week, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="font-medium">{week.week}</div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600">
+                      مخطط: {week.planned} | مكتمل: {week.completed}
+                    </div>
+                    <div className="w-32 bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-green-500 h-3 rounded-full"
+                        style={{ width: `${Math.min(100, (week.completed / week.planned) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
         }
       ]);
       
