@@ -494,7 +494,39 @@ const translations = {
     wage: 'الأجر',
     bonus: 'المكافأة',
     
-    // Additional common terms
+    // Additional translations
+    allStatuses: 'جميع الحالات',
+    allTypes: 'جميع الأنواع',
+    paid: 'مدفوع',
+    unpaid: 'غير مدفوع',
+    overdue: 'متأخر',
+    draft: 'مسودة',
+    sent: 'مرسل',
+    viewed: 'تم عرضه',
+    processing: 'قيد المعالجة',
+    completed: 'مكتمل',
+    failed: 'فشل',
+    
+    // Filter and search terms
+    filterBy: 'تصفية بحسب',
+    filterByStatus: 'تصفية بالحالة',
+    filterByType: 'تصفية بالنوع',
+    filterByDate: 'تصفية بالتاريخ',
+    filterByUser: 'تصفية بالمستخدم',
+    searchBy: 'البحث بحسب',
+    
+    // Approval system
+    approve: 'موافقة',
+    reject: 'رفض',
+    approved: 'موافق عليه',
+    rejected: 'مرفوض',
+    pending: 'قيد الانتظار',
+    
+    // Common phrases
+    noData: 'لا توجد بيانات',
+    noResults: 'لا توجد نتائج',
+    selectAll: 'اختيار الكل',
+    deselectAll: 'إلغاء اختيار الكل',
     general: 'عام',
     specific: 'محدد',
     basic: 'أساسي',
