@@ -13033,7 +13033,10 @@ async def get_clinics_with_tracking_info(credentials: HTTPAuthorizationCredentia
             # Get registering user info
             registered_by_user = None
             if clinic.get("added_by"):
-                registered_by_user = await db.users.find_one({"id": clinic["added_by"]})
+                registered_by_user = await db.users.find_one(
+                    {"id": clinic["added_by"]}, 
+                    {"_id": 0, "password_hash": 0}
+                )
             
             enhanced_clinic = {
                 **clinic,
