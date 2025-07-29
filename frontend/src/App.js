@@ -26857,7 +26857,7 @@ const RepClinicRegistration = ({ user }) => {
             <h4 className="text-sm font-semibold text-gray-600 mb-2">معلومات التسجيل (مخفية عن المندوب)</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500">
               <div>
-                <strong>المسجل:</strong> {user.full_name || user.username}
+                <strong>المسجل:</strong> {currentUser?.full_name || currentUser?.username}
               </div>
               <div>
                 <strong>موقع المندوب:</strong> {currentLocation ? 'تم الحصول عليه ✅' : 'جاري التحديد...'}
