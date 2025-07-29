@@ -21540,8 +21540,8 @@ const InvoiceCreateModal = ({ onClose, onSave }) => {
                 onClick={addItem}
                 className="btn-primary flex items-center gap-2"
               >
-                <SVGIcon name="add" size={16} />
-                <span>إضافة عنصر</span>
+                <SVGIcon name="add" size={20} />
+                <span>{t('add')} {t('order')}</span>
               </button>
             </div>
 
