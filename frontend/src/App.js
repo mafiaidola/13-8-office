@@ -15213,17 +15213,17 @@ const ClinicRegistration = () => {
                 تحديد الموقع على الخريطة
               </h4>
               {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
-                <SimpleGoogleMap
-                  latitude={location?.latitude}
-                  longitude={location?.longitude}
-                  showCurrentLocation={true}
-                  onLocationSelect={(selectedLocation) => {
-                    setLocation({
-                      latitude: selectedLocation.lat,
-                      longitude: selectedLocation.lng
-                    });
-                    setLocationAddress(`الموقع: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`);
-                  }}
+              <SimpleGoogleMap
+                latitude={location?.latitude}
+                longitude={location?.longitude}
+                showCurrentLocation={true}
+                onLocationSelect={(selectedLocation) => {
+                  setLocation({
+                    latitude: selectedLocation.lat,
+                    longitude: selectedLocation.lng
+                  });
+                  setLocationAddress(`الموقع: ${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`);
+                }}
                 />
               ) : (
                 <div className="h-64 glass-effect rounded-xl flex items-center justify-center">
