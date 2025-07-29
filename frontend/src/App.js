@@ -17819,6 +17819,17 @@ const Dashboard = () => {
               </button>
             )}
             
+            {/* Lines Management for admin, GM, and line managers */}
+            {(['admin', 'gm', 'line_manager'].includes(user.role)) && (
+              <button
+                onClick={() => setActiveTab('lines-management')}
+                className={`nav-item ${activeTab === 'lines-management' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🗺️</span>
+                إدارة الخطوط
+              </button>
+            )}
+            
             {/* Accounting tab for admin, accounting, and manager roles */}
             {canAccessTab('accounting') && (
               <button
