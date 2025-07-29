@@ -17726,7 +17726,7 @@ const Dashboard = () => {
               </button>
             )}
 
-            {user.role === 'medical_rep' && (
+            {['key_account', 'medical_rep'].includes(user.role) && (
               <button
                 onClick={() => setActiveTab('register-clinic')}
                 className={`nav-item ${activeTab === 'register-clinic' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
