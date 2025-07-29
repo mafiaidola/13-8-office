@@ -10222,9 +10222,9 @@ const EnhancedUserManagement = () => {
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="form-modern w-full"
               >
-                <option value="all">جميع الحالات</option>
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
+                <option value="all">{t('allStatuses')}</option>
+                <option value="active">{t('active')}</option>
+                <option value="inactive">{t('inactive')}</option>
               </select>
             </div>
             <div>
