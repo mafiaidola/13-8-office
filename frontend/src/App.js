@@ -1249,7 +1249,7 @@ const ThemeProvider = ({ children }) => {
         '--accent-bg': '#334155',
         '--card-bg': 'rgba(30, 41, 59, 0.95)',
         '--glass-bg': 'rgba(15, 23, 42, 0.8)',
-        '--text-primary': '#f8fafc',
+        '--text-primary': '#f1f5f9',
         '--text-secondary': '#cbd5e1',
         '--text-muted': '#94a3b8',
         '--gradient-dark': 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
