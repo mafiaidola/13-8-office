@@ -51,7 +51,7 @@ class UserRole:
     AREA_MANAGER = "area_manager"  # Area Manager - Level 4 - Manage districts
     DISTRICT_MANAGER = "district_manager"  # District Manager - Level 3 - Manage key accounts
     KEY_ACCOUNT = "key_account"  # Key Account - Level 2 - Manage medical reps
-    MEDICAL_REP = "medical_rep"  # Medical Rep - Level 1 - Basic operations
+    MEDICAL_REP = "medical_rep"  # Medical Rep - Level 1 - Basic operations (unified with sales_rep)
     
     # Special roles
     WAREHOUSE_KEEPER = "warehouse_keeper"  # Warehouse operations
@@ -60,7 +60,7 @@ class UserRole:
     # Legacy role for backward compatibility
     MANAGER = "manager"  # Legacy manager role
     WAREHOUSE_MANAGER = "warehouse_manager"  # Legacy warehouse manager role
-    SALES_REP = "sales_rep"  # Legacy sales rep role
+    # sales_rep is now merged with medical_rep
     
     # Role hierarchy for permissions (approval levels)
     ROLE_HIERARCHY = {
@@ -70,13 +70,13 @@ class UserRole:
         "area_manager": 4,
         "district_manager": 3,
         "key_account": 2,
-        "medical_rep": 1,
+        "medical_rep": 1,  # Unified role for all field representatives
         "warehouse_keeper": 3,
         "accounting": 3,
         # Legacy roles for backward compatibility
         "manager": 4,
         "warehouse_manager": 3,
-        "sales_rep": 1
+        "sales_rep": 1  # Maps to medical_rep
     }
     
     # Lines Assignment
