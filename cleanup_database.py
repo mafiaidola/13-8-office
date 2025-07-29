@@ -10,7 +10,8 @@ from datetime import datetime
 import sys
 
 # MongoDB connection
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/ep_group_system')
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'test_database')
 
 def connect_to_mongodb():
     """اتصال بقاعدة البيانات"""
