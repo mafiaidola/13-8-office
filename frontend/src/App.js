@@ -18072,11 +18072,11 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'users' && canAccessTab('users') && (
-          <EnhancedUserManagement />
+          <AdvancedUserManagement />
         )}
         
         {activeTab === 'clinics' && canAccessTab('clinics') && (
-          <EnhancedClinicsManagement />
+          <ProfessionalClinicsManagement />
         )}
 
         {activeTab === 'lines-management' && (['admin', 'gm', 'line_manager'].includes(user.role)) && (
