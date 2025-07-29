@@ -26853,6 +26853,5 @@ const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
     </div>
   );
 };
-}}
 
 export default App;
