@@ -26686,7 +26686,22 @@ const RepClinicRegistration = ({ user }) => {
 
     } catch (error) {
       console.error('خطأ في تسجيل العيادة:', error);
-      setError(error.response?.data?.detail || 'فشل في تسجيل العيادة');
+      
+      // معالجة تفصيلية للأخطاء
+      let errorMessage = 'فشل في تسجيل العيادة';
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.status === 403) {
+        errorMessage = 'ليس لديك صلاحية لتسجيل العيادات';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'يرجى تسجيل الدخول مرة أخرى';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً';
+      } else if (error.message) {
+        errorMessage = `خطأ في الشبكة: ${error.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
