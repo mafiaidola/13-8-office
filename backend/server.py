@@ -1154,6 +1154,10 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 # Authentication Routes
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    # Normalize role (convert sales_rep to medical_rep)
+    normalized_role = UserRole.normalize_role(user_data.role)
+    user_data.role = normalized_role
+    
     # Check permissions based on role hierarchy
     if not UserRole.can_manage(current_user.role, user_data.role):
         raise HTTPException(status_code=403, detail="You don't have permission to create this role")
