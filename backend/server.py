@@ -4097,28 +4097,319 @@ async def create_visit(request: Request, credentials: HTTPAuthorizationCredentia
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating visit: {str(e)}")
 
-@api_router.get("/visits", response_model=List[Dict[str, Any]])
-async def get_visits(current_user: User = Depends(get_current_user)):
-    query = {}
-    if current_user.role == UserRole.SALES_REP:
-        query = {"sales_rep_id": current_user.id}
-    elif current_user.role == UserRole.MANAGER:
-        # Managers can see all visits for review
-        pass
-    
-    visits = await db.visits.find(query, {"_id": 0}).to_list(1000)
-    
-    # Enrich with doctor and clinic information
-    for visit in visits:
-        doctor = await db.doctors.find_one({"id": visit["doctor_id"]}, {"_id": 0})
-        clinic = await db.clinics.find_one({"id": visit["clinic_id"]}, {"_id": 0})
-        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}, {"_id": 0})
+@api_router.get("/planning/monthly")
+async def get_monthly_plans(credentials: HTTPAuthorizationCredentials = Depends(security), month: str = None):
+    """
+    Get monthly plans for the current manager or all plans for admin
+    جلب الخطط الشهرية للمدير الحالي أو جميع الخطط للأدمن
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
         
-        visit["doctor_name"] = doctor["name"] if doctor else "Unknown"
-        visit["clinic_name"] = clinic["name"] if clinic else "Unknown"
-        visit["sales_rep_name"] = sales_rep["full_name"] if sales_rep else "Unknown"
-    
-    return visits
+        # Build query based on user role
+        query = {}
+        if month:
+            query["month"] = month
+        
+        # Only admin and GM can see all plans
+        if user.get("role") not in ["admin", "gm"]:
+            if user.get("role") in ["manager", "line_manager", "area_manager"]:
+                # Managers see plans of their subordinates
+                subordinates = await db.users.find({"manager_id": user["id"]}).to_list(1000)
+                subordinate_ids = [sub["id"] for sub in subordinates]
+                query["rep_id"] = {"$in": subordinate_ids}
+            else:
+                # Sales reps see only their own plans
+                query["rep_id"] = user["id"]
+        
+        plans = await db.monthly_plans.find(query).sort("created_at", -1).to_list(1000)
+        
+        # Add rep information
+        for plan in plans:
+            plan["_id"] = str(plan["_id"])
+            if plan.get("rep_id"):
+                rep = await db.users.find_one({"id": plan["rep_id"]})
+                if rep:
+                    plan["rep_name"] = rep.get("full_name", "غير محدد")
+                    plan["rep_region"] = rep.get("region_id", "غير محدد")
+        
+        return plans
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching monthly plans: {str(e)}")
+
+@api_router.post("/planning/monthly")
+async def create_monthly_plan(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Create a new monthly plan
+    إنشاء خطة شهرية جديدة
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only managers and above can create plans
+        if user.get("role") not in ["admin", "gm", "manager", "line_manager", "area_manager"]:
+            raise HTTPException(status_code=403, detail="Only managers can create monthly plans")
+        
+        # Get request data
+        request_data = await request.json()
+        
+        plan_data = {
+            "id": str(uuid.uuid4()),
+            "rep_id": request_data.get("rep_id"),
+            "month": request_data.get("month"),
+            "objectives": request_data.get("objectives", []),
+            "visits": request_data.get("visits", []),
+            "targets": request_data.get("targets", {}),
+            "notes": request_data.get("notes", ""),
+            "status": "active",
+            "total_visits_planned": len(request_data.get("visits", [])),
+            "total_visits_completed": 0,
+            "completion_rate": 0,
+            "created_by": user["id"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Check if plan already exists for this rep and month
+        existing_plan = await db.monthly_plans.find_one({
+            "rep_id": plan_data["rep_id"],
+            "month": plan_data["month"]
+        })
+        
+        if existing_plan:
+            raise HTTPException(status_code=400, detail="Plan already exists for this representative and month")
+        
+        # Save to database
+        await db.monthly_plans.insert_one(plan_data)
+        
+        # Get rep name for response
+        rep = await db.users.find_one({"id": plan_data["rep_id"]})
+        rep_name = rep.get("full_name", "غير محدد") if rep else "غير محدد"
+        
+        return {
+            "message": "تم إنشاء الخطة الشهرية بنجاح",
+            "plan_id": plan_data["id"],
+            "rep_name": rep_name,
+            "month": plan_data["month"],
+            "total_visits": plan_data["total_visits_planned"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating monthly plan: {str(e)}")
+
+@api_router.put("/planning/monthly/{plan_id}")
+async def update_monthly_plan(plan_id: str, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Update an existing monthly plan
+    تحديث خطة شهرية موجودة
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get the plan
+        plan = await db.monthly_plans.find_one({"id": plan_id})
+        if not plan:
+            raise HTTPException(status_code=404, detail="Plan not found")
+        
+        # Check permissions
+        if (user.get("role") not in ["admin", "gm"] and 
+            plan.get("created_by") != user["id"] and 
+            plan.get("rep_id") != user["id"]):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get request data
+        request_data = await request.json()
+        
+        update_data = {
+            "objectives": request_data.get("objectives", plan.get("objectives", [])),
+            "visits": request_data.get("visits", plan.get("visits", [])),
+            "targets": request_data.get("targets", plan.get("targets", {})),
+            "notes": request_data.get("notes", plan.get("notes", "")),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Update visit counts
+        update_data["total_visits_planned"] = len(update_data["visits"])
+        
+        # Calculate completion rate if visits are completed
+        completed_visits = len([v for v in update_data["visits"] if v.get("status") == "completed"])
+        if update_data["total_visits_planned"] > 0:
+            update_data["completion_rate"] = round((completed_visits / update_data["total_visits_planned"]) * 100)
+            update_data["total_visits_completed"] = completed_visits
+        
+        # Update status based on completion
+        if update_data["completion_rate"] >= 100:
+            update_data["status"] = "completed"
+        elif update_data["completion_rate"] > 0:
+            update_data["status"] = "in_progress"
+        
+        await db.monthly_plans.update_one(
+            {"id": plan_id},
+            {"$set": update_data}
+        )
+        
+        return {
+            "message": "تم تحديث الخطة الشهرية بنجاح",
+            "plan_id": plan_id,
+            "completion_rate": update_data["completion_rate"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating monthly plan: {str(e)}")
+
+@api_router.get("/users/my-team")
+async def get_my_team(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get team members under the current manager
+    جلب أعضاء الفريق تحت إشراف المدير الحالي
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only managers can access team data
+        if user.get("role") not in ["admin", "gm", "manager", "line_manager", "area_manager"]:
+            raise HTTPException(status_code=403, detail="Only managers can access team data")
+        
+        if user.get("role") in ["admin", "gm"]:
+            # Admin and GM see all sales reps
+            team_members = await db.users.find({
+                "role": {"$in": ["medical_rep", "sales_rep"]}
+            }).to_list(1000)
+        else:
+            # Managers see their direct reports
+            team_members = await db.users.find({
+                "manager_id": user["id"]
+            }).to_list(1000)
+        
+        # Clean up response
+        for member in team_members:
+            member["_id"] = str(member["_id"])
+            member.pop("hashed_password", None)
+        
+        return team_members
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching team: {str(e)}")
+
+@api_router.get("/planning/analytics/{month}")
+async def get_planning_analytics(month: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get analytics for monthly planning
+    جلب تحليلات التخطيط الشهري
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only managers and above can see analytics
+        if user.get("role") not in ["admin", "gm", "manager", "line_manager", "area_manager"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get plans for the specified month
+        query = {"month": month}
+        if user.get("role") not in ["admin", "gm"]:
+            # Managers see only their team's analytics
+            subordinates = await db.users.find({"manager_id": user["id"]}).to_list(1000)
+            subordinate_ids = [sub["id"] for sub in subordinates]
+            query["rep_id"] = {"$in": subordinate_ids}
+        
+        plans = await db.monthly_plans.find(query).to_list(1000)
+        
+        # Calculate analytics
+        total_plans = len(plans)
+        completed_plans = len([p for p in plans if p.get("status") == "completed"])
+        average_completion = sum(p.get("completion_rate", 0) for p in plans) / total_plans if total_plans > 0 else 0
+        
+        # Top performers
+        top_performers = sorted(plans, key=lambda x: x.get("completion_rate", 0), reverse=True)[:5]
+        for performer in top_performers:
+            rep = await db.users.find_one({"id": performer["rep_id"]})
+            performer["rep_name"] = rep.get("full_name", "غير محدد") if rep else "غير محدد"
+        
+        # Regional performance
+        regional_stats = {}
+        for plan in plans:
+            rep = await db.users.find_one({"id": plan["rep_id"]})
+            if rep and rep.get("region_id"):
+                region = rep["region_id"]
+                if region not in regional_stats:
+                    regional_stats[region] = {
+                        "total_plans": 0,
+                        "completed_visits": 0,
+                        "planned_visits": 0
+                    }
+                regional_stats[region]["total_plans"] += 1
+                regional_stats[region]["completed_visits"] += plan.get("total_visits_completed", 0)
+                regional_stats[region]["planned_visits"] += plan.get("total_visits_planned", 0)
+        
+        return {
+            "month": month,
+            "summary": {
+                "total_plans": total_plans,
+                "completed_plans": completed_plans,
+                "average_completion": round(average_completion, 1),
+                "total_planned_visits": sum(p.get("total_visits_planned", 0) for p in plans),
+                "total_completed_visits": sum(p.get("total_visits_completed", 0) for p in plans)
+            },
+            "top_performers": top_performers,
+            "regional_performance": regional_stats
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching planning analytics: {str(e)}")
+
+@api_router.get("/visits")
+async def get_visits(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get visits for the current user or all visits for admin
+    جلب الزيارات للمستخدم الحالي أو جميع الزيارات للأدمن
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Build query based on user role
+        query = {}
+        if user.get("role") not in ["admin", "gm"]:
+            if user.get("role") in ["manager", "line_manager", "area_manager"]:
+                # Managers see visits of their subordinates
+                subordinates = await db.users.find({"manager_id": user["id"]}).to_list(1000)
+                subordinate_ids = [sub["id"] for sub in subordinates]
+                query["sales_rep_id"] = {"$in": subordinate_ids}
+            else:
+                # Sales reps see only their own visits
+                query["sales_rep_id"] = user["id"]
+        
+        visits = await db.visits.find(query).sort("created_at", -1).to_list(1000)
+        
+        # Add additional information
+        for visit in visits:
+            visit["_id"] = str(visit["_id"])
+            
+            # Add clinic information
+            if visit.get("clinic_id"):
+                clinic = await db.clinics.find_one({"id": visit["clinic_id"]})
+                if clinic:
+                    visit["clinic_info"] = {
+                        "name": clinic.get("name", "غير محدد"),
+                        "address": clinic.get("address", "غير محدد")
+                    }
+        
+        return visits
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching visits: {str(e)}")
 
 @api_router.patch("/visits/{visit_id}/review")
 async def review_visit(visit_id: str, is_effective: bool, current_user: User = Depends(get_current_user)):
