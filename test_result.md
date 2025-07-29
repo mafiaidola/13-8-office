@@ -583,7 +583,65 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: Recent Activities API working perfectly with 100% success rate (7/7 tests passed). ✅ BACKEND API FULLY FUNCTIONAL: 1) Admin login (admin/admin123) successful with proper JWT token generation 2) JWT token validation working correctly for session maintenance 3) Dashboard statistics APIs returning proper data (29 users, 0 clinics, 0 doctors, 0 visits) 4) Recent Activities API structure CORRECT: Returns object with 'activities' array containing 29 activities 5) Data extraction working perfectly: Found activities with proper types (user: 29) and complete structure (type, action, title, description, timestamp, icon, color) 6) MongoDB connections healthy: All collections accessible (users, clinics, doctors, visits, products, warehouses) 7) JSON format validation passed: Structure matches API specification. ✅ ROOT CAUSE IDENTIFIED: Backend API is working correctly but returns {activities: [...], total_count: N} structure. Frontend likely expects direct array instead of nested structure. Issue is in frontend API call handling, not backend implementation."
 
-  - task: "Enhanced User Management APIs with statistics and password change"
+  - task: "Order Debt Warning System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تطوير نظام تحذير المديونية للطلبات. إضافة API للتحقق من حالة العيادة قبل إنشاء الطلب، مع إظهار تحذير إذا كانت العيادة مدينة بأكثر من 1000 جنيه، وتسجيل الطلب باللون الأحمر في نظام المحاسبة."
+      - working: false
+        agent: "main"
+        comment: "تم تطوير: 1) دالة check_clinic_debt_status للتحقق من مديونية العيادة 2) تحديث OrderEnhanced model لإضافة معلومات المديونية والتصنيف اللوني 3) تحديث create_order API لفحص المديونية وإظهار التحذير 4) إضافة check-clinic-status API للفحص المسبق 5) تحديث OrderCreate model لدعم تأكيد التحذير. الآن يتطلب اختبار الباكند."
+
+  - task: "Enhanced Visit Registration with Manager Participation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تحسين نموذج تسجيل الزيارة لإضافة خيارات المشاركة: SOLO (فردي), DUO_WITH_MANAGER (مع مدير), THREE_WITH_MANAGER_AND_OTHER (مع مدير وآخر). إضافة حقول للمدير المرافق والمشارك الآخر مع تفاصيل كاملة."
+      - working: false
+        agent: "main"
+        comment: "تم تطوير: 1) تحديث Visit model لإضافة visit_type مع ثلاثة أنواع 2) إضافة حقول accompanying_manager_id/name/role 3) إضافة حقول other_participant_id/name/role 4) إضافة participants_count و participants_details 5) تحديث VisitCreate model بنفس المميزات. يتطلب اختبار الباكند واختبار تسجيل الزيارات."
+
+  - task: "User Profile Access Control System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تطوير نظام تقييد الوصول للملفات الشخصية. الملف الشخصي للمندوب يجب أن يكون مرئي فقط لمديره المباشر، لاين مانجر، GM، والأدمن. منع المندوبين من رؤية ملفاتهم الشخصية مباشرة."
+      - working: false
+        agent: "main"
+        comment: "تم تطوير: 1) دالة can_access_user_profile شاملة للتحكم في الصلاحيات 2) تحديث get_user_profile API لاستخدام نظام الصلاحيات الجديد 3) إضافة access_info لتتبع من وصل للملف ومتى 4) رسائل خطأ بالعربية 5) دعم جميع الأدوار الهرمية. يتطلب اختبار الباكند وفحص الصلاحيات."
+
+  - task: "Movement Log System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تطوير نظام Movement Log لتتبع حركة الأصناف والعملاء. يشمل: اختيار المخزن، اختيار الخط (1 أو 2)، ثلاثة أنواع حركة (صنف، خط كامل، عميل). مقتصر على أدمن وGM ومحاسبة فقط."
+      - working: false
+        agent: "main"
+        comment: "تم تطوير: 1) نماذج MovementLog, MovementLogCreate, MovementLogFilter 2) API للحصول على قائمة المخازن 3) إنشاء سجلات حركة جديدة 4) البحث والفلترة مع التصفح 5) إحصائيات ملخصة للحركة 6) تحكم صلاحيات محدود للأدوار المصرح لها 7) دعم العربية كامل. يتطلب اختبار الباكند."
     implemented: true
     working: true
     file: "/app/backend/server.py"
