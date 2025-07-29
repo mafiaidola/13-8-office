@@ -2,54 +2,80 @@ import React, { useState, useEffect, createContext, useContext, useRef, useCallb
 import "./App.css";
 import axios from "axios";
 
-// Simple Google Maps Component using direct Google Maps API
-const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = false }) => {
+// Enhanced Google Maps Component with Current Location and Draggable Pin
+const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = true, repLocation = null, showBothLocations = false }) => {
   const mapRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [map, setMap] = useState(null);
+  const [draggableMarker, setDraggableMarker] = useState(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
+  // Get current location when component mounts
   useEffect(() => {
-    if (showCurrentLocation && navigator.geolocation) {
+    if (navigator.geolocation && !currentLocation) {
+      setIsLoadingLocation(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentLocation({
+          const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setCurrentLocation(location);
+          setIsLoadingLocation(false);
+          
+          // If no specific location provided, set current location as selected
+          if (!latitude && !longitude && onLocationSelect) {
+            setSelectedLocation(location);
+            onLocationSelect(location);
+          }
         },
         (error) => {
           console.error('Error getting current location:', error);
+          setIsLoadingLocation(false);
+          // Fallback to Cairo coordinates
+          const fallback = { lat: 30.0444, lng: 31.2357 };
+          setCurrentLocation(fallback);
+          if (!latitude && !longitude && onLocationSelect) {
+            setSelectedLocation(fallback);
+            onLocationSelect(fallback);
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
         }
       );
     }
-  }, [showCurrentLocation]);
+  }, [latitude, longitude, onLocationSelect, currentLocation]);
 
+  // Initialize map
   useEffect(() => {
-    // Initialize map when Google Maps API is loaded
-    if (window.google && window.google.maps && mapRef.current && !map) {
+    if (window.google && window.google.maps && mapRef.current && !map && (currentLocation || latitude)) {
       const mapCenter = {
-        lat: latitude || currentLocation?.lat || 30.0444, // Cairo coordinates as default
+        lat: latitude || currentLocation?.lat || 30.0444,
         lng: longitude || currentLocation?.lng || 31.2357
       };
 
       const newMap = new window.google.maps.Map(mapRef.current, {
-        zoom: 15,
+        zoom: 16, // Higher zoom for better precision
         center: mapCenter,
-        mapTypeControl: false,
+        mapTypeControl: true,
         streetViewControl: false,
         fullscreenControl: true,
         zoomControl: true,
+        gestureHandling: 'greedy',
         styles: [
           {
-            featureType: "poi",
+            featureType: "poi.business",
             elementType: "labels",
             stylers: [{ visibility: "off" }]
           }
         ]
       });
 
-      // Add click listener
+      // Add click listener for manual selection
       newMap.addListener('click', (event) => {
         const location = {
           lat: event.latLng.lat(),
@@ -59,64 +85,138 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
         if (onLocationSelect) {
           onLocationSelect(location);
         }
+        updateDraggableMarker(newMap, location);
       });
 
       setMap(newMap);
     }
-  }, [latitude, longitude, currentLocation, map, onLocationSelect]);
+  }, [currentLocation, latitude, longitude, map, onLocationSelect]);
+
+  // Update draggable marker
+  const updateDraggableMarker = (mapInstance, location) => {
+    // Remove existing draggable marker
+    if (draggableMarker) {
+      draggableMarker.setMap(null);
+    }
+
+    if (onLocationSelect) {
+      // Create new draggable marker
+      const marker = new window.google.maps.Marker({
+        position: location,
+        map: mapInstance,
+        title: "اسحب لتحديد الموقع",
+        draggable: true,
+        animation: window.google.maps.Animation.DROP,
+        icon: {
+          url: 'data:image/svg+xml;base64,' + btoa(`
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#ef4444" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              <circle cx="12" cy="9" r="3" fill="white"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 40)
+        }
+      });
+
+      // Add drag listener
+      marker.addListener('dragend', (event) => {
+        const newLocation = {
+          lat: event.latLng.lat(),
+          lng: event.latLng.lng()
+        };
+        setSelectedLocation(newLocation);
+        if (onLocationSelect) {
+          onLocationSelect(newLocation);
+        }
+      });
+
+      setDraggableMarker(marker);
+    }
+  };
 
   // Add markers when map or locations change
   useEffect(() => {
     if (map && window.google) {
-      // Clear existing markers
+      // Clear existing markers (except draggable)
       if (map.markers) {
         map.markers.forEach(marker => marker.setMap(null));
       }
       map.markers = [];
 
-      // Current location marker (blue)
-      if (currentLocation) {
+      // Current location marker (blue circle)
+      if (currentLocation && showCurrentLocation) {
         const marker = new window.google.maps.Marker({
           position: currentLocation,
           map: map,
           title: "موقعك الحالي",
           icon: {
-            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2NmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgZmlsbD0iIzAwN2NmZiIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iNCIgZmlsbD0iIzAwN2NmZiIvPgo8L3N2Zz4=',
-            scaledSize: new window.google.maps.Size(24, 24)
+            url: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#007cff" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="8" fill="#007cff" fill-opacity="0.3"/>
+                <circle cx="12" cy="12" r="4" fill="#007cff"/>
+                <circle cx="12" cy="12" r="2" fill="white"/>
+              </svg>
+            `),
+            scaledSize: new window.google.maps.Size(20, 20),
+            anchor: new window.google.maps.Point(10, 10)
           }
         });
         map.markers.push(marker);
       }
 
-      // Selected location marker (red)
-      if (selectedLocation) {
+      // Rep location marker (for admin view)
+      if (repLocation && showBothLocations) {
         const marker = new window.google.maps.Marker({
-          position: selectedLocation,
+          position: { lat: repLocation.latitude, lng: repLocation.longitude },
           map: map,
-          title: "الموقع المحدد",
+          title: "موقع المندوب أثناء التسجيل",
           icon: {
-            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2VmNDQ0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
-            scaledSize: new window.google.maps.Size(32, 32)
+            url: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                <text x="12" y="8" text-anchor="middle" fill="white" font-size="8" font-weight="bold">👤</text>
+              </svg>
+            `),
+            scaledSize: new window.google.maps.Size(32, 32),
+            anchor: new window.google.maps.Point(16, 32)
           }
         });
         map.markers.push(marker);
       }
 
-      // Existing location marker (green)
-      if (latitude && longitude && !selectedLocation) {
+      // Static location marker (green - for display only)
+      if (latitude && longitude && !onLocationSelect) {
         const marker = new window.google.maps.Marker({
           position: { lat: latitude, lng: longitude },
           map: map,
           title: "الموقع المسجل",
           icon: {
-            url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPgo8L3N2Zz4=',
-            scaledSize: new window.google.maps.Size(32, 32)
+            url: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="#10b981" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                <circle cx="12" cy="9" r="3" fill="white"/>
+              </svg>
+            `),
+            scaledSize: new window.google.maps.Size(32, 32),
+            anchor: new window.google.maps.Point(16, 32)
           }
         });
         map.markers.push(marker);
       }
+
+      // Create draggable marker for location selection
+      if (onLocationSelect) {
+        const markerPosition = selectedLocation || 
+                              (latitude && longitude ? { lat: latitude, lng: longitude } : null) ||
+                              currentLocation;
+        
+        if (markerPosition) {
+          updateDraggableMarker(map, markerPosition);
+        }
+      }
     }
-  }, [map, currentLocation, selectedLocation, latitude, longitude]);
+  }, [map, currentLocation, selectedLocation, latitude, longitude, repLocation, showBothLocations, showCurrentLocation, onLocationSelect]);
 
   if (!window.google || !window.google.maps) {
     return (
@@ -130,9 +230,58 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     );
   }
 
+  if (isLoadingLocation) {
+    return (
+      <div className="h-80 glass-effect rounded-xl flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse">
+            <div className="w-12 h-12 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+              📍
+            </div>
+          </div>
+          <p className="font-bold">جاري تحديد موقعك الحالي...</p>
+          <p className="text-sm opacity-75">يرجى السماح بالوصول للموقع</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full rounded-xl overflow-hidden">
-      <div ref={mapRef} style={{ width: '100%', height: '320px' }} />
+    <div className="w-full rounded-xl overflow-hidden relative">
+      <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
+      
+      {/* Legend for different markers */}
+      {(showCurrentLocation || showBothLocations || onLocationSelect) && (
+        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-xs shadow-lg">
+          {showCurrentLocation && currentLocation && (
+            <div className="flex items-center gap-1 mb-1">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>موقعك الحالي</span>
+            </div>
+          )}
+          {onLocationSelect && (
+            <div className="flex items-center gap-1 mb-1">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span>الموقع المحدد (قابل للسحب)</span>
+            </div>
+          )}
+          {showBothLocations && repLocation && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+              <span>موقع المندوب</span>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Instructions */}
+      {onLocationSelect && (
+        <div className="absolute bottom-2 left-2 right-2">
+          <div className="bg-blue-600/90 backdrop-blur-sm text-white rounded-lg p-2 text-xs text-center">
+            💡 اضغط على الخريطة أو اسحب الدبوس لتحديد الموقع
+          </div>
+        </div>
+      )}
     </div>
   );
 };
