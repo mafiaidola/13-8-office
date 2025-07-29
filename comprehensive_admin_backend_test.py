@@ -26,7 +26,7 @@ from datetime import datetime
 import time
 
 # Backend URL from environment
-BACKEND_URL = "https://57d40b08-2f65-4089-943d-5c723a6fda86.preview.emergentagent.com/api"
+BACKEND_URL = "https://b09695e5-3c8e-4c2c-9ca1-06cbdd9a8993.preview.emergentagent.com/api"
 
 class ComprehensiveAdminBackendTester:
     def __init__(self):
