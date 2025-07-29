@@ -15299,15 +15299,19 @@ const ClinicRegistration = () => {
   );
 };
 
-// Order Creation Component
+// Enhanced Order Creation Component - Modern Design
 const OrderCreation = () => {
-  const [doctors, setDoctors] = useState([]);
+  const { t } = useLanguage();
+  const [clinics, setClinics] = useState([]);
   const [products, setProducts] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
+  const [stockData, setStockData] = useState({});
   const [orderData, setOrderData] = useState({
-    doctor_id: '',
-    order_type: 'DEMO', 
-    warehouse_id: '',
+    clinic_id: '',
+    phone: '',
+    clinic_name: '',
+    address: '',
+    order_type: 'demo', // 'demo' or 'debt'
+    priority: 'normal', // 'normal', 'important', 'urgent'
     notes: '',
     items: []
   });
@@ -15315,14 +15319,13 @@ const OrderCreation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [userCurrentLocation, setUserCurrentLocation] = useState(null); // موقع المندوب السري
-  const [selectedClinic, setSelectedClinic] = useState(null); // العيادة المختارة
+  const [userCurrentLocation, setUserCurrentLocation] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     getCurrentUserLocation();
-    fetchDoctors();
-    fetchProducts();
-    fetchWarehouses();
+    fetchClinicsForRep();
+    fetchStockData();
   }, []);
 
   // الحصول على الموقع الحالي للمندوب (سري)
@@ -15350,74 +15353,102 @@ const OrderCreation = () => {
     }
   };
 
-  useEffect(() => {
-    fetchDoctors();
-    fetchProducts();
-    fetchWarehouses();
-  }, []);
-
-  const fetchDoctors = async () => {
+  // جلب العيادات المتاحة للمندوب حسب منطقته
+  const fetchClinicsForRep = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/doctors`, {
+      const response = await axios.get(`${API}/clinics/my-region`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Only show approved doctors
-      setDoctors(response.data.filter(doctor => doctor.approved_by));
+      setClinics(response.data || []);
     } catch (error) {
-      console.error('Error fetching doctors:', error);
+      console.error('Error fetching clinics:', error);
+      // Fallback to all clinics if region-specific API doesn't exist
+      try {
+        const response = await axios.get(`${API}/clinics`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setClinics(response.data || []);
+      } catch (fallbackError) {
+        console.error('Error fetching all clinics:', fallbackError);
+        setError('فشل في تحميل العيادات المتaحة');
+      }
     }
   };
 
-  const fetchProducts = async () => {
+  // جلب بيانات المخزون للمندوب
+  const fetchStockData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/products`, {
+      const response = await axios.get(`${API}/sales-rep/warehouse-stock-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
-
-  const fetchWarehouses = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/warehouses`, {
-        headers: { Authorization: `Bearer ${token}` }
+      
+      // تحويل بيانات المخزون إلى كائن للوصول السريع
+      const stockMap = {};
+      response.data.warehouses?.forEach(warehouse => {
+        warehouse.products?.forEach(product => {
+          stockMap[product.product_id] = {
+            ...product,
+            warehouse_name: warehouse.warehouse_name
+          };
+        });
       });
-      setWarehouses(response.data);
+      setStockData(stockMap);
+
+      // استخراج قائمة المنتجات
+      const allProducts = Object.values(stockMap);
+      setProducts(allProducts);
     } catch (error) {
-      console.error('Error fetching warehouses:', error);
+      console.error('Error fetching stock data:', error);
+      setError('فشل في تحميل بيانات المخزون');
     }
   };
 
-  const addProductToOrder = (productId) => {
-    const product = products.find(p => p.id === productId);
-    if (product && !selectedProducts.find(p => p.id === productId)) {
-      setSelectedProducts([...selectedProducts, {...product, quantity: 1}]);
+  // اختيار العيادة
+  const selectClinic = (clinic) => {
+    setOrderData({
+      ...orderData,
+      clinic_id: clinic.id,
+      phone: clinic.phone || '',
+      clinic_name: clinic.name || '',
+      address: clinic.address || clinic.location || ''
+    });
+    setSearchTerm('');
+  };
+
+  // إضافة منتج للطلبية
+  const addProductToOrder = (product) => {
+    if (!selectedProducts.find(p => p.product_id === product.product_id)) {
+      setSelectedProducts([...selectedProducts, {
+        ...product,
+        quantity: 1
+      }]);
     }
   };
 
+  // تحديث كمية المنتج
   const updateProductQuantity = (productId, quantity) => {
+    const qty = Math.max(1, parseInt(quantity) || 1);
     setSelectedProducts(selectedProducts.map(p => 
-      p.id === productId ? {...p, quantity: parseInt(quantity)} : p
+      p.product_id === productId ? {...p, quantity: qty} : p
     ));
   };
 
+  // حذف منتج
   const removeProduct = (productId) => {
-    setSelectedProducts(selectedProducts.filter(p => p.id !== productId));
+    setSelectedProducts(selectedProducts.filter(p => p.product_id !== productId));
   };
 
-  const getTotalAmount = () => {
-    return selectedProducts.reduce((total, product) => {
-      return total + (product.price * product.quantity);
-    }, 0);
-  };
-
+  // إرسال الطلبية
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!orderData.clinic_id) {
+      setError('يجب اختيار العيادة');
+      return;
+    }
+
     if (selectedProducts.length === 0) {
       setError('يجب إضافة منتج واحد على الأقل');
       return;
@@ -15434,45 +15465,62 @@ const OrderCreation = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const doctor = doctors.find(d => d.id === orderData.doctor_id);
+      const selectedClinic = clinics.find(c => c.id === orderData.clinic_id);
       
       const requestData = {
-        ...orderData,
-        clinic_id: doctor.clinic_id,
+        clinic_id: orderData.clinic_id,
+        order_type: orderData.order_type,
+        priority: orderData.priority,
+        notes: orderData.notes,
         items: selectedProducts.map(p => ({
-          product_id: p.id,
+          product_id: p.product_id,
           quantity: p.quantity
         })),
-        // موقع المندوب الحالي (سري - للأدمن فقط)
-        rep_current_latitude: userCurrentLocation.latitude,
-        rep_current_longitude: userCurrentLocation.longitude,
-        rep_location_timestamp: userCurrentLocation.timestamp,
-        rep_location_accuracy: userCurrentLocation.accuracy,
-        // معلومات العيادة المستهدفة
-        target_clinic_latitude: doctor.latitude,
-        target_clinic_longitude: doctor.longitude,
-        // معلومات إضافية للتتبع
-        order_source: 'field_order',
-        device_info: JSON.stringify({
+        // معلومات العيادة
+        clinic_phone: orderData.phone,
+        clinic_address: orderData.address,
+        // موقع المندوب الحالي (سري)
+        user_actual_location: {
+          lat: userCurrentLocation.latitude,
+          lng: userCurrentLocation.longitude,
+          timestamp: userCurrentLocation.timestamp,
+          accuracy: userCurrentLocation.accuracy
+        },
+        // موقع العيادة المختارة
+        clinic_location: {
+          lat: selectedClinic?.latitude || null,
+          lng: selectedClinic?.longitude || null
+        },
+        // معلومات إضافية
+        order_source: 'mobile_app',
+        device_info: {
           userAgent: navigator.userAgent,
           timestamp: new Date().toISOString(),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        })
+        }
       };
 
       await axios.post(`${API}/orders`, requestData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setSuccess('تم إرسال الطلبية بنجاح. في انتظار موافقة المدير');
+      setSuccess('تم إرسال الطلبية بنجاح');
+      
+      // إعادة تعيين النموذج
       setOrderData({
-        doctor_id: '',
-        order_type: 'DEMO',
-        warehouse_id: '',
+        clinic_id: '',
+        phone: '',
+        clinic_name: '',
+        address: '',
+        order_type: 'demo',
+        priority: 'normal',
         notes: '',
         items: []
       });
       setSelectedProducts([]);
+      
+      setTimeout(() => setSuccess(''), 5000);
+      
     } catch (error) {
       setError(error.response?.data?.detail || 'حدث خطأ في إرسال الطلبية');
     } finally {
@@ -15480,156 +15528,391 @@ const OrderCreation = () => {
     }
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">عمل طلبية</h2>
+  // تصفية العيادات حسب البحث
+  const filteredClinics = clinics.filter(clinic =>
+    clinic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    clinic.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
+  // تصفية المنتجات حسب البحث
+  const filteredProducts = products.filter(product =>
+    product.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // رمز حالة المخزون
+  const getStockIcon = (status) => {
+    switch (status) {
+      case 'available': return '✅';
+      case 'low_stock': return '⚠️';
+      case 'out_of_stock': return '❌';
+      default: return '📦';
+    }
+  };
+
+  // لون حالة المخزون
+  const getStockColor = (status) => {
+    switch (status) {
+      case 'available': return 'text-green-600';
+      case 'low_stock': return 'text-yellow-600';
+      case 'out_of_stock': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <span className="text-3xl">📝</span>
+              إنشاء طلبية جديدة
+            </h2>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              إنشاء طلبية للعيادات المتاحة في منطقتك
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
+        <div className="bg-red-100 bg-opacity-30 border border-red-300 text-red-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">❌</span>
+            <span>{error}</span>
+          </div>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
-          {success}
+        <div className="bg-green-100 bg-opacity-30 border border-green-300 text-green-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✅</span>
+            <span>{success}</span>
+          </div>
         </div>
       )}
 
+      {/* Order Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Doctor Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">اختيار الطبيب</label>
-          <select
-            value={orderData.doctor_id}
-            onChange={(e) => setOrderData({...orderData, doctor_id: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">-- اختر الطبيب --</option>
-            {doctors.map((doctor) => (
-              <option key={doctor.id} value={doctor.id}>
-                د. {doctor.name} - {doctor.specialty}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Order Type */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">نوع الطلبية</label>
-            <select
-              value={orderData.order_type}
-              onChange={(e) => setOrderData({...orderData, order_type: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="DEMO">ديمو (مجاني)</option>
-              <option value="SALE">أوردر مدفوع</option>
-            </select>
+        
+        {/* Clinic Selection */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">🏥</span>
+            اختيار العيادة
+          </h3>
+          
+          {/* Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="ابحث عن العيادة بالاسم أو الطبيب أو العنوان..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+            />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">اختيار المخزن</label>
-            <select
-              value={orderData.warehouse_id}
-              onChange={(e) => setOrderData({...orderData, warehouse_id: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">-- اختر المخزن --</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name} - {warehouse.location}
-                </option>
+          {/* Selected Clinic Display */}
+          {orderData.clinic_id && (
+            <div className="mb-4 p-4 bg-blue-100 bg-opacity-30 border border-blue-300 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-blue-800">{orderData.clinic_name}</div>
+                  <div className="text-sm text-blue-600">{orderData.address}</div>
+                  <div className="text-sm text-blue-600">{orderData.phone}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOrderData({...orderData, clinic_id: '', phone: '', clinic_name: '', address: ''})}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Clinics List */}
+          {!orderData.clinic_id && filteredClinics.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
+              {filteredClinics.slice(0, 10).map((clinic) => (
+                <div
+                  key={clinic.id}
+                  onClick={() => selectClinic(clinic)}
+                  className="p-4 border border-gray-300 border-opacity-30 rounded-lg cursor-pointer hover:bg-blue-100 hover:bg-opacity-20 transition-all"
+                >
+                  <div className="font-bold">{clinic.name}</div>
+                  <div className="text-sm text-gray-600">{clinic.doctor_name}</div>
+                  <div className="text-sm text-gray-600">{clinic.address}</div>
+                  <div className="text-sm text-gray-600">{clinic.phone}</div>
+                </div>
               ))}
-            </select>
+            </div>
+          )}
+
+          {!orderData.clinic_id && filteredClinics.length === 0 && searchTerm && (
+            <div className="text-center py-4 text-gray-500">
+              لا توجد عيادات تطابق البحث
+            </div>
+          )}
+        </div>
+
+        {/* Order Details */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">📋</span>
+            تفاصيل الطلبية
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-bold mb-2">رقم الهاتف</label>
+              <input
+                type="tel"
+                value={orderData.phone}
+                onChange={(e) => setOrderData({...orderData, phone: e.target.value})}
+                className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+                placeholder="رقم هاتف العيادة"
+              />
+            </div>
+
+            {/* Address */}
+            <div>
+              <label className="block text-sm font-bold mb-2">العنوان</label>
+              <input
+                type="text"
+                value={orderData.address}
+                onChange={(e) => setOrderData({...orderData, address: e.target.value})}
+                className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+                placeholder="عنوان العيادة"
+                readOnly
+              />
+            </div>
+
+            {/* Order Type */}
+            <div>
+              <label className="block text-sm font-bold mb-2">نوع الطلبية</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderData({...orderData, order_type: 'demo'})}
+                  className={`p-3 rounded-lg border text-center transition-all ${
+                    orderData.order_type === 'demo' 
+                      ? 'border-green-500 bg-green-100 bg-opacity-30 text-green-800' 
+                      : 'border-gray-300 border-opacity-30'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">🎁</div>
+                  <div className="font-bold">ديمو مجاني</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderData({...orderData, order_type: 'debt'})}
+                  className={`p-3 rounded-lg border text-center transition-all ${
+                    orderData.order_type === 'debt' 
+                      ? 'border-blue-500 bg-blue-100 bg-opacity-30 text-blue-800' 
+                      : 'border-gray-300 border-opacity-30'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">💳</div>
+                  <div className="font-bold">مديونية</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-bold mb-2">أهمية الطلبية</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 'normal', label: 'عادية', icon: '📝', color: 'gray' },
+                  { value: 'important', label: 'مهمة', icon: '⚡', color: 'yellow' },
+                  { value: 'urgent', label: 'مهم جداً', icon: '🚨', color: 'red' }
+                ].map((priority) => (
+                  <button
+                    key={priority.value}
+                    type="button"
+                    onClick={() => setOrderData({...orderData, priority: priority.value})}
+                    className={`p-2 rounded-lg border text-center transition-all text-xs ${
+                      orderData.priority === priority.value 
+                        ? `border-${priority.color}-500 bg-${priority.color}-100 bg-opacity-30 text-${priority.color}-800` 
+                        : 'border-gray-300 border-opacity-30'
+                    }`}
+                  >
+                    <div className="text-lg">{priority.icon}</div>
+                    <div className="font-bold">{priority.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="mt-4">
+            <label className="block text-sm font-bold mb-2">ملاحظات</label>
+            <textarea
+              value={orderData.notes}
+              onChange={(e) => setOrderData({...orderData, notes: e.target.value})}
+              rows={3}
+              className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+              placeholder="أضف أي ملاحظات خاصة بالطلبية..."
+            />
           </div>
         </div>
 
         {/* Product Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">إضافة منتجات</label>
-          <select
-            onChange={(e) => {
-              if (e.target.value) {
-                addProductToOrder(e.target.value);
-                e.target.value = '';
-              }
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- اختر منتج لإضافته --</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name} - {product.price} ريال ({product.unit})
-              </option>
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">📦</span>
+            اختيار المنتجات
+          </h3>
+
+          {/* Product Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="ابحث عن المنتج بالاسم أو الفئة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+            />
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
+            {filteredProducts.map((product) => (
+              <div
+                key={product.product_id}
+                className="p-4 border border-gray-300 border-opacity-30 rounded-lg"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="font-bold text-sm">{product.product_name}</div>
+                  <div className={`text-2xl ${getStockColor(product.status)}`}>
+                    {getStockIcon(product.status)}
+                  </div>
+                </div>
+                
+                <div className="text-xs text-gray-600 mb-2">
+                  <div>المخزن: {product.warehouse_name}</div>
+                  <div>المخزون: {product.current_stock} {product.unit}</div>
+                  <div>الفئة: {product.category}</div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className={`text-xs px-2 py-1 rounded ${
+                    product.status === 'available' ? 'bg-green-100 bg-opacity-30 text-green-600' :
+                    product.status === 'low_stock' ? 'bg-yellow-100 bg-opacity-30 text-yellow-600' :
+                    'bg-red-100 bg-opacity-30 text-red-600'
+                  }`}>
+                    {product.status === 'available' ? 'متوفر' :
+                     product.status === 'low_stock' ? 'مخزون منخفض' : 'غير متوفر'}
+                  </div>
+
+                  {product.status !== 'out_of_stock' && (
+                    <button
+                      type="button"
+                      onClick={() => addProductToOrder(product)}
+                      disabled={selectedProducts.find(p => p.product_id === product.product_id)}
+                      className="btn-primary text-xs px-3 py-1 disabled:opacity-50"
+                    >
+                      {selectedProducts.find(p => p.product_id === product.product_id) ? 'مُضاف' : 'إضافة'}
+                    </button>
+                  )}
+                </div>
+              </div>
             ))}
-          </select>
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-4 text-gray-500">
+              لا توجد منتجات متاحة
+            </div>
+          )}
         </div>
 
         {/* Selected Products */}
         {selectedProducts.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">المنتجات المختارة</h3>
+          <div className="glass-effect p-6 rounded-lg">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span className="text-xl">🛒</span>
+              المنتجات المختارة ({selectedProducts.length})
+            </h3>
+
             <div className="space-y-3">
               {selectedProducts.map((product) => (
-                <div key={product.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                <div key={product.product_id} className="flex items-center justify-between p-3 bg-gray-100 bg-opacity-20 rounded-lg">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-800">{product.name}</h4>
-                    <p className="text-sm text-gray-600">{product.price} ريال / {product.unit}</p>
+                    <div className="font-bold">{product.product_name}</div>
+                    <div className="text-sm text-gray-600">
+                      {product.warehouse_name} • {product.unit}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="number"
-                      min="1"
-                      value={product.quantity}
-                      onChange={(e) => updateProductQuantity(product.id, e.target.value)}
-                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                    />
-                    <span className="text-sm font-medium text-gray-600">
-                      {(product.price * product.quantity).toFixed(2)} ريال
-                    </span>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateProductQuantity(product.product_id, product.quantity - 1)}
+                        className="w-8 h-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-400"
+                        disabled={product.quantity <= 1}
+                      >
+                        -
+                      </button>
+                      <span className="w-12 text-center font-bold">{product.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateProductQuantity(product.product_id, product.quantity + 1)}
+                        className="w-8 h-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center hover:bg-gray-400"
+                      >
+                        +
+                      </button>
+                    </div>
+                    
                     <button
                       type="button"
-                      onClick={() => removeProduct(product.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      onClick={() => removeProduct(product.product_id)}
+                      className="text-red-500 hover:text-red-700 p-2"
                     >
-                      حذف
+                      <span className="text-xl">🗑️</span>
                     </button>
                   </div>
                 </div>
               ))}
-              
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-blue-800">إجمالي الطلبية:</span>
-                  <span className="text-xl font-bold text-blue-600">{getTotalAmount().toFixed(2)} ريال</span>
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات الأوردر</label>
-          <textarea
-            value={orderData.notes}
-            onChange={(e) => setOrderData({...orderData, notes: e.target.value})}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="أضف أي ملاحظات خاصة بالطلبية..."
-          />
+        {/* Submit Button */}
+        <div className="glass-effect p-6 rounded-lg">
+          <button
+            type="submit"
+            disabled={isLoading || !orderData.clinic_id || selectedProducts.length === 0}
+            className="w-full btn-primary py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>جاري الإرسال...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">🚀</span>
+                <span>إرسال الطلبية</span>
+              </div>
+            )}
+          </button>
+          
+          <div className="mt-3 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+            ستتم مراجعة الطلبية من قِبل الإدارة قبل الاعتماد
+          </div>
         </div>
-
-        <button
-          type="submit"
-          disabled={isLoading || selectedProducts.length === 0}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'جاري الإرسال...' : 'إرسال الطلبية'}
-        </button>
       </form>
     </div>
   );
