@@ -11,7 +11,7 @@ import requests
 # MongoDB connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'test_database')
-BACKEND_URL = "https://b5e79940-efa7-4d10-8c69-0e64088e0f5f.preview.emergentagent.com/api"
+BACKEND_URL = "https://bd501eff-b5f7-4f63-9578-160402c0ca0a.preview.emergentagent.com/api"
 
 def connect_to_mongodb():
     """اتصال بقاعدة البيانات"""

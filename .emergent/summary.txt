@@ -1,75 +1,84 @@
 <analysis>
-The AI engineer focused on enhancing the EP Group System, addressing critical bugs and implementing new features. Initial efforts involved resolving persistent JSX parsing errors in  at multiple lines, which were hindering frontend compilation. This required careful examination of component structure, missing  blocks, and incorrect component calls. Following the resolution of these core compilation issues, the engineer moved to specific user-reported bugs. This included fixing the Create Order functionality for sales reps, specifically addressing  errors by ensuring correct data structure handling from the backend API. Subsequently, the daily login system was refined to appear only once per day using . Finally, a comprehensive clinic registration feature for sales reps was implemented, integrating enhanced Google Maps with current location detection and draggable markers, ensuring auto-approval for three months, and adding hidden location tracking for admin view. The final stage involved robust debugging of  serialization issues and ensuring correct component rendering in .
+The AI engineer successfully progressed the EP Group System through several critical development cycles. Initial work involved resolving pervasive frontend compilation errors and refining core functionalities like daily login and clinic registration with Google Maps. This was followed by a comprehensive technical review and cleanup of the codebase and database. Subsequently, the engineer executed a significant architectural refactor, merging  and  roles, introducing a full Lines Management system with dedicated APIs and UI, and ensuring hierarchical linkages. Most recently, the focus shifted to implementing advanced UI/UX features: enhanced user management dashboards with performance cards, an intelligent colored clinic categorization system (green for new, gold for featured, red for debt), a detailed clinic mini-profile, and a robust invoice-based debt management system. The engineer consistently updated  and created detailed reports, demonstrating an iterative, user-feedback-driven development approach.
 </analysis>
 
 <product_requirements>
-The EP Group System is an enterprise management solution offering dynamic themes, global search, and comprehensive user/warehouse management, with Arabic/English support and a 7-level hierarchy. Core features include CRUD for warehouses/products, advanced invoicing, a hierarchical order approval system, monthly planning, and enhanced user management. Recent focus areas included: bug fixes (buttons, themes, language); user management refinements; displaying region-specific stock status for sales reps; automatic invoicing; a comprehensive mini-profile; enhanced location tracking for clinics and orders; replacing selfie-based daily login with fingerprint/location logging; redesigning Create Order, Visit Registration, and Monthly Planning UIs for dynamic listings, voice notes, and simplified workflows; and improving the Dashboard. The immediate problem addressed was a persistent frontend compilation error and subsequent functionality issues for sales reps.
+The EP Group System is an enterprise solution with dynamic themes, global search, and multi-level user/warehouse management, supporting Arabic/English. It features CRUD for warehouses/products, advanced invoicing, hierarchical order approval, and monthly planning. Key past improvements included bug fixes, user management refinements, region-specific stock status, automatic invoicing, mini-profiles, enhanced location tracking, replacing selfie-login with fingerprint/location, and UI redesigns for Create Order, Visit Registration, and Monthly Planning. The immediate problem addressed was persistent frontend compilation errors and subsequent sales rep functionality issues. Recent explicit requests involved: merging  and  roles into one executive role capable of adding clinics, implementing a Lines Management system with manager assignments, enhancing user management with detailed performance cards, professional colored clinic categorization (new, featured, debt), comprehensive clinic mini-profiles, and an integrated invoice-based debt system.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-Stack**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
--   **UI/UX**: i18n/L10n (Arabic/English), RTL support, Tailwind CSS, CSS Custom Properties.
--   **API Design**: RESTful APIs, Pydantic, Role-Based Access Control (RBAC).
--   **State Management**: React Context API, useState, useEffect.
--   **Third-Party Integrations**: Google Maps API (Geolocation, Markers), Web Speech API.
--   **Authentication**: JWT, WebAuthn API (fingerprint),  for client-side state.
--   **Database**: MongoDB  serialization/deserialization.
+-   **Full-Stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
+-   **UI/UX**: i18n/L10n (Arabic/English), RTL, Tailwind CSS, Google Maps API.
+-   **API Design**: RESTful APIs, Pydantic, JWT authentication, Role-Based Access Control (RBAC).
+-   **State Management**: React Context API, , .
+-   **Database**: MongoDB  serialization/deserialization, data migration scripts.
+-   **System Management**:  for client-side state, backend                          RUNNING   pid 53, uptime 0:00:02
+code-server                      RUNNING   pid 55, uptime 0:00:02
+frontend                         STOPPED   Jul 29 11:21 PM
+mongodb                          RUNNING   pid 61, uptime 0:00:02
+supervisor>  for service control.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a standard full-stack architecture with React on the frontend, FastAPI for the backend, and MongoDB for data persistence.
+The application utilizes a standard full-stack setup with React, FastAPI, and MongoDB.
 
 
 
 -   ****:
-    -   **Summary of importance**: The central React application file managing routing, global state, and UI components.
-    -   **Changes made**: Extensive modifications to resolve persistent JSX parsing errors (lines 16514, 26317, 26614, etc.) by correcting misplaced/unclosed tags and orphaned code blocks, balancing parentheses/braces, and ensuring  is at the top level. The  component was updated to correctly handle clinic data (accessing  and adding  checks). The daily login logic was modified in  to use  for  to prevent repeated modals. A new  component was added for sales rep clinic registration with integrated Google Maps (showing current location and draggable markers). A new  component was added to display detailed tracking info for admins. Authentication context () was explicitly used in  to access user data.
+    -   **Summary of importance**: The core React application file handling routing, global state, and UI component rendering. It serves as the single entry point for the user interface.
+    -   **Changes made**: Initially fixed numerous JSX parsing errors. Updated  for clinic data. Implemented daily login using . Added  for sales rep clinic registration with Google Maps. Introduced  for admin view. Recently, significantly refactored permissions and role checks. Added  component and its navigation tab. Integrated new components for , , and . Updated rendering logic to incorporate new features like colored clinic classification and user performance cards.
 -   ****:
-    -   **Summary of importance**: The FastAPI backend handles all business logic, user authentication, data processing, and MongoDB interactions.
-    -   **Changes made**: The  endpoint was modified to allow sales representatives to access clinics via  for consistent authentication. A new endpoint  was added to handle clinic registration by sales reps, including saving rep's current location, calculating distance to clinic, and setting . Critical fixes were made to handle MongoDB's  serialization issues by ensuring all  instances were converted to  and all  queries included  projection (e.g., for  and ). A new admin endpoint  was added to manage the auto-approval feature for a specified duration.
+    -   **Summary of importance**: The FastAPI backend is the central hub for all business logic, user authentication, data processing, and interactions with MongoDB.
+    -   **Changes made**: Modified  for sales rep access. Added  (auto-approval logic). Fixed  serialization errors (ISO format for ,  projection in ). Added . Crucially, updated  class to streamline and merge  into  and introduced  logic at user creation/update. Added new Pydantic models and API endpoints for Lines Management (creation, update, deletion of lines and areas). Implemented new models for  (with classification fields), , and . Added new APIs for enhanced user profiles, clinic statistics, and invoice/debt management.
 -   ****:
-    -   **Summary of importance**: Defines global CSS, theme variables, and animations.
-    -   **Changes made**: No new explicit changes mentioned in the provided trajectory, although past changes improved text visibility.
+    -   **Summary of importance**: A critical log file documenting problem statements, testing protocols, agent communications, and test results throughout the development lifecycle.
+    -   **Changes made**: Continuously updated after each major phase, including reports on frontend compilation fixes, Create Order logic, daily login, clinic registration, comprehensive system review (frontend/backend), database cleanup, and major feature implementations like role merging, line management, enhanced user/clinic views, and debt system.
 -   ****:
-    -   **Summary of importance**: Stores environment variables for the frontend, including the backend URL.
-    -   **Changes made**:  was added previously. No new explicit changes mentioned in this trajectory.
+    -   **Summary of importance**: A utility script created during the trajectory to programmatically clean up and reduce the number of test data entries in the MongoDB database.
+    -   **Changes made**: Initially created to fulfill user's request to reduce data to 2 of each type. Corrected a bug related to database name ( environment variable was not correctly used, fixed to match ).
 -   ****:
-    -   **Summary of importance**: The main HTML file where the React application is mounted.
-    -   **Changes made**: Google Maps JavaScript API script tag directly added previously. No new explicit changes mentioned in this trajectory.
+    -   **Summary of importance**: A utility script created to migrate existing  users in the database to the newly unified  role.
+    -   **Changes made**: Created to ensure backward compatibility and data consistency after merging user roles.
 -   ****:
-    -   **Summary of importance**: Critical log for problem statements, testing protocols, agent communications, and test results.
-    -   **Changes made**: Consistently updated by the AI engineer after each phase, including language/theme fixes, warehouse/stock system implementation, daily login updates, and detailed reports on debugging frontend compilation errors, fixing Create Order logic, daily login modal frequency, and the comprehensive clinic registration feature for reps, including API tests and frontend visual confirmations.
--   **Other scripts (, , , , , )**:
-    -   **Summary of importance**: Used for database setup, populating test data, and initial configuration.
-    -   **Changes made**: These scripts were executed during this trajectory to generate necessary test data (e.g., new sales rep, clinics) to validate the implemented features and bug fixes. No direct code modifications to these scripts were explicitly detailed in this trajectory.
+    -   **Summary of importance**: A utility script created to populate the database with sample invoice data to test the newly implemented debt management system.
+    -   **Changes made**: Created to generate various invoice statuses (paid, pending, overdue) for testing the new feature.
 </code_architecture>
 
 <pending_tasks>
 -   Full implementation of comprehensive admin settings, refining permissions management.
--   Refine Gamification into tangible incentive systems using AI (OpenAI GPT-4).
--   Complete the Accounting System.
+-   Refine Gamification into tangible incentive systems using AI.
+-   Complete the Accounting System (beyond current debt tracking).
 -   Enhance visit logs with Google Maps integration (beyond current tracking).
 -   Full integration and completion of AI-Powered features beyond current analytics.
 -   Finalize the detailed order approval hierarchy logic.
 -   Implement warehouse-region-rep linkages for full functionality and stock status display for reps in all scenarios.
--   Complete Clinic Registration details (accounting person, working hours) – partially addressed.
--   Complete remaining redesign and functionality for  and  as per detailed user requirements.
+-   Complete remaining redesign and functionality for  and .
 -   Complete dashboard adjustments: improved welcome message, approvals shortcut, Quick Actions.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer successfully resolved a critical bug reported by the user regarding clinic registration for sales representatives. The user reported ⚠️حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى and indicated that clinics could not be registered, even without manager approval.
+Immediately before this summary request, the AI engineer completed a significant set of enhancements based on the user's explicit instructions. This work focused on improving user management, clinic categorization, clinic insights, and financial tracking within the EP Group System.
 
-The AI engineer's work focused on:
-1.  **Debugging  Serialization**: Identified and fixed a recurring  error from MongoDB in the backend (). This involved ensuring that  instances were converted to  before being stored in the database (e.g., for  in clinic data). Additionally,  was explicitly added to MongoDB queries () for  and  to prevent  fields from causing serialization issues in JSON responses.
-2.  **Correcting Frontend Component Usage**: Discovered that the  component was being mistakenly rendered instead of the newly developed  component for sales reps in  (line 17969). This was fixed by replacing the incorrect component call.
-3.  **Ensuring User Context**: Verified that  data was correctly accessible within the  component. This was addressed by ensuring  was properly used to retrieve  from the context and updating all references within the component.
-4.  **Error Handling Enhancement**: Added more robust error handling in the frontend to provide clearer feedback to the user in Arabic.
-5.  **Auto-Approval System**: Confirmed that the backend's new logic for sales rep clinic registration (specifically  endpoint) allows clinics to be  without manager intervention, and this feature can be toggled by admins for a specific duration (e.g., 3 months).
+Specifically, the following was implemented:
+1.  **Enhanced User Management for Admin**: A detailed performance card system was added for each user, providing comprehensive statistics on orders, visits, overall performance (scored out of 100), peer ranking, and performance percentiles. The user interface for user management was updated to include advanced search and filtering capabilities.
+2.  **Professional Colored Clinic Categorization**: Clinics are now automatically categorized and visually represented with colors:
+    *   🟢 **Green**: For new clinics with no outstanding debt.
+    *   🟡 **Gold**: For featured or high-revenue clinics.
+    *   🔴 **Red**: For clinics with significant overdue debt (specifically, over 1000 EGP).
+    This classification is intelligent and automatic but allows for manual overrides.
+3.  **Comprehensive Clinic Mini-Profile**: A detailed modal mini-profile for clinics was introduced. This profile displays:
+    *   Full clinic statistics (visits, orders, debt).
+    *   Information about the responsible user (name, role, visit count).
+    *   Summaries of the last 5 visits and last 5 orders, with direct links to full details in their respective sections.
+4.  **Integrated Debt System**: A robust system for managing invoices and debt was implemented.
+    *   All new invoices are now initially marked as  (debt).
+    *   The accounting department can manage and mark invoices as paid, updating the clinic's financial status.
+    *   This system is directly linked to the colored clinic categorization, automatically updating a clinic's color based on its debt status.
+    *   Detailed transaction records are maintained.
 
-The trajectory concludes with the AI engineer confidently stating that the problem is 100% solved and the system is ready for use, having successfully registered a clinic via the sales rep account and verified backend logs and API responses.
+Technically, this involved adding new data models in  for clinics (with classification fields), invoices, and payment records. Numerous new FastAPI endpoints were created for user performance data, clinic statistics, and invoice management. On the frontend,  was extensively modified to incorporate new React components such as , , and , along with updated routing and state management to display these features. A utility script () was also created and run to generate sample debt data for testing. The AI engineer reported the completion with high confidence, providing a final screenshot of the system.
 </current_work>
 
 <optional_next_step>
-The AI engineer has declared the clinic registration issue fully resolved. The next step is to await user confirmation on the fix.
+The next step is to begin implementing the newly requested features starting with backend updates, including order warnings for indebted clinics, manager inclusion in visit logs, restricted rep profile views, and the detailed movement log system.
 </optional_next_step>
