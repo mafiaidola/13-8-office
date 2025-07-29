@@ -422,6 +422,8 @@ class Phase3CreateOrderTester:
         except Exception as e:
             self.log_test("Areas and Regions Setup", False, f"Exception: {str(e)}")
             return False
+
+    def test_location_tracking(self):
         """Test location tracking functionality"""
         try:
             self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
