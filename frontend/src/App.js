@@ -22479,6 +22479,7 @@ const WarehouseKeeperAddProductModal = ({ onClose, onSave, warehouseId }) => {
 
 // Warehouse Keeper Stock Adjustment Modal Component
 const WarehouseKeeperStockAdjustmentModal = ({ product, onClose, onSave }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     type: 'add',
     quantity: 0,
