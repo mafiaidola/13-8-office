@@ -18048,6 +18048,10 @@ const Dashboard = () => {
           <MonthlyPlanningSystem />
         )}
 
+        {activeTab === 'lines-management' && (['admin', 'gm', 'line_manager'].includes(user.role)) && (
+          <LinesManagement />
+        )}
+
         </div>
         
         {/* Enhanced Footer */}
