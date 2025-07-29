@@ -116,7 +116,7 @@ class DailyLoginTester:
             
             if response.status_code == 200:
                 data = response.json()
-                self.test_rep_token = data.get("access_token")
+                self.test_rep_token = data.get("token") or data.get("access_token")
                 self.log_test("Test Rep Login", True, f"Token: {self.test_rep_token[:20]}...")
                 return True
             else:
