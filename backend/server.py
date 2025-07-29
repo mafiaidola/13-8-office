@@ -2308,7 +2308,14 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         item.order_id = order.id
         await db.order_items.insert_one(item.dict())
     
-    return {"message": "Order created successfully", "order_id": order.id}
+    return {
+        "message": "Order created successfully", 
+        "order_id": order.id,
+        "order_color": order_color,
+        "clinic_debt_status": debt_status,
+        "clinic_debt_amount": clinic_debt_info["outstanding_debt"],
+        "total_amount": total_amount
+    }
 
 @api_router.get("/orders", response_model=List[Dict[str, Any]])
 async def get_orders(current_user: User = Depends(get_current_user)):
