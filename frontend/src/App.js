@@ -25474,6 +25474,8 @@ const MonthlyPlanningSystem = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false);
+  const [showPlanViewModal, setShowPlanViewModal] = useState(false);
   
   // Create Plan States
   const [newPlan, setNewPlan] = useState({
