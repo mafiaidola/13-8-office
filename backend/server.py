@@ -12045,31 +12045,201 @@ async def get_clinic_registrations_with_locations(current_user: User = Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching clinic locations: {str(e)}")
 
+@api_router.post("/users/daily-login")
+async def daily_login_record(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Record daily login with fingerprint or selfie authentication
+    تسجيل تسجيل الدخول اليومي مع مصادقة بصمة الإصبع أو السيلفي
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get request data
+        request_data = await request.json()
+        
+        login_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user["id"],
+            "user_name": user.get("full_name", user.get("username", "Unknown")),
+            "authentication_method": request_data.get("authentication_method", "unknown"),
+            "timestamp": request_data.get("timestamp", datetime.utcnow().isoformat()),
+            "location": {
+                "latitude": request_data.get("location", {}).get("latitude"),
+                "longitude": request_data.get("location", {}).get("longitude"),
+                "recorded_at": datetime.utcnow()
+            },
+            "device_info": {
+                "user_agent": request.headers.get("user-agent", "Unknown"),
+                "ip_address": request.client.host if hasattr(request, 'client') else None
+            },
+            "created_at": datetime.utcnow()
+        }
+        
+        # Handle different authentication methods
+        if request_data.get("authentication_method") == "fingerprint":
+            # Store fingerprint authentication data
+            login_record["fingerprint_data"] = {
+                "type": request_data.get("type", "authentication"),
+                "credential_id": request_data.get("credentialId"),
+                "public_key": request_data.get("publicKey") if request_data.get("type") == "registration" else None,
+                "signature": request_data.get("signature"),
+                "authenticator_data": request_data.get("authenticatorData"),
+                "client_data_json": request_data.get("clientDataJSON")
+            }
+            
+        elif request_data.get("authentication_method") == "selfie":
+            # Store selfie image (as base64)
+            login_record["selfie_image"] = request_data.get("selfie_image")
+        
+        # Save to database
+        await db.daily_login_records.insert_one(login_record)
+        
+        # Update user's last login
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"last_login": datetime.utcnow()}}
+        )
+        
+        return {
+            "message": "تم تسجيل الحضور بنجاح",
+            "record_id": login_record["id"],
+            "method": request_data.get("authentication_method"),
+            "timestamp": login_record["timestamp"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording daily login: {str(e)}")
+
+@api_router.get("/admin/daily-login-records")
+async def get_daily_login_records(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get all daily login records for admin monitoring
+    جلب جميع سجلات تسجيل الدخول اليومي لمراقبة الإدارة
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only admin can access all records
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get all login records with user information
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "id",
+                    "as": "user"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$user",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$project": {
+                    "record_id": "$id",
+                    "user_name": "$user_name",
+                    "user_role": "$user.role",
+                    "user_region": "$user.region_id",
+                    "authentication_method": "$authentication_method",
+                    "timestamp": "$timestamp",
+                    "location": "$location",
+                    "device_info": "$device_info",
+                    "has_selfie": {"$cond": [{"$ne": ["$selfie_image", None]}, True, False]},
+                    "has_fingerprint": {"$cond": [{"$ne": ["$fingerprint_data", None]}, True, False]},
+                    "created_at": "$created_at"
+                }
+            },
+            {
+                "$sort": {"created_at": -1}
+            }
+        ]
+        
+        records = await db.daily_login_records.aggregate(pipeline).to_list(1000)
+        
+        # Convert ObjectId to string
+        for record in records:
+            record["_id"] = str(record["_id"])
+        
+        return {
+            "total_records": len(records),
+            "records": records
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching login records: {str(e)}")
+
+@api_router.get("/users/my-login-history")
+async def get_my_login_history(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get user's own login history
+    جلب تاريخ تسجيل الدخول الخاص بالمستخدم
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get user's login records
+        records = await db.daily_login_records.find(
+            {"user_id": user["id"]},
+            {
+                "record_id": "$id",
+                "authentication_method": 1,
+                "timestamp": 1,
+                "location.latitude": 1,
+                "location.longitude": 1,
+                "created_at": 1,
+                "_id": 0
+            }
+        ).sort("created_at", -1).limit(50).to_list(50)
+        
+        return {
+            "user_id": user["id"],
+            "user_name": user.get("full_name", user.get("username", "Unknown")),
+            "total_records": len(records),
+            "recent_logins": records
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching login history: {str(e)}")
+
 @api_router.get("/sales-rep/warehouse-stock-status")
-async def get_sales_rep_warehouse_stock_status(current_user: User = Depends(get_current_user)):
+async def get_sales_rep_warehouse_stock_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Get warehouse stock status for the sales rep based on their region
     حالة المخزون للمندوب حسب منطقته
     """
     try:
+        # Verify JWT token
+        user = await verify_token_and_get_user(credentials)
+        
         # Only sales reps can access this
-        if current_user.role not in ["medical_rep", "sales_rep"]:
+        if user.get("role") not in ["medical_rep", "sales_rep"]:
             raise HTTPException(status_code=403, detail="Only sales representatives can access stock status")
         
         # Get user's region from their profile
-        user_region = current_user.region_id or "القاهرة"  # Default to Cairo if no region specified
+        user_region = user.get("region_id", "القاهرة")  # Default to Cairo if no region specified
         
         # Find warehouses in the user's region
         warehouses = await db.warehouses.find({
             "region": user_region,
-            "is_active": True
+            "status": "active"
         }).to_list(1000)
         
         # If no warehouses found in user's region, include main warehouse
         if not warehouses:
             main_warehouse = await db.warehouses.find_one({
-                "warehouse_type": "main",
-                "is_active": True
+                "type": "main",
+                "status": "active"
             })
             if main_warehouse:
                 warehouses = [main_warehouse]
@@ -12103,7 +12273,7 @@ async def get_sales_rep_warehouse_stock_status(current_user: User = Depends(get_
             stock_status.append({
                 "warehouse_id": warehouse["id"],
                 "warehouse_name": warehouse["name"],
-                "warehouse_location": warehouse.get("address", ""),
+                "warehouse_location": warehouse["location"],
                 "total_products": len(warehouse_products),
                 "available_products": len([p for p in warehouse_products if p["status"] == "available"]),
                 "low_stock_products": len([p for p in warehouse_products if p["status"] == "low_stock"]),
