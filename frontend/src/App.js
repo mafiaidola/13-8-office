@@ -26371,65 +26371,6 @@ const MonthlyPlanningSystem = () => {
       )}
     </div>
 
-  const handleCreatePlan = async (planData) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/planning/create`, planData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      await loadPlanningData();
-      setShowCreatePlanModal(false);
-    } catch (error) {
-      console.error('Error creating plan:', error);
-    }
-  };
-
-  const handleUpdatePlanStatus = async (planId, status) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`${API}/planning/${planId}/status`, { status }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      await loadPlanningData();
-    } catch (error) {
-      console.error('Error updating plan status:', error);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      active: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      paused: 'bg-yellow-100 text-yellow-800',
-      cancelled: 'bg-red-100 text-red-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusText = (status) => {
-    const statuses = {
-      active: 'نشط',
-      completed: 'مكتمل',
-      paused: 'متوقف',
-      cancelled: 'ملغي'
-    };
-    return statuses[status] || status;
-  };
-
-  const getCompletionColor = (rate) => {
-    if (rate >= 90) return 'text-green-600';
-    if (rate >= 70) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const canManagePlans = () => {
-    return ['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role);
-  };
-
-  const canViewPlans = () => {
-    return ['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role);
-  };
-
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <div className="container mx-auto px-4 py-8">
