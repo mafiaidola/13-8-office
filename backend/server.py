@@ -4089,7 +4089,10 @@ async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizati
             raise HTTPException(status_code=403, detail="Only sales representatives can register clinics")
         
         # Check if rep clinic registration is enabled (optional - for future admin control)
-        settings = await db.system_settings.find_one({"setting_type": "rep_clinic_registration"})
+        settings = await db.system_settings.find_one(
+            {"setting_type": "rep_clinic_registration"}, 
+            {"_id": 0}
+        )
         registration_enabled = True  # Default to enabled for 3 months as requested
         
         if settings:
