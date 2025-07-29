@@ -124,31 +124,6 @@ class District(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
-    # Areas Definition
-    CAIRO_GIZA = "cairo_giza"
-    DELTA_1 = "delta_1"
-    DELTA_2 = "delta_2"
-    UPPER_EGYPT = "upper_egypt"
-    ALEXANDRIA = "alexandria"
-    WESTERN = "western"
-    
-    # Warehouses Definition
-    MAIN_WAREHOUSE = "main_warehouse"
-    CAIRO_WAREHOUSE = "cairo_warehouse"
-    GIZA_WAREHOUSE = "giza_warehouse"
-    ALEXANDRIA_WAREHOUSE = "alexandria_warehouse"
-    GHARBIA_WAREHOUSE = "gharbia_warehouse"
-    DAKAHLIA_WAREHOUSE = "dakahlia_warehouse"
-    SOHAG_WAREHOUSE = "sohag_warehouse"
-    GIZA_2_WAREHOUSE = "giza_2_warehouse"
-    
-    # Clinic Classifications
-    CLASS_A_STAR = "class_a_star"
-    CLASS_A = "class_a"
-    CLASS_B = "class_b"
-    CLASS_C = "class_c"
-    CLASS_D = "class_d"
-    
     @classmethod
     def can_manage(cls, manager_role: str, target_role: str) -> bool:
         """Check if manager_role can manage target_role"""
