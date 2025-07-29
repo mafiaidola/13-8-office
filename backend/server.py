@@ -515,6 +515,62 @@ class UserPerformanceStats(BaseModel):
     
     calculated_at: datetime = Field(default_factory=datetime.utcnow)
 
+class Invoice(BaseModel):
+    """نموذج الفاتورة مع نظام المديونية"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_number: str
+    clinic_id: str
+    clinic_name: str
+    order_id: Optional[str] = None
+    
+    # تفاصيل المبلغ
+    subtotal: float
+    tax_amount: float = 0.0
+    discount_amount: float = 0.0
+    total_amount: float
+    
+    # حالة الدفع - كل فاتورة تبدأ كمديونية
+    payment_status: str = "pending"  # pending, paid, partially_paid, overdue
+    paid_amount: float = 0.0
+    outstanding_amount: float  # total_amount - paid_amount
+    
+    # تواريخ مهمة
+    issue_date: datetime = Field(default_factory=datetime.utcnow)
+    due_date: datetime
+    payment_date: Optional[datetime] = None
+    
+    # معلومات الدفع
+    payment_method: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_notes: Optional[str] = None
+    paid_by_user_id: Optional[str] = None  # من المحاسبة
+    
+    # معلومات الإنشاء
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # العناصر
+    items: List[Dict] = []
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # تأكد من أن المبلغ المستحق يساوي المبلغ الإجمالي عند الإنشاء
+        if not hasattr(self, 'outstanding_amount') or self.outstanding_amount is None:
+            self.outstanding_amount = self.total_amount - self.paid_amount
+
+class PaymentRecord(BaseModel):
+    """سجل دفعة"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_id: str
+    amount: float
+    payment_method: str  # cash, bank_transfer, check, card
+    payment_date: datetime = Field(default_factory=datetime.utcnow)
+    reference_number: Optional[str] = None
+    notes: Optional[str] = None
+    processed_by: str  # user_id من المحاسبة
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class WarehouseCreate(BaseModel):
     name: str
     code: str
