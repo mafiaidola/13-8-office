@@ -240,6 +240,10 @@ class DailyLoginTester:
         try:
             headers = {"Authorization": f"Bearer {self.test_rep_token}"}
             
+            # Debug: Check if token is valid by trying a different endpoint first
+            debug_response = requests.get(f"{API_BASE}/users", headers=headers)
+            print(f"Debug - users endpoint status: {debug_response.status_code}")
+            
             response = requests.get(f"{API_BASE}/users/my-login-history", headers=headers)
             
             if response.status_code == 200:
@@ -252,8 +256,14 @@ class DailyLoginTester:
                             f"User: {user_name}, Total records: {total_records}, Recent logins: {len(recent_logins)}")
                 return recent_logins
             else:
-                self.log_test("User Login History", False, 
-                            f"Status: {response.status_code}, Response: {response.text}")
+                # Check if it's a 403 due to role restrictions or actual API issue
+                if response.status_code == 403:
+                    # This might be expected behavior - let's check if the endpoint exists
+                    self.log_test("User Login History", False, 
+                                f"Access denied (403) - may be role-restricted. Response: {response.text}")
+                else:
+                    self.log_test("User Login History", False, 
+                                f"Status: {response.status_code}, Response: {response.text}")
                 return []
                 
         except Exception as e:
