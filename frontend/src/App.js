@@ -26310,6 +26310,7 @@ const MonthlyPlanningSystem = () => {
           </div>
         </div>
       )}
+    </div>
 
   const handleCreatePlan = async (planData) => {
     try {
