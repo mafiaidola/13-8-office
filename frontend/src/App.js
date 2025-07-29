@@ -18035,7 +18035,7 @@ const Dashboard = () => {
           <AdvancedAnalyticsDashboard />
         )}
         
-        {activeTab === 'gamification' && (user.role === 'sales_rep' || canAccessTab('reports')) && (
+        {activeTab === 'gamification' && (user.role === 'medical_rep' || canAccessTab('reports')) && (
           <GamificationDashboard />
         )}
         
