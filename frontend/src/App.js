@@ -18067,6 +18067,10 @@ const Dashboard = () => {
           <MonthlyPlanningSystem />
         )}
 
+        {activeTab === 'register-clinic' && (['key_account', 'medical_rep'].includes(normalizeRole(user.role))) && (
+          <RepClinicRegistration />
+        )}
+
         {activeTab === 'lines-management' && (['admin', 'gm', 'line_manager'].includes(user.role)) && (
           <LinesManagement />
         )}
