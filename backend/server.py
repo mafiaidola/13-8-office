@@ -1220,9 +1220,19 @@ class LineManagementCreate(BaseModel):
 class VisitCreate(BaseModel):
     doctor_id: str
     clinic_id: str
+    # Visit Type Enhancement - نوع الزيارة المحسن
+    visit_type: str = "SOLO"  # SOLO, DUO_WITH_MANAGER, THREE_WITH_MANAGER_AND_OTHER
+    
+    # Manager Participation - مشاركة المدير (اختياري)
+    accompanying_manager_id: Optional[str] = None
+    
+    # Other Participant - مشارك آخر (في حالة THREE)
+    other_participant_id: Optional[str] = None
+    
+    notes: str = ""
     latitude: float
     longitude: float
-    notes: str
+    effective: bool = True
 
 # Helper Functions
 def hash_password(password: str) -> str:
