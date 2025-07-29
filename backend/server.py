@@ -3380,25 +3380,61 @@ async def get_sales_reps(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/users/{user_id}", response_model=Dict[str, Any])
-async def get_user_details(user_id: str, current_user: User = Depends(get_current_user)):
-    if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Get additional user statistics
-    if user.get("role") == "sales_rep":
-        visits_count = await db.visits.count_documents({"sales_rep_id": user_id})
-        orders_count = await db.orders.count_documents({"sales_rep_id": user_id})
-        user["statistics"] = {
-            "total_visits": visits_count,
-            "total_orders": orders_count
+@api_router.get("/users/my-login-history")
+async def get_my_login_history(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get user's own login history
+    جلب تاريخ تسجيل الدخول الخاص بالمستخدم
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get user's login records
+        records = await db.daily_login_records.find(
+            {"user_id": user["id"]},
+            {
+                "record_id": "$id",
+                "authentication_method": 1,
+                "timestamp": 1,
+                "location.latitude": 1,
+                "location.longitude": 1,
+                "created_at": 1,
+                "_id": 0
+            }
+        ).sort("created_at", -1).limit(50).to_list(50)
+        
+        return {
+            "user_id": user["id"],
+            "user_name": user.get("full_name", user.get("username", "Unknown")),
+            "total_records": len(records),
+            "recent_logins": records
         }
-    
-    return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching login history: {str(e)}")
+
+@api_router.get("/users/{user_id}")
+async def get_user_by_id(user_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get specific user by ID"""
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Admin can see any user, others can only see themselves
+        if user.get("role") != "admin" and user.get("id") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        target_user = await db.users.find_one({"id": user_id}, {"_id": 0, "hashed_password": 0})
+        if not target_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return target_user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching user: {str(e)}")
 
 @api_router.patch("/users/{user_id}")
 async def update_user(user_id: str, user_data: dict, current_user: User = Depends(get_current_user)):
