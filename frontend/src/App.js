@@ -15365,13 +15365,14 @@ const OrderCreation = () => {
       console.error('Error fetching clinics:', error);
       // Fallback to all clinics if region-specific API doesn't exist
       try {
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${API}/clinics`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setClinics(response.data || []);
       } catch (fallbackError) {
         console.error('Error fetching all clinics:', fallbackError);
-        setError('فشل في تحميل العيادات المتaحة');
+        setError('فشل في تحميل العيادات المتاحة');
       }
     }
   };
