@@ -476,9 +476,10 @@ class Phase3CreateOrderTester:
             ("3. Demo Clinics Setup (8 clinics)", self.test_demo_clinics_setup),
             ("4. Demo Warehouses Setup (8 warehouses)", self.test_demo_warehouses_setup),
             ("5. Test Rep User Setup", self.test_test_rep_user_setup),
-            ("6. Region Filtering", self.test_region_filtering),
-            ("7. Stock Integration", self.test_stock_integration),
-            ("8. Location Tracking", self.test_location_tracking),
+            ("6. Areas and Regions Setup", self.test_areas_and_regions_setup),
+            ("7. Region Filtering", self.test_region_filtering),
+            ("8. Stock Integration", self.test_stock_integration),
+            ("9. Location Tracking", self.test_location_tracking),
         ]
         
         passed_tests = 0
