@@ -11,7 +11,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://46cf73c5-6ae2-47bf-acd2-8c92062172ff.preview.emergentagent.com/api"
+BACKEND_URL = "https://b5e79940-efa7-4d10-8c69-0e64088e0f5f.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class CoreBackendTester:

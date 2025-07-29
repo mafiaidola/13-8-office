@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://46cf73c5-6ae2-47bf-acd2-8c92062172ff.preview.emergentagent.com/api"
+BASE_URL = "https://b5e79940-efa7-4d10-8c69-0e64088e0f5f.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 # GPS test coordinates for testing geofencing
