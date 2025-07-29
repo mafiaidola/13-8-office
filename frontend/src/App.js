@@ -985,7 +985,39 @@ const translations = {
     wage: 'Wage',
     bonus: 'Bonus',
     
-    // Additional common terms
+    // Additional translations
+    allStatuses: 'All Statuses',
+    allTypes: 'All Types',
+    paid: 'Paid',
+    unpaid: 'Unpaid',
+    overdue: 'Overdue',
+    draft: 'Draft',
+    sent: 'Sent',
+    viewed: 'Viewed',
+    processing: 'Processing',
+    completed: 'Completed',
+    failed: 'Failed',
+    
+    // Filter and search terms
+    filterBy: 'Filter By',
+    filterByStatus: 'Filter by Status',
+    filterByType: 'Filter by Type',
+    filterByDate: 'Filter by Date',
+    filterByUser: 'Filter by User',
+    searchBy: 'Search By',
+    
+    // Approval system
+    approve: 'Approve',
+    reject: 'Reject',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    pending: 'Pending',
+    
+    // Common phrases
+    noData: 'No Data',
+    noResults: 'No Results',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
     general: 'General',
     specific: 'Specific',
     basic: 'Basic',
