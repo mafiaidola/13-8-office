@@ -209,34 +209,43 @@ class Phase3CreateOrderTester:
         try:
             self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
             
-            response = self.session.get(f"{API_BASE}/warehouses")
+            # Check both old and new warehouse endpoints
+            old_response = self.session.get(f"{API_BASE}/warehouses")
+            new_response = self.session.get(f"{API_BASE}/warehouses/new")
             
-            if response.status_code == 200:
-                data = response.json()
-                warehouse_count = len(data) if isinstance(data, list) else 0
+            old_count = 0
+            new_count = 0
+            
+            if old_response.status_code == 200:
+                old_data = old_response.json()
+                old_count = len(old_data) if isinstance(old_data, list) else 0
+            
+            if new_response.status_code == 200:
+                new_data = new_response.json()
+                new_count = len(new_data) if isinstance(new_data, list) else 0
                 
-                if warehouse_count >= 8:
-                    # Check warehouse details
+                if new_count >= 8:
+                    # Check new warehouse system details
                     active_warehouses = 0
-                    regions = set()
+                    warehouse_types = set()
                     
-                    for warehouse in data:
+                    for warehouse in new_data:
                         if warehouse.get('is_active', True):
                             active_warehouses += 1
-                        if warehouse.get('region') or warehouse.get('area_id'):
-                            regions.add(warehouse.get('region') or warehouse.get('area_id'))
+                        warehouse_types.add(warehouse.get('type', 'unknown'))
                     
                     self.log_test("Demo Warehouses Setup", True,
-                                f"Found {warehouse_count} warehouses. {active_warehouses} active across {len(regions)} regions",
-                                {"total_warehouses": warehouse_count, "active_warehouses": active_warehouses, "regions_count": len(regions)})
+                                f"Found {new_count} warehouses in new system (vs {old_count} in old system). {active_warehouses} active with types: {list(warehouse_types)}",
+                                {"new_warehouses": new_count, "old_warehouses": old_count, "active_warehouses": active_warehouses, "types": list(warehouse_types)})
+                    return True
                 else:
                     self.log_test("Demo Warehouses Setup", False,
-                                f"Expected at least 8 warehouses, found {warehouse_count}",
-                                {"warehouse_count": warehouse_count})
-                return warehouse_count >= 8
+                                f"Expected at least 8 warehouses, found {new_count} in new system and {old_count} in old system",
+                                {"new_warehouse_count": new_count, "old_warehouse_count": old_count})
+                    return False
             else:
                 self.log_test("Demo Warehouses Setup", False,
-                            f"Status: {response.status_code}, Response: {response.text}")
+                            f"Could not access warehouse endpoints. Old: {old_response.status_code}, New: {new_response.status_code}")
                 return False
                 
         except Exception as e:
