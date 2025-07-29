@@ -3145,32 +3145,7 @@ const LoginPage = () => {
               </button>
             </form>
 
-            <div className="mt-8">
-              <div className="card-gradient-blue p-6 rounded-2xl text-center">
-                <h3 className="font-bold mb-3 flex items-center justify-center gap-2">
-                  <span>💡</span>
-                  <span>
-                    {language === 'ar' ? 'بيانات التجربة' : 'Demo Credentials'}
-                  </span>
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold">
-                      {language === 'ar' ? 'أدمن:' : 'Admin:'}
-                    </span>
-                    <span>admin / admin123</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold">
-                      {language === 'ar' ? 'مندوب:' : 'Sales Rep:'}
-                    </span>
-                    <span>
-                      {language === 'ar' ? 'أنشئ من لوحة الأدمن' : 'Create from Admin Panel'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+
 
             {/* Footer */}
             <div className="mt-6 text-center">
