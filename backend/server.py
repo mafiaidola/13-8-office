@@ -4040,56 +4040,62 @@ async def approve_doctor(doctor_id: str, current_user: User = Depends(get_curren
 
 # Visit Routes
 @api_router.post("/visits")
-async def create_visit(visit_data: VisitCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.SALES_REP:
-        raise HTTPException(status_code=403, detail="Only sales reps can create visits")
-    
-    # Get clinic location
-    clinic = await db.clinics.find_one({"id": visit_data.clinic_id})
-    if not clinic:
-        raise HTTPException(status_code=404, detail="Clinic not found")
-    
-    # Check if user is within 20 meters of the clinic
-    distance = calculate_distance(
-        visit_data.latitude, visit_data.longitude,
-        clinic["latitude"], clinic["longitude"]
-    )
-    
-    if distance > 20:  # 20 meters limit
-        raise HTTPException(
-            status_code=400, 
-            detail=f"You must be within 20 meters of the clinic to register a visit. Current distance: {distance:.1f}m"
-        )
-    
-    # Check if doctor exists
-    doctor = await db.doctors.find_one({"id": visit_data.doctor_id})
-    if not doctor:
-        raise HTTPException(status_code=404, detail="Doctor not found")
-    
-    # Check if visit already exists today
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today_start + timedelta(days=1)
-    
-    existing_visit = await db.visits.find_one({
-        "sales_rep_id": current_user.id,
-        "doctor_id": visit_data.doctor_id,
-        "visit_date": {"$gte": today_start, "$lt": today_end}
-    })
-    
-    if existing_visit:
-        raise HTTPException(status_code=400, detail="Visit already registered for this doctor today")
-    
-    visit = Visit(
-        sales_rep_id=current_user.id,
-        doctor_id=visit_data.doctor_id,
-        clinic_id=visit_data.clinic_id,
-        latitude=visit_data.latitude,
-        longitude=visit_data.longitude,
-        notes=visit_data.notes
-    )
-    
-    await db.visits.insert_one(visit.dict())
-    return {"message": "Visit registered successfully", "visit_id": visit.id}
+async def create_visit(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Create a new visit record with voice notes and location tracking
+    إنشاء سجل زيارة جديد مع الملاحظات الصوتية وتتبع الموقع
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only sales reps can create visits
+        if user.get("role") not in ["medical_rep", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only sales representatives can create visits")
+        
+        # Get request data
+        request_data = await request.json()
+        
+        visit_data = {
+            "id": str(uuid.uuid4()),
+            "sales_rep_id": user["id"],
+            "sales_rep_name": user.get("full_name", user.get("username", "Unknown")),
+            "clinic_id": request_data.get("clinic_id"),
+            "doctor_name": request_data.get("doctor_name"),
+            "notes": request_data.get("notes", ""),
+            "voice_notes": request_data.get("voice_notes", []),
+            "with_manager": request_data.get("with_manager", "no"),
+            "managers": request_data.get("managers", []),
+            "location": request_data.get("location", {}),
+            "actual_location": request_data.get("actual_location", {}),
+            "clinic_location": request_data.get("clinic_location", {}),
+            "visit_date": datetime.utcnow(),
+            "status": "pending",  # pending, approved, rejected
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Save to database
+        await db.visits.insert_one(visit_data)
+        
+        # Get clinic info if available
+        clinic_name = "غير محدد"
+        if visit_data["clinic_id"]:
+            clinic = await db.clinics.find_one({"id": visit_data["clinic_id"]})
+            if clinic:
+                clinic_name = clinic.get("name", "غير محدد")
+        
+        return {
+            "message": "تم تسجيل الزيارة بنجاح",
+            "visit_id": visit_data["id"],
+            "clinic_name": clinic_name,
+            "doctor_name": visit_data["doctor_name"],
+            "status": visit_data["status"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating visit: {str(e)}")
 
 @api_router.get("/visits", response_model=List[Dict[str, Any]])
 async def get_visits(current_user: User = Depends(get_current_user)):
