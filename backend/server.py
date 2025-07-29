@@ -2214,6 +2214,42 @@ async def review_clinic_request(request_id: str, approved: bool, current_user: U
     return {"message": f"Request {status.lower()} successfully"}
 
 # Order Management Routes
+
+# فحص حالة العيادة قبل إنشاء الطلب
+@api_router.get("/orders/check-clinic-status/{clinic_id}")
+async def check_clinic_order_status(clinic_id: str, current_user: User = Depends(get_current_user)):
+    """فحص حالة العيادة قبل إنشاء الطلب"""
+    if current_user.role not in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT, UserRole.SALES_REP]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # التحقق من وجود العيادة
+    clinic = await db.clinics.find_one({"id": clinic_id})
+    if not clinic:
+        raise HTTPException(status_code=404, detail="Clinic not found")
+    
+    # فحص حالة المديونية
+    debt_info = await check_clinic_debt_status(clinic_id)
+    
+    # تحديد حالة العيادة ولونها
+    clinic_status = {
+        "clinic_id": clinic_id,
+        "clinic_name": clinic.get("name"),
+        "debt_info": debt_info,
+        "can_order": debt_info["outstanding_debt"] <= 5000,  # منع الطلب إذا كانت المديونية أكثر من 5000
+        "requires_warning": debt_info["outstanding_debt"] > 1000,
+        "color_classification": "red" if debt_info["outstanding_debt"] > 1000 else "green",
+        "recommendation": {
+            "ar": "يمكن إنشاء الطلب" if debt_info["outstanding_debt"] <= 1000 else 
+                  "تحذير: العيادة لديها مديونية" if debt_info["outstanding_debt"] <= 5000 else 
+                  "مرفوض: مديونية مرتفعة جداً",
+            "en": "Can create order" if debt_info["outstanding_debt"] <= 1000 else
+                  "Warning: Clinic has debt" if debt_info["outstanding_debt"] <= 5000 else
+                  "Blocked: Very high debt"
+        }
+    }
+    
+    return clinic_status
+
 @api_router.post("/orders")
 async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
     # تحديث: السماح للأدوار الجديدة بإنشاء الطلبات
