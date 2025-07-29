@@ -12213,41 +12213,6 @@ async def get_daily_login_records(credentials: HTTPAuthorizationCredentials = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching login records: {str(e)}")
 
-@api_router.get("/users/my-login-history")
-async def get_my_login_history(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """
-    Get user's own login history
-    جلب تاريخ تسجيل الدخول الخاص بالمستخدم
-    """
-    try:
-        user = await verify_token_and_get_user(credentials)
-        
-        # Get user's login records
-        records = await db.daily_login_records.find(
-            {"user_id": user["id"]},
-            {
-                "record_id": "$id",
-                "authentication_method": 1,
-                "timestamp": 1,
-                "location.latitude": 1,
-                "location.longitude": 1,
-                "created_at": 1,
-                "_id": 0
-            }
-        ).sort("created_at", -1).limit(50).to_list(50)
-        
-        return {
-            "user_id": user["id"],
-            "user_name": user.get("full_name", user.get("username", "Unknown")),
-            "total_records": len(records),
-            "recent_logins": records
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching login history: {str(e)}")
-
 @api_router.get("/sales-rep/warehouse-stock-status")
 async def get_sales_rep_warehouse_stock_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
