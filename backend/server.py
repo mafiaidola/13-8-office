@@ -876,6 +876,16 @@ class OrderEnhanced(BaseModel):
     discount_amount: float = 0
     total_amount: float
     
+    # Debt Warning System - عيادة مدينة
+    clinic_debt_status: str = "clear"  # clear, warning, blocked
+    clinic_debt_amount: float = 0.0
+    debt_warning_shown: bool = False
+    debt_override_reason: Optional[str] = None
+    debt_override_by: Optional[str] = None  # user_id who overrode the warning
+    
+    # Order Color Classification - تصنيف لون الطلب
+    order_color: str = "green"  # green (normal), red (debt clinic), yellow (warning)
+    
     # New hierarchical approval system
     approval_request_id: Optional[str] = None
     approval_status: str = "pending"  # pending, district_approved, area_approved, accounting_approved, final_approved, rejected
