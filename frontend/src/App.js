@@ -22345,7 +22345,7 @@ const WarehouseKeeperDashboard = () => {
                         }}
                         className="btn-primary text-xs px-3 py-1"
                       >
-                        تعديل
+                        {t('edit')}
                       </button>
                     </div>
 
