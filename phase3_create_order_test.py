@@ -73,7 +73,7 @@ class Phase3CreateOrderTester:
             
             if response.status_code == 200:
                 data = response.json()
-                self.test_rep_token = data.get("access_token")
+                self.test_rep_token = data.get("token")  # API returns "token" not "access_token"
                 self.log_test("Test Rep Authentication", True, "Successfully logged in as test_rep")
                 return True
             else:
