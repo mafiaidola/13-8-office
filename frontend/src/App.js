@@ -23821,7 +23821,7 @@ const EnhancedUserManagementV2 = () => {
             className="btn-primary flex items-center gap-2"
           >
             <SVGIcon name="add" size={20} />
-            <span>إضافة مستخدم جديد</span>
+            <span>{t('add')} {t('user')}</span>
           </button>
         </div>
 
