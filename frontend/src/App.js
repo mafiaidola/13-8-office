@@ -15919,26 +15919,80 @@ const OrderCreation = () => {
   );
 };
 
+// Enhanced Visit Registration Component with Voice Notes and Speech-to-Text
 const VisitRegistration = () => {
-  const [doctors, setDoctors] = useState([]);
+  const { t } = useLanguage();
   const [clinics, setClinics] = useState([]);
-  const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedClinic, setSelectedClinic] = useState('');
+  const [doctorName, setDoctorName] = useState('');
   const [notes, setNotes] = useState('');
+  const [voiceNotes, setVoiceNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Voice recording states
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [voiceNotes, setVoiceNotes] = useState([]);
-  const [currentVisitId, setCurrentVisitId] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+  
+  // Speech recognition states
+  const [recognition, setRecognition] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  
+  // Managers selection
+  const [withManager, setWithManager] = useState('no');
+  const [selectedManagers, setSelectedManagers] = useState([]);
+  const [availableManagers] = useState([
+    { id: 'manager_1', name: 'أحمد محمد - مدير المنطقة' },
+    { id: 'manager_2', name: 'فاطمة علي - مدير الخط' },
+    { id: 'manager_3', name: 'محمود حسن - مدير عام' }
+  ]);
 
   useEffect(() => {
-    fetchDoctors();
     fetchClinics();
     getCurrentLocation();
+    initializeSpeechRecognition();
   }, []);
+
+  // Initialize Speech Recognition
+  const initializeSpeechRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.lang = 'ar-SA'; // Arabic
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.maxAlternatives = 1;
+
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setNotes(prevNotes => prevNotes + (prevNotes ? ' ' : '') + transcript);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setError('خطأ في تحويل الصوت إلى نص: ' + event.error);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+      setSpeechSupported(true);
+    } else {
+      setSpeechSupported(false);
+    }
+  };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -15958,24 +16012,55 @@ const VisitRegistration = () => {
     }
   };
 
+  const fetchClinics = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/clinics/my-region`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.clinics) {
+        setClinics(response.data.clinics);
+      } else if (Array.isArray(response.data)) {
+        setClinics(response.data);
+      } else {
+        // Fallback to all clinics
+        const fallbackResponse = await axios.get(`${API}/clinics`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setClinics(fallbackResponse.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching clinics:', error);
+      setError('فشل في تحميل العيادات');
+    }
+  };
+
+  // Voice recording functions
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       const chunks = [];
 
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = async () => {
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/wav' });
         const reader = new FileReader();
-        reader.onloadend = async () => {
+        reader.onloadend = () => {
           const base64Audio = reader.result;
-          if (currentVisitId) {
-            await addVoiceNote(currentVisitId, base64Audio, blob.size / 1000); // duration in seconds estimate
-          } else {
-            // Store temporarily until visit is created
-            setVoiceNotes([...voiceNotes, { audio: base64Audio, duration: blob.size / 1000 }]);
-          }
+          const newVoiceNote = {
+            id: Date.now(),
+            audio: base64Audio,
+            duration: Math.round(blob.size / 1000), // rough estimate
+            timestamp: new Date().toLocaleString('ar-EG')
+          };
+          setVoiceNotes([...voiceNotes, newVoiceNote]);
         };
         reader.readAsDataURL(blob);
         
@@ -15986,9 +16071,10 @@ const VisitRegistration = () => {
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      setAudioChunks([]);
     } catch (error) {
       console.error('Error starting recording:', error);
-      setError('خطأ في بدء تسجيل الصوت');
+      setError('خطأ في بدء تسجيل الصوت. تأكد من السماح بالوصول للميكروفون');
     }
   };
 
@@ -16000,53 +16086,396 @@ const VisitRegistration = () => {
     }
   };
 
-  const addVoiceNote = async (visitId, audioData, duration) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/visits/${visitId}/voice-notes`, {
-        audio_data: audioData,
-        duration: Math.round(duration)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setSuccess('تم إضافة الملاحظة الصوتية بنجاح');
-    } catch (error) {
-      console.error('Error adding voice note:', error);
-      setError('خطأ في إضافة الملاحظة الصوتية');
+  // Speech to text function
+  const startSpeechToText = () => {
+    if (recognition && speechSupported) {
+      recognition.start();
+    } else {
+      setError('ميزة تحويل الصوت إلى نص غير مدعومة في هذا المتصفح');
     }
   };
 
-  const fetchDoctors = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/doctors`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDoctors(response.data);
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
+  const stopSpeechToText = () => {
+    if (recognition && isListening) {
+      recognition.stop();
     }
   };
 
-  const fetchClinics = async () => {
+  // Convert voice note to text (mock implementation)
+  const convertVoiceToText = async (voiceNoteId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/clinics`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setClinics(response.data);
+      setIsLoading(true);
+      // This would typically use an external service like Google Speech API
+      // For now, we'll simulate with speech recognition
+      if (speechSupported && recognition) {
+        // In a real implementation, you'd send the audio to a speech-to-text service
+        alert('ميزة تحويل التسجيلات الصوتية إلى نص تتطلب خدمة خارجية. حالياً يمكنك استخدام زر "تحويل الصوت إلى نص المباشر"');
+      } else {
+        setError('ميزة تحويل الصوت إلى نص غير متاحة');
+      }
     } catch (error) {
-      console.error('Error fetching clinics:', error);
+      setError('فشل في تحويل الصوت إلى نص');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const deleteVoiceNote = (noteId) => {
+    setVoiceNotes(voiceNotes.filter(note => note.id !== noteId));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!selectedClinic) {
+      setError('يجب اختيار العيادة');
+      return;
+    }
+
+    if (!doctorName.trim()) {
+      setError('يجب كتابة اسم الدكتور');
+      return;
+    }
+
     if (!location) {
       setError('لا يمكن تسجيل الزيارة بدون تحديد الموقع');
       return;
     }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const selectedClinicData = clinics.find(c => c.id === selectedClinic);
+      
+      const visitData = {
+        clinic_id: selectedClinic,
+        doctor_name: doctorName,
+        notes: notes,
+        voice_notes: voiceNotes,
+        with_manager: withManager,
+        managers: withManager === 'yes' ? selectedManagers : [],
+        location: location,
+        // Secret location tracking for admin
+        actual_location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          timestamp: new Date().toISOString()
+        },
+        clinic_location: {
+          latitude: selectedClinicData?.latitude || null,
+          longitude: selectedClinicData?.longitude || null
+        }
+      };
+
+      await axios.post(`${API}/visits`, visitData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('تم تسجيل الزيارة بنجاح');
+      
+      // Reset form
+      setSelectedClinic('');
+      setDoctorName('');
+      setNotes('');
+      setVoiceNotes([]);
+      setWithManager('no');
+      setSelectedManagers([]);
+      
+      setTimeout(() => setSuccess(''), 5000);
+      
+    } catch (error) {
+      setError(error.response?.data?.detail || 'حدث خطأ في تسجيل الزيارة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <span className="text-3xl">🏥</span>
+              تسجيل زيارة العيادة
+            </h2>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              تسجيل زيارة جديدة مع الملاحظات الصوتية والمكتوبة
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="bg-red-100 bg-opacity-30 border border-red-300 text-red-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">❌</span>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-100 bg-opacity-30 border border-green-300 text-green-600 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">✅</span>
+            <span>{success}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Visit Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* Clinic Selection */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">🏥</span>
+            اختر العيادة
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {clinics.map((clinic) => (
+              <div
+                key={clinic.id}
+                onClick={() => setSelectedClinic(clinic.id)}
+                className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                  selectedClinic === clinic.id 
+                    ? 'border-blue-500 bg-blue-100 bg-opacity-30' 
+                    : 'border-gray-300 border-opacity-30 hover:bg-gray-100 hover:bg-opacity-20'
+                }`}
+              >
+                <div className="font-bold">{clinic.name}</div>
+                <div className="text-sm text-gray-600">{clinic.doctor_name}</div>
+                <div className="text-sm text-gray-600">{clinic.address}</div>
+                <div className="text-sm text-gray-600">{clinic.phone}</div>
+              </div>
+            ))}
+          </div>
+
+          {clinics.length === 0 && (
+            <div className="text-center py-4 text-gray-500">
+              لا توجد عيادات متاحة في منطقتك
+            </div>
+          )}
+        </div>
+
+        {/* Doctor Name */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">👨‍⚕️</span>
+            اسم الدكتور
+          </h3>
+          
+          <input
+            type="text"
+            value={doctorName}
+            onChange={(e) => setDoctorName(e.target.value)}
+            placeholder="اكتب اسم الدكتور..."
+            className="w-full p-4 rounded-lg border border-gray-300 border-opacity-30"
+            required
+          />
+        </div>
+
+        {/* Manager Visit */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">👔</span>
+            هل تمت الزيارة مع المدير؟
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <button
+              type="button"
+              onClick={() => setWithManager('no')}
+              className={`p-3 rounded-lg border transition-all ${
+                withManager === 'no' 
+                  ? 'border-green-500 bg-green-100 bg-opacity-30 text-green-800' 
+                  : 'border-gray-300 border-opacity-30'
+              }`}
+            >
+              <div className="text-2xl mb-1">❌</div>
+              <div className="font-bold">لا</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWithManager('yes')}
+              className={`p-3 rounded-lg border transition-all ${
+                withManager === 'yes' 
+                  ? 'border-blue-500 bg-blue-100 bg-opacity-30 text-blue-800' 
+                  : 'border-gray-300 border-opacity-30'
+              }`}
+            >
+              <div className="text-2xl mb-1">✅</div>
+              <div className="font-bold">نعم</div>
+            </button>
+          </div>
+
+          {withManager === 'yes' && (
+            <div>
+              <h4 className="font-bold mb-2">اختر المديرين:</h4>
+              <div className="space-y-2">
+                {availableManagers.map((manager) => (
+                  <label key={manager.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedManagers.includes(manager.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedManagers([...selectedManagers, manager.id]);
+                        } else {
+                          setSelectedManagers(selectedManagers.filter(id => id !== manager.id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm">{manager.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Notes Section */}
+        <div className="glass-effect p-6 rounded-lg">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span className="text-xl">📝</span>
+            ملاحظات الزيارة
+          </h3>
+          
+          {/* Text Notes */}
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2">ملاحظات كتابية</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              className="w-full p-3 rounded-lg border border-gray-300 border-opacity-30"
+              placeholder="اكتب ملاحظاتك هنا..."
+            />
+          </div>
+
+          {/* Voice to Text */}
+          {speechSupported && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-sm font-bold">تحويل الصوت إلى نص مباشر</label>
+                {isListening && (
+                  <span className="text-red-500 text-sm animate-pulse">● جاري الاستماع...</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={startSpeechToText}
+                  disabled={isListening}
+                  className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
+                >
+                  <span className="text-lg mr-2">🎤</span>
+                  تحويل الصوت لنص
+                </button>
+                <button
+                  type="button"
+                  onClick={stopSpeechToText}
+                  disabled={!isListening}
+                  className="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
+                >
+                  <span className="text-lg mr-2">⏹️</span>
+                  إيقاف
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Voice Notes */}
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2">ملاحظات صوتية</label>
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`px-4 py-2 rounded-lg text-sm font-bold ${
+                  isRecording 
+                    ? 'bg-red-500 text-white animate-pulse' 
+                    : 'btn-primary'
+                }`}
+              >
+                <span className="text-lg mr-2">{isRecording ? '⏹️' : '🎤'}</span>
+                {isRecording ? 'إيقاف التسجيل' : 'بدء تسجيل صوتي'}
+              </button>
+            </div>
+
+            {/* Voice Notes List */}
+            {voiceNotes.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-bold text-sm">التسجيلات الصوتية:</h4>
+                {voiceNotes.map((note, index) => (
+                  <div key={note.id} className="flex items-center justify-between p-3 bg-gray-100 bg-opacity-20 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🎵</span>
+                      <div>
+                        <div className="text-sm font-bold">تسجيل {index + 1}</div>
+                        <div className="text-xs text-gray-600">{note.timestamp}</div>
+                      </div>
+                      <audio controls src={note.audio} className="h-8" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => convertVoiceToText(note.id)}
+                        className="btn-secondary text-xs px-3 py-1"
+                        disabled={isLoading}
+                      >
+                        📝 تحويل لنص
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteVoiceNote(note.id)}
+                        className="text-red-500 hover:text-red-700 px-2"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="glass-effect p-6 rounded-lg">
+          <button
+            type="submit"
+            disabled={isLoading || !selectedClinic || !doctorName.trim()}
+            className="w-full btn-primary py-4 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>جاري تسجيل الزيارة...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-xl">✅</span>
+                <span>تسجيل الزيارة</span>
+              </div>
+            )}
+          </button>
+          
+          <div className="mt-3 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+            ستتم مراجعة الزيارة من قِبل الإدارة
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
 
     setIsLoading(true);
     setError('');
