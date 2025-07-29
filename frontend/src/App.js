@@ -4254,7 +4254,9 @@ const MedicalRepDashboard = ({ stats, user }) => {
         <div className="glass-effect p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl font-bold">{stockData.length || 0}</div>
+              <div className="text-xl font-bold">
+                {stockData?.warehouses?.reduce((total, warehouse) => total + warehouse.total_products, 0) || 0}
+              </div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>المنتجات المتاحة</div>
             </div>
             <div className="text-2xl">📊</div>
