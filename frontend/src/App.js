@@ -6985,6 +6985,366 @@ const AdminActionButton = ({ icon, text, onClick }) => {
   );
 };
 
+// Admin Daily Login Records Management Component
+const AdminDailyLoginRecords = () => {
+  const { t } = useLanguage();
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [filter, setFilter] = useState({
+    method: 'all',
+    role: 'all',
+    region: 'all',
+    date: ''
+  });
+
+  useEffect(() => {
+    fetchLoginRecords();
+  }, []);
+
+  const fetchLoginRecords = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/daily-login-records`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRecords(response.data.records || []);
+    } catch (error) {
+      console.error('Error fetching login records:', error);
+      setError('فشل في تحميل سجلات تسجيل الدخول');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getAuthMethodIcon = (method) => {
+    switch (method) {
+      case 'fingerprint': return '👆';
+      case 'selfie': return '📷';
+      default: return '❓';
+    }
+  };
+
+  const getAuthMethodText = (method) => {
+    switch (method) {
+      case 'fingerprint': return 'بصمة الإصبع';
+      case 'selfie': return 'سيلفي';
+      default: return 'غير محدد';
+    }
+  };
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ar-EG', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const getLocationText = (location) => {
+    if (location && location.latitude && location.longitude) {
+      return `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+    }
+    return 'غير متوفر';
+  };
+
+  const filteredRecords = records.filter(record => {
+    const matchesMethod = filter.method === 'all' || record.authentication_method === filter.method;
+    const matchesRole = filter.role === 'all' || record.user_role === filter.role;
+    const matchesRegion = filter.region === 'all' || record.user_region === filter.region;
+    const matchesDate = !filter.date || record.timestamp.startsWith(filter.date);
+    
+    return matchesMethod && matchesRole && matchesRegion && matchesDate;
+  });
+
+  const showRecordDetails = (record) => {
+    setSelectedRecord(record);
+    setShowDetails(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="mr-3">جاري تحميل سجلات تسجيل الدخول...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-effect p-6 rounded-lg">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <span className="text-3xl">🗂️</span>
+              سجل تسجيل الدخول اليومي
+            </h2>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              مراقبة تسجيل دخول المناديب مع المواقع والطرق المستخدمة
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">{records.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              إجمالي السجلات
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-bold mb-2">طريقة المصادقة</label>
+            <select
+              value={filter.method}
+              onChange={(e) => setFilter({...filter, method: e.target.value})}
+              className="w-full p-2 rounded border"
+            >
+              <option value="all">جميع الطرق</option>
+              <option value="fingerprint">بصمة الإصبع</option>
+              <option value="selfie">سيلفي</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">الدور</label>
+            <select
+              value={filter.role}
+              onChange={(e) => setFilter({...filter, role: e.target.value})}
+              className="w-full p-2 rounded border"
+            >
+              <option value="all">جميع الأدوار</option>
+              <option value="medical_rep">مندوب</option>
+              <option value="manager">مدير</option>
+              <option value="warehouse_manager">مدير مخزن</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">المنطقة</label>
+            <select
+              value={filter.region}
+              onChange={(e) => setFilter({...filter, region: e.target.value})}
+              className="w-full p-2 rounded border"
+            >
+              <option value="all">جميع المناطق</option>
+              <option value="القاهرة">القاهرة</option>
+              <option value="الجيزة">الجيزة</option>
+              <option value="الإسكندرية">الإسكندرية</option>
+              <option value="الغربية">الغربية</option>
+              <option value="الدقهلية">الدقهلية</option>
+              <option value="سوهاج">سوهاج</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">التاريخ</label>
+            <input
+              type="date"
+              value={filter.date}
+              onChange={(e) => setFilter({...filter, date: e.target.value})}
+              className="w-full p-2 rounded border"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            عرض {filteredRecords.length} من {records.length} سجل
+          </div>
+          <button
+            onClick={fetchLoginRecords}
+            className="btn-secondary text-sm px-4 py-2"
+          >
+            🔄 تحديث
+          </button>
+        </div>
+      </div>
+
+      {/* Records Table */}
+      <div className="glass-effect rounded-lg p-6">
+        {error ? (
+          <div className="text-center py-8 text-red-500">
+            <p>{error}</p>
+            <button onClick={fetchLoginRecords} className="btn-primary mt-4">إعادة المحاولة</button>
+          </div>
+        ) : filteredRecords.length === 0 ? (
+          <div className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>
+            <p>لا توجد سجلات تطابق المرشحات المحددة</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-300 border-opacity-30">
+                  <th className="py-3 px-4 text-right">المستخدم</th>
+                  <th className="py-3 px-4 text-right">الطريقة</th>
+                  <th className="py-3 px-4 text-right">التاريخ والوقت</th>
+                  <th className="py-3 px-4 text-right">الموقع</th>
+                  <th className="py-3 px-4 text-right">المنطقة</th>
+                  <th className="py-3 px-4 text-right">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRecords.map((record, index) => (
+                  <tr 
+                    key={record.record_id} 
+                    className="border-b border-gray-300 border-opacity-20 hover:bg-gray-100 hover:bg-opacity-10"
+                  >
+                    <td className="py-3 px-4">
+                      <div>
+                        <div className="font-bold">{record.user_name}</div>
+                        <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {record.user_role}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{getAuthMethodIcon(record.authentication_method)}</span>
+                        <span className="text-sm">{getAuthMethodText(record.authentication_method)}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm">
+                        {formatDateTime(record.timestamp)}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        {getLocationText(record.location)}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-2 py-1 bg-blue-100 bg-opacity-30 text-blue-600 rounded text-xs">
+                        {record.user_region || 'غير محدد'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => showRecordDetails(record)}
+                        className="btn-primary text-xs px-3 py-1"
+                      >
+                        عرض التفاصيل
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Record Details Modal */}
+      {showDetails && selectedRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="modal-modern p-6 w-full max-w-lg max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">تفاصيل سجل تسجيل الدخول</h3>
+              <button
+                onClick={() => setShowDetails(false)}
+                className="text-2xl hover:text-red-500"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* User Info */}
+              <div>
+                <h4 className="font-bold mb-2">معلومات المستخدم</h4>
+                <div className="bg-gray-100 bg-opacity-20 p-3 rounded">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div><strong>الاسم:</strong> {selectedRecord.user_name}</div>
+                    <div><strong>الدور:</strong> {selectedRecord.user_role}</div>
+                    <div><strong>المنطقة:</strong> {selectedRecord.user_region || 'غير محدد'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Authentication Info */}
+              <div>
+                <h4 className="font-bold mb-2">معلومات المصادقة</h4>
+                <div className="bg-gray-100 bg-opacity-20 p-3 rounded">
+                  <div className="text-sm space-y-2">
+                    <div className="flex items-center gap-2">
+                      <strong>الطريقة:</strong>
+                      <span className="text-xl">{getAuthMethodIcon(selectedRecord.authentication_method)}</span>
+                      <span>{getAuthMethodText(selectedRecord.authentication_method)}</span>
+                    </div>
+                    <div><strong>التوقيت:</strong> {formatDateTime(selectedRecord.timestamp)}</div>
+                    <div><strong>يحتوي على سيلفي:</strong> {selectedRecord.has_selfie ? 'نعم ✅' : 'لا ❌'}</div>
+                    <div><strong>يحتوي على بصمة:</strong> {selectedRecord.has_fingerprint ? 'نعم ✅' : 'لا ❌'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Info */}
+              <div>
+                <h4 className="font-bold mb-2">معلومات الموقع</h4>
+                <div className="bg-gray-100 bg-opacity-20 p-3 rounded">
+                  <div className="text-sm space-y-2">
+                    {selectedRecord.location && selectedRecord.location.latitude ? (
+                      <>
+                        <div><strong>خط العرض:</strong> {selectedRecord.location.latitude}</div>
+                        <div><strong>خط الطول:</strong> {selectedRecord.location.longitude}</div>
+                        <div className="mt-2">
+                          <a
+                            href={`https://www.google.com/maps?q=${selectedRecord.location.latitude},${selectedRecord.location.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-primary text-xs px-3 py-1"
+                          >
+                            🗺️ عرض على الخريطة
+                          </a>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-gray-500">لا توجد معلومات موقع متوفرة</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Device Info */}
+              {selectedRecord.device_info && (
+                <div>
+                  <h4 className="font-bold mb-2">معلومات الجهاز</h4>
+                  <div className="bg-gray-100 bg-opacity-20 p-3 rounded">
+                    <div className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                      <div><strong>المتصفح:</strong> {selectedRecord.device_info.user_agent || 'غير محدد'}</div>
+                      <div><strong>IP:</strong> {selectedRecord.device_info.ip_address || 'غير محدد'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowDetails(false)}
+                className="btn-secondary px-4 py-2"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Enhanced Authentication Component with Fingerprint and Selfie Options
 const EnhancedAuthentication = ({ onAuthenticate, onSkip, user }) => {
   const { t } = useLanguage();
