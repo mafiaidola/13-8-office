@@ -28461,8 +28461,8 @@ const CreateAreaModal = ({ lines, users, onCreate }) => {
   );
 };
 
-// Enhanced User Management Component
-const EnhancedUserManagement = () => {
+// Enhanced User Management Component with Performance Cards
+const AdvancedUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserCard, setShowUserCard] = useState(false);
@@ -28530,7 +28530,7 @@ const EnhancedUserManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">👥 إدارة المستخدمين المحسنة</h1>
+        <h1 className="text-3xl font-bold mb-2">👥 إدارة المستخدمين المتقدمة</h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           إدارة شاملة للمستخدمين مع إحصائيات الأداء والبطاقات التفصيلية
         </p>
@@ -28561,7 +28561,7 @@ const EnhancedUserManagement = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUsers.map((user) => (
-            <UserCard
+            <UserPerformanceCard
               key={user.id}
               user={user}
               onViewPerformance={() => viewUserPerformance(user)}
@@ -28573,7 +28573,7 @@ const EnhancedUserManagement = () => {
 
       {/* User Performance Modal */}
       {showUserCard && selectedUser && (
-        <UserPerformanceCard
+        <UserDetailedProfile
           user={selectedUser}
           onClose={() => setShowUserCard(false)}
           getRoleLabel={getRoleLabel}
@@ -28583,8 +28583,8 @@ const EnhancedUserManagement = () => {
   );
 };
 
-// User Card Component
-const UserCard = ({ user, onViewPerformance, getRoleLabel }) => {
+// User Performance Card Component
+const UserPerformanceCard = ({ user, onViewPerformance, getRoleLabel }) => {
   const stats = user.stats_last_30_days || {};
   
   return (
@@ -28648,8 +28648,8 @@ const UserCard = ({ user, onViewPerformance, getRoleLabel }) => {
   );
 };
 
-// User Performance Card Modal
-const UserPerformanceCard = ({ user, onClose, getRoleLabel }) => {
+// User Detailed Profile Modal
+const UserDetailedProfile = ({ user, onClose, getRoleLabel }) => {
   const performanceData = user.performanceData || {};
   const visitStats = performanceData.visit_stats || {};
   const orderStats = performanceData.order_stats || {};
@@ -28816,7 +28816,7 @@ const UserPerformanceCard = ({ user, onClose, getRoleLabel }) => {
 };
 
 // Enhanced Clinics Management Component
-const EnhancedClinicsManagement = () => {
+const ProfessionalClinicsManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [showClinicProfile, setShowClinicProfile] = useState(false);
@@ -28906,9 +28906,9 @@ const EnhancedClinicsManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">🏥 إدارة العيادات المحسنة</h1>
+        <h1 className="text-3xl font-bold mb-2">🏥 إدارة العيادات الاحترافية</h1>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          إدارة شاملة للعيادات مع تصنيف بالألوان وإحصائيات تفصيلية
+          إدارة شاملة للعيادات مع تصنيف بالألوان وإحصائيات تفصيلية ومديونية
         </p>
       </div>
 
@@ -28939,6 +28939,25 @@ const EnhancedClinicsManagement = () => {
         </select>
       </div>
 
+      {/* Classification Legend */}
+      <div className="mb-6 bg-white bg-opacity-10 backdrop-blur-md rounded-lg p-4">
+        <h3 className="font-bold mb-3">🎨 دليل الألوان:</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+            <span className="text-sm">🆕 عيادات جديدة - حديثة التسجيل</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+            <span className="text-sm">⭐ عيادات مميزة - عالية الإيرادات</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+            <span className="text-sm">⚠️ مديونية مستحقة - تحتاج متابعة</span>
+          </div>
+        </div>
+      </div>
+
       {/* Clinics Grid */}
       {loading ? (
         <div className="text-center py-8">
@@ -28948,7 +28967,7 @@ const EnhancedClinicsManagement = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClinics.map((clinic) => (
-            <ClinicCard
+            <ProfessionalClinicCard
               key={clinic.id}
               clinic={clinic}
               onViewProfile={() => viewClinicProfile(clinic)}
@@ -28973,8 +28992,8 @@ const EnhancedClinicsManagement = () => {
   );
 };
 
-// Clinic Card Component
-const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
+// Professional Clinic Card Component
+const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
   const [showClassificationModal, setShowClassificationModal] = useState(false);
   
   const classificationColor = getClassificationColor(clinic.classification);
@@ -28989,7 +29008,12 @@ const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassifi
       classificationColor === 'green' ? 'rgba(16, 185, 129, 0.05)' :
       classificationColor === 'gold' ? 'rgba(245, 158, 11, 0.05)' :
       classificationColor === 'red' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(107, 114, 128, 0.05)'
-    }, transparent)`
+    }, transparent)`,
+    boxShadow: `0 4px 6px ${
+      classificationColor === 'green' ? 'rgba(16, 185, 129, 0.1)' :
+      classificationColor === 'gold' ? 'rgba(245, 158, 11, 0.1)' :
+      classificationColor === 'red' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+    }`
   };
 
   return (
@@ -29003,7 +29027,7 @@ const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassifi
             <p className="text-sm text-blue-600">د. {clinic.doctor_name}</p>
           )}
         </div>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
           classificationColor === 'green' ? 'bg-green-100 text-green-800' :
           classificationColor === 'gold' ? 'bg-yellow-100 text-yellow-800' :
           classificationColor === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
@@ -29026,9 +29050,19 @@ const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassifi
           <div className="text-lg font-bold text-purple-600">{clinic.total_revenue?.toFixed(0) || 0}</div>
           <div className="text-xs text-purple-800">إجمالي الإيرادات</div>
         </div>
-        <div className="bg-orange-50 rounded p-2 text-center">
-          <div className="text-lg font-bold text-orange-600">{clinic.outstanding_debt?.toFixed(0) || 0}</div>
-          <div className="text-xs text-orange-800">المديونية</div>
+        <div className={`rounded p-2 text-center ${
+          clinic.outstanding_debt > 0 ? 'bg-red-50' : 'bg-gray-50'
+        }`}>
+          <div className={`text-lg font-bold ${
+            clinic.outstanding_debt > 0 ? 'text-red-600' : 'text-gray-600'
+          }`}>
+            {clinic.outstanding_debt?.toFixed(0) || 0}
+          </div>
+          <div className={`text-xs ${
+            clinic.outstanding_debt > 0 ? 'text-red-800' : 'text-gray-800'
+          }`}>
+            المديونية
+          </div>
         </div>
       </div>
 
@@ -29065,298 +29099,6 @@ const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassifi
           onUpdate={onUpdateClassification}
         />
       )}
-    </div>
-  );
-};
-
-// Classification Modal Component
-const ClassificationModal = ({ clinic, onClose, onUpdate }) => {
-  const [selectedClassification, setSelectedClassification] = useState(clinic.classification);
-  const [notes, setNotes] = useState('');
-
-  const handleSubmit = () => {
-    onUpdate(clinic.id, selectedClassification, notes);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold">🏷️ تصنيف العيادة</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">اختار التصنيف:</label>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    value="new"
-                    checked={selectedClassification === 'new'}
-                    onChange={(e) => setSelectedClassification(e.target.value)}
-                    className="form-radio text-green-600"
-                  />
-                  <span className="text-green-600 font-medium">🆕 عيادة جديدة</span>
-                </label>
-                
-                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    value="premium"
-                    checked={selectedClassification === 'premium'}
-                    onChange={(e) => setSelectedClassification(e.target.value)}
-                    className="form-radio text-yellow-600"
-                  />
-                  <span className="text-yellow-600 font-medium">⭐ عيادة مميزة</span>
-                </label>
-                
-                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    value="debt"
-                    checked={selectedClassification === 'debt'}
-                    onChange={(e) => setSelectedClassification(e.target.value)}
-                    className="form-radio text-red-600"
-                  />
-                  <span className="text-red-600 font-medium">⚠️ مديونية مستحقة</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">ملاحظات:</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="input-glass w-full h-20"
-                placeholder="أضف ملاحظات حول التصنيف..."
-              />
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={handleSubmit}
-                className="btn-primary flex-1"
-              >
-                حفظ التصنيف
-              </button>
-              <button
-                onClick={onClose}
-                className="btn-secondary flex-1"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Clinic Mini Profile Component
-const ClinicMiniProfile = ({ clinicData, onClose, getClassificationColor, getClassificationLabel }) => {
-  const clinic = clinicData.clinic || {};
-  const visitStats = clinicData.visit_stats || {};
-  const orderStats = clinicData.order_stats || {};
-  const debtStats = clinicData.debt_stats || {};
-  const assignedRep = clinicData.assigned_rep || {};
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                getClassificationColor(clinicData.classification) === 'green' ? 'bg-green-500' :
-                getClassificationColor(clinicData.classification) === 'gold' ? 'bg-yellow-500' :
-                getClassificationColor(clinicData.classification) === 'red' ? 'bg-red-500' : 'bg-gray-500'
-              }`}>
-                🏥
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">{clinic.name}</h2>
-                <p className="text-gray-600">{clinic.address}</p>
-                {clinic.doctor_name && (
-                  <p className="text-blue-600">د. {clinic.doctor_name} - {clinic.doctor_specialty}</p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* Classification Badge */}
-          <div className="mb-6">
-            <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-              getClassificationColor(clinicData.classification) === 'green' ? 'bg-green-100 text-green-800' :
-              getClassificationColor(clinicData.classification) === 'gold' ? 'bg-yellow-100 text-yellow-800' :
-              getClassificationColor(clinicData.classification) === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-            }`}>
-              {getClassificationLabel(clinicData.classification)}
-            </span>
-          </div>
-
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* Visit Statistics */}
-            <div className="glass-effect p-6 rounded-xl">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                🚗 إحصائيات الزيارات
-              </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>إجمالي الزيارات:</span>
-                  <span className="font-bold">{visitStats.total_visits || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>زيارات ناجحة:</span>
-                  <span className="font-bold text-green-600">{visitStats.successful_visits || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>معدل النجاح:</span>
-                  <span className="font-bold">{visitStats.success_rate?.toFixed(1) || 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>آخر زيارة:</span>
-                  <span className="text-sm">{visitStats.last_visit_date ? new Date(visitStats.last_visit_date).toLocaleDateString('ar-EG') : 'لا توجد'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Order Statistics */}
-            <div className="glass-effect p-6 rounded-xl">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                📋 إحصائيات الطلبات
-              </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>إجمالي الطلبات:</span>
-                  <span className="font-bold">{orderStats.total_orders || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>إجمالي الإيرادات:</span>
-                  <span className="font-bold text-green-600">{orderStats.total_revenue?.toFixed(0) || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>متوسط قيمة الطلب:</span>
-                  <span className="font-bold">{orderStats.average_order_value?.toFixed(0) || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>آخر طلب:</span>
-                  <span className="text-sm">{orderStats.last_order_date ? new Date(orderStats.last_order_date).toLocaleDateString('ar-EG') : 'لا يوجد'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Debt Statistics */}
-            <div className="glass-effect p-6 rounded-xl">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                💰 إحصائيات المديونية
-              </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>إجمالي الفواتير:</span>
-                  <span className="font-bold">{debtStats.total_invoices || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>فواتير معلقة:</span>
-                  <span className="font-bold text-orange-600">{debtStats.pending_invoices || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>المديونية المستحقة:</span>
-                  <span className="font-bold text-red-600">{debtStats.outstanding_debt?.toFixed(0) || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>فواتير متأخرة:</span>
-                  <span className="font-bold text-red-800">{debtStats.overdue_invoices || 0}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Assigned Representative */}
-          {assignedRep && assignedRep.full_name && (
-            <div className="glass-effect p-6 rounded-xl">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                👤 المسؤول عن العيادة
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h5 className="font-medium text-blue-600">{assignedRep.full_name}</h5>
-                  <p className="text-sm text-gray-600">{assignedRep.role}</p>
-                </div>
-                <div className="space-y-1 text-sm">
-                  <div>📱 الهاتف: {assignedRep.phone || 'غير محدد'}</div>
-                  <div>📧 البريد: {assignedRep.email || 'غير محدد'}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Recent Activity */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Recent Visits */}
-            {visitStats.recent_visits && visitStats.recent_visits.length > 0 && (
-              <div className="glass-effect p-4 rounded-lg">
-                <h5 className="font-bold mb-3">🚗 آخر الزيارات</h5>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {visitStats.recent_visits.slice(0, 5).map((visit, index) => (
-                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                      <div className="flex justify-between">
-                        <span>{new Date(visit.visit_date).toLocaleDateString('ar-EG')}</span>
-                        <span className={visit.is_successful ? 'text-green-600' : 'text-red-600'}>
-                          {visit.is_successful ? '✅ ناجحة' : '❌ فاشلة'}
-                        </span>
-                      </div>
-                      {visit.notes && (
-                        <div className="text-xs text-gray-600 mt-1">{visit.notes}</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Recent Orders */}
-            {orderStats.recent_orders && orderStats.recent_orders.length > 0 && (
-              <div className="glass-effect p-4 rounded-lg">
-                <h5 className="font-bold mb-3">📋 آخر الطلبات</h5>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {orderStats.recent_orders.slice(0, 5).map((order, index) => (
-                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                      <div className="flex justify-between">
-                        <span>{new Date(order.created_at).toLocaleDateString('ar-EG')}</span>
-                        <span className="font-bold text-green-600">
-                          {order.total_amount?.toFixed(0) || 0}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {order.order_type} - {order.status}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
