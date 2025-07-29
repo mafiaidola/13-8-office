@@ -19738,6 +19738,8 @@ const App = () => {
   );
 };
 
+export default App;
+
 // Order Details Modal Component
 const OrderDetailsModal = ({ order, onClose, language }) => {
   const t = language === 'ar' ? {
