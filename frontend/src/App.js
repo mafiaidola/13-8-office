@@ -18071,6 +18071,14 @@ const Dashboard = () => {
           <RepClinicRegistration />
         )}
 
+        {activeTab === 'users' && canAccessTab('users') && (
+          <EnhancedUserManagement />
+        )}
+        
+        {activeTab === 'clinics' && canAccessTab('clinics') && (
+          <EnhancedClinicsManagement />
+        )}
+
         {activeTab === 'lines-management' && (['admin', 'gm', 'line_manager'].includes(user.role)) && (
           <LinesManagement />
         )}
