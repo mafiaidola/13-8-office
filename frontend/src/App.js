@@ -17557,6 +17557,12 @@ const Dashboard = () => {
     return t(role) || role;
   };
 
+  // Function to normalize roles (convert sales_rep to medical_rep)
+  const normalizeRole = (role) => {
+    if (role === 'sales_rep') return 'medical_rep';
+    return role;
+  };
+
   const canAccessTab = (tabName) => {
     const permissions = {
       users: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager'],
