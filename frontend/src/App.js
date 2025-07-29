@@ -17761,7 +17761,7 @@ const Dashboard = () => {
         )}
 
         {activeTab === 'clinics-management' && canAccessTab('clinics-management') && (
-          <AdminClinicsManagement />
+          <AdminClinicsWithTracking />
         )}
 
         {activeTab === 'location-tracking' && canAccessTab('location-tracking') && (
