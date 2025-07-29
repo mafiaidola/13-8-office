@@ -17567,19 +17567,21 @@ const Dashboard = () => {
     const permissions = {
       users: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager'],
       warehouse: ['admin', 'gm', 'warehouse_manager'],
-      visit: ['sales_rep', 'medical_rep'],
+      visit: ['medical_rep', 'key_account'], // Unified role
       reports: ['admin', 'gm', 'warehouse_manager', 'manager', 'line_manager', 'area_manager', 'accounting'],
       accounting: ['admin', 'gm', 'accounting', 'manager', 'line_manager'],
       regions: ['admin', 'gm', 'line_manager', 'area_manager'],
       comprehensive: ['admin', 'gm'],
-      clinic: ['admin'], // تسجيل العيادة متاح للأدمن فقط
+      clinic: ['admin', 'key_account', 'medical_rep'], // Executives can now create clinics
       'clinics-management': ['admin'], // إدارة العيادات متاحة للأدمن فقط
-      'my-plan': ['sales_rep', 'medical_rep'], // إدارة الخطة للمندوبين
+      'my-plan': ['medical_rep', 'key_account'], // Unified roles
       'location-tracking': ['admin'], // تتبع المواقع السري للأدمن فقط
       'daily-login-records': ['admin'] // سجل تسجيل الدخول للأدمن فقط
     };
     
-    return permissions[tabName]?.includes(user.role) || false;
+    // Normalize user role before checking permissions
+    const normalizedRole = normalizeRole(user?.role);
+    return permissions[tabName]?.includes(normalizedRole) || false;
   };
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
