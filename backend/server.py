@@ -13372,6 +13372,297 @@ async def get_orders_with_locations(current_user: User = Depends(get_current_use
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching order locations: {str(e)}")
 
+# Lines Management APIs
+@api_router.get("/lines")
+async def get_lines(current_user: User = Depends(get_current_user)):
+    """Get all lines with their details"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.LINE_MANAGER]:
+            raise HTTPException(status_code=403, detail="No permission to view lines")
+        
+        # Get lines
+        lines = await db.lines.find({"is_active": True}, {"_id": 0}).to_list(1000)
+        
+        # Enrich with manager details and coverage info
+        for line in lines:
+            # Get line manager info
+            if line.get("line_manager_id"):
+                manager = await db.users.find_one(
+                    {"id": line["line_manager_id"]}, 
+                    {"_id": 0, "password_hash": 0}
+                )
+                line["manager_info"] = manager
+            
+            # Get coverage areas details
+            if line.get("coverage_areas"):
+                areas_details = []
+                for area_id in line["coverage_areas"]:
+                    area = await db.areas.find_one({"id": area_id}, {"_id": 0})
+                    if area:
+                        # Get area manager info
+                        if area.get("area_manager_id"):
+                            area_manager = await db.users.find_one(
+                                {"id": area["area_manager_id"]}, 
+                                {"_id": 0, "password_hash": 0}
+                            )
+                            area["manager_info"] = area_manager
+                        areas_details.append(area)
+                line["areas_details"] = areas_details
+            
+            # Get products details
+            if line.get("products"):
+                products_details = []
+                for product_id in line["products"]:
+                    product = await db.products.find_one(
+                        {"id": product_id}, 
+                        {"_id": 0}
+                    )
+                    if product:
+                        products_details.append(product)
+                line["products_details"] = products_details
+        
+        return lines
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching lines: {str(e)}")
+
+@api_router.post("/lines")
+async def create_line(line_data: dict, current_user: User = Depends(get_current_user)):
+    """Create a new line"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="No permission to create lines")
+        
+        # Validate line manager exists and has correct role
+        manager = await db.users.find_one({"id": line_data["line_manager_id"]})
+        if not manager:
+            raise HTTPException(status_code=400, detail="Line manager not found")
+        
+        if manager["role"] != UserRole.LINE_MANAGER:
+            raise HTTPException(status_code=400, detail="User must have line_manager role")
+        
+        # Create line
+        line = Line(
+            name=line_data["name"],
+            description=line_data.get("description", ""),
+            line_manager_id=line_data["line_manager_id"],
+            coverage_areas=line_data.get("coverage_areas", []),
+            products=line_data.get("products", [])
+        )
+        
+        await db.lines.insert_one(line.dict())
+        
+        return {"message": "Line created successfully", "line_id": line.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating line: {str(e)}")
+
+@api_router.put("/lines/{line_id}")
+async def update_line(line_id: str, line_data: dict, current_user: User = Depends(get_current_user)):
+    """Update a line"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.LINE_MANAGER]:
+            raise HTTPException(status_code=403, detail="No permission to update lines")
+        
+        # Find line
+        existing_line = await db.lines.find_one({"id": line_id})
+        if not existing_line:
+            raise HTTPException(status_code=404, detail="Line not found")
+        
+        # If user is line manager, they can only update their own line
+        if current_user.role == UserRole.LINE_MANAGER:
+            if existing_line["line_manager_id"] != current_user.id:
+                raise HTTPException(status_code=403, detail="Can only update your own line")
+        
+        # Prepare update data
+        update_data = {
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Update allowed fields
+        allowed_fields = ["name", "description", "coverage_areas", "products", "line_manager_id"]
+        for field in allowed_fields:
+            if field in line_data:
+                if field == "line_manager_id":
+                    # Validate new manager
+                    manager = await db.users.find_one({"id": line_data[field]})
+                    if not manager or manager["role"] != UserRole.LINE_MANAGER:
+                        raise HTTPException(status_code=400, detail="Invalid line manager")
+                update_data[field] = line_data[field]
+        
+        await db.lines.update_one({"id": line_id}, {"$set": update_data})
+        
+        return {"message": "Line updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating line: {str(e)}")
+
+@api_router.delete("/lines/{line_id}")
+async def delete_line(line_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a line (soft delete)"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="No permission to delete lines")
+        
+        # Find line
+        existing_line = await db.lines.find_one({"id": line_id})
+        if not existing_line:
+            raise HTTPException(status_code=404, detail="Line not found")
+        
+        # Soft delete
+        await db.lines.update_one(
+            {"id": line_id}, 
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {"message": "Line deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting line: {str(e)}")
+
+# Areas Management APIs
+@api_router.get("/areas")
+async def get_areas(current_user: User = Depends(get_current_user)):
+    """Get all areas with their details"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            raise HTTPException(status_code=403, detail="No permission to view areas")
+        
+        # Build query based on role
+        query = {"is_active": True}
+        if current_user.role == UserRole.LINE_MANAGER:
+            # Line managers can only see areas in their line
+            line = await db.lines.find_one({"line_manager_id": current_user.id})
+            if line:
+                query["line_id"] = line["id"]
+        elif current_user.role == UserRole.AREA_MANAGER:
+            # Area managers can only see their own area
+            query["area_manager_id"] = current_user.id
+        
+        areas = await db.areas.find(query, {"_id": 0}).to_list(1000)
+        
+        # Enrich with manager details
+        for area in areas:
+            # Get area manager info
+            if area.get("area_manager_id"):
+                manager = await db.users.find_one(
+                    {"id": area["area_manager_id"]}, 
+                    {"_id": 0, "password_hash": 0}
+                )
+                area["manager_info"] = manager
+            
+            # Get line info
+            if area.get("line_id"):
+                line = await db.lines.find_one({"id": area["line_id"]}, {"_id": 0})
+                area["line_info"] = line
+        
+        return areas
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching areas: {str(e)}")
+
+@api_router.post("/areas")
+async def create_area(area_data: dict, current_user: User = Depends(get_current_user)):
+    """Create a new area - requires manager assignment"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.LINE_MANAGER]:
+            raise HTTPException(status_code=403, detail="No permission to create areas")
+        
+        # Validate area manager exists and has correct role
+        if not area_data.get("area_manager_id"):
+            raise HTTPException(status_code=400, detail="Area manager is required")
+        
+        manager = await db.users.find_one({"id": area_data["area_manager_id"]})
+        if not manager:
+            raise HTTPException(status_code=400, detail="Area manager not found")
+        
+        if manager["role"] != UserRole.AREA_MANAGER:
+            raise HTTPException(status_code=400, detail="User must have area_manager role")
+        
+        # Validate line exists
+        if not area_data.get("line_id"):
+            raise HTTPException(status_code=400, detail="Line ID is required")
+        
+        line = await db.lines.find_one({"id": area_data["line_id"]})
+        if not line:
+            raise HTTPException(status_code=400, detail="Line not found")
+        
+        # Create area
+        area = Area(
+            name=area_data["name"],
+            description=area_data.get("description", ""),
+            area_manager_id=area_data["area_manager_id"],
+            line_id=area_data["line_id"],
+            districts=area_data.get("districts", [])
+        )
+        
+        await db.areas.insert_one(area.dict())
+        
+        # Update line to include this area
+        await db.lines.update_one(
+            {"id": area_data["line_id"]},
+            {"$addToSet": {"coverage_areas": area.id}}
+        )
+        
+        return {"message": "Area created successfully", "area_id": area.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating area: {str(e)}")
+
+# Enhanced clinic creation with executive permissions
+@api_router.post("/clinics/create-by-executive")
+async def create_clinic_by_executive(clinic_data: dict, current_user: User = Depends(get_current_user)):
+    """Create clinic by executive users (key_account, medical_rep)"""
+    try:
+        # Check permissions - executives can create clinics
+        if current_user.role not in [UserRole.KEY_ACCOUNT, UserRole.MEDICAL_REP, "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only executives can create clinics")
+        
+        # Normalize role
+        normalized_role = UserRole.normalize_role(current_user.role)
+        
+        # Create clinic with executive approval
+        clinic_id = str(uuid.uuid4())
+        clinic = {
+            "id": clinic_id,
+            "name": clinic_data["name"],
+            "address": clinic_data["address"],
+            "phone": clinic_data.get("phone", ""),
+            "latitude": clinic_data.get("latitude"),
+            "longitude": clinic_data.get("longitude"),
+            "doctor_name": clinic_data.get("doctor_name", ""),
+            "doctor_specialty": clinic_data.get("doctor_specialty", ""),
+            "status": "approved",  # Auto-approved for executives
+            "created_by": current_user.id,
+            "created_by_role": normalized_role,
+            "approval_level": "executive_created",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.clinics.insert_one(clinic)
+        
+        return {"message": "Clinic created successfully", "clinic_id": clinic_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating clinic: {str(e)}")
+
 app.include_router(api_router)
 
 app.add_middleware(
