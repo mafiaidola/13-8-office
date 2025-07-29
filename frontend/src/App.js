@@ -26647,7 +26647,7 @@ const RepClinicRegistration = ({ user }) => {
         ...clinicData,
         // معلومات العيادة العادية
         status: 'approved', // تلقائياً معتمدة بدون موافقة المدير
-        added_by: user.id,
+        added_by: currentUser?.id,
         approved_by: null, // لا تحتاج موافقة
         
         // معلومات التتبع المخفية (للأدمن فقط)
@@ -26658,8 +26658,8 @@ const RepClinicRegistration = ({ user }) => {
           timestamp: currentLocation.timestamp
         },
         registration_metadata: {
-          registered_by: user.id,
-          registered_by_name: user.full_name || user.username,
+          registered_by: currentUser?.id,
+          registered_by_name: currentUser?.full_name || currentUser?.username,
           registration_time: new Date().toISOString(),
           clinic_chosen_location: {
             latitude: clinicData.latitude,
