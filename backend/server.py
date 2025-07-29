@@ -83,6 +83,47 @@ class UserRole:
     LINE_1 = "line_1"
     LINE_2 = "line_2"
     
+    @staticmethod
+    def normalize_role(role):
+        """Normalize legacy roles to new unified system"""
+        if role == "sales_rep":
+            return "medical_rep"
+        return role
+
+# Line Management Models
+class Line(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    line_manager_id: str
+    coverage_areas: List[str] = []  # List of area IDs
+    products: List[str] = []  # List of product IDs
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Area(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    area_manager_id: str  # Required - each area must have a manager
+    line_id: str  # Which line this area belongs to
+    districts: List[str] = []  # List of district IDs
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class District(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    district_manager_id: str
+    area_id: str  # Which area this district belongs to
+    key_accounts: List[str] = []  # List of key account user IDs
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
     # Areas Definition
     CAIRO_GIZA = "cairo_giza"
     DELTA_1 = "delta_1"
