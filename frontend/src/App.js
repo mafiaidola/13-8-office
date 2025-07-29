@@ -4175,6 +4175,7 @@ const NotificationsCenter = () => {
 
 // Medical Rep Dashboard with Stock Display
 const MedicalRepDashboard = ({ stats, user }) => {
+  const { t } = useLanguage();
   const [stockData, setStockData] = useState([]);
   const [loadingStock, setLoadingStock] = useState(true);
   const [stockError, setStockError] = useState('');
@@ -4186,10 +4187,10 @@ const MedicalRepDashboard = ({ stats, user }) => {
   const fetchStockData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/stock/dashboard`, {
+      const response = await axios.get(`${API}/sales-rep/warehouse-stock-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStockData(response.data.stock_items || []);
+      setStockData(response.data);
     } catch (error) {
       console.error('Error fetching stock data:', error);
       setStockError('فشل في تحميل بيانات المخزون');
@@ -4200,7 +4201,7 @@ const MedicalRepDashboard = ({ stats, user }) => {
 
   const getStockStatusColor = (status) => {
     switch (status) {
-      case 'in_stock': return 'text-green-600';
+      case 'available': return 'text-green-600';
       case 'low_stock': return 'text-yellow-600';
       case 'out_of_stock': return 'text-red-600';
       default: return 'text-gray-600';
@@ -4209,7 +4210,7 @@ const MedicalRepDashboard = ({ stats, user }) => {
 
   const getStockStatusIcon = (status) => {
     switch (status) {
-      case 'in_stock': return '✅';
+      case 'available': return '✅';
       case 'low_stock': return '⚠️';
       case 'out_of_stock': return '❌';
       default: return '📦';
