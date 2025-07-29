@@ -14548,6 +14548,205 @@ async def update_clinic_debt_status(clinic_id: str):
     except Exception as e:
         print(f"Error updating clinic debt status: {e}")
 
+# Movement Log System APIs
+@api_router.get("/movement-logs/warehouses")
+async def get_warehouses_for_movement(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المخازن للمستخدمين المصرح لهم"""
+    # فقط الأدمن وGM والحسابات يمكنهم الوصول
+    if current_user.role not in [UserRole.ADMIN, "gm", UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Access denied. Only admin, GM, and accounting can access movement logs")
+    
+    warehouses = await db.warehouses.find({}).to_list(1000)
+    return {"warehouses": warehouses}
+
+@api_router.post("/movement-logs")
+async def create_movement_log(movement_data: MovementLogCreate, current_user: User = Depends(get_current_user)):
+    """إنشاء سجل حركة جديد"""
+    # فقط الأدمن وGM والحسابات يمكنهم إنشاء سجلات الحركة
+    if current_user.role not in [UserRole.ADMIN, "gm", UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # التحقق من وجود المخزن
+    warehouse = await db.warehouses.find_one({"id": movement_data.warehouse_id})
+    if not warehouse:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    
+    # إنشاء سجل الحركة
+    movement = MovementLog(
+        movement_type=movement_data.movement_type,
+        warehouse_id=movement_data.warehouse_id,
+        line=movement_data.line,
+        product_id=movement_data.product_id,
+        quantity_change=movement_data.quantity_change,
+        movement_reason=movement_data.movement_reason,
+        affected_products=movement_data.affected_products,
+        line_operation=movement_data.line_operation,
+        customer_id=movement_data.customer_id,
+        customer_operation=movement_data.customer_operation,
+        order_id=movement_data.order_id,
+        visit_id=movement_data.visit_id,
+        description=movement_data.description,
+        reference_number=movement_data.reference_number,
+        created_by=current_user.id,
+        created_by_name=current_user.full_name,
+        created_by_role=current_user.role,
+        metadata=movement_data.metadata
+    )
+    
+    # إضافة معلومات إضافية حسب نوع الحركة
+    movement_dict = movement.dict()
+    
+    # إذا كانت حركة منتج، احصل على اسم المنتج
+    if movement_data.product_id:
+        product = await db.products.find_one({"id": movement_data.product_id})
+        if product:
+            movement_dict["product_name"] = product.get("name")
+    
+    # إذا كانت حركة عميل، احصل على اسم العميل
+    if movement_data.customer_id:
+        clinic = await db.clinics.find_one({"id": movement_data.customer_id})
+        if clinic:
+            movement_dict["customer_name"] = clinic.get("name")
+    
+    # حفظ السجل
+    await db.movement_logs.insert_one(movement_dict)
+    
+    return {"message": "Movement log created successfully", "movement_id": movement.id}
+
+@api_router.get("/movement-logs")
+async def get_movement_logs(
+    warehouse_id: Optional[str] = None,
+    line: Optional[str] = None,
+    movement_type: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    page: int = 1,
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """الحصول على سجلات الحركة مع الفلترة"""
+    # فقط الأدمن وGM والحسابات يمكنهم الوصول
+    if current_user.role not in [UserRole.ADMIN, "gm", UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Access denied. Only admin, GM, and accounting can access movement logs")
+    
+    # بناء فلتر البحث
+    filter_dict = {}
+    
+    if warehouse_id:
+        filter_dict["warehouse_id"] = warehouse_id
+    
+    if line and line != "all":
+        filter_dict["line"] = line
+    
+    if movement_type:
+        filter_dict["movement_type"] = movement_type
+    
+    if date_from or date_to:
+        date_filter = {}
+        if date_from:
+            try:
+                date_filter["$gte"] = datetime.strptime(date_from, "%Y-%m-%d")
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD")
+        if date_to:
+            try:
+                date_filter["$lte"] = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD")
+        filter_dict["movement_date"] = date_filter
+    
+    # حساب العدد الكلي
+    total_count = await db.movement_logs.count_documents(filter_dict)
+    total_pages = (total_count + limit - 1) // limit
+    
+    # البحث مع الترقيم
+    skip = (page - 1) * limit
+    movements = await db.movement_logs.find(filter_dict).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # تحسين البيانات المرجعة
+    for movement in movements:
+        # تحويل ObjectId إلى string إذا لزم الأمر
+        if "_id" in movement:
+            del movement["_id"]
+        
+        # تحويل التواريخ إلى string
+        if "movement_date" in movement and isinstance(movement["movement_date"], datetime):
+            movement["movement_date"] = movement["movement_date"].isoformat()
+        if "created_at" in movement and isinstance(movement["created_at"], datetime):
+            movement["created_at"] = movement["created_at"].isoformat()
+    
+    return {
+        "movements": movements,
+        "pagination": {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_count": total_count,
+            "limit": limit
+        },
+        "filter_applied": filter_dict
+    }
+
+@api_router.get("/movement-logs/summary")
+async def get_movement_logs_summary(
+    warehouse_id: Optional[str] = None,
+    line: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """الحصول على ملخص سجلات الحركة"""
+    if current_user.role not in [UserRole.ADMIN, "gm", UserRole.ACCOUNTING]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # بناء فلتر البحث
+    filter_dict = {}
+    if warehouse_id:
+        filter_dict["warehouse_id"] = warehouse_id
+    if line and line != "all":
+        filter_dict["line"] = line
+    
+    if date_from or date_to:
+        date_filter = {}
+        if date_from:
+            date_filter["$gte"] = datetime.strptime(date_from, "%Y-%m-%d")
+        if date_to:
+            date_filter["$lte"] = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+        filter_dict["movement_date"] = date_filter
+    
+    # إحصائيات الحركة
+    pipeline = [
+        {"$match": filter_dict},
+        {"$group": {
+            "_id": "$movement_type",
+            "count": {"$sum": 1},
+            "total_quantity": {"$sum": "$quantity_change"}
+        }}
+    ]
+    
+    summary_data = await db.movement_logs.aggregate(pipeline).to_list(100)
+    
+    # تنظيم البيانات
+    summary = {
+        "total_movements": await db.movement_logs.count_documents(filter_dict),
+        "by_type": {
+            "product_movement": 0,
+            "line_movement": 0,
+            "customer_movement": 0
+        },
+        "total_quantity_changes": 0
+    }
+    
+    for item in summary_data:
+        movement_type = item.get("_id")
+        count = item.get("count", 0)
+        quantity = item.get("total_quantity", 0) or 0
+        
+        if movement_type in summary["by_type"]:
+            summary["by_type"][movement_type] = count
+        summary["total_quantity_changes"] += quantity
+    
+    return summary
+
 app.include_router(api_router)
 
 app.add_middleware(
