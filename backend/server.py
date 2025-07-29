@@ -407,7 +407,7 @@ class StockMovement(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: str
 
-class ClinicClassification(BaseModel):
+class ClinicClassification:
     """تصنيف العيادات"""
     NEW = "new"          # جيدة - أخضر
     PREMIUM = "premium"  # مميزة - ذهبي  
