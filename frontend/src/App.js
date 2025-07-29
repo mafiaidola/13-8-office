@@ -26407,6 +26407,335 @@ const MonthlyPlanningSystem = () => {
   );
 };
 
+// Rep Clinic Registration Component with Hidden Location Tracking
+const RepClinicRegistration = ({ user }) => {
+  const { t } = useLanguage();
+  const [clinicData, setClinicData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    doctor_name: '',
+    latitude: null,
+    longitude: null,
+    classification: 'class_c'
+  });
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [locationError, setLocationError] = useState('');
+
+  useEffect(() => {
+    // الحصول على الموقع الحالي للمندوب بشكل مخفي
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: new Date().toISOString()
+          });
+          console.log('تم الحصول على موقع المندوب بنجاح (مخفي للأدمن)');
+        },
+        (error) => {
+          console.error('خطأ في الحصول على الموقع:', error);
+          setLocationError('لا يمكن الحصول على الموقع الحالي');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      );
+    } else {
+      setLocationError('المتصفح لا يدعم تحديد الموقع');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setClinicData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleMapClick = (latitude, longitude) => {
+    setClinicData(prev => ({
+      ...prev,
+      latitude,
+      longitude
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!clinicData.latitude || !clinicData.longitude) {
+      setError('يرجى اختيار موقع العيادة على الخريطة');
+      return;
+    }
+
+    if (!currentLocation) {
+      setError('لا يمكن تحديد موقعك الحالي. يرجى السماح بالوصول للموقع');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const clinicPayload = {
+        ...clinicData,
+        // معلومات العيادة العادية
+        status: 'approved', // تلقائياً معتمدة بدون موافقة المدير
+        added_by: user.id,
+        approved_by: null, // لا تحتاج موافقة
+        
+        // معلومات التتبع المخفية (للأدمن فقط)
+        rep_location_at_registration: {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          accuracy: currentLocation.accuracy,
+          timestamp: currentLocation.timestamp
+        },
+        registration_metadata: {
+          registered_by: user.id,
+          registered_by_name: user.full_name || user.username,
+          registration_time: new Date().toISOString(),
+          clinic_chosen_location: {
+            latitude: clinicData.latitude,
+            longitude: clinicData.longitude
+          },
+          rep_actual_location: currentLocation
+        }
+      };
+
+      await axios.post(`${API}/clinics/register-by-rep`, clinicPayload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess('تم تسجيل العيادة بنجاح! العيادة معتمدة تلقائياً');
+      
+      // إعادة تعيين النموذج
+      setClinicData({
+        name: '',
+        address: '',
+        phone: '',
+        doctor_name: '',
+        latitude: null,
+        longitude: null,
+        classification: 'class_c'
+      });
+
+    } catch (error) {
+      console.error('خطأ في تسجيل العيادة:', error);
+      setError(error.response?.data?.detail || 'فشل في تسجيل العيادة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">🏥➕ تسجيل عيادة جديدة</h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            سجل عيادة جديدة بسهولة - العيادة ستكون معتمدة تلقائياً
+          </p>
+        </div>
+
+        {/* تحذير الموقع */}
+        {locationError && (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+            <div className="flex items-center">
+              <span className="text-xl mr-2">⚠️</span>
+              <div>
+                <strong>تحذير:</strong> {locationError}
+                <button 
+                  onClick={getCurrentLocation}
+                  className="btn-secondary text-sm px-3 py-1 mr-3"
+                >
+                  إعادة المحاولة
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* معلومات العيادة */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">معلومات العيادة</h3>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم العيادة *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={clinicData.name}
+                  onChange={handleInputChange}
+                  className="input-glass w-full"
+                  placeholder="مثال: عيادة الدكتور أحمد"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم الطبيب *</label>
+                <input
+                  type="text"
+                  name="doctor_name"
+                  value={clinicData.doctor_name}
+                  onChange={handleInputChange}
+                  className="input-glass w-full"
+                  placeholder="مثال: د. أحمد محمد"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">العنوان *</label>
+                <textarea
+                  name="address"
+                  value={clinicData.address}
+                  onChange={handleInputChange}
+                  className="input-glass w-full h-24"
+                  placeholder="العنوان التفصيلي للعيادة"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">رقم الهاتف *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={clinicData.phone}
+                  onChange={handleInputChange}
+                  className="input-glass w-full"
+                  placeholder="مثال: +966501234567"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">تصنيف العيادة</label>
+                <select
+                  name="classification"
+                  value={clinicData.classification}
+                  onChange={handleInputChange}
+                  className="input-glass w-full"
+                >
+                  <option value="class_a">فئة A - عيادة كبيرة</option>
+                  <option value="class_b">فئة B - عيادة متوسطة</option>
+                  <option value="class_c">فئة C - عيادة صغيرة</option>
+                </select>
+              </div>
+            </div>
+
+            {/* خريطة اختيار الموقع */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">موقع العيادة على الخريطة</h3>
+              
+              <div className="bg-gray-100 rounded-lg p-4 h-96">
+                <SimpleGoogleMap
+                  latitude={clinicData.latitude || 30.0444}
+                  longitude={clinicData.longitude || 31.2357}
+                  onLocationSelect={handleMapClick}
+                  showCurrentLocation={false}
+                />
+              </div>
+
+              {clinicData.latitude && clinicData.longitude && (
+                <div className="bg-green-50 border border-green-200 rounded p-3">
+                  <p className="text-sm text-green-700">
+                    ✅ تم اختيار الموقع: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
+                  </p>
+                </div>
+              )}
+
+              {!clinicData.latitude && (
+                <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                  <p className="text-sm text-blue-700">
+                    📍 اضغط على الخريطة لاختيار موقع العيادة
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* معلومات للأدمن فقط */}
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-gray-600 mb-2">معلومات التسجيل (مخفية عن المندوب)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500">
+              <div>
+                <strong>المسجل:</strong> {user.full_name || user.username}
+              </div>
+              <div>
+                <strong>موقع المندوب:</strong> {currentLocation ? 'تم الحصول عليه ✅' : 'جاري التحديد...'}
+              </div>
+              <div>
+                <strong>وقت التسجيل:</strong> {new Date().toLocaleString('ar-EG')}
+              </div>
+            </div>
+          </div>
+
+          {/* أزرار التحكم */}
+          <div className="flex justify-end gap-4">
+            <button
+              type="submit"
+              disabled={isLoading || !clinicData.latitude || !currentLocation}
+              className="btn-primary px-8 py-3"
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading-shimmer w-4 h-4 rounded-full mr-2"></span>
+                  جاري التسجيل...
+                </>
+              ) : (
+                '🏥➕ تسجيل العيادة'
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* ملاحظات مهمة */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-semibold text-blue-800 mb-2">📋 ملاحظات مهمة:</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• العيادة ستكون معتمدة تلقائياً بدون انتظار موافقة المدير</li>
+            <li>• لا يمكن حذف العيادة بعد التسجيل</li>
+            <li>• موقعك الحالي يُحفظ للأدمن كمرجع (مخفي عنك)</li>
+            <li>• تأكد من دقة المعلومات قبل التسجيل</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Create Plan Modal Component
 const CreatePlanModal = ({ salesReps, clinics, selectedMonth, onClose, onSave }) => {
   const [formData, setFormData] = useState({
