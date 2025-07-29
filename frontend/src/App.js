@@ -26808,12 +26808,12 @@ const RepClinicRegistration = ({ user }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">موقع العيادة على الخريطة</h3>
               
-              <div className="bg-gray-100 rounded-lg p-4 h-96">
+              <div className="bg-gray-100 rounded-lg p-4 h-[450px]">
                 <SimpleGoogleMap
-                  latitude={clinicData.latitude || 30.0444}
-                  longitude={clinicData.longitude || 31.2357}
+                  latitude={clinicData.latitude}
+                  longitude={clinicData.longitude}
                   onLocationSelect={handleMapClick}
-                  showCurrentLocation={false}
+                  showCurrentLocation={true}
                 />
               </div>
 
