@@ -1124,6 +1124,23 @@ class Visit(BaseModel):
     sales_rep_id: str
     doctor_id: str
     clinic_id: str
+    # Visit Type Enhancement - نوع الزيارة المحسن
+    visit_type: str = "SOLO"  # SOLO, DUO_WITH_MANAGER, THREE_WITH_MANAGER_AND_OTHER
+    
+    # Manager Participation - مشاركة المدير
+    accompanying_manager_id: Optional[str] = None  # ID للمدير المرافق
+    accompanying_manager_name: Optional[str] = None  # اسم المدير المرافق
+    accompanying_manager_role: Optional[str] = None  # دور المدير (line_manager, area_manager, etc.)
+    
+    # Other Participant - مشارك آخر (في حالة THREE)
+    other_participant_id: Optional[str] = None
+    other_participant_name: Optional[str] = None
+    other_participant_role: Optional[str] = None
+    
+    # Visit participation details
+    participants_count: int = 1  # عدد المشاركين الكلي
+    participants_details: List[Dict[str, str]] = []  # تفاصيل جميع المشاركين
+    
     visit_date: datetime = Field(default_factory=datetime.utcnow)
     latitude: float
     longitude: float
