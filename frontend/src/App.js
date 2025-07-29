@@ -26370,8 +26370,8 @@ const MonthlyPlanningSystem = () => {
         </div>
       )}
     </div>
-
-  return (
+  );
+};
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
