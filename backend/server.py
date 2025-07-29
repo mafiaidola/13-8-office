@@ -4088,6 +4088,25 @@ async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizati
         if user.get("role") not in ["medical_rep", "sales_rep"]:
             raise HTTPException(status_code=403, detail="Only sales representatives can register clinics")
         
+        # Check if rep clinic registration is enabled (optional - for future admin control)
+        settings = await db.system_settings.find_one({"setting_type": "rep_clinic_registration"})
+        registration_enabled = True  # Default to enabled for 3 months as requested
+        
+        if settings:
+            # Check if feature is still enabled and not expired
+            if settings.get("enabled") and settings.get("expires_at"):
+                expiry_date = datetime.fromisoformat(settings["expires_at"])
+                if datetime.utcnow() > expiry_date:
+                    registration_enabled = False
+            elif not settings.get("enabled"):
+                registration_enabled = False
+        
+        if not registration_enabled:
+            raise HTTPException(
+                status_code=403, 
+                detail="Clinic registration by sales reps is currently disabled. Please contact admin."
+            )
+        
         # Generate clinic ID
         clinic_id = str(uuid.uuid4())
         
