@@ -60,6 +60,7 @@ class UserRole:
     # Legacy role for backward compatibility
     MANAGER = "manager"  # Legacy manager role
     WAREHOUSE_MANAGER = "warehouse_manager"  # Legacy warehouse manager role
+    SALES_REP = "sales_rep"  # Legacy sales rep role - maps to medical_rep
     # sales_rep is now merged with medical_rep
     
     # Role hierarchy for permissions (approval levels)
