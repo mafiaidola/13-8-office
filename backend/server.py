@@ -926,6 +926,9 @@ class OrderCreate(BaseModel):
     # معلومات إضافية للتتبع
     order_source: Optional[str] = "field_order"
     device_info: Optional[str] = ""
+    # نظام تحذير المديونية
+    debt_warning_acknowledged: bool = False
+    debt_override_reason: Optional[str] = None
 
 # Enhanced User Model with Line and Area Assignment
 class UserEnhanced(BaseModel):
