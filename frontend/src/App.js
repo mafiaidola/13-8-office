@@ -11261,7 +11261,7 @@ const EnhancedUserManagement = () => {
                           user.role === 'key_account' ? 'badge-info' :
                           user.role === 'medical_rep' ? 'badge-success' :
                           user.role === 'manager' ? 'badge-warning' :
-                          user.role === 'sales_rep' ? 'badge-info' :
+                          user.role === 'medical_rep' ? 'badge-info' :
                           user.role === 'warehouse_manager' ? 'badge-success' : 'badge-secondary'
                         }`}>
                           {getRoleText(user.role)}
