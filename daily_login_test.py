@@ -43,16 +43,25 @@ class DailyLoginTester:
     def login_admin(self):
         """Login as admin to get JWT token"""
         try:
+            print(f"Attempting login to: {API_BASE}/auth/login")
             response = requests.post(f"{API_BASE}/auth/login", json={
                 "username": "admin",
                 "password": "admin123"
             })
             
+            print(f"Login response status: {response.status_code}")
+            print(f"Login response text: {response.text}")
+            
             if response.status_code == 200:
                 data = response.json()
+                print(f"Login response data: {data}")
                 self.admin_token = data.get("access_token")
-                self.log_test("Admin Login", True, f"Token: {self.admin_token[:20]}...")
-                return True
+                if self.admin_token:
+                    self.log_test("Admin Login", True, f"Token: {self.admin_token[:20]}...")
+                    return True
+                else:
+                    self.log_test("Admin Login", False, "No access_token in response")
+                    return False
             else:
                 self.log_test("Admin Login", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
