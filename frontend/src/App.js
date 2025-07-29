@@ -27709,4 +27709,736 @@ const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
   );
 };
 
+// Lines Management Component
+const LinesManagement = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [lines, setLines] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedLine, setSelectedLine] = useState(null);
+  const { language, t, isRTL } = useLanguage();
+
+  const tabs = [
+    { id: 'overview', label: 'نظرة عامة', icon: '📊' },
+    { id: 'lines', label: 'إدارة الخطوط', icon: '🗺️' },
+    { id: 'areas', label: 'إدارة المناطق', icon: '🏘️' },
+    { id: 'districts', label: 'إدارة المقاطعات', icon: '🏢' }
+  ];
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [linesRes, areasRes, usersRes, productsRes] = await Promise.all([
+        axios.get(`${API}/lines`, { headers }),
+        axios.get(`${API}/areas`, { headers }),
+        axios.get(`${API}/users`, { headers }),
+        axios.get(`${API}/products`, { headers })
+      ]);
+
+      setLines(linesRes.data || []);
+      setAreas(areasRes.data || []);
+      setUsers(usersRes.data?.users || []);
+      setProducts(productsRes.data || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError('فشل في تحميل البيانات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createLine = async (lineData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/lines`, lineData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم إنشاء الخط بنجاح');
+      loadData();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Error creating line:', error);
+      setError('فشل في إنشاء الخط');
+    }
+  };
+
+  const updateLine = async (lineId, lineData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/lines/${lineId}`, lineData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم تحديث الخط بنجاح');
+      loadData();
+    } catch (error) {
+      console.error('Error updating line:', error);
+      setError('فشل في تحديث الخط');
+    }
+  };
+
+  const deleteLine = async (lineId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الخط؟')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/lines/${lineId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم حذف الخط بنجاح');
+      loadData();
+    } catch (error) {
+      console.error('Error deleting line:', error);
+      setError('فشل في حذف الخط');
+    }
+  };
+
+  const createArea = async (areaData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/areas`, areaData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم إنشاء المنطقة بنجاح');
+      loadData();
+    } catch (error) {
+      console.error('Error creating area:', error);
+      setError('فشل في إنشاء المنطقة');
+    }
+  };
+
+  // Get filtered users by role
+  const getLineManagers = () => users.filter(u => u.role === 'line_manager');
+  const getAreaManagers = () => users.filter(u => u.role === 'area_manager');
+  const getDistrictManagers = () => users.filter(u => u.role === 'district_manager');
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">🗺️ إدارة الخطوط والمناطق</h1>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          إدارة شاملة للخطوط والمناطق والمقاطعات مع ربط المديرين والمنتجات
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+          {success}
+        </div>
+      )}
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-8 overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'glass-effect hover:bg-white hover:bg-opacity-10'
+            }`}
+          >
+            <span className="mr-2">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="glass-effect p-6 rounded-xl text-center">
+              <div className="text-3xl font-bold text-blue-500">{lines.length}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>خطوط إجمالية</div>
+            </div>
+            <div className="glass-effect p-6 rounded-xl text-center">
+              <div className="text-3xl font-bold text-green-500">{areas.length}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مناطق إجمالية</div>
+            </div>
+            <div className="glass-effect p-6 rounded-xl text-center">
+              <div className="text-3xl font-bold text-purple-500">{getLineManagers().length}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مديرو خطوط</div>
+            </div>
+            <div className="glass-effect p-6 rounded-xl text-center">
+              <div className="text-3xl font-bold text-orange-500">{getAreaManagers().length}</div>
+              <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>مديرو مناطق</div>
+            </div>
+          </div>
+
+          {/* Lines Overview */}
+          <div className="glass-effect p-6 rounded-xl">
+            <h3 className="text-xl font-bold mb-4">📊 نظرة عامة على الخطوط</h3>
+            <div className="space-y-4">
+              {lines.map((line) => (
+                <div key={line.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-lg">{line.name}</h4>
+                      <p className="text-sm text-gray-600">{line.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500">
+                        المدير: {line.manager_info?.full_name || 'غير محدد'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded p-3">
+                      <div className="text-sm font-medium text-blue-800">المناطق المغطاة</div>
+                      <div className="text-xl font-bold text-blue-600">
+                        {line.areas_details?.length || 0}
+                      </div>
+                      <div className="text-xs text-blue-600">
+                        {line.areas_details?.map(a => a.name).join(', ') || 'لا توجد مناطق'}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-green-50 rounded p-3">
+                      <div className="text-sm font-medium text-green-800">المنتجات</div>
+                      <div className="text-xl font-bold text-green-600">
+                        {line.products_details?.length || 0}
+                      </div>
+                      <div className="text-xs text-green-600">
+                        {line.products_details?.slice(0, 2).map(p => p.name).join(', ') || 'لا توجد منتجات'}
+                        {(line.products_details?.length || 0) > 2 && '...'}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-purple-50 rounded p-3">
+                      <div className="text-sm font-medium text-purple-800">الحالة</div>
+                      <div className="text-sm font-bold text-purple-600">
+                        {line.is_active ? '✅ نشط' : '❌ غير نشط'}
+                      </div>
+                      <div className="text-xs text-purple-600">
+                        تم الإنشاء: {new Date(line.created_at).toLocaleDateString('ar-EG')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lines Management Tab */}
+      {activeTab === 'lines' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">🗺️ إدارة الخطوط</h3>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary px-6 py-2"
+            >
+              ➕ إضافة خط جديد
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {lines.map((line) => (
+              <LineCard
+                key={line.id}
+                line={line}
+                users={users}
+                products={products}
+                onUpdate={updateLine}
+                onDelete={deleteLine}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Areas Management Tab */}
+      {activeTab === 'areas' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">🏘️ إدارة المناطق</h3>
+            <CreateAreaModal
+              lines={lines}
+              users={getAreaManagers()}
+              onCreate={createArea}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {areas.map((area) => (
+              <AreaCard key={area.id} area={area} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Create Line Modal */}
+      {showCreateModal && (
+        <CreateLineModal
+          users={getLineManagers()}
+          products={products}
+          areas={areas}
+          onClose={() => setShowCreateModal(false)}
+          onCreate={createLine}
+        />
+      )}
+    </div>
+  );
+};
+
+// Line Card Component
+const LineCard = ({ line, users, products, onUpdate, onDelete }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: line.name,
+    description: line.description,
+    line_manager_id: line.line_manager_id,
+    products: line.products || []
+  });
+
+  const handleSave = () => {
+    onUpdate(line.id, editData);
+    setIsEditing(false);
+  };
+
+  const lineManagers = users.filter(u => u.role === 'line_manager');
+
+  return (
+    <div className="glass-effect p-6 rounded-xl">
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">اسم الخط</label>
+              <input
+                type="text"
+                value={editData.name}
+                onChange={(e) => setEditData({...editData, name: e.target.value})}
+                className="input-glass w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">مدير الخط</label>
+              <select
+                value={editData.line_manager_id}
+                onChange={(e) => setEditData({...editData, line_manager_id: e.target.value})}
+                className="input-glass w-full"
+              >
+                <option value="">اختار مدير الخط</option>
+                {lineManagers.map(manager => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">الوصف</label>
+            <textarea
+              value={editData.description}
+              onChange={(e) => setEditData({...editData, description: e.target.value})}
+              className="input-glass w-full h-20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">المنتجات</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+              {products.map(product => (
+                <label key={product.id} className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <input
+                    type="checkbox"
+                    checked={editData.products.includes(product.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setEditData({...editData, products: [...editData.products, product.id]});
+                      } else {
+                        setEditData({...editData, products: editData.products.filter(p => p !== product.id)});
+                      }
+                    }}
+                    className="form-checkbox"
+                  />
+                  <span className="text-sm">{product.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="btn-primary">
+              حفظ التغييرات
+            </button>
+            <button 
+              onClick={() => setIsEditing(false)} 
+              className="btn-secondary"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h4 className="text-xl font-bold">{line.name}</h4>
+              <p className="text-gray-600">{line.description}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="btn-secondary text-sm px-3 py-1"
+              >
+                ✏️ تعديل
+              </button>
+              <button
+                onClick={() => onDelete(line.id)}
+                className="btn-danger text-sm px-3 py-1"
+              >
+                🗑️ حذف
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 rounded p-3">
+              <div className="text-sm font-medium text-blue-800">مدير الخط</div>
+              <div className="font-bold text-blue-600">
+                {line.manager_info?.full_name || 'غير محدد'}
+              </div>
+            </div>
+            
+            <div className="bg-green-50 rounded p-3">
+              <div className="text-sm font-medium text-green-800">المناطق</div>
+              <div className="font-bold text-green-600">
+                {line.areas_details?.length || 0} منطقة
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 rounded p-3">
+              <div className="text-sm font-medium text-purple-800">المنتجات</div>
+              <div className="font-bold text-purple-600">
+                {line.products_details?.length || 0} منتج
+              </div>
+            </div>
+          </div>
+
+          {line.areas_details && line.areas_details.length > 0 && (
+            <div className="mt-4">
+              <div className="text-sm font-medium mb-2">المناطق المغطاة:</div>
+              <div className="flex flex-wrap gap-2">
+                {line.areas_details.map(area => (
+                  <span key={area.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    {area.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Create Line Modal Component
+const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    line_manager_id: '',
+    coverage_areas: [],
+    products: []
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.line_manager_id) return;
+    onCreate(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">➕ إنشاء خط جديد</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم الخط *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="input-glass w-full"
+                  placeholder="مثال: خط القاهرة الكبرى"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">مدير الخط *</label>
+                <select
+                  value={formData.line_manager_id}
+                  onChange={(e) => setFormData({...formData, line_manager_id: e.target.value})}
+                  className="input-glass w-full"
+                  required
+                >
+                  <option value="">اختار مدير الخط</option>
+                  {users.map(manager => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">الوصف</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="input-glass w-full h-20"
+                placeholder="وصف الخط والمناطق المغطاة..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">المنتجات المخصصة</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border rounded p-2">
+                {products.map(product => (
+                  <label key={product.id} className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <input
+                      type="checkbox"
+                      checked={formData.products.includes(product.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({...formData, products: [...formData.products, product.id]});
+                        } else {
+                          setFormData({...formData, products: formData.products.filter(p => p !== product.id)});
+                        }
+                      }}
+                      className="form-checkbox"
+                    />
+                    <span className="text-sm">{product.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="submit"
+                className="btn-primary flex-1"
+                disabled={!formData.name || !formData.line_manager_id}
+              >
+                إنشاء الخط
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-secondary flex-1"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Area Card Component
+const AreaCard = ({ area }) => {
+  return (
+    <div className="glass-effect p-6 rounded-xl">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h4 className="text-lg font-bold">{area.name}</h4>
+          <p className="text-gray-600">{area.description}</p>
+        </div>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          area.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {area.is_active ? 'نشط' : 'غير نشط'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-blue-50 rounded p-3">
+          <div className="text-sm font-medium text-blue-800">مدير المنطقة</div>
+          <div className="font-bold text-blue-600">
+            {area.manager_info?.full_name || 'غير محدد'}
+          </div>
+        </div>
+        
+        <div className="bg-green-50 rounded p-3">
+          <div className="text-sm font-medium text-green-800">الخط التابع له</div>
+          <div className="font-bold text-green-600">
+            {area.line_info?.name || 'غير محدد'}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 text-xs text-gray-500">
+        تم الإنشاء: {new Date(area.created_at).toLocaleDateString('ar-EG')}
+      </div>
+    </div>
+  );
+};
+
+// Create Area Modal Component
+const CreateAreaModal = ({ lines, users, onCreate }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    area_manager_id: '',
+    line_id: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.area_manager_id || !formData.line_id) return;
+    onCreate(formData);
+    setShowModal(false);
+    setFormData({ name: '', description: '', area_manager_id: '', line_id: '' });
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="btn-primary px-6 py-2"
+      >
+        ➕ إضافة منطقة جديدة
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">➕ إنشاء منطقة جديدة</h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">اسم المنطقة *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="input-glass w-full"
+                    placeholder="مثال: منطقة الجيزة"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">الخط التابع له *</label>
+                  <select
+                    value={formData.line_id}
+                    onChange={(e) => setFormData({...formData, line_id: e.target.value})}
+                    className="input-glass w-full"
+                    required
+                  >
+                    <option value="">اختار الخط</option>
+                    {lines.map(line => (
+                      <option key={line.id} value={line.id}>
+                        {line.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">مدير المنطقة *</label>
+                  <select
+                    value={formData.area_manager_id}
+                    onChange={(e) => setFormData({...formData, area_manager_id: e.target.value})}
+                    className="input-glass w-full"
+                    required
+                  >
+                    <option value="">اختار مدير المنطقة</option>
+                    {users.map(manager => (
+                      <option key={manager.id} value={manager.id}>
+                        {manager.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">الوصف</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    className="input-glass w-full h-20"
+                    placeholder="وصف المنطقة..."
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1"
+                    disabled={!formData.name || !formData.area_manager_id || !formData.line_id}
+                  >
+                    إنشاء المنطقة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="btn-secondary flex-1"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 export default App;
