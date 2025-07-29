@@ -26559,6 +26559,8 @@ const MonthlyPlanningSystem = () => {
 // Rep Clinic Registration Component with Hidden Location Tracking
 const RepClinicRegistration = ({ user }) => {
   const { t } = useLanguage();
+  const { user: contextUser } = useAuth(); // احصل على user من context كذلك
+  const currentUser = user || contextUser; // استخدم user المُمرر أو من context
   const [clinicData, setClinicData] = useState({
     name: '',
     address: '',
