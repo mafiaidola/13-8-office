@@ -2274,19 +2274,34 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
     
     # إنشاء الطلب
     order = Order(
-        visit_id=order_data.visit_id,
+        visit_id="",  # Will be set if needed
         sales_rep_id=current_user.id,
-        doctor_id=order_data.doctor_id,
+        doctor_id="",  # Will be set if needed
         clinic_id=order_data.clinic_id,
         warehouse_id=order_data.warehouse_id,
         status="PENDING",
-        order_type=order_data.order_type,
+        order_type="SALE",  # Default to SALE
         total_amount=total_amount,
         notes=order_data.notes
     )
     
+    # إضافة معلومات المديونية والتصنيف
+    order_dict = order.dict()
+    order_dict.update({
+        "clinic_debt_status": debt_status,
+        "clinic_debt_amount": clinic_debt_info["outstanding_debt"],
+        "order_color": order_color,
+        "debt_warning_acknowledged": order_data.debt_warning_acknowledged,
+        "debt_override_reason": order_data.debt_override_reason,
+        "line": order_data.line,
+        "area_id": order_data.area_id,
+        "rep_current_latitude": order_data.rep_current_latitude,
+        "rep_current_longitude": order_data.rep_current_longitude,
+        "order_source": order_data.order_source or "field_order"
+    })
+    
     # Insert order
-    await db.orders.insert_one(order.dict())
+    await db.orders.insert_one(order_dict)
     
     # Insert order items
     for item in order_items:
