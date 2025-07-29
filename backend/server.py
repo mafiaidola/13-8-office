@@ -12041,13 +12041,13 @@ async def get_sales_rep_warehouse_stock_status(current_user: User = Depends(get_
         stock_status = []
         
         for warehouse in warehouses:
-            # Get products in this warehouse using product_stock collection
-            product_stocks = await db.product_stock.find({
+            # Get products stock in this warehouse
+            stocks = await db.product_stock.find({
                 "warehouse_id": warehouse["id"]
             }).to_list(1000)
             
             warehouse_products = []
-            for stock in product_stocks:
+            for stock in stocks:
                 # Get product details
                 product = await db.products.find_one({"id": stock["product_id"]})
                 if product and product.get("is_active", True):
@@ -12059,6 +12059,7 @@ async def get_sales_rep_warehouse_stock_status(current_user: User = Depends(get_
                         "product_name": product["name"],
                         "current_stock": stock_level,
                         "unit": product.get("unit", "قطعة"),
+                        "category": product.get("category", "عام"),
                         "status": status,
                         "status_color": "green" if status == "available" else "orange" if status == "low_stock" else "red"
                     })
