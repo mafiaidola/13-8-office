@@ -390,7 +390,38 @@ class Phase3CreateOrderTester:
             self.log_test("Stock Integration", False, f"Exception: {str(e)}")
             return False
 
-    def test_location_tracking(self):
+    def test_areas_and_regions_setup(self):
+        """Test that areas and regions are properly set up"""
+        try:
+            self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+            
+            # Check areas
+            areas_response = self.session.get(f"{API_BASE}/areas")
+            
+            if areas_response.status_code == 200:
+                areas = areas_response.json()
+                areas_count = len(areas) if isinstance(areas, list) else 0
+                
+                # Check regions
+                regions_response = self.session.get(f"{API_BASE}/regions/list")
+                regions_count = 0
+                
+                if regions_response.status_code == 200:
+                    regions = regions_response.json()
+                    regions_count = len(regions) if isinstance(regions, list) else 0
+                
+                self.log_test("Areas and Regions Setup", True,
+                            f"Found {areas_count} areas and {regions_count} regions configured",
+                            {"areas_count": areas_count, "regions_count": regions_count})
+                return True
+            else:
+                self.log_test("Areas and Regions Setup", False,
+                            f"Could not get areas. Status: {areas_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Areas and Regions Setup", False, f"Exception: {str(e)}")
+            return False
         """Test location tracking functionality"""
         try:
             self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
