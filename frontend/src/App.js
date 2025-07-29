@@ -26312,7 +26312,6 @@ const MonthlyPlanningSystem = () => {
       )}
     </div>
   );
-};
 
   const handleCreatePlan = async (planData) => {
     try {
