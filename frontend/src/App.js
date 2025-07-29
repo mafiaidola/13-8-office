@@ -6985,6 +6985,374 @@ const AdminActionButton = ({ icon, text, onClick }) => {
   );
 };
 
+// Enhanced Authentication Component with Fingerprint and Selfie Options
+const EnhancedAuthentication = ({ onAuthenticate, onSkip, user }) => {
+  const { t } = useLanguage();
+  const [authMethod, setAuthMethod] = useState('fingerprint'); // 'fingerprint' or 'selfie'
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [error, setError] = useState('');
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  // Check if WebAuthn is supported
+  const isWebAuthSupported = window.PublicKeyCredential && navigator.credentials;
+
+  // Generate random challenge for WebAuthn
+  const generateChallenge = () => {
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    return challenge;
+  };
+
+  // Fingerprint authentication using WebAuthn
+  const authenticateWithFingerprint = async () => {
+    if (!isWebAuthSupported) {
+      setError('بصمة الإصبع غير مدعومة على هذا المتصفح');
+      return;
+    }
+
+    setIsAuthenticating(true);
+    setError('');
+
+    try {
+      const challenge = generateChallenge();
+      
+      // Check if user has existing credentials first
+      let credentialId = localStorage.getItem(`webauthn_credential_${user.id}`);
+      
+      if (!credentialId) {
+        // Registration (first time setup)
+        const createCredentialOptions = {
+          challenge: challenge,
+          rp: {
+            name: "EP Group System",
+            id: window.location.hostname
+          },
+          user: {
+            id: new TextEncoder().encode(user.id),
+            name: user.username || user.email,
+            displayName: user.full_name || user.username
+          },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 }, // ES256
+            { type: "public-key", alg: -35 }, // ES384
+            { type: "public-key", alg: -36 } // ES512
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            userVerification: "required",
+            requireResidentKey: false
+          },
+          timeout: 60000,
+          attestation: "none"
+        };
+
+        const credential = await navigator.credentials.create({
+          publicKey: createCredentialOptions
+        });
+
+        // Store credential ID for future use
+        credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+        localStorage.setItem(`webauthn_credential_${user.id}`, credentialId);
+        
+        // Send registration to backend
+        await sendAuthData('fingerprint', {
+          type: 'registration',
+          credentialId: credentialId,
+          publicKey: btoa(String.fromCharCode(...new Uint8Array(credential.response.publicKey))),
+          location: await getCurrentLocation()
+        });
+
+      } else {
+        // Authentication (existing user)
+        const getCredentialOptions = {
+          challenge: challenge,
+          allowCredentials: [{
+            id: new Uint8Array(atob(credentialId).split('').map(c => c.charCodeAt(0))),
+            type: "public-key",
+            transports: ["internal"]
+          }],
+          userVerification: "required",
+          timeout: 60000
+        };
+
+        const assertion = await navigator.credentials.get({
+          publicKey: getCredentialOptions
+        });
+
+        // Send authentication to backend
+        await sendAuthData('fingerprint', {
+          type: 'authentication',
+          credentialId: credentialId,
+          signature: btoa(String.fromCharCode(...new Uint8Array(assertion.response.signature))),
+          authenticatorData: btoa(String.fromCharCode(...new Uint8Array(assertion.response.authenticatorData))),
+          clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(assertion.response.clientDataJSON))),
+          location: await getCurrentLocation()
+        });
+      }
+
+      if (onAuthenticate) onAuthenticate('fingerprint');
+      
+    } catch (error) {
+      console.error('Fingerprint authentication error:', error);
+      if (error.name === 'NotSupportedError') {
+        setError('بصمة الإصبع غير مدعومة على هذا الجهاز');
+      } else if (error.name === 'NotAllowedError') {
+        setError('تم إلغاء المصادقة أو انتهت المهلة الزمنية');
+      } else if (error.name === 'InvalidStateError') {
+        setError('خطأ في حالة المصادقة. يرجى المحاولة مرة أخرى');
+      } else {
+        setError('فشل في مصادقة بصمة الإصبع. يرجى المحاولة مرة أخرى');
+      }
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // Selfie authentication
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user', width: 640, height: 480 } 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setError('لا يمكن الوصول للكاميرا. يرجى السماح بصلاحيات الكاميرا');
+    }
+  };
+
+  const takeSelfie = async () => {
+    if (canvasRef.current && videoRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      setIsAuthenticating(true);
+      
+      try {
+        await sendAuthData('selfie', {
+          selfie_image: imageData,
+          location: await getCurrentLocation()
+        });
+        
+        if (onAuthenticate) onAuthenticate('selfie');
+      } catch (error) {
+        console.error('Error saving selfie:', error);
+        setError('فشل في حفظ السيلفي. يرجى المحاولة مرة أخرى');
+      } finally {
+        setIsAuthenticating(false);
+      }
+    }
+  };
+
+  // Send authentication data to backend
+  const sendAuthData = async (method, data) => {
+    const token = localStorage.getItem('token');
+    await axios.post(`${API}/users/daily-login`, {
+      authentication_method: method,
+      timestamp: new Date().toISOString(),
+      ...data
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  };
+
+  const getCurrentLocation = () => {
+    return new Promise((resolve) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          }),
+          () => resolve({ latitude: null, longitude: null })
+        );
+      } else {
+        resolve({ latitude: null, longitude: null });
+      }
+    });
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+      <div className="modal-modern p-8 w-full max-w-md">
+        <div className="text-center mb-6">
+          <h3 className="text-2xl font-bold mb-2">🔐 تسجيل الحضور اليومي</h3>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            اختر طريقة التحقق من الهوية
+          </p>
+        </div>
+
+        {/* Authentication Method Selection */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setAuthMethod('fingerprint')}
+            className={`flex-1 p-4 rounded-lg border transition-all ${
+              authMethod === 'fingerprint' 
+                ? 'border-blue-500 bg-blue-100 bg-opacity-20' 
+                : 'border-gray-300 bg-gray-100 bg-opacity-10'
+            }`}
+            disabled={!isWebAuthSupported}
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-2">👆</div>
+              <div className="text-sm font-bold">بصمة الإصبع</div>
+              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {isWebAuthSupported ? 'مفضل وآمن' : 'غير مدعوم'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setAuthMethod('selfie')}
+            className={`flex-1 p-4 rounded-lg border transition-all ${
+              authMethod === 'selfie' 
+                ? 'border-blue-500 bg-blue-100 bg-opacity-20' 
+                : 'border-gray-300 bg-gray-100 bg-opacity-10'
+            }`}
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-2">📷</div>
+              <div className="text-sm font-bold">سيلفي</div>
+              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                خيار بديل
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-100 bg-opacity-20 border border-red-300 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Fingerprint Authentication */}
+        {authMethod === 'fingerprint' && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">👆</div>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+              {isAuthenticating ? 'جاري التحقق من بصمة الإصبع...' : 'اضغط للمصادقة ببصمة الإصبع'}
+            </p>
+            
+            <button
+              onClick={authenticateWithFingerprint}
+              disabled={isAuthenticating || !isWebAuthSupported}
+              className="btn-primary w-full mb-4 py-3 flex items-center justify-center gap-2"
+            >
+              {isAuthenticating ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>جاري المصادقة...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">👆</span>
+                  <span>المصادقة ببصمة الإصبع</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Selfie Authentication */}
+        {authMethod === 'selfie' && (
+          <div>
+            {!stream ? (
+              <div className="text-center">
+                <div className="text-6xl mb-4">📷</div>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+                  اضغط لتشغيل الكاميرا والتقاط سيلفي
+                </p>
+                
+                <button
+                  onClick={startCamera}
+                  className="btn-primary w-full mb-4 py-3 flex items-center justify-center gap-2"
+                >
+                  <span className="text-xl">🎥</span>
+                  <span>تشغيل الكاميرا</span>
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="relative mb-4">
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline
+                    className="w-full rounded-lg"
+                    style={{ maxHeight: '300px' }}
+                  />
+                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                </div>
+                
+                <button
+                  onClick={takeSelfie}
+                  disabled={isAuthenticating}
+                  className="btn-primary w-full mb-4 py-3 flex items-center justify-center gap-2"
+                >
+                  {isAuthenticating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>جاري الحفظ...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl">📸</span>
+                      <span>التقاط السيلفي</span>
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={stopCamera}
+                  className="btn-secondary w-full py-2 text-sm"
+                >
+                  إغلاق الكاميرا
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Skip Option */}
+        <div className="mt-6 pt-4 border-t border-gray-300 border-opacity-30">
+          <button
+            onClick={onSkip}
+            className="btn-secondary w-full py-2 text-sm flex items-center justify-center gap-2"
+            disabled={isAuthenticating}
+          >
+            <span>⏭️</span>
+            <span>تخطي الآن</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Selfie Capture Component for Sales Reps
 const SelfieCapture = ({ onCapture, onSkip }) => {
   const videoRef = useRef(null);
