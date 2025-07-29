@@ -13802,6 +13802,518 @@ async def create_clinic_by_executive(clinic_data: dict, current_user: User = Dep
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating clinic: {str(e)}")
 
+# Enhanced Clinics Management APIs
+@api_router.get("/clinics/enhanced")
+async def get_enhanced_clinics(current_user: User = Depends(get_current_user)):
+    """Get clinics with enhanced information and classification"""
+    try:
+        # Build query based on user role
+        query = {}
+        if current_user.role == UserRole.MEDICAL_REP:
+            query["assigned_rep_id"] = current_user.id
+        
+        clinics = await db.clinics.find(query, {"_id": 0}).to_list(1000)
+        
+        # Enhance each clinic with statistics and classification
+        for clinic in clinics:
+            clinic_id = clinic["id"]
+            
+            # Calculate visits statistics
+            visits = await db.visits.find({"clinic_id": clinic_id}).to_list(1000)
+            clinic["total_visits"] = len(visits)
+            clinic["last_visit_date"] = visits[-1]["visit_date"] if visits else None
+            
+            # Calculate orders statistics
+            orders = await db.orders.find({"clinic_id": clinic_id}).to_list(1000)
+            clinic["total_orders"] = len(orders)
+            clinic["total_revenue"] = sum(order.get("total_amount", 0) for order in orders)
+            clinic["last_order_date"] = orders[-1]["created_at"] if orders else None
+            
+            # Calculate outstanding debt
+            outstanding_debt = 0
+            invoices = await db.invoices.find({
+                "clinic_id": clinic_id,
+                "payment_status": {"$in": ["pending", "partially_paid", "overdue"]}
+            }).to_list(1000)
+            
+            for invoice in invoices:
+                outstanding_debt += invoice.get("outstanding_amount", 0)
+            
+            clinic["outstanding_debt"] = outstanding_debt
+            
+            # Auto-classify clinic based on data
+            classification = await classify_clinic_automatically(clinic_id, clinic, outstanding_debt)
+            clinic["classification"] = classification
+            
+            # Get assigned rep info
+            if clinic.get("assigned_rep_id"):
+                rep_info = await db.users.find_one(
+                    {"id": clinic["assigned_rep_id"]}, 
+                    {"_id": 0, "password_hash": 0}
+                )
+                if rep_info:
+                    clinic["assigned_rep_name"] = rep_info.get("full_name")
+                    clinic["assigned_rep_role"] = rep_info.get("role")
+        
+        return clinics
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching enhanced clinics: {str(e)}")
+
+async def classify_clinic_automatically(clinic_id: str, clinic_data: dict, outstanding_debt: float):
+    """Auto-classify clinic based on business rules"""
+    try:
+        # Check if clinic has outstanding debt > 1000
+        if outstanding_debt > 1000:
+            return ClinicClassification.DEBT
+        
+        # Check if clinic is premium (high revenue or many orders)
+        total_revenue = clinic_data.get("total_revenue", 0)
+        total_orders = clinic_data.get("total_orders", 0)
+        
+        if total_revenue > 10000 or total_orders > 20:
+            return ClinicClassification.PREMIUM
+        
+        # Default to new
+        return ClinicClassification.NEW
+        
+    except Exception:
+        return ClinicClassification.NEW
+
+@api_router.put("/clinics/{clinic_id}/classification")
+async def update_clinic_classification(
+    clinic_id: str, 
+    classification_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Update clinic classification"""
+    try:
+        # Check permissions - only admin, GM, or managers can classify
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            raise HTTPException(status_code=403, detail="No permission to classify clinics")
+        
+        # Validate classification
+        valid_classifications = [ClinicClassification.NEW, ClinicClassification.PREMIUM, ClinicClassification.DEBT]
+        new_classification = classification_data.get("classification")
+        
+        if new_classification not in valid_classifications:
+            raise HTTPException(status_code=400, detail="Invalid classification")
+        
+        # Update clinic
+        update_data = {
+            "classification": new_classification,
+            "classification_notes": classification_data.get("notes", ""),
+            "classification_updated_at": datetime.utcnow(),
+            "classification_updated_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }
+        
+        result = await db.clinics.update_one(
+            {"id": clinic_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Clinic not found")
+        
+        return {"message": "Clinic classification updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating clinic classification: {str(e)}")
+
+@api_router.get("/clinics/{clinic_id}/mini-profile")
+async def get_clinic_mini_profile(clinic_id: str, current_user: User = Depends(get_current_user)):
+    """Get clinic mini profile with detailed statistics"""
+    try:
+        # Get clinic details
+        clinic = await db.clinics.find_one({"id": clinic_id}, {"_id": 0})
+        if not clinic:
+            raise HTTPException(status_code=404, detail="Clinic not found")
+        
+        # Get visits with detailed stats
+        visits = await db.visits.find({"clinic_id": clinic_id}).to_list(1000)
+        successful_visits = [v for v in visits if v.get("is_successful", False)]
+        
+        visit_stats = {
+            "total_visits": len(visits),
+            "successful_visits": len(successful_visits),
+            "success_rate": (len(successful_visits) / len(visits) * 100) if visits else 0,
+            "last_visit_date": visits[-1]["visit_date"] if visits else None,
+            "recent_visits": sorted(visits, key=lambda x: x["visit_date"], reverse=True)[:5]
+        }
+        
+        # Get orders with revenue stats
+        orders = await db.orders.find({"clinic_id": clinic_id}).to_list(1000)
+        total_revenue = sum(order.get("total_amount", 0) for order in orders)
+        
+        order_stats = {
+            "total_orders": len(orders),
+            "total_revenue": total_revenue,
+            "average_order_value": (total_revenue / len(orders)) if orders else 0,
+            "last_order_date": orders[-1]["created_at"] if orders else None,
+            "recent_orders": sorted(orders, key=lambda x: x["created_at"], reverse=True)[:5]
+        }
+        
+        # Get debt information
+        invoices = await db.invoices.find({"clinic_id": clinic_id}).to_list(1000)
+        pending_invoices = [inv for inv in invoices if inv.get("payment_status") in ["pending", "partially_paid", "overdue"]]
+        outstanding_debt = sum(inv.get("outstanding_amount", 0) for inv in pending_invoices)
+        
+        debt_stats = {
+            "total_invoices": len(invoices),
+            "pending_invoices": len(pending_invoices),
+            "outstanding_debt": outstanding_debt,
+            "overdue_invoices": len([inv for inv in pending_invoices if inv.get("payment_status") == "overdue"])
+        }
+        
+        # Get assigned rep info
+        rep_info = None
+        if clinic.get("assigned_rep_id"):
+            rep_info = await db.users.find_one(
+                {"id": clinic["assigned_rep_id"]}, 
+                {"_id": 0, "password_hash": 0, "full_name": 1, "role": 1, "phone": 1, "email": 1}
+            )
+        
+        # Auto-classify
+        classification = await classify_clinic_automatically(clinic_id, {"total_revenue": total_revenue, "total_orders": len(orders)}, outstanding_debt)
+        
+        return {
+            "clinic": clinic,
+            "classification": classification,
+            "visit_stats": visit_stats,
+            "order_stats": order_stats,
+            "debt_stats": debt_stats,
+            "assigned_rep": rep_info
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching clinic mini profile: {str(e)}")
+
+# User Performance and Statistics APIs
+@api_router.get("/users/{user_id}/performance")
+async def get_user_performance(user_id: str, current_user: User = Depends(get_current_user)):
+    """Get comprehensive user performance statistics"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM] and current_user.id != user_id:
+            # Allow managers to view their subordinates
+            if current_user.role in [UserRole.LINE_MANAGER, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER]:
+                target_user = await db.users.find_one({"id": user_id})
+                if not target_user or target_user.get("managed_by") != current_user.id:
+                    raise HTTPException(status_code=403, detail="No permission to view this user's performance")
+            else:
+                raise HTTPException(status_code=403, detail="No permission to view user performance")
+        
+        # Get user details
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Calculate performance for last 6 months
+        current_date = datetime.utcnow()
+        six_months_ago = current_date - timedelta(days=180)
+        
+        # Get visits statistics
+        visits = await db.visits.find({
+            "created_by": user_id,
+            "visit_date": {"$gte": six_months_ago}
+        }).to_list(1000)
+        
+        successful_visits = [v for v in visits if v.get("is_successful", False)]
+        
+        visit_stats = {
+            "total_visits": len(visits),
+            "successful_visits": len(successful_visits),
+            "failed_visits": len(visits) - len(successful_visits),
+            "success_rate": (len(successful_visits) / len(visits) * 100) if visits else 0,
+            "monthly_average": len(visits) / 6
+        }
+        
+        # Get orders statistics
+        orders = await db.orders.find({
+            "created_by": user_id,
+            "created_at": {"$gte": six_months_ago}
+        }).to_list(1000)
+        
+        total_order_value = sum(order.get("total_amount", 0) for order in orders)
+        
+        order_stats = {
+            "total_orders": len(orders),
+            "total_value": total_order_value,
+            "average_order_value": (total_order_value / len(orders)) if orders else 0,
+            "monthly_average": len(orders) / 6
+        }
+        
+        # Get clinics registered by user
+        clinics = await db.clinics.find({
+            "created_by": user_id,
+            "created_at": {"$gte": six_months_ago}
+        }).to_list(1000)
+        
+        clinic_stats = {
+            "new_clinics_registered": len(clinics),
+            "monthly_average": len(clinics) / 6
+        }
+        
+        # Calculate performance score (0-100)
+        performance_score = calculate_performance_score(visit_stats, order_stats, clinic_stats)
+        
+        # Get ranking among peers
+        ranking = await calculate_user_ranking(user_id, user["role"], performance_score)
+        
+        return {
+            "user": user,
+            "performance_period": {
+                "start_date": six_months_ago.isoformat(),
+                "end_date": current_date.isoformat()
+            },
+            "visit_stats": visit_stats,
+            "order_stats": order_stats,
+            "clinic_stats": clinic_stats,
+            "performance_score": performance_score,
+            "ranking": ranking,
+            "calculated_at": current_date.isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching user performance: {str(e)}")
+
+def calculate_performance_score(visit_stats, order_stats, clinic_stats):
+    """Calculate user performance score based on various metrics"""
+    score = 0
+    
+    # Visit performance (40% of total score)
+    visit_score = min(visit_stats["success_rate"], 100) * 0.4
+    score += visit_score
+    
+    # Order performance (35% of total score)
+    monthly_orders = order_stats["monthly_average"]
+    order_score = min(monthly_orders * 5, 35)  # 5 points per order, max 35
+    score += order_score
+    
+    # Clinic registration (25% of total score)
+    monthly_clinics = clinic_stats["monthly_average"]
+    clinic_score = min(monthly_clinics * 12.5, 25)  # 12.5 points per clinic, max 25
+    score += clinic_score
+    
+    return round(score, 2)
+
+async def calculate_user_ranking(user_id: str, user_role: str, performance_score: float):
+    """Calculate user ranking among peers"""
+    try:
+        # Get all users with same role
+        peers = await db.users.find({"role": user_role}).to_list(1000)
+        
+        # Calculate performance scores for all peers (simplified)
+        peer_performances = []
+        for peer in peers:
+            # This is a simplified calculation - in reality, you'd calculate for each peer
+            peer_performances.append({
+                "user_id": peer["id"],
+                "score": performance_score if peer["id"] == user_id else performance_score - 10  # Simplified
+            })
+        
+        # Sort by score descending
+        peer_performances.sort(key=lambda x: x["score"], reverse=True)
+        
+        # Find user's rank
+        for i, peer in enumerate(peer_performances):
+            if peer["user_id"] == user_id:
+                return {
+                    "rank": i + 1,
+                    "total_peers": len(peer_performances),
+                    "percentile": ((len(peer_performances) - i) / len(peer_performances)) * 100
+                }
+        
+        return None
+        
+    except Exception:
+        return None
+
+@api_router.get("/users/enhanced")
+async def get_enhanced_users(current_user: User = Depends(get_current_user)):
+    """Get users with enhanced performance statistics for admin"""
+    try:
+        # Check permissions - only admin and GM can see all users with stats
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM]:
+            raise HTTPException(status_code=403, detail="No permission to view enhanced user data")
+        
+        # Get all users
+        users = await db.users.find({"is_active": True}, {"_id": 0, "password_hash": 0}).to_list(1000)
+        
+        # Enhance each user with quick stats
+        for user in users:
+            user_id = user["id"]
+            
+            # Quick stats for last 30 days
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            
+            # Count visits
+            visit_count = await db.visits.count_documents({
+                "created_by": user_id,
+                "visit_date": {"$gte": thirty_days_ago}
+            })
+            
+            # Count orders and calculate total value
+            orders = await db.orders.find({
+                "created_by": user_id,
+                "created_at": {"$gte": thirty_days_ago}
+            }).to_list(1000)
+            
+            total_order_value = sum(order.get("total_amount", 0) for order in orders)
+            
+            # Count new clinics
+            clinic_count = await db.clinics.count_documents({
+                "created_by": user_id,
+                "created_at": {"$gte": thirty_days_ago}
+            })
+            
+            user["stats_last_30_days"] = {
+                "visits": visit_count,
+                "orders": len(orders),
+                "order_value": total_order_value,
+                "new_clinics": clinic_count
+            }
+        
+        return users
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching enhanced users: {str(e)}")
+
+# Invoice and Payment Management APIs
+@api_router.post("/invoices")
+async def create_invoice(invoice_data: dict, current_user: User = Depends(get_current_user)):
+    """Create a new invoice - starts as pending debt"""
+    try:
+        # Check permissions
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.ACCOUNTING]:
+            raise HTTPException(status_code=403, detail="No permission to create invoices")
+        
+        # Generate invoice number
+        invoice_count = await db.invoices.count_documents({}) + 1
+        invoice_number = f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{invoice_count:04d}"
+        
+        # Calculate due date (30 days from now)
+        due_date = datetime.utcnow() + timedelta(days=30)
+        
+        # Create invoice
+        invoice = Invoice(
+            invoice_number=invoice_number,
+            clinic_id=invoice_data["clinic_id"],
+            clinic_name=invoice_data["clinic_name"],
+            order_id=invoice_data.get("order_id"),
+            subtotal=invoice_data["subtotal"],
+            tax_amount=invoice_data.get("tax_amount", 0.0),
+            discount_amount=invoice_data.get("discount_amount", 0.0),
+            total_amount=invoice_data["total_amount"],
+            due_date=due_date,
+            created_by=current_user.id,
+            items=invoice_data.get("items", [])
+        )
+        
+        await db.invoices.insert_one(invoice.dict())
+        
+        # Update clinic debt
+        await update_clinic_debt_status(invoice_data["clinic_id"])
+        
+        return {"message": "Invoice created successfully", "invoice_id": invoice.id, "invoice_number": invoice_number}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating invoice: {str(e)}")
+
+@api_router.post("/invoices/{invoice_id}/payment")
+async def record_payment(invoice_id: str, payment_data: dict, current_user: User = Depends(get_current_user)):
+    """Record a payment against an invoice"""
+    try:
+        # Check permissions - only accounting can record payments
+        if current_user.role not in [UserRole.ADMIN, UserRole.GM, UserRole.ACCOUNTING]:
+            raise HTTPException(status_code=403, detail="No permission to record payments")
+        
+        # Get invoice
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        payment_amount = payment_data["amount"]
+        
+        if payment_amount <= 0:
+            raise HTTPException(status_code=400, detail="Payment amount must be positive")
+        
+        if payment_amount > invoice["outstanding_amount"]:
+            raise HTTPException(status_code=400, detail="Payment amount exceeds outstanding amount")
+        
+        # Create payment record
+        payment = PaymentRecord(
+            invoice_id=invoice_id,
+            amount=payment_amount,
+            payment_method=payment_data["payment_method"],
+            reference_number=payment_data.get("reference_number"),
+            notes=payment_data.get("notes"),
+            processed_by=current_user.id
+        )
+        
+        await db.payment_records.insert_one(payment.dict())
+        
+        # Update invoice
+        new_paid_amount = invoice["paid_amount"] + payment_amount
+        new_outstanding_amount = invoice["total_amount"] - new_paid_amount
+        
+        payment_status = "paid" if new_outstanding_amount == 0 else "partially_paid"
+        
+        update_data = {
+            "paid_amount": new_paid_amount,
+            "outstanding_amount": new_outstanding_amount,
+            "payment_status": payment_status,
+            "updated_at": datetime.utcnow()
+        }
+        
+        if payment_status == "paid":
+            update_data["payment_date"] = datetime.utcnow()
+            update_data["payment_method"] = payment_data["payment_method"]
+            update_data["paid_by_user_id"] = current_user.id
+        
+        await db.invoices.update_one({"id": invoice_id}, {"$set": update_data})
+        
+        # Update clinic debt status
+        await update_clinic_debt_status(invoice["clinic_id"])
+        
+        return {"message": "Payment recorded successfully", "payment_id": payment.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recording payment: {str(e)}")
+
+async def update_clinic_debt_status(clinic_id: str):
+    """Update clinic's outstanding debt total"""
+    try:
+        # Calculate total outstanding debt
+        invoices = await db.invoices.find({
+            "clinic_id": clinic_id,
+            "payment_status": {"$in": ["pending", "partially_paid", "overdue"]}
+        }).to_list(1000)
+        
+        total_debt = sum(inv.get("outstanding_amount", 0) for inv in invoices)
+        
+        # Update clinic
+        await db.clinics.update_one(
+            {"id": clinic_id},
+            {"$set": {"outstanding_debt": total_debt}}
+        )
+        
+    except Exception as e:
+        print(f"Error updating clinic debt status: {e}")
+
 app.include_router(api_router)
 
 app.add_middleware(
