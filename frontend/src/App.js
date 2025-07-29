@@ -15360,7 +15360,11 @@ const OrderCreation = () => {
       const response = await axios.get(`${API}/clinics/my-region`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setClinics(response.data || []);
+      
+      // API /clinics/my-region returns {user_region, total_clinics, clinics}
+      const clinicsData = response.data?.clinics || [];
+      setClinics(Array.isArray(clinicsData) ? clinicsData : []);
+      
     } catch (error) {
       console.error('Error fetching clinics:', error);
       // Fallback to all clinics if region-specific API doesn't exist
@@ -15369,7 +15373,11 @@ const OrderCreation = () => {
         const response = await axios.get(`${API}/clinics`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setClinics(response.data || []);
+        
+        // API /clinics returns array directly
+        const clinicsData = response.data || [];
+        setClinics(Array.isArray(clinicsData) ? clinicsData : []);
+        
       } catch (fallbackError) {
         console.error('Error fetching all clinics:', fallbackError);
         setError('فشل في تحميل العيادات المتاحة');
