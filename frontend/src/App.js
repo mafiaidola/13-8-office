@@ -4262,7 +4262,7 @@ const MedicalRepDashboard = ({ stats, user }) => {
         </div>
       </div>
 
-      {/* Stock Display */}
+      {/* Stock Display - Enhanced Warehouse Stock Status */}
       <div className="glass-effect p-4 rounded-lg">
         <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
           <span className="text-xl">📦</span>
@@ -4284,64 +4284,101 @@ const MedicalRepDashboard = ({ stats, user }) => {
               إعادة المحاولة
             </button>
           </div>
-        ) : stockData.length === 0 ? (
+        ) : !stockData || !stockData.warehouses || stockData.warehouses.length === 0 ? (
           <div className="text-center py-6" style={{ color: 'var(--text-secondary)' }}>
-            <p className="text-sm">لا توجد بيانات مخزون متاحة</p>
+            <p className="text-sm">لا توجد بيانات مخزون متاحة في منطقتك</p>
+            <p className="text-xs mt-2">المنطقة: {stockData?.user_region || 'غير محددة'}</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {/* Stock Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <div className="text-lg font-bold text-green-800">
-                  {stockData.filter(item => item.status === 'in_stock').length}
+          <div className="space-y-4">
+            {/* User Region Info */}
+            <div className="bg-blue-100 bg-opacity-20 p-3 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📍</span>
+                <div>
+                  <div className="font-bold">منطقتك: {stockData.user_region}</div>
+                  <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    المخازن المتاحة: {stockData.total_warehouses}
+                  </div>
                 </div>
-                <div className="text-sm text-green-600">متوفر</div>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <div className="text-lg font-bold text-yellow-800">
-                  {stockData.filter(item => item.current_stock > 0 && item.current_stock < 10).length}
-                </div>
-                <div className="text-sm text-yellow-600">مخزون منخفض</div>
-              </div>
-              <div className="bg-red-100 p-3 rounded-lg">
-                <div className="text-lg font-bold text-red-800">
-                  {stockData.filter(item => item.status === 'out_of_stock').length}
-                </div>
-                <div className="text-sm text-red-600">غير متوفر</div>
               </div>
             </div>
 
-            {/* Stock Items */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {stockData.map((item, index) => (
-                <div key={index} className="bg-white bg-opacity-5 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-sm">{item.product_name}</h4>
-                    <span className={`text-lg ${getStockStatusColor(item.status)}`}>
-                      {getStockStatusIcon(item.status)}
-                    </span>
+            {/* Warehouses */}
+            {stockData.warehouses.map((warehouse, warehouseIndex) => (
+              <div key={warehouseIndex} className="border border-opacity-20 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-bold text-lg">{warehouse.warehouse_name}</h4>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {warehouse.warehouse_location}
+                    </p>
                   </div>
-                  
-                  <div className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
-                    <div>المخزن: {item.warehouse_name}</div>
-                    <div>الكمية: {item.current_stock} {item.product_unit}</div>
-                    <div>السعر: {item.product_price} جنيه</div>
-                  </div>
-                  
-                  <div className="mt-2">
-                    <div className={`inline-block px-2 py-1 rounded text-xs ${
-                      item.status === 'in_stock' ? 'bg-green-100 text-green-800' :
-                      item.status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {item.status === 'in_stock' ? 'متوفر' :
-                       item.status === 'low_stock' ? 'مخزون منخفض' : 'غير متوفر'}
+                  <div className="text-right">
+                    <div className="text-sm font-bold">
+                      {warehouse.total_products} منتج
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Stock Summary for this warehouse */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-green-100 bg-opacity-30 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-green-600">
+                      {warehouse.available_products}
+                    </div>
+                    <div className="text-xs text-green-600">متوفر</div>
+                  </div>
+                  <div className="bg-yellow-100 bg-opacity-30 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-yellow-600">
+                      {warehouse.low_stock_products}
+                    </div>
+                    <div className="text-xs text-yellow-600">مخزون منخفض</div>
+                  </div>
+                  <div className="bg-red-100 bg-opacity-30 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-red-600">
+                      {warehouse.out_of_stock_products}
+                    </div>
+                    <div className="text-xs text-red-600">غير متوفر</div>
+                  </div>
+                </div>
+
+                {/* Products in this warehouse */}
+                {warehouse.products && warehouse.products.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {warehouse.products.map((product, productIndex) => (
+                      <div key={productIndex} className="bg-white bg-opacity-5 p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-sm">{product.product_name}</h5>
+                          <span className={`text-lg ${getStockStatusColor(product.status)}`}>
+                            {getStockStatusIcon(product.status)}
+                          </span>
+                        </div>
+                        
+                        <div className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                          <div>الكمية: {product.current_stock} {product.unit}</div>
+                        </div>
+                        
+                        <div className="mt-2">
+                          <div className={`inline-block px-2 py-1 rounded text-xs ${
+                            product.status === 'available' ? 'bg-green-100 bg-opacity-30 text-green-600' :
+                            product.status === 'low_stock' ? 'bg-yellow-100 bg-opacity-30 text-yellow-600' :
+                            'bg-red-100 bg-opacity-30 text-red-600'
+                          }`}>
+                            {product.status === 'available' ? 'متوفر' :
+                             product.status === 'low_stock' ? 'مخزون منخفض' : 'غير متوفر'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4" style={{ color: 'var(--text-secondary)' }}>
+                    <p className="text-sm">لا توجد منتجات في هذا المخزن</p>
+                  </div>
+                )}
+              </div>
+            ))}
 
             {/* Refresh Button */}
             <div className="text-center mt-4">
