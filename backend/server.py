@@ -3967,13 +3967,20 @@ async def create_clinic(clinic_data: ClinicCreate, current_user: User = Depends(
     return {"message": "Clinic added successfully", "clinic_id": clinic.id}
 
 @api_router.get("/clinics", response_model=List[Dict[str, Any]])
-async def get_clinics(current_user: User = Depends(get_current_user)):
-    query = {}
-    if current_user.role == UserRole.SALES_REP:
-        query = {"$or": [{"approved_by": {"$ne": None}}, {"added_by": current_user.id}]}
-    
-    clinics = await db.clinics.find(query, {"_id": 0}).to_list(1000)
-    return clinics
+async def get_clinics(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        query = {}
+        if user.get("role") in ["medical_rep", "sales_rep"]:
+            query = {"$or": [{"approved_by": {"$ne": None}}, {"added_by": user.get("id")}]}
+        
+        clinics = await db.clinics.find(query, {"_id": 0}).to_list(1000)
+        return clinics
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching clinics: {str(e)}")
 
 @api_router.patch("/clinics/{clinic_id}/approve")
 async def approve_clinic(clinic_id: str, current_user: User = Depends(get_current_user)):
