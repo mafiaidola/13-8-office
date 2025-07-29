@@ -17,7 +17,7 @@ def connect_to_mongodb():
     """اتصال بقاعدة البيانات"""
     try:
         client = MongoClient(MONGO_URL)
-        db = client.get_database()
+        db = client[DB_NAME]
         print("✅ تم الاتصال بقاعدة البيانات بنجاح")
         return db
     except Exception as e:
