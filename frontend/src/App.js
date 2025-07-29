@@ -16477,41 +16477,6 @@ const VisitRegistration = () => {
   );
 };
 
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/visits`, {
-        doctor_id: selectedDoctor,
-        clinic_id: selectedClinic,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        notes
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setCurrentVisitId(response.data.visit_id);
-      
-      // Add any pending voice notes
-      for (const voiceNote of voiceNotes) {
-        await addVoiceNote(response.data.visit_id, voiceNote.audio, voiceNote.duration);
-      }
-      
-      setSuccess('تم تسجيل الزيارة بنجاح');
-      setVoiceNotes([]);
-      setNotes('');
-      
-    } catch (error) {
-      console.error('Error submitting visit:', error);
-      setError('فشل في تسجيل الزيارة');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
 // Inventory Edit Modal Component
 const InventoryEditModal = ({ item, warehouses, onClose, onSave, language }) => {
   const [formData, setFormData] = useState({
