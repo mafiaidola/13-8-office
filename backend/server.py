@@ -12009,6 +12009,82 @@ async def get_clinic_registrations_with_locations(current_user: User = Depends(g
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching clinic locations: {str(e)}")
 
+@api_router.get("/sales-rep/warehouse-stock-status")
+async def get_sales_rep_warehouse_stock_status(current_user: User = Depends(get_current_user)):
+    """
+    Get warehouse stock status for the sales rep based on their region
+    حالة المخزون للمندوب حسب منطقته
+    """
+    try:
+        # Only sales reps can access this
+        if current_user.role not in ["medical_rep", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only sales representatives can access stock status")
+        
+        # Get user's region from their profile
+        user_region = current_user.region_id or "القاهرة"  # Default to Cairo if no region specified
+        
+        # Find warehouses in the user's region
+        warehouses = await db.warehouses.find({
+            "region": user_region,
+            "is_active": True
+        }).to_list(1000)
+        
+        # If no warehouses found in user's region, include main warehouse
+        if not warehouses:
+            main_warehouse = await db.warehouses.find_one({
+                "warehouse_type": "main",
+                "is_active": True
+            })
+            if main_warehouse:
+                warehouses = [main_warehouse]
+        
+        stock_status = []
+        
+        for warehouse in warehouses:
+            # Get products in this warehouse using product_stock collection
+            product_stocks = await db.product_stock.find({
+                "warehouse_id": warehouse["id"]
+            }).to_list(1000)
+            
+            warehouse_products = []
+            for stock in product_stocks:
+                # Get product details
+                product = await db.products.find_one({"id": stock["product_id"]})
+                if product and product.get("is_active", True):
+                    stock_level = stock.get("quantity", 0)
+                    status = "available" if stock_level > 10 else "low_stock" if stock_level > 0 else "out_of_stock"
+                    
+                    warehouse_products.append({
+                        "product_id": product["id"],
+                        "product_name": product["name"],
+                        "current_stock": stock_level,
+                        "unit": product.get("unit", "قطعة"),
+                        "status": status,
+                        "status_color": "green" if status == "available" else "orange" if status == "low_stock" else "red"
+                    })
+            
+            stock_status.append({
+                "warehouse_id": warehouse["id"],
+                "warehouse_name": warehouse["name"],
+                "warehouse_location": warehouse.get("address", ""),
+                "total_products": len(warehouse_products),
+                "available_products": len([p for p in warehouse_products if p["status"] == "available"]),
+                "low_stock_products": len([p for p in warehouse_products if p["status"] == "low_stock"]),
+                "out_of_stock_products": len([p for p in warehouse_products if p["status"] == "out_of_stock"]),
+                "products": warehouse_products
+            })
+        
+        return {
+            "user_region": user_region,
+            "total_warehouses": len(stock_status),
+            "warehouses": stock_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching stock status: {str(e)}")
+
 @api_router.get("/admin/orders-with-locations")
 async def get_orders_with_locations(current_user: User = Depends(get_current_user)):
     """Get orders with rep and clinic locations for admin tracking"""
