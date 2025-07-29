@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://b09695e5-3c8e-4c2c-9ca1-06cbdd9a8993.preview.emergentagent.com/api"
+BASE_URL = "https://46cf73c5-6ae2-47bf-acd2-8c92062172ff.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 class DetailedUserTester:
