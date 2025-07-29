@@ -2216,24 +2216,38 @@ async def review_clinic_request(request_id: str, approved: bool, current_user: U
 # Order Management Routes
 @api_router.post("/orders")
 async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.SALES_REP:
-        raise HTTPException(status_code=403, detail="Only sales reps can create orders")
+    # تحديث: السماح للأدوار الجديدة بإنشاء الطلبات
+    if current_user.role not in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT, UserRole.SALES_REP]:
+        raise HTTPException(status_code=403, detail="Only medical reps and key accounts can create orders")
     
-    # Check if doctor and clinic exist
-    doctor = await db.doctors.find_one({"id": order_data.doctor_id})
-    if not doctor:
-        raise HTTPException(status_code=404, detail="Doctor not found")
-    
+    # فحص العيادة والمديونية أولاً
     clinic = await db.clinics.find_one({"id": order_data.clinic_id})
     if not clinic:
         raise HTTPException(status_code=404, detail="Clinic not found")
     
-    # Check if warehouse exists
+    # فحص حالة مديونية العيادة
+    clinic_debt_info = await check_clinic_debt_status(order_data.clinic_id)
+    
+    # إذا كانت العيادة مدينة وبمبلغ كبير (أكثر من 1000 جنيه)
+    if clinic_debt_info["outstanding_debt"] > 1000:
+        # إذا لم يتم تأكيد التحذير من المندوب
+        if not order_data.debt_warning_acknowledged:
+            raise HTTPException(
+                status_code=400, 
+                detail={
+                    "error": "clinic_debt_warning",
+                    "message": f"هذه العيادة لديها مديونية قدرها {clinic_debt_info['outstanding_debt']:.2f} ج.م. هل تريد المتابعة؟",
+                    "debt_amount": clinic_debt_info["outstanding_debt"],
+                    "require_acknowledgment": True
+                }
+            )
+    
+    # فحص المخزن
     warehouse = await db.warehouses.find_one({"id": order_data.warehouse_id})
     if not warehouse:
         raise HTTPException(status_code=404, detail="Warehouse not found")
     
-    # Calculate total amount
+    # حساب المبلغ الإجمالي
     total_amount = 0.0
     order_items = []
     
@@ -2243,7 +2257,7 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
             raise HTTPException(status_code=404, detail=f"Product {item_data['product_id']} not found")
         
         item_total = product["price"] * item_data["quantity"]
-        total_amount += item_total if order_data.order_type == "SALE" else 0.0
+        total_amount += item_total
         
         order_item = OrderItem(
             order_id="",  # Will be set after order creation
@@ -2254,7 +2268,11 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         )
         order_items.append(order_item)
     
-    # Create order
+    # تحديد لون الطلب حسب حالة العيادة
+    order_color = "red" if clinic_debt_info["outstanding_debt"] > 1000 else "green"
+    debt_status = "blocked" if clinic_debt_info["outstanding_debt"] > 5000 else ("warning" if clinic_debt_info["outstanding_debt"] > 1000 else "clear")
+    
+    # إنشاء الطلب
     order = Order(
         visit_id=order_data.visit_id,
         sales_rep_id=current_user.id,
