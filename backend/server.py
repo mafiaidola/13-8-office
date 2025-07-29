@@ -12836,23 +12836,19 @@ async def admin_delete_product(product_id: str, current_user: User = Depends(get
 # Enhanced User Profile API
 @api_router.get("/users/{user_id}/profile", response_model=Dict[str, Any])
 async def get_user_profile(user_id: str, current_user: User = Depends(get_current_user)):
-    """Get comprehensive user profile with sales activity, debt info, and territory details"""
+    """الحصول على الملف الشخصي للمستخدم مع تقييد الصلاحيات"""
     try:
-        # Get user basic info
+        # فحص الصلاحية للوصول للملف الشخصي
+        if not await can_access_user_profile(current_user, user_id):
+            raise HTTPException(
+                status_code=403, 
+                detail="ليس لديك صلاحية للوصول إلى هذا الملف الشخصي. يمكن للمندوب رؤية ملفه فقط من قبل مديره أو لاين مانجر أو GM أو الأدمن."
+            )
+        
+        # البحث عن المستخدم
         user = await db.users.find_one({"id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
-        # Check permissions
-        if current_user.role not in [UserRole.ADMIN, UserRole.GM] and current_user.id != user_id:
-            # Managers can view profiles of their subordinates
-            if current_user.role in [UserRole.DISTRICT_MANAGER, UserRole.AREA_MANAGER, UserRole.LINE_MANAGER]:
-                subordinates = await db.users.find({"direct_manager_id": current_user.id}).to_list(1000)
-                subordinate_ids = [sub["id"] for sub in subordinates]
-                if user_id not in subordinate_ids:
-                    raise HTTPException(status_code=403, detail="Not authorized to view this profile")
-            else:
-                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
         
         # Get sales activity
         sales_activity = await get_user_sales_activity(user_id)
