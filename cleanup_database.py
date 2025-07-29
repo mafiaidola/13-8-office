@@ -233,7 +233,7 @@ def main():
     
     # الاتصال بقاعدة البيانات
     db = connect_to_mongodb()
-    if not db:
+    if db is None:
         return
     
     try:
