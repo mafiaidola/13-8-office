@@ -16498,6 +16498,20 @@ const VisitRegistration = () => {
       // Add any pending voice notes
       for (const voiceNote of voiceNotes) {
         await addVoiceNote(response.data.visit_id, voiceNote.audio, voiceNote.duration);
+      }
+      
+      setSuccess('تم تسجيل الزيارة بنجاح');
+      setVoiceNotes([]);
+      setNotes('');
+      
+    } catch (error) {
+      console.error('Error submitting visit:', error);
+      setError('فشل في تسجيل الزيارة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 // Inventory Edit Modal Component
 const InventoryEditModal = ({ item, warehouses, onClose, onSave, language }) => {
   const [formData, setFormData] = useState({
