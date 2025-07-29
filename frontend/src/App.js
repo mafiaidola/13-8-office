@@ -17602,6 +17602,16 @@ const Dashboard = () => {
               </button>
             )}
 
+            {user.role === 'medical_rep' && (
+              <button
+                onClick={() => setActiveTab('register-clinic')}
+                className={`nav-item ${activeTab === 'register-clinic' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🏥➕</span>
+                {language === 'ar' ? 'تسجيل عيادة' : 'Register Clinic'}
+              </button>
+            )}
+
             {canAccessTab('my-plan') && (
               <button
                 onClick={() => setActiveTab('my-plan')}
