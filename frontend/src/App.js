@@ -13352,11 +13352,21 @@ const SalesRepDashboard = ({ stats, user }) => {
   const handleSelfieCapture = (imageData) => {
     setSelfieToday(imageData);
     setShowSelfieCapture(false);
+    
+    // حفظ تاريخ اليوم في localStorage
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('lastDailyLogin', today);
+    
     setShowDailyPlan(true); // Show daily plan after selfie
   };
 
   const handleSelfieSkip = () => {
     setShowSelfieCapture(false);
+    
+    // حفظ تاريخ اليوم في localStorage حتى لو تم التخطي
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('lastDailyLogin', today);
+    
     setShowDailyPlan(true); // Show daily plan anyway
   };
 
