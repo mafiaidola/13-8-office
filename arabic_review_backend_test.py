@@ -78,7 +78,7 @@ class ArabicReviewBackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                self.admin_token = data.get("access_token") or data.get("token")
+                self.admin_token = data.get("token")
                 if self.admin_token:
                     self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
                     self.log_test("Admin Authentication", True, f"Successfully logged in as {ADMIN_USERNAME}")
