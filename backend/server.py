@@ -3998,7 +3998,7 @@ async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizati
             "added_by": user.get("id"),
             "approved_by": None,  # No approval needed
             "is_active": True,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.utcnow().isoformat(),
             
             # Hidden tracking info (visible only to admin)
             "rep_location_at_registration": clinic_data.get("rep_location_at_registration"),
@@ -4014,7 +4014,9 @@ async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizati
                 "rep_actual_location": clinic_data.get("rep_location_at_registration"),
                 "distance_between_locations": None,  # Will be calculated if needed
                 "registration_source": "mobile_app",
-                "can_be_deleted_by_rep": False  # Reps cannot delete their registered clinics
+                "can_be_deleted_by_rep": False,  # Reps cannot delete their registered clinics
+                "approval_expires": None,  # No approval needed for 3 months
+                "auto_approved": True
             }
         }
         
