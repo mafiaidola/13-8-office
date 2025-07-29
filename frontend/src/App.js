@@ -22231,7 +22231,7 @@ const WarehouseKeeperDashboard = () => {
                     className="btn-primary flex items-center gap-2"
                   >
                     <SVGIcon name="add" size={20} />
-                    <span>إضافة منتج</span>
+                    <span>{t('add')} {t('products')}</span>
                   </button>
                   <button
                     onClick={() => {
