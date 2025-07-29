@@ -3966,6 +3966,103 @@ async def create_clinic(clinic_data: ClinicCreate, current_user: User = Depends(
     await db.clinics.insert_one(clinic.dict())
     return {"message": "Clinic added successfully", "clinic_id": clinic.id}
 
+@api_router.post("/clinics/register-by-rep")
+async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Register a new clinic by sales rep with hidden location tracking
+    تسجيل عيادة جديدة بواسطة المندوب مع تتبع الموقع المخفي
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only medical reps can register clinics
+        if user.get("role") not in ["medical_rep", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only sales representatives can register clinics")
+        
+        # Generate clinic ID
+        clinic_id = str(uuid.uuid4())
+        
+        # Prepare clinic document with tracking info
+        clinic_doc = {
+            "id": clinic_id,
+            "name": clinic_data.get("name"),
+            "address": clinic_data.get("address"),
+            "phone": clinic_data.get("phone"),
+            "doctor_name": clinic_data.get("doctor_name"),
+            "latitude": clinic_data.get("latitude"),
+            "longitude": clinic_data.get("longitude"),
+            "classification": clinic_data.get("classification", "class_c"),
+            
+            # Standard fields
+            "status": "approved",  # Auto-approved without manager approval
+            "added_by": user.get("id"),
+            "approved_by": None,  # No approval needed
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            
+            # Hidden tracking info (visible only to admin)
+            "rep_location_at_registration": clinic_data.get("rep_location_at_registration"),
+            "registration_metadata": {
+                "registered_by": user.get("id"),
+                "registered_by_name": user.get("full_name", user.get("username")),
+                "registered_by_role": user.get("role"),
+                "registration_time": datetime.utcnow().isoformat(),
+                "clinic_chosen_location": {
+                    "latitude": clinic_data.get("latitude"),
+                    "longitude": clinic_data.get("longitude")
+                },
+                "rep_actual_location": clinic_data.get("rep_location_at_registration"),
+                "distance_between_locations": None,  # Will be calculated if needed
+                "registration_source": "mobile_app",
+                "can_be_deleted_by_rep": False  # Reps cannot delete their registered clinics
+            }
+        }
+        
+        # Calculate distance between rep location and clinic location
+        if clinic_data.get("rep_location_at_registration"):
+            rep_lat = clinic_data["rep_location_at_registration"]["latitude"]
+            rep_lng = clinic_data["rep_location_at_registration"]["longitude"]
+            clinic_lat = clinic_data.get("latitude")
+            clinic_lng = clinic_data.get("longitude")
+            
+            # Simple distance calculation (for monitoring purposes)
+            if rep_lat and rep_lng and clinic_lat and clinic_lng:
+                import math
+                lat_diff = abs(rep_lat - clinic_lat)
+                lng_diff = abs(rep_lng - clinic_lng)
+                distance_km = math.sqrt(lat_diff**2 + lng_diff**2) * 111  # Rough conversion to km
+                clinic_doc["registration_metadata"]["distance_between_locations"] = distance_km
+        
+        # Insert clinic into database
+        await db.clinics.insert_one(clinic_doc)
+        
+        # Log the registration for admin tracking
+        log_entry = {
+            "id": str(uuid.uuid4()),
+            "action": "clinic_registered_by_rep",
+            "user_id": user.get("id"),
+            "clinic_id": clinic_id,
+            "timestamp": datetime.utcnow(),
+            "details": {
+                "clinic_name": clinic_data.get("name"),
+                "registered_location": clinic_data.get("rep_location_at_registration"),
+                "clinic_location": {"lat": clinic_data.get("latitude"), "lng": clinic_data.get("longitude")}
+            }
+        }
+        await db.admin_logs.insert_one(log_entry)
+        
+        return {
+            "message": "Clinic registered successfully by sales rep",
+            "clinic_id": clinic_id,
+            "status": "approved",
+            "registration_time": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error registering clinic: {str(e)}")
+
 @api_router.get("/clinics", response_model=List[Dict[str, Any]])
 async def get_clinics(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
