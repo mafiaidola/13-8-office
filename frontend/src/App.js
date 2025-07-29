@@ -22781,9 +22781,9 @@ const StockAdjustmentModal = ({ product, onClose, onSave }) => {
               className="form-modern w-full"
               required
             >
-              <option value="add">{t('add')} {t('inventory')}</option>
-              <option value="remove">{t('delete')} {t('inventory')}</option>
-              <option value="adjust">{t('edit')} {t('inventory')}</option>
+              <option value="add">إضافة مخزون</option>
+              <option value="remove">خصم مخزون</option>
+              <option value="adjust">تعديل المخزون</option>
             </select>
           </div>
 
