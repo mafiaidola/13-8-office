@@ -432,6 +432,89 @@ class StockMovement(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: str
 
+class ClinicClassification(BaseModel):
+    """تصنيف العيادات"""
+    NEW = "new"          # جيدة - أخضر
+    PREMIUM = "premium"  # مميزة - ذهبي  
+    DEBT = "debt"        # مديونية - أحمر
+
+class ClinicEnhanced(BaseModel):
+    """نموذج محسن للعيادات"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    address: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    doctor_name: Optional[str] = None
+    doctor_specialty: Optional[str] = None
+    
+    # تصنيف العيادة
+    classification: str = ClinicClassification.NEW
+    classification_notes: Optional[str] = None
+    classification_updated_at: Optional[datetime] = None
+    classification_updated_by: Optional[str] = None
+    
+    # إحصائيات العيادة
+    total_visits: int = 0
+    total_orders: int = 0
+    total_revenue: float = 0.0
+    outstanding_debt: float = 0.0
+    last_visit_date: Optional[datetime] = None
+    last_order_date: Optional[datetime] = None
+    
+    # معلومات المسؤول عن العيادة
+    assigned_rep_id: Optional[str] = None
+    assigned_rep_name: Optional[str] = None
+    assigned_rep_role: Optional[str] = None
+    
+    # بيانات التسجيل
+    status: str = "approved"
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ClinicDebt(BaseModel):
+    """مديونية العيادة"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    clinic_id: str
+    invoice_id: str
+    amount: float
+    due_date: datetime
+    status: str = "pending"  # pending, paid, overdue
+    payment_date: Optional[datetime] = None
+    payment_method: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_by: str
+
+class UserPerformanceStats(BaseModel):
+    """إحصائيات أداء المستخدم"""
+    user_id: str
+    month: str  # YYYY-MM format
+    
+    # إحصائيات الزيارات
+    total_visits: int = 0
+    successful_visits: int = 0
+    failed_visits: int = 0
+    visit_success_rate: float = 0.0
+    
+    # إحصائيات الطلبات
+    total_orders: int = 0
+    total_order_value: float = 0.0
+    average_order_value: float = 0.0
+    
+    # إحصائيات العيادات
+    new_clinics_registered: int = 0
+    active_clinics: int = 0
+    
+    # تقييم الأداء
+    performance_score: float = 0.0
+    ranking: Optional[int] = None
+    
+    calculated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class WarehouseCreate(BaseModel):
     name: str
     code: str
