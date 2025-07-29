@@ -13535,11 +13535,12 @@ const SalesRepDashboard = ({ stats, user }) => {
         </div>
       </div>
 
-      {/* Selfie Capture Modal */}
+      {/* Enhanced Authentication Modal */}
       {showSelfieCapture && (
-        <SelfieCapture 
-          onCapture={handleSelfieCapture}
+        <EnhancedAuthentication 
+          onAuthenticate={handleSelfieCapture}
           onSkip={handleSelfieSkip}
+          user={user}
         />
       )}
 
