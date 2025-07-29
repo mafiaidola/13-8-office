@@ -1234,6 +1234,87 @@ class VisitCreate(BaseModel):
     longitude: float
     effective: bool = True
 
+# Movement Log System Models
+class MovementLog(BaseModel):
+    """نظام سجل الحركة - Movement Log System"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Movement Basic Information
+    movement_type: str  # "product_movement", "line_movement", "customer_movement"
+    warehouse_id: str  # ID المخزن المختار
+    line: str  # line_1 or line_2 - الخط المختار
+    
+    # Product Movement - حركة صنف
+    product_id: Optional[str] = None
+    product_name: Optional[str] = None
+    quantity_change: Optional[float] = None
+    movement_reason: Optional[str] = None  # إضافة، سحب، تعديل، تلف، إرجاع
+    
+    # Line Movement - حركة خط كامل
+    affected_products: List[str] = []  # قائمة المنتجات المتأثرة
+    line_operation: Optional[str] = None  # "transfer", "adjustment", "inventory_count"
+    
+    # Customer Movement - حركة عميل في الخط
+    customer_id: Optional[str] = None  # clinic_id
+    customer_name: Optional[str] = None
+    customer_operation: Optional[str] = None  # "order", "return", "payment", "visit"
+    order_id: Optional[str] = None
+    visit_id: Optional[str] = None
+    
+    # Movement Details
+    description: str
+    reference_number: Optional[str] = None
+    
+    # Authorization & Audit
+    created_by: str  # User ID
+    created_by_name: str
+    created_by_role: str
+    
+    # Timestamps
+    movement_date: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Additional metadata
+    metadata: Dict[str, Any] = {}
+
+class MovementLogCreate(BaseModel):
+    """إنشاء سجل حركة جديد"""
+    movement_type: str  # "product_movement", "line_movement", "customer_movement"
+    warehouse_id: str
+    line: str  # line_1 or line_2
+    
+    # For product movement
+    product_id: Optional[str] = None
+    quantity_change: Optional[float] = None
+    movement_reason: Optional[str] = None
+    
+    # For line movement
+    affected_products: List[str] = []
+    line_operation: Optional[str] = None
+    
+    # For customer movement
+    customer_id: Optional[str] = None
+    customer_operation: Optional[str] = None
+    order_id: Optional[str] = None
+    visit_id: Optional[str] = None
+    
+    description: str
+    reference_number: Optional[str] = None
+    metadata: Dict[str, Any] = {}
+
+class MovementLogFilter(BaseModel):
+    """فلترة سجل الحركة"""
+    warehouse_id: Optional[str] = None
+    line: Optional[str] = None  # line_1, line_2, or "all"
+    movement_type: Optional[str] = None
+    date_from: Optional[str] = None  # YYYY-MM-DD format
+    date_to: Optional[str] = None
+    product_id: Optional[str] = None
+    customer_id: Optional[str] = None
+    created_by: Optional[str] = None
+    page: int = 1
+    limit: int = 50
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
