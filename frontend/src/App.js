@@ -19723,7 +19723,7 @@ const GPSTrackingDashboard = () => {
       )}
     </div>
   );
-}
+};
 
 // Main App Component
 const App = () => {
