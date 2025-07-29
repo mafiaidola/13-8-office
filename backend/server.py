@@ -12850,58 +12850,53 @@ async def get_user_profile(user_id: str, current_user: User = Depends(get_curren
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Get sales activity
-        sales_activity = await get_user_sales_activity(user_id)
+        # حذف معلومات حساسة
+        if "_id" in user:
+            del user["_id"]
+        if "password_hash" in user:
+            del user["password_hash"]
         
-        # Get debt information
-        debt_info = await get_user_debt_info(user_id)
-        
-        # Get territory information
-        territory_info = await get_user_territory_info(user_id)
-        
-        # Get team information
-        team_info = await get_user_team_info(user_id)
-        
-        # Get region and manager names
-        region_name = "غير محدد"
-        if user.get("region_id"):
-            region = await db.regions.find_one({"id": user["region_id"]})
-            if region:
-                region_name = region["name"]
-        
-        direct_manager = None
-        if user.get("direct_manager_id"):
-            manager = await db.users.find_one({"id": user["direct_manager_id"]})
-            if manager:
-                direct_manager = {
-                    "name": manager["full_name"],
-                    "role": manager["role"],
-                    "phone": manager.get("phone", ""),
-                    "email": manager.get("email", "")
-                }
-        
-        profile_data = {
-            "user": {
-                "id": user["id"],
-                "username": user["username"],
-                "full_name": user["full_name"],
-                "email": user.get("email", ""),
-                "phone": user.get("phone", ""),
-                "role": user["role"],
-                "region": region_name,
-                "direct_manager": direct_manager,
-                "hire_date": user.get("hire_date", ""),
-                "profile_photo": user.get("profile_photo", ""),
-                "is_active": user.get("is_active", True),
-                "last_seen": user.get("last_seen", "")
+        # إضافة إحصائيات المستخدم
+        user_stats = {
+            "sales_activity": {
+                "total_visits": await db.visits.count_documents({"sales_rep_id": user_id}),
+                "total_orders": await db.orders.count_documents({"sales_rep_id": user_id}),
+                "monthly_visits": await db.visits.count_documents({
+                    "sales_rep_id": user_id,
+                    "date": {"$gte": datetime.utcnow().replace(day=1)}
+                }),
+                "monthly_orders": await db.orders.count_documents({
+                    "sales_rep_id": user_id,
+                    "created_at": {"$gte": datetime.utcnow().replace(day=1)}
+                })
             },
-            "sales_activity": sales_activity,
-            "debt_info": debt_info,
-            "territory_info": territory_info,
-            "team_info": team_info
+            "debt_info": {
+                "total_debt": 0.0,
+                "overdue_debt": 0.0,
+                "clinics_with_debt": 0
+            },
+            "territory_info": {
+                "assigned_clinics": await db.clinics.count_documents({"assigned_rep_id": user_id}),
+                "active_clinics": await db.clinics.count_documents({"assigned_rep_id": user_id, "is_active": True}),
+                "coverage_area": user.get("area_id") or "غير محدد"
+            },
+            "team_info": {
+                "direct_reports": await db.users.count_documents({"managed_by": user_id}) if user.get("role") in ["manager", "line_manager", "area_manager"] else 0,
+                "team_performance": "جيد"  # يمكن تطوير هذا لاحقاً
+            }
         }
         
-        return profile_data
+        # دمج البيانات
+        user.update({
+            "user_stats": user_stats,
+            "access_info": {
+                "accessed_by": current_user.full_name,
+                "access_time": datetime.utcnow().isoformat(),
+                "access_reason": "profile_view"
+            }
+        })
+        
+        return {"user": user}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
