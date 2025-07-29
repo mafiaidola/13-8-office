@@ -13314,21 +13314,38 @@ const SalesRepDashboard = ({ stats, user }) => {
 
   const checkDailySelfie = async () => {
     try {
+      // التحقق من آخر تسجيل حضور في localStorage
+      const lastLoginDate = localStorage.getItem('lastDailyLogin');
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      // إذا تم تسجيل الحضور اليوم، لا تظهر المودال
+      if (lastLoginDate === today) {
+        console.log('تم تسجيل الحضور اليوم بالفعل:', today);
+        return;
+      }
+      
+      // محاولة التحقق من الخادم (اختياري)
       const token = localStorage.getItem('token');
-      const today = new Date().toISOString().split('T')[0];
       const response = await axios.get(`${API}/users/selfie/today`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.selfie) {
         setSelfieToday(response.data.selfie);
+        // حفظ تاريخ اليوم في localStorage
+        localStorage.setItem('lastDailyLogin', today);
       } else {
-        // Show selfie capture if no selfie taken today
+        // إظهار مودال تسجيل الحضور إذا لم يسجل اليوم
         setShowSelfieCapture(true);
       }
     } catch (error) {
-      // If API doesn't exist, show selfie capture for demo
-      setShowSelfieCapture(true);
+      // في حالة عدم وجود API، التحقق من localStorage فقط
+      const lastLoginDate = localStorage.getItem('lastDailyLogin');
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (lastLoginDate !== today) {
+        setShowSelfieCapture(true);
+      }
     }
   };
 
