@@ -12213,6 +12213,94 @@ async def get_daily_login_records(credentials: HTTPAuthorizationCredentials = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching login records: {str(e)}")
 
+@api_router.get("/clinics/my-region")
+async def get_clinics_in_my_region(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get clinics available in the sales rep's region
+    جلب العيادات المتاحة في منطقة المندوب
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only sales reps can access this
+        if user.get("role") not in ["medical_rep", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only sales representatives can access region clinics")
+        
+        # Get user's region
+        user_region = user.get("region_id", "القاهرة")
+        
+        # Find clinics in the user's region
+        pipeline = [
+            {
+                "$match": {
+                    "status": "approved",
+                    "region": user_region
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "doctors",
+                    "localField": "doctor_id",
+                    "foreignField": "id",
+                    "as": "doctor"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$doctor",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$project": {
+                    "id": "$id",
+                    "name": "$name",
+                    "address": "$address",
+                    "phone": "$phone",
+                    "latitude": "$latitude",
+                    "longitude": "$longitude",
+                    "doctor_name": "$doctor.name",
+                    "doctor_specialty": "$doctor.specialty",
+                    "region": "$region",
+                    "line": "$line",
+                    "created_at": "$created_at"
+                }
+            },
+            {
+                "$sort": {"name": 1}
+            }
+        ]
+        
+        clinics = await db.clinics.aggregate(pipeline).to_list(1000)
+        
+        # If no clinics found in user's region, get a few from nearby regions
+        if not clinics:
+            # Get general clinics that are approved
+            general_clinics = await db.clinics.find({
+                "status": "approved"
+            }).limit(20).to_list(20)
+            
+            # Add doctor information
+            for clinic in general_clinics:
+                if clinic.get("doctor_id"):
+                    doctor = await db.doctors.find_one({"id": clinic["doctor_id"]})
+                    if doctor:
+                        clinic["doctor_name"] = doctor.get("name", "غير محدد")
+                        clinic["doctor_specialty"] = doctor.get("specialty", "غير محدد")
+            
+            clinics = general_clinics
+        
+        return {
+            "user_region": user_region,
+            "total_clinics": len(clinics),
+            "clinics": clinics
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching region clinics: {str(e)}")
+
 @api_router.get("/sales-rep/warehouse-stock-status")
 async def get_sales_rep_warehouse_stock_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
