@@ -4135,6 +4135,212 @@ async def review_visit(visit_id: str, is_effective: bool, current_user: User = D
     
     return {"message": "Visit reviewed successfully"}
 
+@api_router.get("/visits/my-visits")
+async def get_my_visits(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get user's own visits
+    جلب زيارات المستخدم
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get user's visits
+        visits = await db.visits.find(
+            {"sales_rep_id": user["id"]},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(100).to_list(100)
+        
+        # Add clinic information
+        for visit in visits:
+            if visit.get("clinic_id"):
+                clinic = await db.clinics.find_one({"id": visit["clinic_id"]})
+                if clinic:
+                    visit["clinic_info"] = {
+                        "name": clinic.get("name", "غير محدد"),
+                        "address": clinic.get("address", "غير محدد")
+                    }
+        
+        return {
+            "user_id": user["id"],
+            "user_name": user.get("full_name", user.get("username", "Unknown")),
+            "total_visits": len(visits),
+            "visits": visits
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching visits: {str(e)}")
+
+@api_router.get("/admin/visits")
+async def get_all_visits_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get all visits for admin with enhanced details and location tracking
+    جلب جميع الزيارات للأدمن مع التفاصيل المحسنة وتتبع المواقع
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only admin and GM can access all visits
+        if user.get("role") not in ["admin", "gm"]:
+            raise HTTPException(status_code=403, detail="Admin or GM access required")
+        
+        # Get all visits with user and clinic information
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "sales_rep_id",
+                    "foreignField": "id",
+                    "as": "sales_rep"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$sales_rep",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "clinics",
+                    "localField": "clinic_id",
+                    "foreignField": "id",
+                    "as": "clinic"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$clinic",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$project": {
+                    "visit_id": "$id",
+                    "sales_rep_name": "$sales_rep_name",
+                    "sales_rep_region": "$sales_rep.region_id",
+                    "doctor_name": "$doctor_name",
+                    "clinic_name": "$clinic.name",
+                    "clinic_address": "$clinic.address",
+                    "notes": "$notes",
+                    "voice_notes_count": {"$size": {"$ifNull": ["$voice_notes", []]}},
+                    "with_manager": "$with_manager",
+                    "managers": "$managers",
+                    "visit_date": "$visit_date",
+                    "status": "$status",
+                    "location": "$location",
+                    "actual_location": "$actual_location",
+                    "clinic_location": "$clinic_location",
+                    "has_location_data": {
+                        "$and": [
+                            {"$ne": ["$actual_location.latitude", None]},
+                            {"$ne": ["$actual_location.longitude", None]}
+                        ]
+                    },
+                    "created_at": "$created_at"
+                }
+            },
+            {
+                "$sort": {"created_at": -1}
+            }
+        ]
+        
+        visits = await db.visits.aggregate(pipeline).to_list(1000)
+        
+        # Convert ObjectId to string
+        for visit in visits:
+            visit["_id"] = str(visit["_id"])
+        
+        return {
+            "total_visits": len(visits),
+            "visits": visits
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching admin visits: {str(e)}")
+
+@api_router.get("/visits/{visit_id}")
+async def get_visit_details(visit_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get detailed visit information including voice notes and location data
+    جلب تفاصيل الزيارة الشاملة مع الملاحظات الصوتية وبيانات الموقع
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Get the visit
+        visit = await db.visits.find_one({"id": visit_id})
+        if not visit:
+            raise HTTPException(status_code=404, detail="Visit not found")
+        
+        # Check permissions
+        if user.get("role") not in ["admin", "gm"] and visit.get("sales_rep_id") != user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get additional information
+        sales_rep = await db.users.find_one({"id": visit["sales_rep_id"]}) if visit.get("sales_rep_id") else None
+        clinic = await db.clinics.find_one({"id": visit["clinic_id"]}) if visit.get("clinic_id") else None
+        
+        # Calculate distance if both locations available
+        distance_info = None
+        if (visit.get("actual_location", {}).get("latitude") and 
+            visit.get("clinic_location", {}).get("latitude")):
+            
+            from math import radians, cos, sin, asin, sqrt
+            
+            def haversine(lon1, lat1, lon2, lat2):
+                # Convert decimal degrees to radians
+                lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+                # Haversine formula
+                dlon = lon2 - lon1
+                dlat = lat2 - lat1
+                a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                c = 2 * asin(sqrt(a))
+                r = 6371  # Radius of earth in kilometers
+                return c * r
+            
+            distance = haversine(
+                visit["actual_location"]["longitude"],
+                visit["actual_location"]["latitude"],
+                visit["clinic_location"]["longitude"],
+                visit["clinic_location"]["latitude"]
+            )
+            
+            distance_info = {
+                "distance_km": round(distance, 2),
+                "distance_m": round(distance * 1000, 0),
+                "warning": "تم تسجيل الزيارة على بُعد أكثر من 100 متر من العيادة" if distance > 0.1 else None
+            }
+        
+        enhanced_visit = {
+            **visit,
+            "_id": str(visit["_id"]),
+            "sales_rep_info": {
+                "name": sales_rep.get("full_name", "غير محدد") if sales_rep else "غير محدد",
+                "region": sales_rep.get("region_id", "غير محدد") if sales_rep else "غير محدد"
+            } if sales_rep else None,
+            "clinic_info": {
+                "name": clinic.get("name", "غير محدد"),
+                "address": clinic.get("address", "غير محدد"),
+                "phone": clinic.get("phone", "غير محدد")
+            } if clinic else None,
+            "distance_analysis": distance_info,
+            "voice_notes_summary": {
+                "total_count": len(visit.get("voice_notes", [])),
+                "total_duration": sum(note.get("duration", 0) for note in visit.get("voice_notes", []))
+            }
+        }
+        
+        return enhanced_visit
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching visit details: {str(e)}")
+
 # Dashboard Routes
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
