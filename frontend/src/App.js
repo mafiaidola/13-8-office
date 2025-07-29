@@ -28461,4 +28461,904 @@ const CreateAreaModal = ({ lines, users, onCreate }) => {
   );
 };
 
+// Enhanced User Management Component
+const EnhancedUserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserCard, setShowUserCard] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { language, t, isRTL } = useLanguage();
+
+  useEffect(() => {
+    loadEnhancedUsers();
+  }, []);
+
+  const loadEnhancedUsers = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/enhanced`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data || []);
+    } catch (error) {
+      console.error('Error loading enhanced users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const viewUserPerformance = async (user) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${user.id}/performance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSelectedUser({
+        ...user,
+        performanceData: response.data
+      });
+      setShowUserCard(true);
+    } catch (error) {
+      console.error('Error loading user performance:', error);
+    }
+  };
+
+  const filteredUsers = users.filter(user =>
+    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getRoleLabel = (role) => {
+    const roleLabels = {
+      'admin': 'مدير النظام',
+      'gm': 'مدير عام',
+      'line_manager': 'مدير خط',
+      'area_manager': 'مدير منطقة',
+      'district_manager': 'مدير مقاطعة',
+      'key_account': 'حساب رئيسي',
+      'medical_rep': 'مندوب طبي',
+      'warehouse_keeper': 'أمين مخزن',
+      'accounting': 'محاسب'
+    };
+    return roleLabels[role] || role;
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">👥 إدارة المستخدمين المحسنة</h1>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          إدارة شاملة للمستخدمين مع إحصائيات الأداء والبطاقات التفصيلية
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="بحث عن المستخدمين..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input-glass w-full pl-12"
+          />
+          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+            🔍
+          </span>
+        </div>
+      </div>
+
+      {/* Users Grid */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          <p className="mt-2">جاري التحميل...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredUsers.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              onViewPerformance={() => viewUserPerformance(user)}
+              getRoleLabel={getRoleLabel}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* User Performance Modal */}
+      {showUserCard && selectedUser && (
+        <UserPerformanceCard
+          user={selectedUser}
+          onClose={() => setShowUserCard(false)}
+          getRoleLabel={getRoleLabel}
+        />
+      )}
+    </div>
+  );
+};
+
+// User Card Component
+const UserCard = ({ user, onViewPerformance, getRoleLabel }) => {
+  const stats = user.stats_last_30_days || {};
+  
+  return (
+    <div className="glass-effect p-6 rounded-xl hover:shadow-lg transition-all">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {user.photo ? (
+            <img 
+              src={user.photo} 
+              alt={user.full_name}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+              {user.full_name?.charAt(0) || '؟'}
+            </div>
+          )}
+          <div>
+            <h3 className="font-bold text-lg">{user.full_name}</h3>
+            <p className="text-sm text-gray-600">@{user.username}</p>
+          </div>
+        </div>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          user.role === 'admin' ? 'bg-red-100 text-red-800' :
+          user.role === 'gm' ? 'bg-purple-100 text-purple-800' :
+          user.role === 'medical_rep' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {getRoleLabel(user.role)}
+        </span>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-blue-50 rounded p-3 text-center">
+          <div className="text-2xl font-bold text-blue-600">{stats.visits || 0}</div>
+          <div className="text-xs text-blue-800">زيارات (30 يوم)</div>
+        </div>
+        <div className="bg-green-50 rounded p-3 text-center">
+          <div className="text-2xl font-bold text-green-600">{stats.orders || 0}</div>
+          <div className="text-xs text-green-800">طلبات (30 يوم)</div>
+        </div>
+        <div className="bg-purple-50 rounded p-3 text-center">
+          <div className="text-2xl font-bold text-purple-600">{stats.order_value?.toFixed(0) || 0}</div>
+          <div className="text-xs text-purple-800">قيمة الطلبات</div>
+        </div>
+        <div className="bg-orange-50 rounded p-3 text-center">
+          <div className="text-2xl font-bold text-orange-600">{stats.new_clinics || 0}</div>
+          <div className="text-xs text-orange-800">عيادات جديدة</div>
+        </div>
+      </div>
+
+      {/* Action Button */}
+      <button
+        onClick={onViewPerformance}
+        className="w-full btn-primary text-sm py-2"
+      >
+        📊 عرض بطاقة الأداء التفصيلية
+      </button>
+    </div>
+  );
+};
+
+// User Performance Card Modal
+const UserPerformanceCard = ({ user, onClose, getRoleLabel }) => {
+  const performanceData = user.performanceData || {};
+  const visitStats = performanceData.visit_stats || {};
+  const orderStats = performanceData.order_stats || {};
+  const clinicStats = performanceData.clinic_stats || {};
+  const ranking = performanceData.ranking || {};
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              {user.photo ? (
+                <img 
+                  src={user.photo} 
+                  alt={user.full_name}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl">
+                  {user.full_name?.charAt(0) || '؟'}
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold">{user.full_name}</h2>
+                <p className="text-gray-600">{getRoleLabel(user.role)}</p>
+                <p className="text-sm text-gray-500">@{user.username}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Performance Score */}
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold">نقاط الأداء</h3>
+                <p className="text-blue-100">آخر 6 أشهر</p>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-bold">{performanceData.performance_score || 0}</div>
+                <div className="text-sm">من 100</div>
+              </div>
+            </div>
+            
+            {ranking.rank && (
+              <div className="mt-4 pt-4 border-t border-blue-400">
+                <div className="flex items-center justify-between text-sm">
+                  <span>الترتيب بين الزملاء:</span>
+                  <span className="font-bold">#{ranking.rank} من {ranking.total_peers}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-1">
+                  <span>المئوية:</span>
+                  <span className="font-bold">{ranking.percentile?.toFixed(1)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Visit Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                🚗 إحصائيات الزيارات
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>إجمالي الزيارات:</span>
+                  <span className="font-bold">{visitStats.total_visits || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>زيارات ناجحة:</span>
+                  <span className="font-bold text-green-600">{visitStats.successful_visits || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>زيارات فاشلة:</span>
+                  <span className="font-bold text-red-600">{visitStats.failed_visits || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>معدل النجاح:</span>
+                  <span className="font-bold">{visitStats.success_rate?.toFixed(1) || 0}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>متوسط شهري:</span>
+                  <span className="font-bold">{visitStats.monthly_average?.toFixed(1) || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                📋 إحصائيات الطلبات
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>إجمالي الطلبات:</span>
+                  <span className="font-bold">{orderStats.total_orders || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>إجمالي القيمة:</span>
+                  <span className="font-bold text-green-600">{orderStats.total_value?.toFixed(0) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>متوسط قيمة الطلب:</span>
+                  <span className="font-bold">{orderStats.average_order_value?.toFixed(0) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>متوسط شهري:</span>
+                  <span className="font-bold">{orderStats.monthly_average?.toFixed(1) || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinic Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                🏥 إحصائيات العيادات
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>عيادات جديدة:</span>
+                  <span className="font-bold">{clinicStats.new_clinics_registered || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>متوسط شهري:</span>
+                  <span className="font-bold">{clinicStats.monthly_average?.toFixed(1) || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="glass-effect p-4 rounded-lg">
+              <h5 className="font-bold mb-2">📞 معلومات الاتصال</h5>
+              <div className="space-y-2 text-sm">
+                <div>📱 الهاتف: {user.phone || 'غير محدد'}</div>
+                <div>📧 البريد: {user.email || 'غير محدد'}</div>
+                <div>🏢 المنطقة: {user.region || 'غير محدد'}</div>
+              </div>
+            </div>
+            
+            <div className="glass-effect p-4 rounded-lg">
+              <h5 className="font-bold mb-2">📅 معلومات الحساب</h5>
+              <div className="space-y-2 text-sm">
+                <div>🔐 الحالة: {user.is_active ? '✅ نشط' : '❌ غير نشط'}</div>
+                <div>📅 تاريخ الإنشاء: {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG') : 'غير محدد'}</div>
+                <div>🔄 آخر تحديث: {user.updated_at ? new Date(user.updated_at).toLocaleDateString('ar-EG') : 'غير محدد'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Clinics Management Component
+const EnhancedClinicsManagement = () => {
+  const [clinics, setClinics] = useState([]);
+  const [selectedClinic, setSelectedClinic] = useState(null);
+  const [showClinicProfile, setShowClinicProfile] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterClassification, setFilterClassification] = useState('all');
+  const { language, t, isRTL } = useLanguage();
+
+  useEffect(() => {
+    loadEnhancedClinics();
+  }, []);
+
+  const loadEnhancedClinics = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/clinics/enhanced`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClinics(response.data || []);
+    } catch (error) {
+      console.error('Error loading enhanced clinics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const viewClinicProfile = async (clinic) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/clinics/${clinic.id}/mini-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSelectedClinic(response.data);
+      setShowClinicProfile(true);
+    } catch (error) {
+      console.error('Error loading clinic profile:', error);
+    }
+  };
+
+  const updateClinicClassification = async (clinicId, classification, notes) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/clinics/${clinicId}/classification`, {
+        classification,
+        notes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Reload clinics
+      loadEnhancedClinics();
+    } catch (error) {
+      console.error('Error updating clinic classification:', error);
+    }
+  };
+
+  const getClassificationColor = (classification) => {
+    switch (classification) {
+      case 'new': return 'green';
+      case 'premium': return 'gold';
+      case 'debt': return 'red';
+      default: return 'gray';
+    }
+  };
+
+  const getClassificationLabel = (classification) => {
+    const labels = {
+      'new': '🆕 عيادة جديدة',
+      'premium': '⭐ عيادة مميزة',
+      'debt': '⚠️ مديونية مستحقة'
+    };
+    return labels[classification] || classification;
+  };
+
+  const filteredClinics = clinics.filter(clinic => {
+    const matchesSearch = clinic.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         clinic.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         clinic.address?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterClassification === 'all' || clinic.classification === filterClassification;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">🏥 إدارة العيادات المحسنة</h1>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          إدارة شاملة للعيادات مع تصنيف بالألوان وإحصائيات تفصيلية
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="بحث عن العيادات..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input-glass w-full pl-12"
+          />
+          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+            🔍
+          </span>
+        </div>
+        
+        <select
+          value={filterClassification}
+          onChange={(e) => setFilterClassification(e.target.value)}
+          className="input-glass"
+        >
+          <option value="all">جميع التصنيفات</option>
+          <option value="new">🆕 عيادات جديدة</option>
+          <option value="premium">⭐ عيادات مميزة</option>
+          <option value="debt">⚠️ مديونية مستحقة</option>
+        </select>
+      </div>
+
+      {/* Clinics Grid */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          <p className="mt-2">جاري التحميل...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredClinics.map((clinic) => (
+            <ClinicCard
+              key={clinic.id}
+              clinic={clinic}
+              onViewProfile={() => viewClinicProfile(clinic)}
+              onUpdateClassification={updateClinicClassification}
+              getClassificationColor={getClassificationColor}
+              getClassificationLabel={getClassificationLabel}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Clinic Profile Modal */}
+      {showClinicProfile && selectedClinic && (
+        <ClinicMiniProfile
+          clinicData={selectedClinic}
+          onClose={() => setShowClinicProfile(false)}
+          getClassificationColor={getClassificationColor}
+          getClassificationLabel={getClassificationLabel}
+        />
+      )}
+    </div>
+  );
+};
+
+// Clinic Card Component
+const ClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
+  const [showClassificationModal, setShowClassificationModal] = useState(false);
+  
+  const classificationColor = getClassificationColor(clinic.classification);
+  
+  const cardStyle = {
+    borderLeft: `6px solid ${
+      classificationColor === 'green' ? '#10B981' :
+      classificationColor === 'gold' ? '#F59E0B' :
+      classificationColor === 'red' ? '#EF4444' : '#6B7280'
+    }`,
+    background: `linear-gradient(135deg, ${
+      classificationColor === 'green' ? 'rgba(16, 185, 129, 0.05)' :
+      classificationColor === 'gold' ? 'rgba(245, 158, 11, 0.05)' :
+      classificationColor === 'red' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(107, 114, 128, 0.05)'
+    }, transparent)`
+  };
+
+  return (
+    <div className="glass-effect rounded-xl p-6 hover:shadow-lg transition-all" style={cardStyle}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="font-bold text-lg">{clinic.name}</h3>
+          <p className="text-sm text-gray-600">{clinic.address}</p>
+          {clinic.doctor_name && (
+            <p className="text-sm text-blue-600">د. {clinic.doctor_name}</p>
+          )}
+        </div>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          classificationColor === 'green' ? 'bg-green-100 text-green-800' :
+          classificationColor === 'gold' ? 'bg-yellow-100 text-yellow-800' :
+          classificationColor === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+          {getClassificationLabel(clinic.classification)}
+        </span>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-blue-50 rounded p-2 text-center">
+          <div className="text-lg font-bold text-blue-600">{clinic.total_visits || 0}</div>
+          <div className="text-xs text-blue-800">زيارات</div>
+        </div>
+        <div className="bg-green-50 rounded p-2 text-center">
+          <div className="text-lg font-bold text-green-600">{clinic.total_orders || 0}</div>
+          <div className="text-xs text-green-800">طلبات</div>
+        </div>
+        <div className="bg-purple-50 rounded p-2 text-center">
+          <div className="text-lg font-bold text-purple-600">{clinic.total_revenue?.toFixed(0) || 0}</div>
+          <div className="text-xs text-purple-800">إجمالي الإيرادات</div>
+        </div>
+        <div className="bg-orange-50 rounded p-2 text-center">
+          <div className="text-lg font-bold text-orange-600">{clinic.outstanding_debt?.toFixed(0) || 0}</div>
+          <div className="text-xs text-orange-800">المديونية</div>
+        </div>
+      </div>
+
+      {/* Assigned Rep */}
+      {clinic.assigned_rep_name && (
+        <div className="bg-gray-50 rounded p-2 mb-4">
+          <div className="text-xs text-gray-600">المسؤول:</div>
+          <div className="text-sm font-medium">{clinic.assigned_rep_name}</div>
+          <div className="text-xs text-gray-500">{clinic.assigned_rep_role}</div>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={onViewProfile}
+          className="flex-1 btn-primary text-sm py-2"
+        >
+          📊 الملف التفصيلي
+        </button>
+        <button
+          onClick={() => setShowClassificationModal(true)}
+          className="btn-secondary text-sm px-3 py-2"
+        >
+          🏷️
+        </button>
+      </div>
+
+      {/* Classification Modal */}
+      {showClassificationModal && (
+        <ClassificationModal
+          clinic={clinic}
+          onClose={() => setShowClassificationModal(false)}
+          onUpdate={onUpdateClassification}
+        />
+      )}
+    </div>
+  );
+};
+
+// Classification Modal Component
+const ClassificationModal = ({ clinic, onClose, onUpdate }) => {
+  const [selectedClassification, setSelectedClassification] = useState(clinic.classification);
+  const [notes, setNotes] = useState('');
+
+  const handleSubmit = () => {
+    onUpdate(clinic.id, selectedClassification, notes);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold">🏷️ تصنيف العيادة</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">اختار التصنيف:</label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    value="new"
+                    checked={selectedClassification === 'new'}
+                    onChange={(e) => setSelectedClassification(e.target.value)}
+                    className="form-radio text-green-600"
+                  />
+                  <span className="text-green-600 font-medium">🆕 عيادة جديدة</span>
+                </label>
+                
+                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    value="premium"
+                    checked={selectedClassification === 'premium'}
+                    onChange={(e) => setSelectedClassification(e.target.value)}
+                    className="form-radio text-yellow-600"
+                  />
+                  <span className="text-yellow-600 font-medium">⭐ عيادة مميزة</span>
+                </label>
+                
+                <label className="flex items-center space-x-3 rtl:space-x-reverse p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    value="debt"
+                    checked={selectedClassification === 'debt'}
+                    onChange={(e) => setSelectedClassification(e.target.value)}
+                    className="form-radio text-red-600"
+                  />
+                  <span className="text-red-600 font-medium">⚠️ مديونية مستحقة</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">ملاحظات:</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="input-glass w-full h-20"
+                placeholder="أضف ملاحظات حول التصنيف..."
+              />
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                onClick={handleSubmit}
+                className="btn-primary flex-1"
+              >
+                حفظ التصنيف
+              </button>
+              <button
+                onClick={onClose}
+                className="btn-secondary flex-1"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Clinic Mini Profile Component
+const ClinicMiniProfile = ({ clinicData, onClose, getClassificationColor, getClassificationLabel }) => {
+  const clinic = clinicData.clinic || {};
+  const visitStats = clinicData.visit_stats || {};
+  const orderStats = clinicData.order_stats || {};
+  const debtStats = clinicData.debt_stats || {};
+  const assignedRep = clinicData.assigned_rep || {};
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                getClassificationColor(clinicData.classification) === 'green' ? 'bg-green-500' :
+                getClassificationColor(clinicData.classification) === 'gold' ? 'bg-yellow-500' :
+                getClassificationColor(clinicData.classification) === 'red' ? 'bg-red-500' : 'bg-gray-500'
+              }`}>
+                🏥
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{clinic.name}</h2>
+                <p className="text-gray-600">{clinic.address}</p>
+                {clinic.doctor_name && (
+                  <p className="text-blue-600">د. {clinic.doctor_name} - {clinic.doctor_specialty}</p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Classification Badge */}
+          <div className="mb-6">
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+              getClassificationColor(clinicData.classification) === 'green' ? 'bg-green-100 text-green-800' :
+              getClassificationColor(clinicData.classification) === 'gold' ? 'bg-yellow-100 text-yellow-800' :
+              getClassificationColor(clinicData.classification) === 'red' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+            }`}>
+              {getClassificationLabel(clinicData.classification)}
+            </span>
+          </div>
+
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Visit Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                🚗 إحصائيات الزيارات
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>إجمالي الزيارات:</span>
+                  <span className="font-bold">{visitStats.total_visits || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>زيارات ناجحة:</span>
+                  <span className="font-bold text-green-600">{visitStats.successful_visits || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>معدل النجاح:</span>
+                  <span className="font-bold">{visitStats.success_rate?.toFixed(1) || 0}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>آخر زيارة:</span>
+                  <span className="text-sm">{visitStats.last_visit_date ? new Date(visitStats.last_visit_date).toLocaleDateString('ar-EG') : 'لا توجد'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                📋 إحصائيات الطلبات
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>إجمالي الطلبات:</span>
+                  <span className="font-bold">{orderStats.total_orders || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>إجمالي الإيرادات:</span>
+                  <span className="font-bold text-green-600">{orderStats.total_revenue?.toFixed(0) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>متوسط قيمة الطلب:</span>
+                  <span className="font-bold">{orderStats.average_order_value?.toFixed(0) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>آخر طلب:</span>
+                  <span className="text-sm">{orderStats.last_order_date ? new Date(orderStats.last_order_date).toLocaleDateString('ar-EG') : 'لا يوجد'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Debt Statistics */}
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                💰 إحصائيات المديونية
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span>إجمالي الفواتير:</span>
+                  <span className="font-bold">{debtStats.total_invoices || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>فواتير معلقة:</span>
+                  <span className="font-bold text-orange-600">{debtStats.pending_invoices || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>المديونية المستحقة:</span>
+                  <span className="font-bold text-red-600">{debtStats.outstanding_debt?.toFixed(0) || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>فواتير متأخرة:</span>
+                  <span className="font-bold text-red-800">{debtStats.overdue_invoices || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Assigned Representative */}
+          {assignedRep && assignedRep.full_name && (
+            <div className="glass-effect p-6 rounded-xl">
+              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                👤 المسؤول عن العيادة
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h5 className="font-medium text-blue-600">{assignedRep.full_name}</h5>
+                  <p className="text-sm text-gray-600">{assignedRep.role}</p>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div>📱 الهاتف: {assignedRep.phone || 'غير محدد'}</div>
+                  <div>📧 البريد: {assignedRep.email || 'غير محدد'}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Activity */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Recent Visits */}
+            {visitStats.recent_visits && visitStats.recent_visits.length > 0 && (
+              <div className="glass-effect p-4 rounded-lg">
+                <h5 className="font-bold mb-3">🚗 آخر الزيارات</h5>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {visitStats.recent_visits.slice(0, 5).map((visit, index) => (
+                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                      <div className="flex justify-between">
+                        <span>{new Date(visit.visit_date).toLocaleDateString('ar-EG')}</span>
+                        <span className={visit.is_successful ? 'text-green-600' : 'text-red-600'}>
+                          {visit.is_successful ? '✅ ناجحة' : '❌ فاشلة'}
+                        </span>
+                      </div>
+                      {visit.notes && (
+                        <div className="text-xs text-gray-600 mt-1">{visit.notes}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Orders */}
+            {orderStats.recent_orders && orderStats.recent_orders.length > 0 && (
+              <div className="glass-effect p-4 rounded-lg">
+                <h5 className="font-bold mb-3">📋 آخر الطلبات</h5>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {orderStats.recent_orders.slice(0, 5).map((order, index) => (
+                    <div key={index} className="text-sm p-2 bg-gray-50 rounded">
+                      <div className="flex justify-between">
+                        <span>{new Date(order.created_at).toLocaleDateString('ar-EG')}</span>
+                        <span className="font-bold text-green-600">
+                          {order.total_amount?.toFixed(0) || 0}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {order.order_type} - {order.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default App;
