@@ -1285,36 +1285,58 @@ async def update_user(
 # User Management Routes
 @api_router.get("/users", response_model=List[Dict[str, Any]])
 async def get_users(current_user: User = Depends(get_current_user)):
-    query = {}
-    
-    # Role-based filtering
-    if current_user.role == UserRole.MANAGER:
-        # Managers can only see their subordinates
-        query = {"$or": [
-            {"managed_by": current_user.id},
-            {"created_by": current_user.id},
-            {"role": UserRole.SALES_REP}
-        ]}
-    elif current_user.role == UserRole.WAREHOUSE_MANAGER:
-        # Warehouse managers can see sales reps and managers
-        query = {"role": {"$in": [UserRole.SALES_REP, UserRole.MANAGER]}}
-    elif current_user.role == UserRole.SALES_REP:
-        # Sales reps can only see themselves
-        query = {"id": current_user.id}
-    
-    users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
-    
-    # Add creator and manager names
-    for user in users:
-        if user.get("created_by"):
-            creator = await db.users.find_one({"id": user["created_by"]}, {"_id": 0})
-            user["created_by_name"] = creator["full_name"] if creator else "Unknown"
+    """
+    Get all users (Admin and GM only)
+    Sales reps can only see themselves
+    """
+    try:
+        # Role-based access control
+        if current_user.role in ["medical_rep", "sales_rep"]:
+            # Sales reps can only see themselves
+            user_data = await db.users.find_one({"id": current_user.id}, {"_id": 0, "password_hash": 0})
+            if user_data:
+                return [user_data]  # Return array with single user
+            return []
         
-        if user.get("managed_by"):
-            manager = await db.users.find_one({"id": user["managed_by"]}, {"_id": 0})
-            user["manager_name"] = manager["full_name"] if manager else "Unknown"
-    
-    return users
+        # Admin and GM can see all users
+        if current_user.role not in ["admin", "gm"]:
+            # Other roles have limited access based on hierarchy
+            query = {}
+            
+            if current_user.role == UserRole.MANAGER:
+                # Managers can only see their subordinates
+                query = {"$or": [
+                    {"managed_by": current_user.id},
+                    {"created_by": current_user.id},
+                    {"role": UserRole.SALES_REP}
+                ]}
+            elif current_user.role == UserRole.WAREHOUSE_MANAGER:
+                # Warehouse managers can see sales reps and managers
+                query = {"role": {"$in": [UserRole.SALES_REP, UserRole.MANAGER]}}
+            else:
+                raise HTTPException(status_code=403, detail="Insufficient permissions")
+        else:
+            # Admin and GM see all users
+            query = {}
+        
+        users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
+        
+        # Add creator and manager names
+        for user in users:
+            if user.get("created_by"):
+                creator = await db.users.find_one({"id": user["created_by"]}, {"_id": 0})
+                user["created_by_name"] = creator["full_name"] if creator else "Unknown"
+            
+            if user.get("managed_by"):
+                manager = await db.users.find_one({"id": user["managed_by"]}, {"_id": 0})
+                user["manager_name"] = manager["full_name"] if manager else "Unknown"
+        
+        return users
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
 
 @api_router.get("/users/enhanced", response_model=List[Dict[str, Any]])
 async def get_users_enhanced(current_user: User = Depends(get_current_user)):
