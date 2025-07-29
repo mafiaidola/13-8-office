@@ -1080,6 +1080,20 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         print(f"User data keys: {list(user.keys())}")
         raise HTTPException(status_code=401, detail=f"User model error: {str(e)}")
 
+async def verify_token_and_get_user(credentials: HTTPAuthorizationCredentials) -> dict:
+    """Verify JWT token and return user data as dict"""
+    try:
+        token = credentials.credentials
+        payload = decode_jwt_token(token)
+        user = await db.users.find_one({"id": payload["user_id"]})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate distance between two coordinates in meters"""
     R = 6371000  # Earth's radius in meters
