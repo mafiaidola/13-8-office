@@ -1303,6 +1303,43 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     
     return R * c
 
+async def check_clinic_debt_status(clinic_id: str) -> dict:
+    """فحص حالة مديونية العيادة"""
+    try:
+        # البحث عن جميع الفواتير المستحقة للعيادة
+        outstanding_invoices = await db.invoices.find({
+            "clinic_id": clinic_id,
+            "payment_status": {"$in": ["pending", "partially_paid", "overdue"]}
+        }).to_list(1000)
+        
+        total_debt = 0.0
+        overdue_debt = 0.0
+        current_date = datetime.utcnow()
+        
+        for invoice in outstanding_invoices:
+            debt_amount = invoice.get("outstanding_amount", invoice.get("total_amount", 0))
+            total_debt += debt_amount
+            
+            # فحص إذا كانت الفاتورة متأخرة
+            due_date = invoice.get("due_date")
+            if due_date and isinstance(due_date, datetime) and due_date < current_date:
+                overdue_debt += debt_amount
+        
+        return {
+            "outstanding_debt": total_debt,
+            "overdue_debt": overdue_debt,
+            "total_invoices": len(outstanding_invoices),
+            "status": "blocked" if total_debt > 5000 else ("warning" if total_debt > 1000 else "clear")
+        }
+    except Exception as e:
+        print(f"Error checking clinic debt status: {e}")
+        return {
+            "outstanding_debt": 0.0,
+            "overdue_debt": 0.0,
+            "total_invoices": 0,
+            "status": "clear"
+        }
+
 # Authentication Routes
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
