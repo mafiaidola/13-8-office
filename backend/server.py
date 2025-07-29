@@ -3966,6 +3966,115 @@ async def create_clinic(clinic_data: ClinicCreate, current_user: User = Depends(
     await db.clinics.insert_one(clinic.dict())
     return {"message": "Clinic added successfully", "clinic_id": clinic.id}
 
+@api_router.post("/admin/enable-rep-clinic-registration")
+async def enable_rep_clinic_registration(
+    duration_months: int = 3,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Enable sales reps to register clinics without approval for specified duration
+    تمكين المناديب من تسجيل العيادات بدون موافقة لفترة محددة
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only admin can enable this feature
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Only admin can enable rep clinic registration")
+        
+        from datetime import timedelta
+        
+        # Calculate expiry date
+        current_time = datetime.utcnow()
+        expiry_date = current_time + timedelta(days=duration_months * 30)
+        
+        # Store settings in database
+        settings_doc = {
+            "id": str(uuid.uuid4()),
+            "setting_type": "rep_clinic_registration",
+            "enabled": True,
+            "enabled_at": current_time.isoformat(),
+            "enabled_by": user.get("id"),
+            "expires_at": expiry_date.isoformat(),
+            "duration_months": duration_months,
+            "auto_approval": True,
+            "created_at": current_time.isoformat()
+        }
+        
+        # Remove old settings
+        await db.system_settings.delete_many({"setting_type": "rep_clinic_registration"})
+        
+        # Insert new settings
+        await db.system_settings.insert_one(settings_doc)
+        
+        return {
+            "message": f"Sales rep clinic registration enabled for {duration_months} months",
+            "enabled": True,
+            "expires_at": expiry_date.isoformat(),
+            "auto_approval": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error enabling rep clinic registration: {str(e)}")
+
+@api_router.get("/admin/rep-clinic-registration-status")
+async def get_rep_clinic_registration_status(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get current status of rep clinic registration feature
+    الحصول على حالة ميزة تسجيل العيادات للمناديب
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only admin can check this
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Only admin can check registration status")
+        
+        # Get current settings
+        settings = await db.system_settings.find_one(
+            {"setting_type": "rep_clinic_registration"},
+            {"_id": 0}
+        )
+        
+        if not settings:
+            return {
+                "enabled": False,
+                "message": "Rep clinic registration is disabled"
+            }
+        
+        # Check if still valid
+        expiry_date = datetime.fromisoformat(settings["expires_at"])
+        current_time = datetime.utcnow()
+        
+        if current_time > expiry_date:
+            # Disable expired setting
+            await db.system_settings.update_one(
+                {"setting_type": "rep_clinic_registration"},
+                {"$set": {"enabled": False, "expired": True}}
+            )
+            
+            return {
+                "enabled": False,
+                "expired": True,
+                "expired_at": settings["expires_at"],
+                "message": "Rep clinic registration has expired"
+            }
+        
+        return {
+            "enabled": True,
+            "expires_at": settings["expires_at"],
+            "duration_months": settings.get("duration_months", 0),
+            "days_remaining": (expiry_date - current_time).days,
+            "auto_approval": settings.get("auto_approval", True)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error checking registration status: {str(e)}")
+
 @api_router.post("/clinics/register-by-rep")
 async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
