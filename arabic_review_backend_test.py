@@ -57,6 +57,20 @@ class ArabicReviewBackendTester:
     def authenticate_admin(self):
         """Authenticate as admin user"""
         try:
+            # First try to register admin if not exists
+            try:
+                register_response = self.session.post(f"{BACKEND_URL}/auth/register", json={
+                    "username": ADMIN_USERNAME,
+                    "email": "admin@epgroup.com",
+                    "password": ADMIN_PASSWORD,
+                    "role": "admin",
+                    "full_name": "System Administrator"
+                })
+                print(f"Register attempt: {register_response.status_code}")
+            except:
+                pass  # Admin might already exist
+            
+            # Now try to login
             response = self.session.post(f"{BACKEND_URL}/auth/login", json={
                 "username": ADMIN_USERNAME,
                 "password": ADMIN_PASSWORD
@@ -64,10 +78,14 @@ class ArabicReviewBackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                self.admin_token = data.get("access_token")
-                self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
-                self.log_test("Admin Authentication", True, f"Successfully logged in as {ADMIN_USERNAME}")
-                return True
+                self.admin_token = data.get("access_token") or data.get("token")
+                if self.admin_token:
+                    self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                    self.log_test("Admin Authentication", True, f"Successfully logged in as {ADMIN_USERNAME}")
+                    return True
+                else:
+                    self.log_test("Admin Authentication", False, error="No token received in response")
+                    return False
             else:
                 self.log_test("Admin Authentication", False, error=f"Status: {response.status_code}, Response: {response.text}")
                 return False
