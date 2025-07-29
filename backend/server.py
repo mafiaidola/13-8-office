@@ -1448,6 +1448,54 @@ async def check_clinic_debt_status(clinic_id: str) -> dict:
             "status": "clear"
         }
 
+async def can_access_user_profile(current_user: User, target_user_id: str) -> bool:
+    """فحص إذا كان المستخدم الحالي يمكنه الوصول للملف الشخصي للمستخدم المستهدف"""
+    # الأدمن يمكنه الوصول لأي ملف شخصي
+    if current_user.role == UserRole.ADMIN:
+        return True
+    
+    # GM يمكنه الوصول لأي ملف شخصي
+    if current_user.role == "gm":
+        return True
+    
+    # المستخدم يمكنه الوصول لملفه الشخصي فقط إذا كان مدير
+    if current_user.id == target_user_id and current_user.role in [
+        UserRole.LINE_MANAGER, UserRole.AREA_MANAGER, UserRole.DISTRICT_MANAGER, 
+        UserRole.KEY_ACCOUNT, UserRole.MANAGER, UserRole.WAREHOUSE_MANAGER
+    ]:
+        return True
+    
+    # البحث عن المستخدم المستهدف
+    target_user = await db.users.find_one({"id": target_user_id})
+    if not target_user:
+        return False
+    
+    # فحص إذا كان المستخدم الحالي هو المدير المباشر للمستخدم المستهدف
+    if target_user.get("managed_by") == current_user.id:
+        return True
+    
+    # Line Manager يمكنه الوصول لملفات مندوبي خطه
+    if current_user.role == UserRole.LINE_MANAGER:
+        target_line = target_user.get("line")
+        current_line = current_user.line
+        if target_line and current_line and target_line == current_line:
+            return True
+    
+    # Area Manager يمكنه الوصول لملفات مندوبي منطقته
+    if current_user.role == UserRole.AREA_MANAGER:
+        target_area = target_user.get("area_id")
+        current_area = current_user.area_id
+        if target_area and current_area and target_area == current_area:
+            return True
+    
+    # المحاسبة يمكنها الوصول لملفات المندوبين لمراجعة الأداء المالي
+    if current_user.role == UserRole.ACCOUNTING:
+        if target_user.get("role") in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT, UserRole.SALES_REP]:
+            return True
+    
+    # لا يمكن الوصول
+    return False
+
 # Authentication Routes
 @api_router.post("/auth/register")
 async def register_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
