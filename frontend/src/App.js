@@ -17016,6 +17016,16 @@ const Dashboard = () => {
                 {language === 'ar' ? 'تتبع المواقع السري' : 'Secret Location Tracking'}
               </button>
             )}
+
+            {canAccessTab('daily-login-records') && (
+              <button
+                onClick={() => setActiveTab('daily-login-records')}
+                className={`nav-item ${activeTab === 'daily-login-records' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🗂️</span>
+                {language === 'ar' ? 'سجل الحضور' : 'Login Records'}
+              </button>
+            )}
             
             {canAccessTab('visit') && (
               <button
