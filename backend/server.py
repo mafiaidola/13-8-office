@@ -4411,6 +4411,64 @@ async def get_visits(credentials: HTTPAuthorizationCredentials = Depends(securit
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching visits: {str(e)}")
 
+@api_router.post("/visits")
+async def create_visit(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Create a new visit record with voice notes and location tracking
+    إنشاء سجل زيارة جديد مع الملاحظات الصوتية وتتبع الموقع
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only sales reps can create visits
+        if user.get("role") not in ["medical_rep", "sales_rep"]:
+            raise HTTPException(status_code=403, detail="Only sales representatives can create visits")
+        
+        # Get request data
+        request_data = await request.json()
+        
+        visit_data = {
+            "id": str(uuid.uuid4()),
+            "sales_rep_id": user["id"],
+            "sales_rep_name": user.get("full_name", user.get("username", "Unknown")),
+            "clinic_id": request_data.get("clinic_id"),
+            "doctor_name": request_data.get("doctor_name"),
+            "notes": request_data.get("notes", ""),
+            "voice_notes": request_data.get("voice_notes", []),
+            "with_manager": request_data.get("with_manager", "no"),
+            "managers": request_data.get("managers", []),
+            "location": request_data.get("location", {}),
+            "actual_location": request_data.get("actual_location", {}),
+            "clinic_location": request_data.get("clinic_location", {}),
+            "visit_date": datetime.utcnow(),
+            "status": "pending",  # pending, approved, rejected
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Save to database
+        await db.visits.insert_one(visit_data)
+        
+        # Get clinic info if available
+        clinic_name = "غير محدد"
+        if visit_data["clinic_id"]:
+            clinic = await db.clinics.find_one({"id": visit_data["clinic_id"]})
+            if clinic:
+                clinic_name = clinic.get("name", "غير محدد")
+        
+        return {
+            "message": "تم تسجيل الزيارة بنجاح",
+            "visit_id": visit_data["id"],
+            "clinic_name": clinic_name,
+            "doctor_name": visit_data["doctor_name"],
+            "status": visit_data["status"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating visit: {str(e)}")
+
 @api_router.patch("/visits/{visit_id}/review")
 async def review_visit(visit_id: str, is_effective: bool, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.MANAGER:
