@@ -22493,9 +22493,9 @@ const WarehouseKeeperStockAdjustmentModal = ({ product, onClose, onSave }) => {
   };
 
   const adjustmentTypes = [
-    { value: 'add', label: 'إضافة مخزون', icon: '➕' },
-    { value: 'remove', label: 'سحب مخزون', icon: '➖' },
-    { value: 'adjust', label: 'تعديل مخزون', icon: '🔄' },
+    { value: 'add', label: t('add') + ' ' + t('inventory'), icon: '➕' },
+    { value: 'remove', label: t('delete') + ' ' + t('inventory'), icon: '➖' },
+    { value: 'adjust', label: t('edit') + ' ' + t('inventory'), icon: '🔄' },
     { value: 'damaged', label: 'تالف', icon: '❌' },
     { value: 'expired', label: 'منتهي الصلاحية', icon: '⚠️' }
   ];
