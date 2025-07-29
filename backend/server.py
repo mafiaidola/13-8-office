@@ -4044,7 +4044,7 @@ async def register_clinic_by_rep(clinic_data: dict, credentials: HTTPAuthorizati
             "action": "clinic_registered_by_rep",
             "user_id": user.get("id"),
             "clinic_id": clinic_id,
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.utcnow().isoformat(),
             "details": {
                 "clinic_name": clinic_data.get("name"),
                 "registered_location": clinic_data.get("rep_location_at_registration"),
