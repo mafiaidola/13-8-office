@@ -1120,13 +1120,14 @@ body {
   padding: 20px;
   transition: all 0.3s ease;
   font-size: 16px;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   backdrop-filter: blur(10px);
 }
 
 .form-modern input::placeholder,
 .form-modern textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
+  opacity: 0.8;
 }
 
 .form-modern input:focus,
@@ -1137,6 +1138,20 @@ body {
   box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2);
   transform: translateY(-2px);
   background: var(--card-bg);
+  color: var(--text-primary) !important;
+}
+
+/* Improved input field visibility across all themes */
+input, select, textarea {
+  background: var(--glass-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary-color) !important;
 }
 
 .form-modern label {
