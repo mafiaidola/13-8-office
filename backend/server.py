@@ -12878,6 +12878,67 @@ async def get_daily_login_records(credentials: HTTPAuthorizationCredentials = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching login records: {str(e)}")
 
+@api_router.get("/admin/clinics-with-tracking")
+async def get_clinics_with_tracking_info(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Get all clinics with detailed tracking information (Admin only)
+    جلب جميع العيادات مع معلومات التتبع التفصيلية (للأدمن فقط)
+    """
+    try:
+        user = await verify_token_and_get_user(credentials)
+        
+        # Only admin can access tracking information
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Only admin can access clinic tracking information")
+        
+        # Get all clinics with full tracking info
+        clinics = await db.clinics.find({}, {"_id": 0}).to_list(1000)
+        
+        # Enrich with additional tracking details
+        enhanced_clinics = []
+        for clinic in clinics:
+            # Get registering user info
+            registered_by_user = None
+            if clinic.get("added_by"):
+                registered_by_user = await db.users.find_one({"id": clinic["added_by"]})
+            
+            enhanced_clinic = {
+                **clinic,
+                "tracking_info": {
+                    "registered_by_user": {
+                        "id": registered_by_user.get("id") if registered_by_user else None,
+                        "name": registered_by_user.get("full_name") if registered_by_user else None,
+                        "username": registered_by_user.get("username") if registered_by_user else None,
+                        "role": registered_by_user.get("role") if registered_by_user else None
+                    },
+                    "registration_location_analysis": {
+                        "rep_was_at": clinic.get("rep_location_at_registration"),
+                        "clinic_location": {
+                            "latitude": clinic.get("latitude"),
+                            "longitude": clinic.get("longitude")
+                        },
+                        "distance_analysis": clinic.get("registration_metadata", {}).get("distance_between_locations"),
+                        "location_match": "Unknown"
+                    },
+                    "registration_details": clinic.get("registration_metadata", {}),
+                    "can_be_modified": True,  # Admin can always modify
+                    "registered_via": clinic.get("registration_metadata", {}).get("registration_source", "unknown")
+                }
+            }
+            
+            enhanced_clinics.append(enhanced_clinic)
+        
+        return {
+            "total_clinics": len(enhanced_clinics),
+            "clinics": enhanced_clinics,
+            "tracking_enabled": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching clinics with tracking: {str(e)}")
+
 @api_router.get("/clinics/my-region")
 async def get_clinics_in_my_region(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
