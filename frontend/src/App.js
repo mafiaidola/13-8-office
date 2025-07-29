@@ -1290,7 +1290,7 @@ const ThemeProvider = ({ children }) => {
         '--card-bg': 'rgba(26, 26, 26, 0.95)',
         '--glass-bg': 'rgba(10, 10, 10, 0.8)',
         '--text-primary': '#ffffff',
-        '--text-secondary': '#d1d5db',
+        '--text-secondary': '#e5e7eb',
         '--text-muted': '#9ca3af',
         '--gradient-dark': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2d2d2d 100%)',
         '--border-color': '#404040',
