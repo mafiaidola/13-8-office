@@ -28638,8 +28638,7 @@ const LinesManagement = () => {
 
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
-    { id: 'lines', label: 'إدارة الخطوط', icon: '🗺️' },
-    { id: 'areas', label: 'إدارة المناطق', icon: '🏘️' },
+    { id: 'lines', label: 'إدارة الخطوط والمناطق', icon: '🗺️' },
     { id: 'districts', label: 'إدارة المقاطعات', icon: '🏢' }
   ];
 
