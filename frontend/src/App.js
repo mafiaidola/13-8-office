@@ -21077,7 +21077,7 @@ const AppContent = () => {
 
   return (
     <div className="App" style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
-      {user ? <Dashboard /> : <LoginPage />}
+      {user ? <MainApp /> : <LoginPage />}
       
       {/* QR Scanner Modal */}
       {showQRScanner && (
