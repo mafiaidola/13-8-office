@@ -1459,10 +1459,13 @@ async def get_products(current_user: User = Depends(get_current_user)):
             # Hide prices for non-admin users
             if current_user.role not in ["admin", "gm", "accounting"]:
                 # Remove price-related fields for non-admin users
+                print(f"DEBUG: Hiding prices for user role: {current_user.role}")
                 product.pop("price", None)
                 product.pop("price_type", None)
                 product.pop("price_before_discount", None)
                 product.pop("discount_percentage", None)
+            else:
+                print(f"DEBUG: Showing prices for user role: {current_user.role}")
         
         return products
     
