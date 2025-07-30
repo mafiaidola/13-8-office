@@ -7052,8 +7052,8 @@ const VisitDetailsModal = ({ visit, language, onClose }) => {
   );
 };
 
-// Ultra Modern Dashboard Component
-const UltraModernDashboard = ({ stats, user, userRole }) => {
+// Ultra Modern Statistics Dashboard Component
+const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
   const { language, t, isRTL } = useLanguage();
   const [dashboardData, setDashboardData] = useState({
     stats: {
