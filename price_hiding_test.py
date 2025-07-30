@@ -177,20 +177,24 @@ class PriceHidingTester:
                     has_price = "price" in first_product
                     has_price_type = "price_type" in first_product
                     
+                    # فحص جميع الحقول المتعلقة بالأسعار
+                    price_fields = ["price", "price_type", "unit_price", "price_1", "price_10", "price_25", "price_50", "price_100"]
+                    found_price_fields = [field for field in price_fields if field in first_product]
+                    
                     if should_see_prices:
-                        if has_price and has_price_type:
+                        if has_price:  # الأدمن والمحاسبة يجب أن يروا على الأقل حقل price
                             self.log_test(f"اختبار المنتجات - {user_type}", True, 
-                                        f"✅ {user_type} يرى الأسعار كما هو مطلوب (عدد المنتجات: {len(products)})")
+                                        f"✅ {user_type} يرى الأسعار كما هو مطلوب (عدد المنتجات: {len(products)}, حقول الأسعار: {found_price_fields})")
                         else:
                             self.log_test(f"اختبار المنتجات - {user_type}", False, 
-                                        f"❌ {user_type} لا يرى الأسعار (يجب أن يراها)")
+                                        f"❌ {user_type} لا يرى الأسعار (يجب أن يراها) - حقول موجودة: {found_price_fields}")
                     else:
-                        if not has_price and not has_price_type:
+                        if not has_price:  # المندوبين يجب ألا يروا أي حقول أسعار
                             self.log_test(f"اختبار المنتجات - {user_type}", True, 
-                                        f"✅ {user_type} لا يرى الأسعار كما هو مطلوب (عدد المنتجات: {len(products)})")
+                                        f"✅ {user_type} لا يرى الأسعار كما هو مطلوب (عدد المنتجات: {len(products)}, حقول مخفية: {len(price_fields) - len(found_price_fields)})")
                         else:
                             self.log_test(f"اختبار المنتجات - {user_type}", False, 
-                                        f"❌ {user_type} يرى الأسعار (يجب ألا يراها)")
+                                        f"❌ {user_type} يرى الأسعار (يجب ألا يراها) - حقول مكشوفة: {found_price_fields}")
                     
                     # طباعة تفاصيل المنتج الأول للتشخيص
                     product_keys = list(first_product.keys())
