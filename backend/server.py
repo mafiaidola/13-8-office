@@ -965,7 +965,7 @@ async def get_lines(current_user: User = Depends(get_current_user)):
 async def update_line(line_id: str, line_data: LineCreate, current_user: User = Depends(get_current_user)):
     """تحديث خط - Update line"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+    if current_user.role not in ["admin", "gm", "line_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث الخطوط")
     
     try:
@@ -974,7 +974,7 @@ async def update_line(line_id: str, line_data: LineCreate, current_user: User = 
             raise HTTPException(status_code=404, detail="الخط غير موجود")
         
         # Role-based access control
-        if current_user["role"] == "line_manager" and existing_line.get("manager_id") != current_user["id"]:
+        if current_user.role == "line_manager" and existing_line.get("manager_id") != current_user.id:
             raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذا الخط")
         
         # Update line
