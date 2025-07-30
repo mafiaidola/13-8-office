@@ -2948,8 +2948,15 @@ const AuthProvider = ({ children }) => {
       console.log('✅ Login response received:', response.status, response.data);
       
       const { access_token, user: userData } = response.data;
+      console.log('🔑 Extracted data:', { access_token: access_token?.substring(0, 20) + '...', userData });
+      
       localStorage.setItem('token', access_token);
+      console.log('🔑 Token stored in localStorage');
+      
+      console.log('🔑 About to call setUser with:', userData);
       setUser(userData);
+      console.log('🔑 setUser called - user state should update now');
+      
       return { success: true };
     } catch (error) {
       console.error('❌ Login error:', error);
