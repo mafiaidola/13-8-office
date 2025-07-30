@@ -1997,6 +1997,7 @@ test_plan:
     - "Comprehensive Technical Review and Deep System Testing"
     - "Backend Infrastructure Testing"
     - "Authentication and Authorization Testing"
+    - "Price Hiding Security Fix - Duplicate Endpoint Removal"
   test_all: false
   test_priority: "critical_first"
     - "Comprehensive Accounting System - Invoices API"
