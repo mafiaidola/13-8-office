@@ -1,5 +1,837 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لنظام إدارة الخطوط والمناطق الجديد
+Comprehensive Testing for Lines and Areas Management System
+
+الهدف: التحقق من أن جميع APIs الخاصة بـ Lines Management وAreas Management تعمل بشكل صحيح
+Goal: Verify that all Lines Management and Areas Management APIs work correctly
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+import uuid
+
+# Configuration
+BASE_URL = "https://d7110555-9702-4d91-b5fc-522e9a08df1c.preview.emergentagent.com/api"
+TIMEOUT = 30
+
+class LinesAreasTestSuite:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.line_manager_token = None
+        self.area_manager_token = None
+        self.test_results = []
+        self.created_line_id = None
+        self.created_area_id = None
+        
+    def log_result(self, test_name, success, details="", error=""):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "error": error,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        status = "✅ نجح" if success else "❌ فشل"
+        print(f"{status} - {test_name}")
+        if details:
+            print(f"   التفاصيل: {details}")
+        if error:
+            print(f"   الخطأ: {error}")
+        print()
+
+    def login_admin(self):
+        """تسجيل دخول الأدمن"""
+        try:
+            response = self.session.post(
+                f"{BASE_URL}/auth/login",
+                json={"username": "admin", "password": "admin123"},
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data["access_token"]
+                self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                self.log_result(
+                    "تسجيل دخول الأدمن",
+                    True,
+                    f"تم تسجيل الدخول بنجاح للمستخدم: {data['user']['username']}"
+                )
+                return True
+            else:
+                self.log_result(
+                    "تسجيل دخول الأدمن",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_result("تسجيل دخول الأدمن", False, error=str(e))
+            return False
+
+    def test_lines_management_apis(self):
+        """اختبار APIs إدارة الخطوط"""
+        print("🔍 بدء اختبار APIs إدارة الخطوط...")
+        
+        # 1. Test GET /api/lines - جلب جميع الخطوط
+        self.test_get_lines()
+        
+        # 2. Test POST /api/lines - إنشاء خط جديد
+        self.test_create_line()
+        
+        # 3. Test PUT /api/lines/{line_id} - تحديث خط
+        if self.created_line_id:
+            self.test_update_line()
+        
+        # 4. Test DELETE /api/lines/{line_id} - حذف خط
+        if self.created_line_id:
+            self.test_delete_line()
+
+    def test_get_lines(self):
+        """اختبار جلب جميع الخطوط"""
+        try:
+            response = self.session.get(f"{BASE_URL}/lines", timeout=TIMEOUT)
+            
+            if response.status_code == 200:
+                lines = response.json()
+                self.log_result(
+                    "GET /api/lines - جلب جميع الخطوط",
+                    True,
+                    f"تم جلب {len(lines)} خط بنجاح"
+                )
+            else:
+                self.log_result(
+                    "GET /api/lines - جلب جميع الخطوط",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("GET /api/lines - جلب جميع الخطوط", False, error=str(e))
+
+    def test_create_line(self):
+        """اختبار إنشاء خط جديد"""
+        try:
+            line_data = {
+                "name": "خط اختبار جديد",
+                "code": f"TEST_LINE_{uuid.uuid4().hex[:8]}",
+                "description": "خط تجريبي لاختبار النظام",
+                "manager_id": None,
+                "assigned_products": [],
+                "coverage_areas": [],
+                "target_achievement": 85.0,
+                "achievement_percentage": 0.0,
+                "is_active": True
+            }
+            
+            response = self.session.post(
+                f"{BASE_URL}/lines",
+                json=line_data,
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.created_line_id = result["line"]["id"]
+                    self.log_result(
+                        "POST /api/lines - إنشاء خط جديد",
+                        True,
+                        f"تم إنشاء الخط بنجاح: {result['line']['name']} (ID: {self.created_line_id})"
+                    )
+                else:
+                    self.log_result(
+                        "POST /api/lines - إنشاء خط جديد",
+                        False,
+                        error=result.get("message", "فشل في إنشاء الخط")
+                    )
+            else:
+                self.log_result(
+                    "POST /api/lines - إنشاء خط جديد",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("POST /api/lines - إنشاء خط جديد", False, error=str(e))
+
+    def test_update_line(self):
+        """اختبار تحديث خط"""
+        try:
+            update_data = {
+                "name": "خط اختبار محدث",
+                "code": f"UPDATED_LINE_{uuid.uuid4().hex[:8]}",
+                "description": "خط تجريبي محدث لاختبار النظام",
+                "manager_id": None,
+                "assigned_products": [],
+                "coverage_areas": [],
+                "target_achievement": 90.0,
+                "achievement_percentage": 15.0,
+                "is_active": True
+            }
+            
+            response = self.session.put(
+                f"{BASE_URL}/lines/{self.created_line_id}",
+                json=update_data,
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.log_result(
+                        "PUT /api/lines/{line_id} - تحديث خط",
+                        True,
+                        f"تم تحديث الخط بنجاح: {result['message']}"
+                    )
+                else:
+                    self.log_result(
+                        "PUT /api/lines/{line_id} - تحديث خط",
+                        False,
+                        error=result.get("message", "فشل في تحديث الخط")
+                    )
+            else:
+                self.log_result(
+                    "PUT /api/lines/{line_id} - تحديث خط",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("PUT /api/lines/{line_id} - تحديث خط", False, error=str(e))
+
+    def test_delete_line(self):
+        """اختبار حذف خط"""
+        try:
+            response = self.session.delete(
+                f"{BASE_URL}/lines/{self.created_line_id}",
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.log_result(
+                        "DELETE /api/lines/{line_id} - حذف خط",
+                        True,
+                        f"تم حذف الخط بنجاح: {result['message']}"
+                    )
+                else:
+                    self.log_result(
+                        "DELETE /api/lines/{line_id} - حذف خط",
+                        False,
+                        error=result.get("message", "فشل في حذف الخط")
+                    )
+            else:
+                self.log_result(
+                    "DELETE /api/lines/{line_id} - حذف خط",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("DELETE /api/lines/{line_id} - حذف خط", False, error=str(e))
+
+    def test_areas_management_apis(self):
+        """اختبار APIs إدارة المناطق"""
+        print("🔍 بدء اختبار APIs إدارة المناطق...")
+        
+        # 1. Test GET /api/areas - جلب جميع المناطق
+        self.test_get_areas()
+        
+        # 2. Test POST /api/areas - إنشاء منطقة جديدة
+        self.test_create_area()
+        
+        # 3. Test PUT /api/areas/{area_id} - تحديث منطقة
+        if self.created_area_id:
+            self.test_update_area()
+        
+        # 4. Test DELETE /api/areas/{area_id} - حذف منطقة
+        if self.created_area_id:
+            self.test_delete_area()
+
+    def test_get_areas(self):
+        """اختبار جلب جميع المناطق"""
+        try:
+            response = self.session.get(f"{BASE_URL}/areas", timeout=TIMEOUT)
+            
+            if response.status_code == 200:
+                areas = response.json()
+                self.log_result(
+                    "GET /api/areas - جلب جميع المناطق",
+                    True,
+                    f"تم جلب {len(areas)} منطقة بنجاح"
+                )
+            else:
+                self.log_result(
+                    "GET /api/areas - جلب جميع المناطق",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("GET /api/areas - جلب جميع المناطق", False, error=str(e))
+
+    def test_create_area(self):
+        """اختبار إنشاء منطقة جديدة"""
+        try:
+            area_data = {
+                "name": "منطقة اختبار جديدة",
+                "code": f"TEST_AREA_{uuid.uuid4().hex[:8]}",
+                "description": "منطقة تجريبية لاختبار النظام",
+                "parent_line_id": None,
+                "manager_id": None,
+                "coordinates": {
+                    "latitude": 30.0444,
+                    "longitude": 31.2357
+                },
+                "coverage_radius": 50.0,
+                "target_clinics": 25,
+                "current_clinics": 0,
+                "is_active": True
+            }
+            
+            response = self.session.post(
+                f"{BASE_URL}/areas",
+                json=area_data,
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.created_area_id = result["area"]["id"]
+                    self.log_result(
+                        "POST /api/areas - إنشاء منطقة جديدة",
+                        True,
+                        f"تم إنشاء المنطقة بنجاح: {result['area']['name']} (ID: {self.created_area_id})"
+                    )
+                else:
+                    self.log_result(
+                        "POST /api/areas - إنشاء منطقة جديدة",
+                        False,
+                        error=result.get("message", "فشل في إنشاء المنطقة")
+                    )
+            else:
+                self.log_result(
+                    "POST /api/areas - إنشاء منطقة جديدة",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("POST /api/areas - إنشاء منطقة جديدة", False, error=str(e))
+
+    def test_update_area(self):
+        """اختبار تحديث منطقة"""
+        try:
+            update_data = {
+                "name": "منطقة اختبار محدثة",
+                "code": f"UPDATED_AREA_{uuid.uuid4().hex[:8]}",
+                "description": "منطقة تجريبية محدثة لاختبار النظام",
+                "parent_line_id": None,
+                "manager_id": None,
+                "coordinates": {
+                    "latitude": 30.0644,
+                    "longitude": 31.2557
+                },
+                "coverage_radius": 75.0,
+                "target_clinics": 30,
+                "current_clinics": 5,
+                "is_active": True
+            }
+            
+            response = self.session.put(
+                f"{BASE_URL}/areas/{self.created_area_id}",
+                json=update_data,
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.log_result(
+                        "PUT /api/areas/{area_id} - تحديث منطقة",
+                        True,
+                        f"تم تحديث المنطقة بنجاح: {result['message']}"
+                    )
+                else:
+                    self.log_result(
+                        "PUT /api/areas/{area_id} - تحديث منطقة",
+                        False,
+                        error=result.get("message", "فشل في تحديث المنطقة")
+                    )
+            else:
+                self.log_result(
+                    "PUT /api/areas/{area_id} - تحديث منطقة",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("PUT /api/areas/{area_id} - تحديث منطقة", False, error=str(e))
+
+    def test_delete_area(self):
+        """اختبار حذف منطقة"""
+        try:
+            response = self.session.delete(
+                f"{BASE_URL}/areas/{self.created_area_id}",
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.log_result(
+                        "DELETE /api/areas/{area_id} - حذف منطقة",
+                        True,
+                        f"تم حذف المنطقة بنجاح: {result['message']}"
+                    )
+                else:
+                    self.log_result(
+                        "DELETE /api/areas/{area_id} - حذف منطقة",
+                        False,
+                        error=result.get("message", "فشل في حذف المنطقة")
+                    )
+            else:
+                self.log_result(
+                    "DELETE /api/areas/{area_id} - حذف منطقة",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("DELETE /api/areas/{area_id} - حذف منطقة", False, error=str(e))
+
+    def test_line_product_assignment_apis(self):
+        """اختبار APIs تخصيص منتجات للخطوط"""
+        print("🔍 بدء اختبار APIs تخصيص منتجات للخطوط...")
+        
+        # First, create a test line for product assignment
+        self.create_test_line_for_products()
+        
+        if self.created_line_id:
+            # Test GET /api/lines/{line_id}/products - جلب منتجات الخط
+            self.test_get_line_products()
+            
+            # Test POST /api/lines/{line_id}/products - تخصيص منتجات للخط
+            self.test_assign_products_to_line()
+
+    def create_test_line_for_products(self):
+        """إنشاء خط اختبار لتخصيص المنتجات"""
+        try:
+            line_data = {
+                "name": "خط اختبار المنتجات",
+                "code": f"PROD_LINE_{uuid.uuid4().hex[:8]}",
+                "description": "خط تجريبي لاختبار تخصيص المنتجات",
+                "manager_id": None,
+                "assigned_products": [],
+                "coverage_areas": [],
+                "target_achievement": 80.0,
+                "achievement_percentage": 0.0,
+                "is_active": True
+            }
+            
+            response = self.session.post(
+                f"{BASE_URL}/lines",
+                json=line_data,
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    self.created_line_id = result["line"]["id"]
+                    self.log_result(
+                        "إنشاء خط اختبار للمنتجات",
+                        True,
+                        f"تم إنشاء خط اختبار المنتجات: {self.created_line_id}"
+                    )
+                    
+        except Exception as e:
+            self.log_result("إنشاء خط اختبار للمنتجات", False, error=str(e))
+
+    def test_get_line_products(self):
+        """اختبار جلب منتجات الخط"""
+        try:
+            response = self.session.get(
+                f"{BASE_URL}/lines/{self.created_line_id}/products",
+                timeout=TIMEOUT
+            )
+            
+            if response.status_code == 200:
+                products = response.json()
+                self.log_result(
+                    "GET /api/lines/{line_id}/products - جلب منتجات الخط",
+                    True,
+                    f"تم جلب {len(products)} منتج للخط بنجاح"
+                )
+            else:
+                self.log_result(
+                    "GET /api/lines/{line_id}/products - جلب منتجات الخط",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("GET /api/lines/{line_id}/products - جلب منتجات الخط", False, error=str(e))
+
+    def test_assign_products_to_line(self):
+        """اختبار تخصيص منتجات للخط"""
+        try:
+            # First, get available products
+            products_response = self.session.get(f"{BASE_URL}/products", timeout=TIMEOUT)
+            
+            if products_response.status_code == 200:
+                products = products_response.json()
+                if products:
+                    # Take first 2 products for assignment
+                    product_ids = [p["id"] for p in products[:2]]
+                    
+                    assignment_data = {
+                        "line_id": self.created_line_id,
+                        "product_ids": product_ids,
+                        "assignment_reason": "اختبار تخصيص المنتجات للخط",
+                        "effective_date": datetime.now().isoformat()
+                    }
+                    
+                    response = self.session.post(
+                        f"{BASE_URL}/lines/{self.created_line_id}/products",
+                        json=assignment_data,
+                        timeout=TIMEOUT
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            self.log_result(
+                                "POST /api/lines/{line_id}/products - تخصيص منتجات للخط",
+                                True,
+                                f"تم تخصيص {len(product_ids)} منتج للخط بنجاح"
+                            )
+                        else:
+                            self.log_result(
+                                "POST /api/lines/{line_id}/products - تخصيص منتجات للخط",
+                                False,
+                                error=result.get("message", "فشل في تخصيص المنتجات")
+                            )
+                    else:
+                        self.log_result(
+                            "POST /api/lines/{line_id}/products - تخصيص منتجات للخط",
+                            False,
+                            error=f"HTTP {response.status_code}: {response.text}"
+                        )
+                else:
+                    self.log_result(
+                        "POST /api/lines/{line_id}/products - تخصيص منتجات للخط",
+                        False,
+                        error="لا توجد منتجات متاحة للتخصيص"
+                    )
+            else:
+                self.log_result(
+                    "POST /api/lines/{line_id}/products - تخصيص منتجات للخط",
+                    False,
+                    error=f"فشل في جلب المنتجات: HTTP {products_response.status_code}"
+                )
+                
+        except Exception as e:
+            self.log_result("POST /api/lines/{line_id}/products - تخصيص منتجات للخط", False, error=str(e))
+
+    def test_geographic_statistics_api(self):
+        """اختبار API الإحصائيات الجغرافية"""
+        print("🔍 بدء اختبار API الإحصائيات الجغرافية...")
+        
+        try:
+            response = self.session.get(f"{BASE_URL}/geographic/statistics", timeout=TIMEOUT)
+            
+            if response.status_code == 200:
+                stats = response.json()
+                
+                # Verify required fields
+                required_fields = [
+                    "total_lines", "active_lines", "total_areas", "active_areas",
+                    "total_districts", "active_districts", "total_assigned_products",
+                    "total_coverage_clinics", "average_achievement_percentage"
+                ]
+                
+                missing_fields = [field for field in required_fields if field not in stats]
+                
+                if not missing_fields:
+                    details = f"""الإحصائيات الجغرافية:
+- إجمالي الخطوط: {stats['total_lines']}
+- الخطوط النشطة: {stats['active_lines']}
+- إجمالي المناطق: {stats['total_areas']}
+- المناطق النشطة: {stats['active_areas']}
+- إجمالي المقاطعات: {stats['total_districts']}
+- المقاطعات النشطة: {stats['active_districts']}
+- إجمالي المنتجات المخصصة: {stats['total_assigned_products']}
+- إجمالي العيادات المغطاة: {stats['total_coverage_clinics']}
+- متوسط نسبة الإنجاز: {stats['average_achievement_percentage']}%"""
+                    
+                    self.log_result(
+                        "GET /api/geographic/statistics - إحصائيات جغرافية شاملة",
+                        True,
+                        details
+                    )
+                else:
+                    self.log_result(
+                        "GET /api/geographic/statistics - إحصائيات جغرافية شاملة",
+                        False,
+                        error=f"حقول مفقودة في الاستجابة: {missing_fields}"
+                    )
+            else:
+                self.log_result(
+                    "GET /api/geographic/statistics - إحصائيات جغرافية شاملة",
+                    False,
+                    error=f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_result("GET /api/geographic/statistics - إحصائيات جغرافية شاملة", False, error=str(e))
+
+    def test_role_based_access_control(self):
+        """اختبار الصلاحيات (Role-based Access Control)"""
+        print("🔍 بدء اختبار الصلاحيات...")
+        
+        # Test admin access (already logged in)
+        self.test_admin_permissions()
+        
+        # Test unauthorized access
+        self.test_unauthorized_access()
+
+    def test_admin_permissions(self):
+        """اختبار صلاحيات الأدمن"""
+        try:
+            # Test admin can access all endpoints
+            endpoints_to_test = [
+                ("/lines", "GET"),
+                ("/areas", "GET"),
+                ("/geographic/statistics", "GET")
+            ]
+            
+            admin_access_results = []
+            
+            for endpoint, method in endpoints_to_test:
+                try:
+                    if method == "GET":
+                        response = self.session.get(f"{BASE_URL}{endpoint}", timeout=TIMEOUT)
+                    
+                    if response.status_code == 200:
+                        admin_access_results.append(f"✅ {endpoint}")
+                    else:
+                        admin_access_results.append(f"❌ {endpoint} (HTTP {response.status_code})")
+                        
+                except Exception as e:
+                    admin_access_results.append(f"❌ {endpoint} (خطأ: {str(e)})")
+            
+            success_count = len([r for r in admin_access_results if r.startswith("✅")])
+            total_count = len(admin_access_results)
+            
+            self.log_result(
+                "اختبار صلاحيات الأدمن",
+                success_count == total_count,
+                f"الأدمن يمكنه الوصول إلى {success_count}/{total_count} من الـ endpoints:\n" + "\n".join(admin_access_results)
+            )
+            
+        except Exception as e:
+            self.log_result("اختبار صلاحيات الأدمن", False, error=str(e))
+
+    def test_unauthorized_access(self):
+        """اختبار الوصول غير المصرح"""
+        try:
+            # Remove authorization header temporarily
+            original_headers = self.session.headers.copy()
+            if "Authorization" in self.session.headers:
+                del self.session.headers["Authorization"]
+            
+            # Test unauthorized access to protected endpoints
+            response = self.session.get(f"{BASE_URL}/lines", timeout=TIMEOUT)
+            
+            # Restore headers
+            self.session.headers.update(original_headers)
+            
+            if response.status_code in [401, 403]:
+                self.log_result(
+                    "اختبار الوصول غير المصرح",
+                    True,
+                    f"النظام يرفض الوصول غير المصرح بشكل صحيح (HTTP {response.status_code})"
+                )
+            else:
+                self.log_result(
+                    "اختبار الوصول غير المصرح",
+                    False,
+                    error=f"النظام لا يحمي الـ endpoints بشكل صحيح (HTTP {response.status_code})"
+                )
+                
+        except Exception as e:
+            self.log_result("اختبار الوصول غير المصرح", False, error=str(e))
+
+    def test_arabic_error_messages(self):
+        """اختبار رسائل الخطأ بالعربية"""
+        print("🔍 بدء اختبار رسائل الخطأ بالعربية...")
+        
+        try:
+            # Test creating line with duplicate code
+            duplicate_line_data = {
+                "name": "خط مكرر",
+                "code": "DUPLICATE_CODE",
+                "description": "اختبار الكود المكرر",
+                "manager_id": None,
+                "assigned_products": [],
+                "coverage_areas": [],
+                "target_achievement": 80.0,
+                "achievement_percentage": 0.0,
+                "is_active": True
+            }
+            
+            # Create first line
+            response1 = self.session.post(f"{BASE_URL}/lines", json=duplicate_line_data, timeout=TIMEOUT)
+            
+            # Try to create duplicate
+            response2 = self.session.post(f"{BASE_URL}/lines", json=duplicate_line_data, timeout=TIMEOUT)
+            
+            if response2.status_code == 400:
+                error_message = response2.json().get("detail", "")
+                if "موجود" in error_message or "رمز" in error_message:
+                    self.log_result(
+                        "اختبار رسائل الخطأ بالعربية",
+                        True,
+                        f"رسالة الخطأ بالعربية: {error_message}"
+                    )
+                else:
+                    self.log_result(
+                        "اختبار رسائل الخطأ بالعربية",
+                        False,
+                        error=f"رسالة الخطأ ليست بالعربية: {error_message}"
+                    )
+            else:
+                self.log_result(
+                    "اختبار رسائل الخطأ بالعربية",
+                    False,
+                    error=f"لم يتم رفض الكود المكرر (HTTP {response2.status_code})"
+                )
+                
+        except Exception as e:
+            self.log_result("اختبار رسائل الخطأ بالعربية", False, error=str(e))
+
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء الاختبار الشامل لنظام إدارة الخطوط والمناطق")
+        print("=" * 80)
+        
+        # 1. Login as admin
+        if not self.login_admin():
+            print("❌ فشل في تسجيل الدخول. إيقاف الاختبار.")
+            return
+        
+        # 2. Test Lines Management APIs
+        self.test_lines_management_apis()
+        
+        # 3. Test Areas Management APIs
+        self.test_areas_management_apis()
+        
+        # 4. Test Line Product Assignment APIs
+        self.test_line_product_assignment_apis()
+        
+        # 5. Test Geographic Statistics API
+        self.test_geographic_statistics_api()
+        
+        # 6. Test Role-based Access Control
+        self.test_role_based_access_control()
+        
+        # 7. Test Arabic Error Messages
+        self.test_arabic_error_messages()
+        
+        # Generate final report
+        self.generate_final_report()
+
+    def generate_final_report(self):
+        """إنتاج التقرير النهائي"""
+        print("\n" + "=" * 80)
+        print("📊 التقرير النهائي للاختبار الشامل")
+        print("=" * 80)
+        
+        total_tests = len(self.test_results)
+        successful_tests = len([r for r in self.test_results if r["success"]])
+        failed_tests = total_tests - successful_tests
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"📈 إجمالي الاختبارات: {total_tests}")
+        print(f"✅ الاختبارات الناجحة: {successful_tests}")
+        print(f"❌ الاختبارات الفاشلة: {failed_tests}")
+        print(f"📊 نسبة النجاح: {success_rate:.1f}%")
+        print()
+        
+        # Group results by category
+        categories = {
+            "إدارة الخطوط": ["lines"],
+            "إدارة المناطق": ["areas"],
+            "تخصيص المنتجات": ["products"],
+            "الإحصائيات الجغرافية": ["geographic", "statistics"],
+            "الصلاحيات": ["صلاحيات", "permissions", "access"],
+            "رسائل الخطأ": ["خطأ", "error"]
+        }
+        
+        for category, keywords in categories.items():
+            category_tests = [
+                r for r in self.test_results 
+                if any(keyword in r["test"].lower() for keyword in keywords)
+            ]
+            
+            if category_tests:
+                category_success = len([r for r in category_tests if r["success"]])
+                category_total = len(category_tests)
+                category_rate = (category_success / category_total * 100) if category_total > 0 else 0
+                
+                print(f"🔍 {category}: {category_success}/{category_total} ({category_rate:.1f}%)")
+        
+        print("\n" + "=" * 80)
+        print("📋 تفاصيل الاختبارات الفاشلة:")
+        print("=" * 80)
+        
+        failed_results = [r for r in self.test_results if not r["success"]]
+        if failed_results:
+            for result in failed_results:
+                print(f"❌ {result['test']}")
+                if result["error"]:
+                    print(f"   الخطأ: {result['error']}")
+                print()
+        else:
+            print("🎉 جميع الاختبارات نجحت!")
+        
+        print("=" * 80)
+        print("🏁 انتهى الاختبار الشامل")
+        print("=" * 80)
+        
+        return {
+            "total_tests": total_tests,
+            "successful_tests": successful_tests,
+            "failed_tests": failed_tests,
+            "success_rate": success_rate,
+            "test_results": self.test_results
+        }
+
+def main():
+    """الدالة الرئيسية"""
+    tester = LinesAreasTestSuite()
+    results = tester.run_comprehensive_test()
+    
+    # Return exit code based on success rate
+    if results["success_rate"] >= 80:
+        sys.exit(0)  # Success
+    else:
+        sys.exit(1)  # Failure
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار تحديثات authentication routes - Authentication Routes Testing
 Testing the new /api/auth/me endpoint and complete authentication system
 الهدف: التحقق من إضافة /api/auth/me endpoint الجديد وأن authentication system يعمل بشكل كامل
