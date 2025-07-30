@@ -18812,10 +18812,6 @@ const MainApp = () => {
           <AdminSettingsPage />
         )}
 
-        {activeTab === 'regions' && (user.role === 'admin' || user.role === 'gm' || user.role === 'line_manager') && (
-          <RegionManagement />
-        )}
-
         {activeTab === 'comprehensive' && (user.role === 'admin' || user.role === 'gm') && (
           <ComprehensiveAdminSettings />
         )}
