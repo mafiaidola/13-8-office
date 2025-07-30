@@ -3029,9 +3029,12 @@ const LoginPage = () => {
   };
 
   const handleLoginSubmit = async (e) => {
+    console.log('🔑 handleLoginSubmit called');
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    console.log('🔑 Username:', username, 'Password length:', password?.length);
 
     // Save credentials if remember me is checked
     if (rememberMe) {
@@ -3042,10 +3045,15 @@ const LoginPage = () => {
       localStorage.removeItem('rememberedPass');
     }
 
+    console.log('🔑 Calling login function...');
     const result = await login(username, password);
+    console.log('🔑 Login result:', result);
     
     if (!result.success) {
       setError(result.error);
+      console.log('❌ Login failed:', result.error);
+    } else {
+      console.log('✅ Login successful');
     }
     
     setIsLoading(false);
