@@ -1361,7 +1361,7 @@ async def create_product(product_data: dict, current_user: User = Depends(get_cu
             "is_active": product_data.get("is_active", True),
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
-            "created_by": current_user["id"]
+            "created_by": current_user.id
         }
         
         await db.products.insert_one(new_product)
