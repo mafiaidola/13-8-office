@@ -28701,7 +28701,50 @@ const LinesManagement = () => {
     }
   };
 
-  const deleteLine = async (lineId) => {
+  const createArea = async (areaData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/areas`, areaData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم إنشاء المنطقة بنجاح');
+      loadData();
+      setShowCreateAreaModal(false);
+    } catch (error) {
+      console.error('Error creating area:', error);
+      setError('فشل في إنشاء المنطقة');
+    }
+  };
+
+  const updateArea = async (areaId, areaData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/areas/${areaId}`, areaData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('تم تحديث المنطقة بنجاح');
+      loadData();
+    } catch (error) {
+      console.error('Error updating area:', error);
+      setError('فشل في تحديث المنطقة');
+    }
+  };
+
+  const deleteArea = async (areaId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه المنطقة؟')) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API}/areas/${areaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSuccess('تم حذف المنطقة بنجاح');
+        loadData();
+      } catch (error) {
+        console.error('Error deleting area:', error);
+        setError('فشل في حذف المنطقة');
+      }
+    }
+  };
     if (!confirm('هل أنت متأكد من حذف هذا الخط؟')) return;
     
     try {
