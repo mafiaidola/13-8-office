@@ -1,10 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.all_models import User, UserLogin, UserRole
 import hashlib
 import jwt
 from datetime import datetime, timedelta
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import Optional
 
 router = APIRouter()
+security = HTTPBearer()
 
 # JWT Configuration (should be imported from main server)
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
@@ -22,6 +27,39 @@ def create_jwt_token(user_data: dict) -> str:
         "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
     }
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+def verify_jwt_token(token: str):
+    """التحقق من JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Token verification failed")
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """الحصول على المستخدم الحالي من JWT token"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Missing authorization header")
+    
+    token = credentials.credentials
+    payload = verify_jwt_token(token)
+    
+    # Get user from database
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ.get('DB_NAME', 'test_database')]
+    
+    try:
+        user = await db.users.find_one({"id": payload["user_id"]})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    finally:
+        client.close()
 
 @router.post("/auth/login")
 async def login(user_data: UserLogin):
