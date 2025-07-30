@@ -1291,6 +1291,71 @@ class MovementLogFilter(BaseModel):
     page: int = 1
     limit: int = 50
 
+# Technical Support System Models
+class SupportTicket(BaseModel):
+    """تذكرة الدعم الفني"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    ticket_number: str = Field(default_factory=lambda: f"TICKET-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}")
+    
+    # معلومات المرسل
+    sender_name: str
+    sender_position: str  # المسمى الوظيفي
+    sender_whatsapp: str  # رقم الواتس اب
+    sender_email: Optional[str] = None
+    
+    # تفاصيل المشكلة
+    problem_description: str
+    priority: str = "medium"  # low, medium, high, urgent
+    category: str = "general"  # general, technical, account, billing, feature_request
+    
+    # حالة التذكرة
+    status: str = "open"  # open, in_progress, resolved, closed
+    assigned_to: Optional[str] = None  # ID للموظف المكلف
+    assigned_to_name: Optional[str] = None
+    
+    # تواريخ مهمة
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    resolved_at: Optional[datetime] = None
+    
+    # ردود ومتابعة
+    responses: List[Dict[str, Any]] = []  # قائمة الردود
+    internal_notes: List[Dict[str, Any]] = []  # ملاحظات داخلية
+    
+    # معلومات إضافية
+    attachment_urls: List[str] = []  # روابط المرفقات
+    satisfaction_rating: Optional[int] = None  # تقييم الرضا (1-5)
+    resolution_summary: Optional[str] = None
+
+class SupportTicketCreate(BaseModel):
+    """إنشاء تذكرة دعم فني جديدة"""
+    sender_name: str
+    sender_position: str
+    sender_whatsapp: str
+    sender_email: Optional[str] = None
+    problem_description: str
+    priority: str = "medium"
+    category: str = "general"
+
+class SupportTicketUpdate(BaseModel):
+    """تحديث تذكرة الدعم الفني"""
+    status: Optional[str] = None
+    assigned_to: Optional[str] = None
+    priority: Optional[str] = None
+    resolution_summary: Optional[str] = None
+
+class SupportResponse(BaseModel):
+    """رد على تذكرة الدعم الفني"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    ticket_id: str
+    response_text: str
+    responder_id: str
+    responder_name: str
+    responder_role: str
+    response_type: str = "public"  # public, internal
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    attachments: List[str] = []
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
