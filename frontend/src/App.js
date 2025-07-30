@@ -3285,6 +3285,10 @@ const LoginPage = () => {
                 type="submit"
                 disabled={isLoading}
                 className="submit-btn login-btn"
+                onClick={(e) => {
+                  console.log('🔑 Login button clicked!');
+                  console.log('🔑 Current form data:', { username, password: password?.length, isLoading });
+                }}
               >
                 {isLoading ? (
                   <div className="loading-content">
