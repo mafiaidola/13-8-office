@@ -3397,7 +3397,8 @@ const AdminSettingsPage = () => {
     { id: 'dashboard', label: 'لوحة التحكم', icon: 'dashboard' },
     { id: 'system', label: 'النظام', icon: 'settings' },
     { id: 'security', label: 'الأمان', icon: 'settings' },
-    { id: 'logs', label: 'السجلات', icon: 'reports' }
+    { id: 'logs', label: 'السجلات', icon: 'reports' },
+    { id: 'support', label: 'الدعم الفني', icon: 'phone' }
   ];
 
   useEffect(() => {
