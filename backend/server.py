@@ -1034,7 +1034,7 @@ async def delete_line(line_id: str, current_user: User = Depends(get_current_use
 async def create_area(area_data: AreaCreate, current_user: User = Depends(get_current_user)):
     """إنشاء منطقة جديدة - Create new area"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm", "area_manager"]:
+    if current_user.role not in ["admin", "gm", "area_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء مناطق")
     
     try:
@@ -1044,7 +1044,7 @@ async def create_area(area_data: AreaCreate, current_user: User = Depends(get_cu
             raise HTTPException(status_code=400, detail="رمز المنطقة موجود بالفعل")
         
         # Create area
-        area = Area(**area_data.dict(), created_by=current_user["id"])
+        area = Area(**area_data.dict(), created_by=current_user.id)
         
         # If parent line is assigned, get line name
         if area.parent_line_id:
