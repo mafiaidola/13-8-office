@@ -21020,6 +21020,13 @@ const AppContent = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const { language } = useLanguage();
 
+  // Debug logging for user state changes
+  useEffect(() => {
+    console.log('🔍 AppContent: User state changed:', user);
+    console.log('🔍 AppContent: Loading state:', loading);
+    console.log('🔍 AppContent: Should show dashboard?', !!user);
+  }, [user, loading]);
+
   const handleQRScan = async (qrData) => {
     try {
       const token = localStorage.getItem('token');
