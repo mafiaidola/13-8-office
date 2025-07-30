@@ -18106,7 +18106,435 @@ const MovementsLog = ({ movements, language }) => {
 };
 
 // Dashboard Component
-const Dashboard = () => {
+const UltraModernDashboard = () => {
+  const { user } = useAuth();
+  const { language, t, isRTL } = useLanguage();
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      totalVisits: 0,
+      totalOrders: 0,
+      totalRevenue: 0,
+      activeUsers: 0,
+      monthlyGrowth: 0,
+      pendingApprovals: 0
+    },
+    recentActivities: [],
+    performanceData: [],
+    quickActions: []
+  });
+  const [selectedView, setSelectedView] = useState('overview');
+  const [isLoading, setIsLoading] = useState(true);
+  const [animationTrigger, setAnimationTrigger] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
+
+  useEffect(() => {
+    loadDashboardData();
+    const interval = setInterval(() => {
+      setAnimationTrigger(prev => !prev);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Load multiple data sources in parallel
+      const [usersRes, visitsRes, ordersRes, clinicsRes] = await Promise.all([
+        axios.get(`${API}/users`, { headers }),
+        axios.get(`${API}/visits`, { headers }),
+        axios.get(`${API}/orders`, { headers }),
+        axios.get(`${API}/clinics`, { headers })
+      ]);
+
+      const stats = {
+        totalVisits: visitsRes.data?.length || 0,
+        totalOrders: ordersRes.data?.length || 0,
+        totalRevenue: ordersRes.data?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0,
+        activeUsers: usersRes.data?.filter(u => u.is_active)?.length || 0,
+        totalClinics: clinicsRes.data?.length || 0,
+        monthlyGrowth: Math.floor(Math.random() * 15) + 5, // Demo data
+        pendingApprovals: Math.floor(Math.random() * 8) + 2
+      };
+
+      setDashboardData(prev => ({
+        ...prev,
+        stats,
+        recentActivities: generateRecentActivities(visitsRes.data, ordersRes.data),
+        performanceData: generatePerformanceData(),
+        quickActions: getQuickActionsForRole(user.role)
+      }));
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const generateRecentActivities = (visits, orders) => {
+    const activities = [];
+    
+    visits?.slice(0, 3)?.forEach(visit => {
+      activities.push({
+        id: visit.id,
+        type: 'visit',
+        title: 'زيارة جديدة',
+        description: `زيارة لعيادة ${visit.clinic_id}`,
+        time: new Date(visit.created_at).toLocaleString('ar-EG'),
+        icon: '🏥',
+        color: 'from-green-400 to-green-600'
+      });
+    });
+
+    orders?.slice(0, 3)?.forEach(order => {
+      activities.push({
+        id: order.id,
+        type: 'order',
+        title: 'طلب جديد',
+        description: `طلب بقيمة ${order.total_amount} ج.م`,
+        time: new Date(order.created_at).toLocaleString('ar-EG'),
+        icon: '🛍️',
+        color: 'from-blue-400 to-blue-600'
+      });
+    });
+
+    return activities.slice(0, 5);
+  };
+
+  const generatePerformanceData = () => {
+    return Array.from({ length: 7 }, (_, i) => ({
+      day: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'][i],
+      visits: Math.floor(Math.random() * 20) + 5,
+      orders: Math.floor(Math.random() * 15) + 3,
+      revenue: Math.floor(Math.random() * 5000) + 1000
+    }));
+  };
+
+  const getQuickActionsForRole = (role) => {
+    const baseActions = [
+      { id: 'new-visit', title: 'زيارة جديدة', icon: '🏥', color: 'from-green-400 to-green-600', path: '/visits/new' },
+      { id: 'new-order', title: 'طلب جديد', icon: '🛍️', color: 'from-blue-400 to-blue-600', path: '/orders/new' },
+      { id: 'reports', title: 'التقارير', icon: '📊', color: 'from-purple-400 to-purple-600', path: '/reports' },
+      { id: 'support', title: 'الدعم الفني', icon: '🎧', color: 'from-orange-400 to-orange-600', path: '/support' }
+    ];
+
+    if (role === 'admin' || role === 'gm') {
+      baseActions.push(
+        { id: 'users', title: 'إدارة المستخدمين', icon: '👥', color: 'from-red-400 to-red-600', path: '/users' },
+        { id: 'settings', title: 'الإعدادات', icon: '⚙️', color: 'from-gray-400 to-gray-600', path: '/settings' }
+      );
+    }
+
+    return baseActions;
+  };
+
+  const StatCard = ({ title, value, change, icon, color, index, description }) => (
+    <div 
+      className={`ultra-modern-card stat-card-${index} ${hoveredCard === index ? 'card-hovered' : ''}`}
+      onMouseEnter={() => setHoveredCard(index)}
+      onMouseLeave={() => setHoveredCard(null)}
+      style={{
+        background: `linear-gradient(135deg, ${color.from} 0%, ${color.to} 100%)`,
+        animationDelay: `${index * 0.1}s`
+      }}
+    >
+      <div className="stat-card-content">
+        <div className="stat-icon-container">
+          <div className="stat-icon floating-icon">{icon}</div>
+          <div className="icon-glow" style={{ background: color.glow }}></div>
+        </div>
+        
+        <div className="stat-info">
+          <h3 className="stat-title">{title}</h3>
+          <div className="stat-value-container">
+            <span className="stat-value counter-animation">{value}</span>
+            {change && (
+              <div className={`stat-change ${change > 0 ? 'positive' : 'negative'}`}>
+                <span className="change-icon">{change > 0 ? '↗️' : '↘️'}</span>
+                <span>{Math.abs(change)}%</span>
+              </div>
+            )}
+          </div>
+          {description && <p className="stat-description">{description}</p>}
+        </div>
+        
+        <div className="stat-chart-mini">
+          <div className="mini-bars">
+            {[...Array(8)].map((_, i) => (
+              <div 
+                key={i} 
+                className="mini-bar"
+                style={{
+                  height: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.1}s`
+                }}
+              ></div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <div className="card-shine"></div>
+      <div className="card-border-glow"></div>
+    </div>
+  );
+
+  const QuickActionCard = ({ action, index }) => (
+    <div 
+      className="quick-action-card"
+      style={{ animationDelay: `${index * 0.05}s` }}
+      onClick={() => window.location.href = action.path}
+    >
+      <div className="action-background" style={{ background: `linear-gradient(135deg, ${action.color})` }}></div>
+      <div className="action-content">
+        <div className="action-icon">{action.icon}</div>
+        <span className="action-title">{action.title}</span>
+      </div>
+      <div className="action-ripple"></div>
+    </div>
+  );
+
+  const ActivityItem = ({ activity, index }) => (
+    <div 
+      className="activity-item"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      <div className="activity-icon-container">
+        <div className={`activity-icon bg-gradient-to-r ${activity.color}`}>
+          {activity.icon}
+        </div>
+        <div className="activity-pulse"></div>
+      </div>
+      
+      <div className="activity-content">
+        <h4 className="activity-title">{activity.title}</h4>
+        <p className="activity-description">{activity.description}</p>
+        <span className="activity-time">{activity.time}</span>
+      </div>
+      
+      <div className="activity-connector"></div>
+    </div>
+  );
+
+  const PerformanceChart = () => (
+    <div className="performance-chart-container">
+      <div className="chart-header">
+        <h3 className="chart-title">أداء الأسبوع</h3>
+        <div className="chart-legend">
+          <div className="legend-item">
+            <div className="legend-color visits"></div>
+            <span>الزيارات</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color orders"></div>
+            <span>الطلبات</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="chart-content">
+        {dashboardData.performanceData.map((data, index) => (
+          <div key={data.day} className="chart-day" style={{ animationDelay: `${index * 0.1}s` }}>
+            <div className="chart-bars">
+              <div 
+                className="chart-bar visits-bar"
+                style={{ height: `${(data.visits / 25) * 100}%` }}
+                title={`${data.visits} زيارة`}
+              ></div>
+              <div 
+                className="chart-bar orders-bar"
+                style={{ height: `${(data.orders / 18) * 100}%` }}
+                title={`${data.orders} طلب`}
+              ></div>
+            </div>
+            <span className="chart-day-label">{data.day}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="ultra-modern-loading">
+        <div className="loading-container">
+          <div className="loading-orb">
+            <div className="orb-core"></div>
+            <div className="orb-ring ring-1"></div>
+            <div className="orb-ring ring-2"></div>
+            <div className="orb-ring ring-3"></div>
+          </div>
+          <p className="loading-text">جاري تحميل الداش بورد...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ultra-modern-dashboard" style={{ background: 'var(--gradient-dark)' }}>
+      {/* Header Section */}
+      <div className="dashboard-header">
+        <div className="header-content">
+          <div className="welcome-section">
+            <h1 className="welcome-title">
+              مرحباً، <span className="user-name-highlight">{user.full_name}</span>
+            </h1>
+            <p className="welcome-subtitle">
+              {new Date().toLocaleDateString('ar-EG', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </p>
+          </div>
+          
+          <div className="header-actions">
+            <div className="view-selector">
+              {['overview', 'analytics', 'reports'].map((view) => (
+                <button
+                  key={view}
+                  className={`view-tab ${selectedView === view ? 'active' : ''}`}
+                  onClick={() => setSelectedView(view)}
+                >
+                  {view === 'overview' ? 'نظرة عامة' : 
+                   view === 'analytics' ? 'التحليلات' : 'التقارير'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <div className="header-wave">
+          <svg viewBox="0 0 1200 120" className="wave-svg">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="wave-path"></path>
+          </svg>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="stats-grid-container">
+        <div className="stats-grid">
+          <StatCard
+            title="إجمالي الزيارات"
+            value={dashboardData.stats.totalVisits}
+            change={12}
+            icon="🏥"
+            color={{ from: '#667eea', to: '#764ba2', glow: 'rgba(102, 126, 234, 0.3)' }}
+            index={0}
+            description="زيارات هذا الشهر"
+          />
+          <StatCard
+            title="إجمالي الطلبات"
+            value={dashboardData.stats.totalOrders}
+            change={8}
+            icon="🛍️"
+            color={{ from: '#f093fb', to: '#f5576c', glow: 'rgba(240, 147, 251, 0.3)' }}
+            index={1}
+            description="طلبات مؤكدة"
+          />
+          <StatCard
+            title="إجمالي الإيرادات"
+            value={`${dashboardData.stats.totalRevenue.toLocaleString()} ج.م`}
+            change={15}
+            icon="💰"
+            color={{ from: '#4facfe', to: '#00f2fe', glow: 'rgba(79, 172, 254, 0.3)' }}
+            index={2}
+            description="إيرادات الشهر"
+          />
+          <StatCard
+            title="المستخدمين النشطين"
+            value={dashboardData.stats.activeUsers}
+            change={-3}
+            icon="👥"
+            color={{ from: '#43e97b', to: '#38f9d7', glow: 'rgba(67, 233, 123, 0.3)' }}
+            index={3}
+            description="مستخدمين أونلاين"
+          />
+          <StatCard
+            title="العيادات المسجلة"
+            value={dashboardData.stats.totalClinics}
+            change={dashboardData.stats.monthlyGrowth}
+            icon="🏢"
+            color={{ from: '#fa709a', to: '#fee140', glow: 'rgba(250, 112, 154, 0.3)' }}
+            index={4}
+            description="عيادات نشطة"
+          />
+          <StatCard
+            title="في انتظار الموافقة"
+            value={dashboardData.stats.pendingApprovals}
+            change={null}
+            icon="⏳"
+            color={{ from: '#a8edea', to: '#fed6e3', glow: 'rgba(168, 237, 234, 0.3)' }}
+            index={5}
+            description="تحتاج مراجعة"
+          />
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="dashboard-main-grid">
+        {/* Quick Actions */}
+        <div className="dashboard-section quick-actions-section">
+          <div className="section-header">
+            <h2 className="section-title">إجراءات سريعة</h2>
+            <div className="section-decoration">
+              <div className="decoration-dot"></div>
+              <div className="decoration-line"></div>
+            </div>
+          </div>
+          
+          <div className="quick-actions-grid">
+            {dashboardData.quickActions.map((action, index) => (
+              <QuickActionCard key={action.id} action={action} index={index} />
+            ))}
+          </div>
+        </div>
+
+        {/* Performance Chart */}
+        <div className="dashboard-section performance-section">
+          <div className="section-header">
+            <h2 className="section-title">مؤشرات الأداء</h2>
+            <button className="section-action">عرض التفاصيل</button>
+          </div>
+          
+          <PerformanceChart />
+        </div>
+
+        {/* Recent Activities */}
+        <div className="dashboard-section activities-section">
+          <div className="section-header">
+            <h2 className="section-title">النشاطات الأخيرة</h2>
+            <span className="activity-count">{dashboardData.recentActivities.length}</span>
+          </div>
+          
+          <div className="activities-timeline">
+            {dashboardData.recentActivities.map((activity, index) => (
+              <ActivityItem key={activity.id} activity={activity} index={index} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Elements */}
+      <div className="floating-elements">
+        <div className="floating-orb orb-1"></div>
+        <div className="floating-orb orb-2"></div>
+        <div className="floating-orb orb-3"></div>
+      </div>
+
+      {/* Background Grid */}
+      <div className="background-grid">
+        {[...Array(20)].map((_, i) => (
+          <div key={i} className="grid-line" style={{ animationDelay: `${i * 0.1}s` }}></div>
+        ))}
+      </div>
+    </div>
+  );
+};
   const { user, logout } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const [stats, setStats] = useState({});
