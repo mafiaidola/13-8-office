@@ -28745,7 +28745,9 @@ const LinesManagement = () => {
       }
     }
   };
-    if (!confirm('هل أنت متأكد من حذف هذا الخط؟')) return;
+
+  const deleteLine = async (lineId) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الخط؟')) return;
     
     try {
       const token = localStorage.getItem('token');
