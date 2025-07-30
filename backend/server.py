@@ -1331,7 +1331,7 @@ async def get_geographic_statistics(current_user: User = Depends(get_current_use
 async def create_product(product_data: dict, current_user: User = Depends(get_current_user)):
     """إنشاء منتج جديد - Create new product"""
     # Check permissions
-    if current_user["role"] not in ["admin"]:
+    if current_user.role not in ["admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء منتجات")
     
     try:
