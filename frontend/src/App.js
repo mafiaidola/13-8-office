@@ -7461,13 +7461,7 @@ const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
   );
 };
 
-
-      visitDetails: 'Visit Details',
-      clinicDetails: 'Clinic Details', 
-      orderDetails: 'Order Details',
-      userDetails: 'User Details',
-      close: 'Close'
-    },
+// Clinic Mini Profile Modal Component
     ar: {
       activityDetails: 'تفاصيل النشاط',
       visitDetails: 'تفاصيل الزيارة',
