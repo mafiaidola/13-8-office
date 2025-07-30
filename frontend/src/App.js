@@ -7461,7 +7461,7 @@ const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
   );
 };
 
-// Previous EnhancedStatisticsDashboard component
+
 const EnhancedStatisticsDashboard = ({ stats, user }) => {
   const [timeRange, setTimeRange] = useState('week');
   const [comparison, setComparison] = useState({});
