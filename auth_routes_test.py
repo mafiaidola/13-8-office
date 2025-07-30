@@ -162,12 +162,32 @@ class AuthenticationTester:
         # Test without token
         response, error = self.make_request("GET", "/auth/me")
         
-        if response and response.status_code == 401:
+        if error:
+            # If there's a connection error, try with curl to verify
+            import subprocess
+            try:
+                result = subprocess.run([
+                    'curl', '-s', '-o', '/dev/null', '-w', '%{http_code}',
+                    f"{BACKEND_URL}/auth/me"
+                ], capture_output=True, text=True, timeout=10)
+                
+                if result.returncode == 0:
+                    status_code = int(result.stdout.strip())
+                    if status_code in [401, 403]:
+                        self.log_test("/api/auth/me without token (should fail)", True, 
+                                    f"Correctly rejected request without authorization token (curl: {status_code})")
+                    else:
+                        self.log_test("/api/auth/me without token (should fail)", False, 
+                                    f"Expected 401/403, got: {status_code} (via curl)")
+                else:
+                    self.log_test("/api/auth/me without token (should fail)", False, 
+                                f"Connection error: {error}")
+            except Exception as e:
+                self.log_test("/api/auth/me without token (should fail)", False, 
+                            f"Connection error and curl failed: {error}")
+        elif response and response.status_code in [401, 403]:
             self.log_test("/api/auth/me without token (should fail)", True, 
                         "Correctly rejected request without authorization token")
-        elif response and response.status_code == 403:
-            self.log_test("/api/auth/me without token (should fail)", True, 
-                        "Correctly rejected request with 403 Forbidden")
         else:
             error_msg = f"Expected 401/403, got: {response.status_code if response else 'No response'}"
             self.log_test("/api/auth/me without token (should fail)", False, error_msg)
@@ -175,7 +195,30 @@ class AuthenticationTester:
         # Test with invalid token
         response, error = self.make_request("GET", "/auth/me", token="invalid_token_12345")
         
-        if response and response.status_code in [401, 403]:
+        if error:
+            # If there's a connection error, try with curl to verify
+            try:
+                result = subprocess.run([
+                    'curl', '-s', '-H', 'Authorization: Bearer invalid_token_12345',
+                    '-o', '/dev/null', '-w', '%{http_code}',
+                    f"{BACKEND_URL}/auth/me"
+                ], capture_output=True, text=True, timeout=10)
+                
+                if result.returncode == 0:
+                    status_code = int(result.stdout.strip())
+                    if status_code in [401, 403]:
+                        self.log_test("/api/auth/me with invalid token (should fail)", True, 
+                                    f"Correctly rejected invalid token (curl: {status_code})")
+                    else:
+                        self.log_test("/api/auth/me with invalid token (should fail)", False, 
+                                    f"Expected 401/403, got: {status_code} (via curl)")
+                else:
+                    self.log_test("/api/auth/me with invalid token (should fail)", False, 
+                                f"Connection error: {error}")
+            except Exception as e:
+                self.log_test("/api/auth/me with invalid token (should fail)", False, 
+                            f"Connection error and curl failed: {error}")
+        elif response and response.status_code in [401, 403]:
             self.log_test("/api/auth/me with invalid token (should fail)", True, 
                         f"Correctly rejected invalid token with status {response.status_code}")
         else:
