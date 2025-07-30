@@ -1404,7 +1404,7 @@ async def get_products(current_user: User = Depends(get_current_user)):
 async def update_product(product_id: str, product_data: dict, current_user: User = Depends(get_current_user)):
     """تحديث منتج - Update product"""
     # Check permissions
-    if current_user["role"] not in ["admin"]:
+    if current_user.role not in ["admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المنتجات")
     
     try:
