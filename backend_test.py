@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Updated Organizational Structure
-Testing the new system with enhanced organizational structure as requested in review.
+اختبار تحديثات authentication routes - Authentication Routes Testing
+Testing the new /api/auth/me endpoint and complete authentication system
+الهدف: التحقق من إضافة /api/auth/me endpoint الجديد وأن authentication system يعمل بشكل كامل
 """
 
 import requests
