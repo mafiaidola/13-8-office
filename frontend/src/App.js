@@ -2961,13 +2961,30 @@ const AuthProvider = ({ children }) => {
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [systemSettings, setSystemSettings] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [activeForm, setActiveForm] = useState('login'); // 'login' or 'support'
+  
+  // Support form states
+  const [supportForm, setSupportForm] = useState({
+    sender_name: '',
+    sender_position: '',
+    sender_whatsapp: '',
+    sender_email: '',
+    problem_description: '',
+    priority: 'medium',
+    category: 'general'
+  });
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState(false);
+
   const { login } = useAuth();
   const { language, changeLanguage, t, isRTL } = useLanguage();
-  const { theme, changeTheme } = useTheme();
+  const { theme, setSpecificTheme, availableThemes } = useTheme();
 
   const themes = [
     { id: 'light', name: t('themeLight'), icon: '☀️' },
@@ -2983,6 +3000,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     fetchSystemSettings();
+    loadRememberedCredentials();
   }, []);
 
   const fetchSystemSettings = async () => {
@@ -2994,10 +3012,29 @@ const LoginPage = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const loadRememberedCredentials = () => {
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    const rememberedPass = localStorage.getItem('rememberedPass');
+    if (rememberedUser && rememberedPass) {
+      setUsername(rememberedUser);
+      setPassword(rememberedPass);
+      setRememberMe(true);
+    }
+  };
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    // Save credentials if remember me is checked
+    if (rememberMe) {
+      localStorage.setItem('rememberedUser', username);
+      localStorage.setItem('rememberedPass', password);
+    } else {
+      localStorage.removeItem('rememberedUser');
+      localStorage.removeItem('rememberedPass');
+    }
 
     const result = await login(username, password);
     
@@ -3008,41 +3045,95 @@ const LoginPage = () => {
     setIsLoading(false);
   };
 
-  return (
-    <div className={`${isRTL ? 'rtl' : 'ltr'}`} 
-         style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault();
+    setSupportSubmitting(true);
+    
+    try {
+      const response = await axios.post(`${API}/support/tickets`, supportForm);
       
-      {/* Language & Theme Toggle for Login */}
-      <div className={`login-language-toggle ${isRTL ? 'rtl' : ''}`}>
+      if (response.data.success) {
+        setSupportSuccess(true);
+        setSupportForm({
+          sender_name: '',
+          sender_position: '',
+          sender_whatsapp: '',
+          sender_email: '',
+          problem_description: '',
+          priority: 'medium',
+          category: 'general'
+        });
+        
+        setTimeout(() => {
+          setSupportSuccess(false);
+          setActiveForm('login');
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error submitting support ticket:', error);
+      setError('خطأ في إرسال طلب الدعم الفني');
+    } finally {
+      setSupportSubmitting(false);
+    }
+  };
+
+  const fillDemoCredentials = () => {
+    setUsername('admin');
+    setPassword('admin123');
+  };
+
+  return (
+    <div className={`login-container ${isRTL ? 'rtl' : 'ltr'}`} 
+         style={{ 
+           background: 'var(--gradient-dark)', 
+           color: 'var(--text-primary)', 
+           minHeight: '100vh',
+           position: 'relative',
+           overflow: 'hidden'
+         }}>
+      
+      {/* Animated Background Elements */}
+      <div className="login-bg-animation">
+        <div className="floating-shapes">
+          <div className="shape shape-1"></div>
+          <div className="shape shape-2"></div>
+          <div className="shape shape-3"></div>
+          <div className="shape shape-4"></div>
+          <div className="shape shape-5"></div>
+        </div>
+      </div>
+      
+      {/* Language & Theme Toggle */}
+      <div className={`login-controls ${isRTL ? 'rtl' : ''}`}>
         <div className="flex items-center gap-4">
           <LanguageToggle position="login" />
           <div className="relative">
             <button
               onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className="glass-effect p-3 rounded-full hover:scale-105 transition-transform"
+              className="control-btn glass-effect"
               title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
             >
               <SVGIcon name="theme" size={20} className="svg-icon-animated" />
             </button>
 
             {showThemeMenu && (
-              <div className="absolute top-full right-0 mt-2 glass-effect rounded-xl p-2 min-w-48 border border-white border-opacity-20 z-50">
-                <div className="grid grid-cols-3 gap-2">
+              <div className="theme-menu glass-effect">
+                <div className="theme-grid">
                   {themes.map((themeOption) => (
                     <button
                       key={themeOption.id}
                       onClick={() => {
-                        changeTheme(themeOption.id);
+                        setSpecificTheme(themeOption.id);
                         setShowThemeMenu(false);
                       }}
                       className={`theme-option ${themeOption.id} ${theme === themeOption.id ? 'active' : ''}`}
                       title={themeOption.name}
                     >
-                      <span className="text-lg">{themeOption.icon}</span>
+                      <span className="theme-icon">{themeOption.icon}</span>
                     </button>
                   ))}
                 </div>
-                <div className="mt-2 pt-2 border-t border-white border-opacity-20">
+                <div className="theme-current">
                   <div className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
                     {language === 'ar' ? 'الثيم الحالي:' : 'Current:'} <strong>{themes.find(t => t.id === theme)?.name}</strong>
                   </div>
@@ -3053,106 +3144,238 @@ const LoginPage = () => {
         </div>
       </div>
       
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="floating">
-          <div className="card-modern w-full max-w-md p-8 fade-in-up glass-effect">
-            <div className="text-center mb-8">
-              {/* Logo Section */}
-              <div className="mb-6">
-                {systemSettings?.logo_image ? (
-                  <img 
-                    src={systemSettings.logo_image} 
-                    alt={t('logo')}
-                    className="w-24 h-24 mx-auto rounded-full object-cover glow-pulse"
-                  />
-                ) : (
-                  <div className="w-24 h-24 mx-auto card-gradient-orange rounded-full flex items-center justify-center glow-pulse">
-                    <span className="text-4xl">🏥</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Company Name */}
-              <h1 className={`text-4xl font-bold text-gradient mb-3 system-brand ${isRTL ? 'arabic' : 'english'}`}>
-                {t('systemName')}
-              </h1>
-              <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
-                {t('footerDescription')}
-              </p>
-              <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
-                {t('enterCredentials')}
-              </p>
+      <div className="login-content">
+        <div className="login-card glass-effect-enhanced">
+          {/* Logo and Header */}
+          <div className="login-header">
+            <div className="login-logo">
+              {systemSettings?.logo_image ? (
+                <img 
+                  src={systemSettings.logo_image} 
+                  alt={t('logo')}
+                  className="logo-image"
+                />
+              ) : (
+                <div className="logo-placeholder">
+                  <span className="logo-emoji">🏥</span>
+                </div>
+              )}
             </div>
+            
+            <h1 className={`login-title ${isRTL ? 'arabic' : 'english'}`}>
+              {t('systemName')}
+            </h1>
+            <p className="login-subtitle">
+              {t('footerDescription')}
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8 form-modern">
-              <div>
-                <label>
-                  <span className="text-shadow-glow">
-                    🧑‍💼 {t('username')}
-                  </span>
+          {/* Form Toggle Buttons */}
+          <div className="form-toggle">
+            <button
+              onClick={() => setActiveForm('login')}
+              className={`toggle-btn ${activeForm === 'login' ? 'active' : ''}`}
+            >
+              <SVGIcon name="user" size={18} />
+              <span>{language === 'ar' ? 'تسجيل الدخول' : 'Login'}</span>
+            </button>
+            <button
+              onClick={() => setActiveForm('support')}
+              className={`toggle-btn ${activeForm === 'support' ? 'active' : ''}`}
+            >
+              <SVGIcon name="phone" size={18} />
+              <span>{language === 'ar' ? 'الدعم الفني' : 'Technical Support'}</span>
+            </button>
+          </div>
+
+          {/* Login Form */}
+          {activeForm === 'login' && (
+            <form onSubmit={handleLoginSubmit} className="login-form">
+              <div className="form-group">
+                <label className="form-label">
+                  <SVGIcon name="user" size={16} />
+                  <span>{t('username')}</span>
                 </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full focus-visible"
+                  className="form-input glass-input"
                   placeholder={t('username')}
                   style={{ textAlign: isRTL ? 'right' : 'left' }}
                   required
                 />
               </div>
 
-              <div>
-                <label>
-                  <span className="text-shadow-glow">
-                    🔒 {t('password')}
-                  </span>
+              <div className="form-group">
+                <label className="form-label">
+                  <SVGIcon name="security" size={16} />
+                  <span>{t('password')}</span>
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full focus-visible"
-                  placeholder={t('password')}
-                  style={{ textAlign: isRTL ? 'right' : 'left' }}
-                  required
-                />
+                <div className="password-input-container">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="form-input glass-input"
+                    placeholder={t('password')}
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="password-toggle"
+                  >
+                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-options">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="checkbox-input"
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span>{language === 'ar' ? 'تذكر كلمة السر' : 'Remember Password'}</span>
+                </label>
+                
+                <button
+                  type="button"
+                  onClick={fillDemoCredentials}
+                  className="demo-btn"
+                >
+                  {language === 'ar' ? 'بيانات تجريبية' : 'Demo Credentials'}
+                </button>
               </div>
 
               {error && (
-                <div className="alert-modern alert-error scale-in">
-                  <span className={`${isRTL ? 'mr-2' : 'ml-2'}`}>⚠️</span>
-                  {error}
+                <div className="error-message">
+                  <SVGIcon name="warning" size={16} />
+                  <span>{error}</span>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full btn-primary neon-glow"
+                className="submit-btn login-btn"
               >
                 {isLoading ? (
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="loading-shimmer w-6 h-6 rounded-full"></div>
-                    <span>{t('loginLoading')}</span>
+                  <div className="loading-content">
+                    <div className="loading-spinner"></div>
+                    <span>{language === 'ar' ? 'جاري الدخول...' : 'Logging in...'}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>🚀</span>
-                    <span>{t('loginButton')}</span>
+                  <div className="btn-content">
+                    <SVGIcon name="success" size={18} />
+                    <span>{language === 'ar' ? 'دخول' : 'Login'}</span>
                   </div>
                 )}
               </button>
             </form>
+          )}
 
+          {/* Support Form */}
+          {activeForm === 'support' && (
+            <form onSubmit={handleSupportSubmit} className="support-form">
+              {supportSuccess ? (
+                <div className="success-message">
+                  <SVGIcon name="success" size={48} className="success-icon" />
+                  <h3>{language === 'ar' ? 'تم إرسال طلبك بنجاح!' : 'Request sent successfully!'}</h3>
+                  <p>{language === 'ar' ? 'سيتم التواصل معك قريباً' : 'We will contact you soon'}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <SVGIcon name="user" size={16} />
+                      <span>{language === 'ar' ? 'الاسم' : 'Name'}</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={supportForm.sender_name}
+                      onChange={(e) => setSupportForm({...supportForm, sender_name: e.target.value})}
+                      className="form-input glass-input"
+                      placeholder={language === 'ar' ? 'اسمك الكامل' : 'Your full name'}
+                      required
+                    />
+                  </div>
 
+                  <div className="form-group">
+                    <label className="form-label">
+                      <SVGIcon name="organization" size={16} />
+                      <span>{language === 'ar' ? 'المسمى الوظيفي' : 'Job Title'}</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={supportForm.sender_position}
+                      onChange={(e) => setSupportForm({...supportForm, sender_position: e.target.value})}
+                      className="form-input glass-input"
+                      placeholder={language === 'ar' ? 'مدير، مندوب، محاسب...' : 'Manager, Rep, Accountant...'}
+                      required
+                    />
+                  </div>
 
-            {/* Footer */}
-            <div className="mt-6 text-center">
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                © {new Date().getFullYear()} {t('systemName')} - {t('footerCopyright')}
-              </p>
-            </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <SVGIcon name="phone" size={16} />
+                      <span>{language === 'ar' ? 'رقم الواتس اب' : 'WhatsApp Number'}</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={supportForm.sender_whatsapp}
+                      onChange={(e) => setSupportForm({...supportForm, sender_whatsapp: e.target.value})}
+                      className="form-input glass-input"
+                      placeholder={language === 'ar' ? '01xxxxxxxxx' : '01xxxxxxxxx'}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      <SVGIcon name="warning" size={16} />
+                      <span>{language === 'ar' ? 'المشكلة' : 'Problem Description'}</span>
+                    </label>
+                    <textarea
+                      value={supportForm.problem_description}
+                      onChange={(e) => setSupportForm({...supportForm, problem_description: e.target.value})}
+                      className="form-textarea glass-input"
+                      placeholder={language === 'ar' ? 'اشرح المشكلة بالتفصيل' : 'Describe the problem in detail'}
+                      rows="4"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={supportSubmitting}
+                    className="submit-btn support-btn"
+                  >
+                    {supportSubmitting ? (
+                      <div className="loading-content">
+                        <div className="loading-spinner"></div>
+                        <span>{language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}</span>
+                      </div>
+                    ) : (
+                      <div className="btn-content">
+                        <SVGIcon name="phone" size={18} />
+                        <span>{language === 'ar' ? 'إرسال طلب الدعم' : 'Send Support Request'}</span>
+                      </div>
+                    )}
+                  </button>
+                </>
+              )}
+            </form>
+          )}
+
+          {/* Footer */}
+          <div className="login-footer">
+            <p>© {new Date().getFullYear()} {t('systemName')} - {t('footerCopyright')}</p>
           </div>
         </div>
       </div>
