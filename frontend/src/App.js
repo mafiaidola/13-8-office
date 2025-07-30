@@ -7081,6 +7081,23 @@ const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Update dashboard data when stats prop changes
+  useEffect(() => {
+    if (stats) {
+      setDashboardData(prev => ({
+        ...prev,
+        stats: {
+          totalVisits: stats.totalVisits || 0,
+          totalOrders: stats.totalOrders || 0,
+          totalRevenue: stats.totalRevenue || 0,
+          activeUsers: stats.activeUsers || 0,
+          monthlyGrowth: Math.floor(Math.random() * 15) + 5,
+          pendingApprovals: Math.floor(Math.random() * 8) + 2
+        }
+      }));
+    }
+  }, [stats]);
+
   const loadDashboardData = async () => {
     try {
       // Simulate loading delay for smooth animations
