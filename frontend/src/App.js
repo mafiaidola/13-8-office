@@ -3559,6 +3559,383 @@ const AdminSettingsPage = () => {
   );
 };
 
+// Support Tickets Management Tab
+const SupportTicketsTab = ({ loading }) => {
+  const [tickets, setTickets] = useState([]);
+  const [stats, setStats] = useState({});
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [filters, setFilters] = useState({
+    status: '',
+    priority: '',
+    category: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [showReplyModal, setShowReplyModal] = useState(false);
+
+  useEffect(() => {
+    fetchTickets();
+    fetchStats();
+  }, [filters]);
+
+  const fetchTickets = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams(filters).toString();
+      const response = await axios.get(`${API}/support/tickets?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTickets(response.data.tickets || []);
+    } catch (error) {
+      console.error('Error fetching support tickets:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/support/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error fetching support stats:', error);
+    }
+  };
+
+  const updateTicketStatus = async (ticketId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/support/tickets/${ticketId}`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchTickets();
+      fetchStats();
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+    }
+  };
+
+  const assignTicket = async (ticketId, assignedTo) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(`${API}/support/tickets/${ticketId}`, { assigned_to: assignedTo }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchTickets();
+    } catch (error) {
+      console.error('Error assigning ticket:', error);
+    }
+  };
+
+  const addReply = async () => {
+    if (!replyText.trim() || !selectedTicket) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/support/tickets/${selectedTicket.id}/responses?response_text=${encodeURIComponent(replyText)}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setReplyText('');
+      setShowReplyModal(false);
+      fetchTickets();
+      // تحديث التفاصيل
+      const response = await axios.get(`${API}/support/tickets/${selectedTicket.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedTicket(response.data.ticket);
+    } catch (error) {
+      console.error('Error adding reply:', error);
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'urgent': return 'text-red-600 bg-red-100';
+      case 'high': return 'text-orange-600 bg-orange-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'open': return 'text-blue-600 bg-blue-100';
+      case 'in_progress': return 'text-yellow-600 bg-yellow-100';
+      case 'resolved': return 'text-green-600 bg-green-100';
+      case 'closed': return 'text-gray-600 bg-gray-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-bold text-gradient">إدارة الدعم الفني</h3>
+        <button 
+          onClick={fetchTickets}
+          disabled={isLoading}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300 disabled:opacity-50"
+        >
+          {isLoading ? 'تحديث...' : 'تحديث'}
+        </button>
+      </div>
+
+      {/* Support Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-blue-600">{stats.total_tickets || 0}</div>
+          <div className="text-sm text-gray-400">إجمالي التذاكر</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-yellow-600">{stats.by_status?.open || 0}</div>
+          <div className="text-sm text-gray-400">تذاكر مفتوحة</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-orange-600">{stats.by_status?.in_progress || 0}</div>
+          <div className="text-sm text-gray-400">قيد المعالجة</div>
+        </div>
+        <div className="glass-effect p-6 text-center">
+          <div className="text-3xl font-bold text-red-600">{stats.by_priority?.total_critical || 0}</div>
+          <div className="text-sm text-gray-400">عاجلة ومهمة</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="glass-effect p-6">
+        <h4 className="text-lg font-bold mb-4">فلترة التذاكر</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({...filters, status: e.target.value})}
+            className="p-3 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+          >
+            <option value="">جميع الحالات</option>
+            <option value="open">مفتوح</option>
+            <option value="in_progress">قيد المعالجة</option>
+            <option value="resolved">محلول</option>
+            <option value="closed">مغلق</option>
+          </select>
+          
+          <select
+            value={filters.priority}
+            onChange={(e) => setFilters({...filters, priority: e.target.value})}
+            className="p-3 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+          >
+            <option value="">جميع الأولويات</option>
+            <option value="low">منخفضة</option>
+            <option value="medium">متوسطة</option>
+            <option value="high">عالية</option>
+            <option value="urgent">عاجلة</option>
+          </select>
+          
+          <select
+            value={filters.category}
+            onChange={(e) => setFilters({...filters, category: e.target.value})}
+            className="p-3 glass-effect border border-white border-opacity-20 rounded-lg text-white"
+          >
+            <option value="">جميع الفئات</option>
+            <option value="general">عام</option>
+            <option value="technical">فني</option>
+            <option value="account">حساب</option>
+            <option value="billing">فوترة</option>
+            <option value="feature_request">طلب ميزة</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tickets List */}
+      <div className="glass-effect p-6">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white border-opacity-20">
+                <th className="text-right p-4">رقم التذكرة</th>
+                <th className="text-right p-4">المرسل</th>
+                <th className="text-right p-4">المشكلة</th>
+                <th className="text-center p-4">الأولوية</th>
+                <th className="text-center p-4">الحالة</th>
+                <th className="text-center p-4">التاريخ</th>
+                <th className="text-center p-4">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map((ticket) => (
+                <tr key={ticket.id} className="border-b border-white border-opacity-10 hover:bg-white hover:bg-opacity-5">
+                  <td className="p-4 font-mono text-sm">{ticket.ticket_number}</td>
+                  <td className="p-4">
+                    <div className="font-medium">{ticket.sender_name}</div>
+                    <div className="text-sm text-gray-400">{ticket.sender_position}</div>
+                    <div className="text-sm text-gray-400">{ticket.sender_whatsapp}</div>
+                  </td>
+                  <td className="p-4 max-w-xs">
+                    <div className="truncate" title={ticket.problem_description}>
+                      {ticket.problem_description}
+                    </div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                      {ticket.priority === 'urgent' ? 'عاجل' :
+                       ticket.priority === 'high' ? 'عالي' :
+                       ticket.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                      {ticket.status === 'open' ? 'مفتوح' :
+                       ticket.status === 'in_progress' ? 'قيد المعالجة' :
+                       ticket.status === 'resolved' ? 'محلول' : 'مغلق'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center text-sm">
+                    {new Date(ticket.created_at).toLocaleDateString('ar-EG')}
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        onClick={() => setSelectedTicket(ticket)}
+                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                        title="عرض التفاصيل"
+                      >
+                        عرض
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedTicket(ticket);
+                          setShowReplyModal(true);
+                        }}
+                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded"
+                        title="إضافة رد"
+                      >
+                        رد
+                      </button>
+                      {ticket.status !== 'resolved' && (
+                        <button
+                          onClick={() => updateTicketStatus(ticket.id, 'resolved')}
+                          className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded"
+                          title="حل المشكلة"
+                        >
+                          حل
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {tickets.length === 0 && !isLoading && (
+            <div className="text-center py-8 text-gray-400">
+              لا توجد تذاكر دعم فني
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Ticket Details Modal */}
+      {selectedTicket && !showReplyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">تفاصيل التذكرة</h3>
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="text-white hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <strong>رقم التذكرة:</strong> {selectedTicket.ticket_number}
+              </div>
+              <div>
+                <strong>المرسل:</strong> {selectedTicket.sender_name} ({selectedTicket.sender_position})
+              </div>
+              <div>
+                <strong>رقم الواتس اب:</strong> {selectedTicket.sender_whatsapp}
+              </div>
+              <div>
+                <strong>المشكلة:</strong>
+                <p className="mt-2 p-3 bg-white bg-opacity-5 rounded">{selectedTicket.problem_description}</p>
+              </div>
+              
+              {selectedTicket.responses && selectedTicket.responses.length > 0 && (
+                <div>
+                  <strong>الردود:</strong>
+                  <div className="mt-2 space-y-2">
+                    {selectedTicket.responses.map((response, index) => (
+                      <div key={index} className="p-3 bg-white bg-opacity-5 rounded">
+                        <div className="text-sm text-gray-400 mb-1">
+                          {response.responder_name} - {new Date(response.created_at).toLocaleString('ar-EG')}
+                        </div>
+                        <p>{response.response_text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reply Modal */}
+      {showReplyModal && selectedTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-xl p-6 max-w-lg w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">إضافة رد</h3>
+              <button
+                onClick={() => setShowReplyModal(false)}
+                className="text-white hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <strong>للتذكرة:</strong> {selectedTicket.ticket_number}
+              </div>
+              <div>
+                <textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="اكتب ردك هنا..."
+                  className="w-full h-32 p-3 glass-effect border border-white border-opacity-20 rounded-lg text-white resize-none"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={addReply}
+                  disabled={!replyText.trim()}
+                  className="flex-1 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  إرسال الرد
+                </button>
+                <button
+                  onClick={() => setShowReplyModal(false)}
+                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Permissions Management Tab
 const PermissionsTab = ({ permissions, onUpdate, loading }) => {
   const [localPermissions, setLocalPermissions] = useState(permissions);
