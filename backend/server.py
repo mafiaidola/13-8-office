@@ -227,6 +227,46 @@ async def login(user_data: UserLogin):
     }
 
 # User Management Routes
+@api_router.post("/users")
+async def create_user(user_data: dict, current_user: User = Depends(get_current_user)):
+    """إنشاء مستخدم جديد"""
+    if current_user.role not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    try:
+        # Check if username already exists
+        existing_user = await db.users.find_one({"username": user_data["username"]})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        
+        # Create new user
+        new_user = {
+            "id": str(uuid.uuid4()),
+            "username": user_data["username"],
+            "password_hash": hash_password(user_data["password"]),
+            "full_name": user_data["full_name"],
+            "role": user_data["role"],
+            "email": user_data.get("email"),
+            "phone": user_data.get("phone"),
+            "is_active": user_data.get("is_active", True),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user.id
+        }
+        
+        await db.users.insert_one(new_user)
+        
+        # Remove password_hash from response
+        new_user.pop("password_hash", None)
+        
+        return {"success": True, "message": "User created successfully", "user": new_user}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/users")
 async def get_users(current_user: User = Depends(get_current_user)):
     """الحصول على المستخدمين"""
