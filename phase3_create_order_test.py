@@ -13,7 +13,7 @@ from datetime import datetime
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://467b9d15-958c-4759-a145-ae246bc11ccf.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://d7110555-9702-4d91-b5fc-522e9a08df1c.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class Phase3CreateOrderTester:

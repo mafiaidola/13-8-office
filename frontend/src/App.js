@@ -286,7 +286,7 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   );
 };
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://467b9d15-958c-4759-a145-ae246bc11ccf.preview.emergentagent.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://d7110555-9702-4d91-b5fc-522e9a08df1c.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 // Debug logging for environment variables
