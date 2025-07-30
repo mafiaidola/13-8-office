@@ -1076,11 +1076,11 @@ async def get_areas(current_user: User = Depends(get_current_user)):
         query = {"is_active": True}
         
         # Role-based filtering
-        if current_user["role"] == "area_manager":
-            query["manager_id"] = current_user["id"]
-        elif current_user["role"] == "line_manager":
+        if current_user.role == "area_manager":
+            query["manager_id"] = current_user.id
+        elif current_user.role == "line_manager":
             # Line managers see areas under their lines
-            managed_lines = await db.lines.find({"manager_id": current_user["id"]}).to_list(100)
+            managed_lines = await db.lines.find({"manager_id": current_user.id}).to_list(100)
             line_ids = [line["id"] for line in managed_lines]
             query["parent_line_id"] = {"$in": line_ids}
         
