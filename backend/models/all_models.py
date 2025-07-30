@@ -9,6 +9,7 @@ from .financial_models import *
 from .support_models import *
 from .movement_models import *
 from .system_models import *
+from .geographic_models import *
 
 # Export all models for easy import
 __all__ = [
