@@ -29155,10 +29155,24 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
               </div>
               
               <div>
+                <label className="block text-sm font-medium mb-2">رمز الخط *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="input-glass w-full"
+                  placeholder="مثال: CAIRO_01"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm font-medium mb-2">مدير الخط *</label>
                 <select
-                  value={formData.line_manager_id}
-                  onChange={(e) => setFormData({...formData, line_manager_id: e.target.value})}
+                  value={formData.manager_id}
+                  onChange={(e) => setFormData({...formData, manager_id: e.target.value})}
                   className="input-glass w-full"
                   required
                 >
@@ -29169,6 +29183,16 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">لون الخط</label>
+                <input
+                  type="color"
+                  value={formData.color}
+                  onChange={(e) => setFormData({...formData, color: e.target.value})}
+                  className="input-glass w-full h-10"
+                />
               </div>
             </div>
 
@@ -29189,12 +29213,12 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
                   <label key={product.id} className="flex items-center space-x-2 rtl:space-x-reverse">
                     <input
                       type="checkbox"
-                      checked={formData.products.includes(product.id)}
+                      checked={formData.assigned_products.includes(product.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData({...formData, products: [...formData.products, product.id]});
+                          setFormData({...formData, assigned_products: [...formData.assigned_products, product.id]});
                         } else {
-                          setFormData({...formData, products: formData.products.filter(p => p !== product.id)});
+                          setFormData({...formData, assigned_products: formData.assigned_products.filter(p => p !== product.id)});
                         }
                       }}
                       className="form-checkbox"
@@ -29203,6 +29227,11 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
                   </label>
                 ))}
               </div>
+              {products.length === 0 && (
+                <p className="text-sm text-gray-500 bg-gray-100 rounded p-2">
+                  لا توجد منتجات متاحة. يرجى إضافة منتجات أولاً من قسم إدارة المنتجات.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">
