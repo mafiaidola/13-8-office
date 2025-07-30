@@ -30281,16 +30281,6 @@ const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification,
           onUpdate={onUpdateClassification}
         />
       )}
-
-      {/* Create Area Modal */}
-      {showCreateAreaModal && (
-        <CreateAreaModal
-          lines={lines}
-          users={getAreaManagers()}
-          onClose={() => setShowCreateAreaModal(false)}
-          onCreate={createArea}
-        />
-      )}
     </div>
   );
 };
