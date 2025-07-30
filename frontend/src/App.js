@@ -28633,6 +28633,7 @@ const LinesManagement = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateAreaModal, setShowCreateAreaModal] = useState(false);
   const [selectedLine, setSelectedLine] = useState(null);
   const { language, t, isRTL } = useLanguage();
 
