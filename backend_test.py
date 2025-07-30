@@ -498,8 +498,10 @@ class LinesAreasTestSuite:
                     assignment_data = {
                         "line_id": self.created_line_id,
                         "product_ids": product_ids,
+                        "assigned_by": "admin",  # Add the required field
                         "assignment_reason": "اختبار تخصيص المنتجات للخط",
-                        "effective_date": datetime.now().isoformat()
+                        "effective_date": datetime.now().isoformat(),
+                        "notes": "تخصيص تجريبي للاختبار"
                     }
                     
                     response = self.session.post(
