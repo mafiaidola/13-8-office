@@ -10095,6 +10095,7 @@ const EnhancedProductManagement = () => {
       {showProductModal && (
         <ProductModal
           product={selectedProduct}
+          lines={lines}
           onClose={() => setShowProductModal(false)}
           onSave={selectedProduct ? handleUpdateProduct : handleCreateProduct}
         />
