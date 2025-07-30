@@ -19,6 +19,10 @@ __all__ = [
     # Organization Models
     'Line', 'Area', 'District', 'Region', 'AreaCreate', 'RegionCreate', 'DistrictCreate', 'LineManagementCreate',
     
+    # Geographic Models (New)
+    'LineBase', 'LineCreate', 'Line', 'AreaBase', 'AreaCreate', 'Area', 'DistrictBase', 'DistrictCreate', 'District',
+    'LineProductAssignment', 'LineUserAssignment', 'GeographicStatistics',
+    
     # Clinic Models
     'ClinicClassification', 'Clinic', 'ClinicCreate', 'ClinicRequest', 'ClinicRequestCreate', 'Doctor', 'DoctorCreate',
     
