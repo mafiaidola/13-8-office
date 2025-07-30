@@ -256,10 +256,18 @@ async def create_user(user_data: dict, current_user: User = Depends(get_current_
         
         await db.users.insert_one(new_user)
         
-        # Remove password_hash from response
-        new_user.pop("password_hash", None)
+        # Return a clean response without complex objects
+        response_user = {
+            "id": new_user["id"],
+            "username": new_user["username"],
+            "full_name": new_user["full_name"],
+            "role": new_user["role"],
+            "email": new_user.get("email"),
+            "phone": new_user.get("phone"),
+            "is_active": new_user["is_active"]
+        }
         
-        return {"success": True, "message": "User created successfully", "user": new_user}
+        return {"success": True, "message": "User created successfully", "user": response_user}
         
     except HTTPException:
         raise
