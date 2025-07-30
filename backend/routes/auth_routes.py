@@ -112,6 +112,24 @@ async def login(user_data: UserLogin):
         }
     }
 
+@router.get("/auth/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """معلومات المستخدم الحالي - Current User Info"""
+    return {
+        "success": True,
+        "user": {
+            "id": current_user["id"],
+            "username": current_user["username"],
+            "full_name": current_user["full_name"],
+            "role": current_user["role"],
+            "email": current_user.get("email"),
+            "phone": current_user.get("phone"),
+            "is_active": current_user.get("is_active", True),
+            "last_login": current_user.get("last_login"),
+            "created_at": current_user.get("created_at")
+        }
+    }
+
 @router.post("/auth/logout")
 async def logout():
     """تسجيل الخروج - User Logout"""
