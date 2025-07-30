@@ -1406,7 +1406,22 @@ async def create_product(product_data: dict, current_user: User = Depends(get_cu
         
         await db.products.insert_one(new_product)
         
-        return {"success": True, "message": "تم إنشاء المنتج بنجاح", "product": new_product}
+        # Return a clean response without complex objects
+        response_product = {
+            "id": new_product["id"],
+            "name": new_product["name"],
+            "description": new_product["description"],
+            "category": new_product["category"],
+            "unit": new_product["unit"],
+            "line_id": new_product["line_id"],
+            "line_name": new_product["line_name"],
+            "price": new_product["price"],
+            "price_type": new_product["price_type"],
+            "current_stock": new_product["current_stock"],
+            "is_active": new_product["is_active"]
+        }
+        
+        return {"success": True, "message": "تم إنشاء المنتج بنجاح", "product": response_product}
     
     except HTTPException:
         raise
