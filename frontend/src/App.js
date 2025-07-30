@@ -3233,7 +3233,13 @@ const LoginPage = () => {
 
           {/* Login Form */}
           {activeForm === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="login-form">
+            <form 
+              onSubmit={(e) => {
+                console.log('🔑 Form submitted!');
+                handleLoginSubmit(e);
+              }}
+              className="login-form"
+            >
               <div className="form-group">
                 <label className="form-label">
                   <SVGIcon name="user" size={16} />
