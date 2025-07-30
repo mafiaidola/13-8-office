@@ -924,8 +924,8 @@ async def get_lines(current_user: User = Depends(get_current_user)):
         query = {"is_active": True}
         
         # Role-based filtering
-        if current_user["role"] == "line_manager":
-            query["manager_id"] = current_user["id"]
+        if current_user.role == "line_manager":
+            query["manager_id"] = current_user.id
         
         lines = await db.lines.find(query, {"_id": 0}).to_list(1000)
         
