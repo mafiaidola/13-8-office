@@ -18734,15 +18734,15 @@ const MainApp = () => {
 
         {/* Content */}
         {activeTab === 'dashboard' && user.role === 'medical_rep' && (
-          <UltraModernDashboard stats={stats} user={user} userRole="medical_rep" />
+          <ProfessionalDashboard stats={stats} user={user} userRole="medical_rep" />
         )}
 
         {activeTab === 'dashboard' && user.role === 'sales_rep' && (
-          <UltraModernDashboard stats={stats} user={user} userRole="sales_rep" />
+          <ProfessionalDashboard stats={stats} user={user} userRole="sales_rep" />
         )}
 
         {activeTab === 'dashboard' && !['medical_rep', 'sales_rep'].includes(user.role) && (
-          <UltraModernDashboard stats={stats} user={user} userRole="admin" />
+          <ProfessionalDashboard stats={stats} user={user} userRole="admin" />
         )}
 
         {activeTab === 'clinic-registration' && canAccessTab('clinic') && (
