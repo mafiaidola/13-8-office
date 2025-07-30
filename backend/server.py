@@ -1455,6 +1455,14 @@ async def get_products(current_user: User = Depends(get_current_user)):
                         {"id": product["id"]},
                         {"$set": {"line_name": line["name"]}}
                     )
+            
+            # Hide prices for non-admin users
+            if current_user.role not in ["admin", "gm", "accounting"]:
+                # Remove price-related fields for non-admin users
+                product.pop("price", None)
+                product.pop("price_type", None)
+                product.pop("price_before_discount", None)
+                product.pop("discount_percentage", None)
         
         return products
     
