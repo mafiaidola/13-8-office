@@ -53,13 +53,17 @@ class AuthenticationTester:
             
         try:
             if method == "GET":
-                response = requests.get(url, headers=headers, timeout=30)
+                response = requests.get(url, headers=headers, timeout=10)
             elif method == "POST":
-                response = requests.post(url, headers=headers, json=data, timeout=30)
+                response = requests.post(url, headers=headers, json=data, timeout=10)
             else:
                 return None, f"Unsupported method: {method}"
                 
             return response, None
+        except requests.exceptions.Timeout:
+            return None, "Request timeout"
+        except requests.exceptions.ConnectionError:
+            return None, "Connection error"
         except requests.exceptions.RequestException as e:
             return None, str(e)
     
