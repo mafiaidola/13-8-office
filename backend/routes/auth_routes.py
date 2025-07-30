@@ -64,53 +64,53 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 @router.post("/auth/login")
 async def login(user_data: UserLogin):
     """تسجيل الدخول - User Login"""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    import os
-    
     # Database connection (should be shared from main server)
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
     db = client[os.environ.get('DB_NAME', 'test_database')]
     
-    user = await db.users.find_one({"username": user_data.username})
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    
-    # Verify password
-    if not hash_password(user_data.password) == user["password_hash"]:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    
-    # Check if user is active
-    if not user.get("is_active", True):
-        raise HTTPException(status_code=401, detail="Account is deactivated")
-    
-    # Normalize role
-    user["role"] = UserRole.normalize_role(user["role"])
-    
-    # Update last login
-    await db.users.update_one(
-        {"id": user["id"]},
-        {
-            "$set": {"last_login": datetime.utcnow()},
-            "$inc": {"login_count": 1}
+    try:
+        user = await db.users.find_one({"username": user_data.username})
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        
+        # Verify password
+        if not hash_password(user_data.password) == user["password_hash"]:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        
+        # Check if user is active
+        if not user.get("is_active", True):
+            raise HTTPException(status_code=401, detail="Account is deactivated")
+        
+        # Normalize role
+        user["role"] = UserRole.normalize_role(user["role"])
+        
+        # Update last login
+        await db.users.update_one(
+            {"id": user["id"]},
+            {
+                "$set": {"last_login": datetime.utcnow()},
+                "$inc": {"login_count": 1}
+            }
+        )
+        
+        # Create JWT token
+        token = create_jwt_token(user)
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "full_name": user["full_name"],
+                "role": user["role"],
+                "email": user.get("email"),
+                "phone": user.get("phone")
+            }
         }
-    )
-    
-    # Create JWT token
-    token = create_jwt_token(user)
-    
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "full_name": user["full_name"],
-            "role": user["role"],
-            "email": user.get("email"),
-            "phone": user.get("phone")
-        }
-    }
+    finally:
+        client.close()
 
 @router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
