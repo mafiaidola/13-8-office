@@ -18923,15 +18923,15 @@ const UltraModernDashboard = () => {
 
         {/* Content */}
         {activeTab === 'dashboard' && user.role === 'medical_rep' && (
-          <MedicalRepDashboard stats={stats} user={user} />
+          <UltraModernDashboard stats={stats} user={user} userRole="medical_rep" />
         )}
 
         {activeTab === 'dashboard' && user.role === 'sales_rep' && (
-          <SalesRepDashboard stats={stats} user={user} />
+          <UltraModernDashboard stats={stats} user={user} userRole="sales_rep" />
         )}
 
         {activeTab === 'dashboard' && !['medical_rep', 'sales_rep'].includes(user.role) && (
-          <EnhancedStatisticsDashboard stats={stats} user={user} />
+          <UltraModernDashboard stats={stats} user={user} userRole="admin" />
         )}
 
         {activeTab === 'clinic-registration' && canAccessTab('clinic') && (
