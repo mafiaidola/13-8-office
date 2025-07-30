@@ -1242,7 +1242,7 @@ async def get_line_products(line_id: str, current_user: User = Depends(get_curre
             raise HTTPException(status_code=404, detail="الخط غير موجود")
         
         # Role-based access control
-        if current_user["role"] == "line_manager" and line.get("manager_id") != current_user["id"]:
+        if current_user.role == "line_manager" and line.get("manager_id") != current_user.id:
             raise HTTPException(status_code=403, detail="غير مصرح لك بعرض هذا الخط")
         
         product_ids = line.get("assigned_products", [])
