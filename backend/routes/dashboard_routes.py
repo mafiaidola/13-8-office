@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.all_models import User, UserRole
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timedelta
 import jwt
+from typing import Optional
 
 router = APIRouter()
+security = HTTPBearer()
 
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
