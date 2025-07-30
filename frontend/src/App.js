@@ -18379,6 +18379,9 @@ const UltraModernDashboard = () => {
     </div>
   );
 };
+
+// Main Application Component
+const MainApp = () => {
   const { user, logout } = useAuth();
   const { language, t, isRTL } = useLanguage();
   const [stats, setStats] = useState({});
