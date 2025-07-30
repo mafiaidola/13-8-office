@@ -24,12 +24,12 @@ def verify_jwt_token(token: str):
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-async def get_current_user(authorization: str = None):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """الحصول على المستخدم الحالي من JWT token"""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Missing authorization header")
     
-    token = authorization.split(" ")[1]
+    token = credentials.credentials
     payload = verify_jwt_token(token)
     
     # Get user from database
@@ -37,11 +37,13 @@ async def get_current_user(authorization: str = None):
     client = AsyncIOMotorClient(mongo_url)
     db = client[os.environ.get('DB_NAME', 'test_database')]
     
-    user = await db.users.find_one({"id": payload["user_id"]})
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    return user
+    try:
+        user = await db.users.find_one({"id": payload["user_id"]})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    finally:
+        client.close()
 
 @router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
