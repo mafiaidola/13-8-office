@@ -41,9 +41,9 @@ async def get_current_user(authorization: str = None):
     return user
 
 @router.get("/dashboard/stats")
-async def get_dashboard_stats(authorization: str = None):
+async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     """احصائيات لوحة التحكم - Dashboard Statistics"""
-    user = await get_current_user(authorization)
+    user = current_user
     
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
