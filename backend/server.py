@@ -739,6 +739,137 @@ async def get_support_stats(current_user: User = Depends(get_current_user)):
         "by_category": {item["_id"]: item["count"] for item in category_stats}
     }
 
+# Additional APIs - الـ APIs المفقودة
+@api_router.get("/visits")
+async def get_visits(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة الزيارات"""
+    try:
+        if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            query = {"sales_rep_id": current_user.id}
+        elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            query = {}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        visits = await db.visits.find(query, {"_id": 0}).sort("created_at", -1).limit(100).to_list(100)
+        
+        for visit in visits:
+            if "date" in visit and isinstance(visit["date"], datetime):
+                visit["date"] = visit["date"].isoformat()
+            if "created_at" in visit and isinstance(visit["created_at"], datetime):
+                visit["created_at"] = visit["created_at"].isoformat()
+        
+        return visits
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/clinics")
+async def get_clinics(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة العيادات"""
+    try:
+        if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            query = {"assigned_rep_id": current_user.id}
+        elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            query = {}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        clinics = await db.clinics.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
+        
+        for clinic in clinics:
+            if "created_at" in clinic and isinstance(clinic["created_at"], datetime):
+                clinic["created_at"] = clinic["created_at"].isoformat()
+            if "updated_at" in clinic and isinstance(clinic["updated_at"], datetime):
+                clinic["updated_at"] = clinic["updated_at"].isoformat()
+        
+        return clinics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/doctors")
+async def get_doctors(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة الأطباء"""
+    try:
+        if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            # Get clinics assigned to this rep first
+            user_clinics = await db.clinics.find({"assigned_rep_id": current_user.id}, {"id": 1}).to_list(500)
+            clinic_ids = [clinic["id"] for clinic in user_clinics]
+            query = {"clinic_id": {"$in": clinic_ids}} if clinic_ids else {"clinic_id": "none"}
+        elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            query = {}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        doctors = await db.doctors.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
+        
+        for doctor in doctors:
+            if "created_at" in doctor and isinstance(doctor["created_at"], datetime):
+                doctor["created_at"] = doctor["created_at"].isoformat()
+        
+        return doctors
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/products")
+async def get_products(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المنتجات"""
+    try:
+        query = {"is_active": True}
+        
+        # Filter by line if user has line assignment
+        if hasattr(current_user, 'line') and current_user.line:
+            query["line"] = current_user.line
+        
+        products = await db.products.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
+        
+        for product in products:
+            if "created_at" in product and isinstance(product["created_at"], datetime):
+                product["created_at"] = product["created_at"].isoformat()
+        
+        return products
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/warehouses")
+async def get_warehouses(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المخازن"""
+    try:
+        query = {"is_active": True}
+        warehouses = await db.warehouses.find(query, {"_id": 0}).sort("created_at", -1).limit(100).to_list(100)
+        
+        for warehouse in warehouses:
+            if "created_at" in warehouse and isinstance(warehouse["created_at"], datetime):
+                warehouse["created_at"] = warehouse["created_at"].isoformat()
+            if "updated_at" in warehouse and isinstance(warehouse["updated_at"], datetime):
+                warehouse["updated_at"] = warehouse["updated_at"].isoformat()
+        
+        return warehouses
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/orders")
+async def get_orders(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة الطلبات"""
+    try:
+        if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            query = {"medical_rep_id": current_user.id}
+        elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER, UserRole.ACCOUNTING, UserRole.WAREHOUSE_KEEPER]:
+            query = {}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
+        
+        for order in orders:
+            if "created_at" in order and isinstance(order["created_at"], datetime):
+                order["created_at"] = order["created_at"].isoformat()
+            if "updated_at" in order and isinstance(order["updated_at"], datetime):
+                order["updated_at"] = order["updated_at"].isoformat()
+        
+        return orders
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include router
 app.include_router(api_router)
 
