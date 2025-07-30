@@ -870,6 +870,459 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ============================================================================
+# LINES AND AREAS MANAGEMENT APIs
+# ============================================================================
+
+@api_router.post("/lines")
+async def create_line(line_data: LineCreate, current_user: User = Depends(get_current_user)):
+    """إنشاء خط جديد - Create new line"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء خطوط")
+    
+    try:
+        # Check if line code already exists
+        existing_line = await db.lines.find_one({"code": line_data.code})
+        if existing_line:
+            raise HTTPException(status_code=400, detail="رمز الخط موجود بالفعل")
+        
+        # Create line
+        line = Line(**line_data.dict(), created_by=current_user["id"])
+        
+        # If manager is assigned, get manager name
+        if line.manager_id:
+            manager = await db.users.find_one({"id": line.manager_id})
+            if manager:
+                line.manager_name = manager.get("full_name", "")
+        
+        # If products are assigned, get product names
+        if line.assigned_products:
+            products = await db.products.find({"id": {"$in": line.assigned_products}}).to_list(100)
+            line.assigned_product_names = [p.get("name", "") for p in products]
+        
+        # If areas are assigned, get area names
+        if line.coverage_areas:
+            areas = await db.areas.find({"id": {"$in": line.coverage_areas}}).to_list(100)
+            line.coverage_area_names = [a.get("name", "") for a in areas]
+        
+        await db.lines.insert_one(line.dict())
+        
+        return {"success": True, "message": "تم إنشاء الخط بنجاح", "line": line}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating line: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إنشاء الخط")
+
+
+@api_router.get("/lines")
+async def get_lines(current_user: User = Depends(get_current_user)):
+    """الحصول على جميع الخطوط - Get all lines"""
+    try:
+        query = {"is_active": True}
+        
+        # Role-based filtering
+        if current_user["role"] == "line_manager":
+            query["manager_id"] = current_user["id"]
+        
+        lines = await db.lines.find(query, {"_id": 0}).to_list(1000)
+        
+        # Enrich lines with additional data
+        for line in lines:
+            # Get manager name if exists
+            if line.get("manager_id"):
+                manager = await db.users.find_one({"id": line["manager_id"]})
+                line["manager_name"] = manager.get("full_name", "") if manager else ""
+            
+            # Get product names
+            if line.get("assigned_products"):
+                products = await db.products.find({"id": {"$in": line["assigned_products"]}}).to_list(100)
+                line["assigned_product_names"] = [p.get("name", "") for p in products]
+            
+            # Get area names
+            if line.get("coverage_areas"):
+                areas = await db.areas.find({"id": {"$in": line["coverage_areas"]}}).to_list(100)
+                line["coverage_area_names"] = [a.get("name", "") for a in areas]
+            
+            # Calculate statistics
+            total_sales_reps = await db.users.count_documents({
+                "assigned_line_id": line["id"],
+                "role": {"$in": ["sales_rep", "medical_rep"]},
+                "is_active": True
+            })
+            line["total_sales_reps"] = total_sales_reps
+        
+        return lines
+    
+    except Exception as e:
+        print(f"Error fetching lines: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب الخطوط")
+
+
+@api_router.put("/lines/{line_id}")
+async def update_line(line_id: str, line_data: LineCreate, current_user: User = Depends(get_current_user)):
+    """تحديث خط - Update line"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث الخطوط")
+    
+    try:
+        existing_line = await db.lines.find_one({"id": line_id})
+        if not existing_line:
+            raise HTTPException(status_code=404, detail="الخط غير موجود")
+        
+        # Role-based access control
+        if current_user["role"] == "line_manager" and existing_line.get("manager_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذا الخط")
+        
+        # Update line
+        update_data = line_data.dict()
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Enrich with related data
+        if update_data.get("manager_id"):
+            manager = await db.users.find_one({"id": update_data["manager_id"]})
+            update_data["manager_name"] = manager.get("full_name", "") if manager else ""
+        
+        if update_data.get("assigned_products"):
+            products = await db.products.find({"id": {"$in": update_data["assigned_products"]}}).to_list(100)
+            update_data["assigned_product_names"] = [p.get("name", "") for p in products]
+        
+        if update_data.get("coverage_areas"):
+            areas = await db.areas.find({"id": {"$in": update_data["coverage_areas"]}}).to_list(100)
+            update_data["coverage_area_names"] = [a.get("name", "") for a in areas]
+        
+        await db.lines.update_one({"id": line_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث الخط بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating line: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث الخط")
+
+
+@api_router.delete("/lines/{line_id}")
+async def delete_line(line_id: str, current_user: User = Depends(get_current_user)):
+    """حذف خط - Delete line"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بحذف الخطوط")
+    
+    try:
+        # Soft delete - set is_active to false
+        await db.lines.update_one(
+            {"id": line_id},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {"success": True, "message": "تم حذف الخط بنجاح"}
+    
+    except Exception as e:
+        print(f"Error deleting line: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف الخط")
+
+
+# ============================================================================
+# AREAS MANAGEMENT APIs
+# ============================================================================
+
+@api_router.post("/areas")
+async def create_area(area_data: AreaCreate, current_user: User = Depends(get_current_user)):
+    """إنشاء منطقة جديدة - Create new area"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm", "area_manager"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء مناطق")
+    
+    try:
+        # Check if area code already exists
+        existing_area = await db.areas.find_one({"code": area_data.code})
+        if existing_area:
+            raise HTTPException(status_code=400, detail="رمز المنطقة موجود بالفعل")
+        
+        # Create area
+        area = Area(**area_data.dict(), created_by=current_user["id"])
+        
+        # If parent line is assigned, get line name
+        if area.parent_line_id:
+            line = await db.lines.find_one({"id": area.parent_line_id})
+            if line:
+                area.parent_line_name = line.get("name", "")
+        
+        # If manager is assigned, get manager name
+        if area.manager_id:
+            manager = await db.users.find_one({"id": area.manager_id})
+            if manager:
+                area.manager_name = manager.get("full_name", "")
+        
+        await db.areas.insert_one(area.dict())
+        
+        return {"success": True, "message": "تم إنشاء المنطقة بنجاح", "area": area}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating area: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إنشاء المنطقة")
+
+
+@api_router.get("/areas")
+async def get_areas(current_user: User = Depends(get_current_user)):
+    """الحصول على جميع المناطق - Get all areas"""
+    try:
+        query = {"is_active": True}
+        
+        # Role-based filtering
+        if current_user["role"] == "area_manager":
+            query["manager_id"] = current_user["id"]
+        elif current_user["role"] == "line_manager":
+            # Line managers see areas under their lines
+            managed_lines = await db.lines.find({"manager_id": current_user["id"]}).to_list(100)
+            line_ids = [line["id"] for line in managed_lines]
+            query["parent_line_id"] = {"$in": line_ids}
+        
+        areas = await db.areas.find(query, {"_id": 0}).to_list(1000)
+        
+        # Enrich areas with additional data
+        for area in areas:
+            # Get parent line name
+            if area.get("parent_line_id"):
+                line = await db.lines.find_one({"id": area["parent_line_id"]})
+                area["parent_line_name"] = line.get("name", "") if line else ""
+            
+            # Get manager name
+            if area.get("manager_id"):
+                manager = await db.users.find_one({"id": area["manager_id"]})
+                area["manager_name"] = manager.get("full_name", "") if manager else ""
+            
+            # Calculate statistics
+            total_clinics = await db.clinics.count_documents({
+                "area_id": area["id"],
+                "is_active": True
+            })
+            total_visits = await db.visits.count_documents({
+                "clinic_area_id": area["id"]
+            })
+            
+            area["total_clinics"] = total_clinics
+            area["total_visits"] = total_visits
+        
+        return areas
+    
+    except Exception as e:
+        print(f"Error fetching areas: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب المناطق")
+
+
+@api_router.put("/areas/{area_id}")
+async def update_area(area_id: str, area_data: AreaCreate, current_user: User = Depends(get_current_user)):
+    """تحديث منطقة - Update area"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm", "area_manager"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المناطق")
+    
+    try:
+        existing_area = await db.areas.find_one({"id": area_id})
+        if not existing_area:
+            raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
+        
+        # Role-based access control
+        if current_user["role"] == "area_manager" and existing_area.get("manager_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذه المنطقة")
+        
+        # Update area
+        update_data = area_data.dict()
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Enrich with related data
+        if update_data.get("parent_line_id"):
+            line = await db.lines.find_one({"id": update_data["parent_line_id"]})
+            update_data["parent_line_name"] = line.get("name", "") if line else ""
+        
+        if update_data.get("manager_id"):
+            manager = await db.users.find_one({"id": update_data["manager_id"]})
+            update_data["manager_name"] = manager.get("full_name", "") if manager else ""
+        
+        await db.areas.update_one({"id": area_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث المنطقة بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating area: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث المنطقة")
+
+
+@api_router.delete("/areas/{area_id}")
+async def delete_area(area_id: str, current_user: User = Depends(get_current_user)):
+    """حذف منطقة - Delete area"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بحذف المناطق")
+    
+    try:
+        # Soft delete - set is_active to false
+        await db.areas.update_one(
+            {"id": area_id},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {"success": True, "message": "تم حذف المنطقة بنجاح"}
+    
+    except Exception as e:
+        print(f"Error deleting area: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف المنطقة")
+
+
+# ============================================================================
+# LINE PRODUCT ASSIGNMENT APIs
+# ============================================================================
+
+@api_router.post("/lines/{line_id}/products")
+async def assign_products_to_line(line_id: str, assignment: LineProductAssignment, current_user: User = Depends(get_current_user)):
+    """تخصيص منتجات للخط - Assign products to line"""
+    # Check permissions
+    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتخصيص المنتجات")
+    
+    try:
+        # Check if line exists
+        line = await db.lines.find_one({"id": line_id})
+        if not line:
+            raise HTTPException(status_code=404, detail="الخط غير موجود")
+        
+        # Role-based access control
+        if current_user["role"] == "line_manager" and line.get("manager_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذا الخط")
+        
+        # Verify products exist
+        products = await db.products.find({"id": {"$in": assignment.product_ids}}).to_list(100)
+        if len(products) != len(assignment.product_ids):
+            raise HTTPException(status_code=400, detail="بعض المنتجات غير موجودة")
+        
+        product_names = [p.get("name", "") for p in products]
+        
+        # Update line with new products
+        await db.lines.update_one(
+            {"id": line_id},
+            {
+                "$set": {
+                    "assigned_products": assignment.product_ids,
+                    "assigned_product_names": product_names,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Record assignment history
+        assignment_record = assignment.dict()
+        assignment_record["assigned_by"] = current_user["id"]
+        assignment_record["assigned_by_name"] = current_user.get("full_name", "")
+        await db.line_product_assignments.insert_one(assignment_record)
+        
+        return {"success": True, "message": "تم تخصيص المنتجات للخط بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error assigning products to line: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تخصيص المنتجات")
+
+
+@api_router.get("/lines/{line_id}/products")
+async def get_line_products(line_id: str, current_user: User = Depends(get_current_user)):
+    """الحصول على منتجات الخط - Get line products"""
+    try:
+        line = await db.lines.find_one({"id": line_id})
+        if not line:
+            raise HTTPException(status_code=404, detail="الخط غير موجود")
+        
+        # Role-based access control
+        if current_user["role"] == "line_manager" and line.get("manager_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بعرض هذا الخط")
+        
+        product_ids = line.get("assigned_products", [])
+        if not product_ids:
+            return []
+        
+        products = await db.products.find({"id": {"$in": product_ids}}, {"_id": 0}).to_list(100)
+        return products
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching line products: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب منتجات الخط")
+
+
+# ============================================================================
+# GEOGRAPHIC STATISTICS API
+# ============================================================================
+
+@api_router.get("/geographic/statistics")
+async def get_geographic_statistics(current_user: User = Depends(get_current_user)):
+    """إحصائيات جغرافية شاملة - Comprehensive geographic statistics"""
+    try:
+        # Calculate statistics
+        total_lines = await db.lines.count_documents({})
+        active_lines = await db.lines.count_documents({"is_active": True})
+        
+        total_areas = await db.areas.count_documents({})
+        active_areas = await db.areas.count_documents({"is_active": True})
+        
+        total_districts = await db.districts.count_documents({})
+        active_districts = await db.districts.count_documents({"is_active": True})
+        
+        # Count assigned products across all lines
+        lines_with_products = await db.lines.find(
+            {"assigned_products": {"$exists": True, "$ne": []}},
+            {"assigned_products": 1}
+        ).to_list(1000)
+        
+        all_assigned_products = set()
+        for line in lines_with_products:
+            all_assigned_products.update(line.get("assigned_products", []))
+        
+        total_assigned_products = len(all_assigned_products)
+        
+        # Count coverage clinics
+        total_coverage_clinics = await db.clinics.count_documents({"is_active": True})
+        
+        # Calculate average achievement percentage
+        active_lines_list = await db.lines.find(
+            {"is_active": True, "achievement_percentage": {"$exists": True}},
+            {"achievement_percentage": 1}
+        ).to_list(1000)
+        
+        if active_lines_list:
+            total_achievement = sum(line.get("achievement_percentage", 0) for line in active_lines_list)
+            average_achievement_percentage = total_achievement / len(active_lines_list)
+        else:
+            average_achievement_percentage = 0.0
+        
+        statistics = GeographicStatistics(
+            total_lines=total_lines,
+            active_lines=active_lines,
+            total_areas=total_areas,
+            active_areas=active_areas,
+            total_districts=total_districts,
+            active_districts=active_districts,
+            total_assigned_products=total_assigned_products,
+            total_coverage_clinics=total_coverage_clinics,
+            average_achievement_percentage=round(average_achievement_percentage, 2)
+        )
+        
+        return statistics
+    
+    except Exception as e:
+        print(f"Error fetching geographic statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب الإحصائيات الجغرافية")
+
+
 # Include routers
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
