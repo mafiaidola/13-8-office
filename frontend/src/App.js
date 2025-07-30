@@ -9926,11 +9926,6 @@ const EnhancedProductManagement = () => {
       setLoading(false);
     }
   };
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreateProduct = async (productData) => {
     try {
