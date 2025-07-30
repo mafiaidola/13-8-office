@@ -10090,20 +10090,6 @@ const EnhancedProductManagement = () => {
           </table>
         </div>
       </div>
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="text-red-400 hover:text-red-300"
-                        title="حذف"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Product Modal */}
       {showProductModal && (
