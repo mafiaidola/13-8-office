@@ -14628,6 +14628,252 @@ async def update_clinic_debt_status(clinic_id: str):
     except Exception as e:
         print(f"Error updating clinic debt status: {e}")
 
+# Technical Support System APIs
+@api_router.post("/support/tickets")
+async def create_support_ticket(ticket_data: SupportTicketCreate):
+    """إنشاء تذكرة دعم فني جديدة - متاح للجميع"""
+    try:
+        # إنشاء التذكرة
+        ticket = SupportTicket(
+            sender_name=ticket_data.sender_name,
+            sender_position=ticket_data.sender_position,
+            sender_whatsapp=ticket_data.sender_whatsapp,
+            sender_email=ticket_data.sender_email,
+            problem_description=ticket_data.problem_description,
+            priority=ticket_data.priority,
+            category=ticket_data.category
+        )
+        
+        # حفظ في قاعدة البيانات
+        await db.support_tickets.insert_one(ticket.dict())
+        
+        return {
+            "success": True,
+            "message": "تم إنشاء تذكرة الدعم الفني بنجاح",
+            "ticket_number": ticket.ticket_number,
+            "ticket_id": ticket.id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في إنشاء التذكرة: {str(e)}")
+
+@api_router.get("/support/tickets")
+async def get_support_tickets(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    category: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    """الحصول على تذاكر الدعم الفني - للأدمن فقط"""
+    # فقط الأدمن يمكنه رؤية تذاكر الدعم الفني
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied. Admin only.")
+    
+    try:
+        # بناء فلتر البحث
+        filter_dict = {}
+        
+        if status:
+            filter_dict["status"] = status
+        if priority:
+            filter_dict["priority"] = priority
+        if category:
+            filter_dict["category"] = category
+        if assigned_to:
+            filter_dict["assigned_to"] = assigned_to
+        
+        # حساب العدد الكلي
+        total_count = await db.support_tickets.count_documents(filter_dict)
+        total_pages = (total_count + limit - 1) // limit
+        
+        # البحث مع الترقيم
+        skip = (page - 1) * limit
+        tickets = await db.support_tickets.find(filter_dict).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # تنظيف البيانات
+        for ticket in tickets:
+            if "_id" in ticket:
+                del ticket["_id"]
+            
+            # تحويل التواريخ إلى string
+            for date_field in ["created_at", "updated_at", "resolved_at"]:
+                if ticket.get(date_field) and isinstance(ticket[date_field], datetime):
+                    ticket[date_field] = ticket[date_field].isoformat()
+        
+        return {
+            "tickets": tickets,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_count": total_count,
+                "limit": limit
+            },
+            "filters": filter_dict
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب التذاكر: {str(e)}")
+
+@api_router.get("/support/tickets/{ticket_id}")
+async def get_support_ticket(ticket_id: str, current_user: User = Depends(get_current_user)):
+    """الحصول على تذكرة دعم فني محددة"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied. Admin only.")
+    
+    try:
+        ticket = await db.support_tickets.find_one({"id": ticket_id})
+        if not ticket:
+            raise HTTPException(status_code=404, detail="تذكرة الدعم الفني غير موجودة")
+        
+        # تنظيف البيانات
+        if "_id" in ticket:
+            del ticket["_id"]
+        
+        # تحويل التواريخ
+        for date_field in ["created_at", "updated_at", "resolved_at"]:
+            if ticket.get(date_field) and isinstance(ticket[date_field], datetime):
+                ticket[date_field] = ticket[date_field].isoformat()
+        
+        return {"ticket": ticket}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب التذكرة: {str(e)}")
+
+@api_router.patch("/support/tickets/{ticket_id}")
+async def update_support_ticket(ticket_id: str, update_data: SupportTicketUpdate, current_user: User = Depends(get_current_user)):
+    """تحديث تذكرة الدعم الفني"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied. Admin only.")
+    
+    try:
+        # البحث عن التذكرة
+        ticket = await db.support_tickets.find_one({"id": ticket_id})
+        if not ticket:
+            raise HTTPException(status_code=404, detail="تذكرة الدعم الفني غير موجودة")
+        
+        # إعداد البيانات للتحديث
+        update_dict = {"updated_at": datetime.utcnow()}
+        
+        if update_data.status:
+            update_dict["status"] = update_data.status
+            if update_data.status == "resolved":
+                update_dict["resolved_at"] = datetime.utcnow()
+        
+        if update_data.assigned_to:
+            update_dict["assigned_to"] = update_data.assigned_to
+            # البحث عن اسم الموظف المكلف
+            assigned_user = await db.users.find_one({"id": update_data.assigned_to})
+            if assigned_user:
+                update_dict["assigned_to_name"] = assigned_user["full_name"]
+        
+        if update_data.priority:
+            update_dict["priority"] = update_data.priority
+        
+        if update_data.resolution_summary:
+            update_dict["resolution_summary"] = update_data.resolution_summary
+        
+        # تحديث التذكرة
+        await db.support_tickets.update_one({"id": ticket_id}, {"$set": update_dict})
+        
+        return {"success": True, "message": "تم تحديث التذكرة بنجاح"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في تحديث التذكرة: {str(e)}")
+
+@api_router.post("/support/tickets/{ticket_id}/responses")
+async def add_support_response(ticket_id: str, response_text: str, response_type: str = "public", current_user: User = Depends(get_current_user)):
+    """إضافة رد على تذكرة الدعم الفني"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied. Admin only.")
+    
+    try:
+        # البحث عن التذكرة
+        ticket = await db.support_tickets.find_one({"id": ticket_id})
+        if not ticket:
+            raise HTTPException(status_code=404, detail="تذكرة الدعم الفني غير موجودة")
+        
+        # إنشاء الرد
+        response = SupportResponse(
+            ticket_id=ticket_id,
+            response_text=response_text,
+            responder_id=current_user.id,
+            responder_name=current_user.full_name,
+            responder_role=current_user.role,
+            response_type=response_type
+        )
+        
+        # إضافة الرد للتذكرة
+        response_dict = response.dict()
+        if "created_at" in response_dict and isinstance(response_dict["created_at"], datetime):
+            response_dict["created_at"] = response_dict["created_at"].isoformat()
+        
+        await db.support_tickets.update_one(
+            {"id": ticket_id},
+            {
+                "$push": {"responses": response_dict},
+                "$set": {
+                    "updated_at": datetime.utcnow(),
+                    "status": "in_progress" if ticket.get("status") == "open" else ticket.get("status")
+                }
+            }
+        )
+        
+        return {"success": True, "message": "تم إضافة الرد بنجاح", "response_id": response.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في إضافة الرد: {str(e)}")
+
+@api_router.get("/support/stats")
+async def get_support_stats(current_user: User = Depends(get_current_user)):
+    """إحصائيات الدعم الفني"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied. Admin only.")
+    
+    try:
+        # إحصائيات عامة
+        total_tickets = await db.support_tickets.count_documents({})
+        open_tickets = await db.support_tickets.count_documents({"status": "open"})
+        in_progress_tickets = await db.support_tickets.count_documents({"status": "in_progress"})
+        resolved_tickets = await db.support_tickets.count_documents({"status": "resolved"})
+        closed_tickets = await db.support_tickets.count_documents({"status": "closed"})
+        
+        # إحصائيات حسب الأولوية
+        high_priority = await db.support_tickets.count_documents({"priority": "high"})
+        urgent_priority = await db.support_tickets.count_documents({"priority": "urgent"})
+        
+        # إحصائيات حسب الفئة
+        pipeline = [
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}}
+        ]
+        category_stats = await db.support_tickets.aggregate(pipeline).to_list(100)
+        
+        return {
+            "total_tickets": total_tickets,
+            "by_status": {
+                "open": open_tickets,
+                "in_progress": in_progress_tickets,
+                "resolved": resolved_tickets,
+                "closed": closed_tickets
+            },
+            "by_priority": {
+                "high": high_priority,
+                "urgent": urgent_priority,
+                "total_critical": high_priority + urgent_priority
+            },
+            "by_category": {item["_id"]: item["count"] for item in category_stats}
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب الإحصائيات: {str(e)}")
+
 # Movement Log System APIs
 @api_router.get("/movement-logs/warehouses")
 async def get_warehouses_for_movement(current_user: User = Depends(get_current_user)):
