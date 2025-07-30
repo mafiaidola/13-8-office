@@ -729,7 +729,7 @@ class LinesAreasTestSuite:
         # 1. Login as admin
         if not self.login_admin():
             print("❌ فشل في تسجيل الدخول. إيقاف الاختبار.")
-            return
+            return self.generate_final_report()
         
         # 2. Test Lines Management APIs
         self.test_lines_management_apis()
@@ -750,7 +750,7 @@ class LinesAreasTestSuite:
         self.test_arabic_error_messages()
         
         # Generate final report
-        self.generate_final_report()
+        return self.generate_final_report()
 
     def generate_final_report(self):
         """إنتاج التقرير النهائي"""
