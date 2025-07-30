@@ -1444,7 +1444,17 @@ async def get_products(current_user: User = Depends(get_current_user)):
     try:
         products = await db.products.find({}, {"_id": 0}).to_list(1000)
         
-        # Enrich products with line names if missing
+        # Check user role once for price visibility
+        user_role = getattr(current_user, 'role', None)
+        print(f"DEBUG: User role is: {user_role}")
+        should_hide_prices = user_role not in ["admin", "gm", "accounting", "محاسبة"]
+        
+        if should_hide_prices:
+            print(f"DEBUG: Hiding prices for user role: {user_role}")
+        else:
+            print(f"DEBUG: Showing prices for authorized user role: {user_role}")
+        
+        # Enrich products with line names if missing and handle price visibility
         for product in products:
             if not product.get("line_name") and product.get("line_id"):
                 line = await db.lines.find_one({"id": product["line_id"]})
@@ -1457,12 +1467,8 @@ async def get_products(current_user: User = Depends(get_current_user)):
                     )
             
             # Hide prices for non-admin/accounting users
-            user_role = getattr(current_user, 'role', None)
-            print(f"DEBUG: User role is: {user_role}")
-            
-            if user_role not in ["admin", "gm", "accounting", "محاسبة"]:
+            if should_hide_prices:
                 # Remove all price-related fields for non-authorized users
-                print(f"DEBUG: Hiding prices for user role: {user_role}")
                 if "price" in product:
                     del product["price"]
                 if "price_type" in product:
@@ -1473,8 +1479,6 @@ async def get_products(current_user: User = Depends(get_current_user)):
                 for price_field in ["price_1", "price_10", "price_25", "price_50", "price_100"]:
                     if price_field in product:
                         del product[price_field]
-            else:
-                print(f"DEBUG: Showing prices for authorized user role: {user_role}")
         
         return products
     
