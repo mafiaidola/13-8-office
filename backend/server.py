@@ -1009,7 +1009,7 @@ async def update_line(line_id: str, line_data: LineCreate, current_user: User = 
 async def delete_line(line_id: str, current_user: User = Depends(get_current_user)):
     """حذف خط - Delete line"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm"]:
+    if current_user.role not in ["admin", "gm"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بحذف الخطوط")
     
     try:
