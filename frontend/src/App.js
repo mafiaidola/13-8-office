@@ -7463,13 +7463,7 @@ const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
 
 
 
-  const [timeRange, setTimeRange] = useState('week');
-  const [comparison, setComparison] = useState({});
-  const [quickActions, setQuickActions] = useState([]);
-  const [filteredStats, setFilteredStats] = useState(stats);
-  const [loading, setLoading] = useState(false);
-  const { analytics, loading: analyticsLoading } = useRealTimeAnalytics();
-  const { language } = useContext(ThemeContext);
+// PLACEHOLDER_TO_REMOVE
 
   const translations = {
     en: {
