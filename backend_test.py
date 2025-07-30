@@ -824,7 +824,7 @@ def main():
     results = tester.run_comprehensive_test()
     
     # Return exit code based on success rate
-    if results["success_rate"] >= 80:
+    if results and results.get("success_rate", 0) >= 80:
         sys.exit(0)  # Success
     else:
         sys.exit(1)  # Failure
