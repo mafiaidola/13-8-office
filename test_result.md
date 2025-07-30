@@ -748,6 +748,21 @@ backend:
         agent: "testing"
         comment: "🎉 ENHANCED USER MANAGEMENT SYSTEM FULLY RESOLVED AND WORKING PERFECTLY! Final comprehensive testing after duplicate User model issue fix shows 100% success rate (7/7 tests passed). ✅ ALL PRIMARY APIS WORKING FLAWLESSLY: 1) POST /api/auth/register - Enhanced user creation with all new fields (region_id, direct_manager_id, address, national_id, hire_date, profile_photo) working perfectly. Successfully created user 'مستخدم تجريبي نهائي' with role 'medical_rep' 2) PATCH /api/users/{user_id} - User update functionality working correctly, successfully updated user information 3) GET /api/users/managers - Found 30 managers with proper structure for user assignment 4) GET /api/regions/list - Found 4 regions with proper structure for user assignment. ✅ SYSTEM HEALTH CONFIRMED: Backend service healthy and responding correctly, all authentication systems working (admin/admin123 and gm/gm123456). ✅ DUPLICATE USER MODEL ISSUE RESOLVED: The main agent successfully fixed the duplicate User model definitions that were causing AttributeError. The correct User model (line 136) with all enhanced fields is now being used throughout the codebase. ✅ COMPREHENSIVE VALIDATION: All enhanced user management features including region validation, manager assignment, Arabic language support, and role-based permissions are functioning correctly. The Enhanced User Management System is now production-ready and fully functional!"
 
+  - task: "Price Hiding Security Fix - Duplicate Endpoint Removal"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "تم اكتشاف مشكلة أمنية حرجة: وجود endpoint مكرر للمنتجات في server.py (السطر 861 والسطر 1441). الـ endpoint الأول لم يكن لديه منطق إخفاء الأسعار، مما يسمح للمندوبين برؤية الأسعار. تم حذف الـ endpoint المكرر والاحتفاظ بالصحيح الذي يحتوي على منطق إخفاء الأسعار."
+      - working: true
+        agent: "testing"
+        comment: "🎉 اختبار نهائي مُكثف لإخفاء الأسعار مكتمل بنجاح 100%! تم التحقق من حل المشكلة الأمنية الحرجة بشكل كامل. ✅ تأكيد حذف Endpoint المكرر: يوجد endpoint واحد فقط للمنتجات في server.py (✅ تم حذف المكرر)، والـ endpoint المتبقي يحتوي على منطق إخفاء الأسعار الكامل. ✅ اختبار إخفاء الأسعار للمندوبين: تم إنشاء مندوب مبيعات جديد (role: medical_rep) واختباره - المندوب لا يرى حقول الأسعار كما هو مطلوب (8 حقول أسعار مخفية من أصل 8). ✅ اختبار ظهور الأسعار للأدمن: الأدمن يرى حقول الأسعار بشكل صحيح (حقل price موجود). ✅ اختبار ظهور الأسعار للمحاسبة: تم إنشاء مستخدم محاسبة (role: accounting) واختباره - المحاسب يرى حقول الأسعار بشكل صحيح. ✅ اختبار Debug Logs: جميع debug messages موجودة في الكود (4/4) وتعمل في server logs بشكل مثالي. 📊 النتائج النهائية: 11/11 اختبار نجح (100% نسبة نجاح). المشكلة الأمنية الحرجة محلولة بالكامل - المندوبين لا يرون الأسعار ❌ ➜ ✅، الأدمن والمحاسبة يرون الأسعار ✅. النظام آمن ومُجهز للإنتاج!"
+
   - task: "Comprehensive Button Functionality Testing - System Wide"
     implemented: true
     working: true
