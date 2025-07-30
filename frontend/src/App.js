@@ -3548,6 +3548,12 @@ const AdminSettingsPage = () => {
             loading={loading}
           />
         )}
+        
+        {activeTab === 'support' && (
+          <SupportTicketsTab 
+            loading={loading}
+          />
+        )}
       </div>
     </div>
   );
