@@ -1323,6 +1323,143 @@ async def get_geographic_statistics(current_user: User = Depends(get_current_use
         raise HTTPException(status_code=500, detail="خطأ في جلب الإحصائيات الجغرافية")
 
 
+# ============================================================================
+# PRODUCTS MANAGEMENT APIs
+# ============================================================================
+
+@api_router.post("/products")
+async def create_product(product_data: dict, current_user: User = Depends(get_current_user)):
+    """إنشاء منتج جديد - Create new product"""
+    # Check permissions
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء منتجات")
+    
+    try:
+        # Validate required fields
+        required_fields = ["name", "unit", "line_id", "price", "price_type"]
+        for field in required_fields:
+            if field not in product_data or not product_data[field]:
+                raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+        
+        # Get line name
+        line = await db.lines.find_one({"id": product_data["line_id"]})
+        if not line:
+            raise HTTPException(status_code=400, detail="الخط المحدد غير موجود")
+        
+        # Create product
+        new_product = {
+            "id": str(uuid.uuid4()),
+            "name": product_data["name"],
+            "description": product_data.get("description", ""),
+            "category": product_data.get("category", ""),
+            "unit": product_data["unit"],
+            "line_id": product_data["line_id"],
+            "line_name": line["name"],
+            "price": float(product_data["price"]),
+            "price_type": product_data["price_type"],
+            "current_stock": int(product_data.get("current_stock", 0)),
+            "is_active": product_data.get("is_active", True),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user["id"]
+        }
+        
+        await db.products.insert_one(new_product)
+        
+        return {"success": True, "message": "تم إنشاء المنتج بنجاح", "product": new_product}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating product: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إنشاء المنتج")
+
+
+@api_router.get("/products")
+async def get_products(current_user: User = Depends(get_current_user)):
+    """الحصول على جميع المنتجات - Get all products"""
+    try:
+        products = await db.products.find({}, {"_id": 0}).to_list(1000)
+        
+        # Enrich products with line names if missing
+        for product in products:
+            if not product.get("line_name") and product.get("line_id"):
+                line = await db.lines.find_one({"id": product["line_id"]})
+                if line:
+                    product["line_name"] = line["name"]
+                    # Update in database
+                    await db.products.update_one(
+                        {"id": product["id"]},
+                        {"$set": {"line_name": line["name"]}}
+                    )
+        
+        return products
+    
+    except Exception as e:
+        print(f"Error fetching products: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب المنتجات")
+
+
+@api_router.put("/products/{product_id}")
+async def update_product(product_id: str, product_data: dict, current_user: User = Depends(get_current_user)):
+    """تحديث منتج - Update product"""
+    # Check permissions
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المنتجات")
+    
+    try:
+        existing_product = await db.products.find_one({"id": product_id})
+        if not existing_product:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
+        
+        # Get line name if line_id is updated
+        if "line_id" in product_data and product_data["line_id"]:
+            line = await db.lines.find_one({"id": product_data["line_id"]})
+            if line:
+                product_data["line_name"] = line["name"]
+        
+        # Update product
+        update_data = product_data.copy()
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Convert numeric fields
+        if "price" in update_data:
+            update_data["price"] = float(update_data["price"])
+        if "current_stock" in update_data:
+            update_data["current_stock"] = int(update_data["current_stock"])
+        
+        await db.products.update_one({"id": product_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث المنتج بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating product: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث المنتج")
+
+
+@api_router.delete("/products/{product_id}")
+async def delete_product(product_id: str, current_user: User = Depends(get_current_user)):
+    """حذف منتج - Delete product"""
+    # Check permissions
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بحذف المنتجات")
+    
+    try:
+        # Soft delete - set is_active to false
+        await db.products.update_one(
+            {"id": product_id},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {"success": True, "message": "تم حذف المنتج بنجاح"}
+    
+    except Exception as e:
+        print(f"Error deleting product: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف المنتج")
+
+
 # Include routers
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
