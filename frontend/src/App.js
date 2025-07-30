@@ -29352,40 +29352,153 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
 };
 
 // Area Card Component
-const AreaCard = ({ area }) => {
+const AreaCard = ({ area, lines, onUpdate, onDelete }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: area.name || '',
+    code: area.code || '',
+    description: area.description || '',
+    parent_line_id: area.parent_line_id || '',
+    region_type: area.region_type || 'urban'
+  });
+
+  const handleSave = () => {
+    onUpdate(area.id, editData);
+    setIsEditing(false);
+  };
+
   return (
     <div className="glass-effect p-6 rounded-xl">
-      <div className="flex justify-between items-start mb-4">
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">اسم المنطقة</label>
+              <input
+                type="text"
+                value={editData.name}
+                onChange={(e) => setEditData({...editData, name: e.target.value})}
+                className="input-glass w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">رمز المنطقة</label>
+              <input
+                type="text"
+                value={editData.code}
+                onChange={(e) => setEditData({...editData, code: e.target.value})}
+                className="input-glass w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">الخط الرئيسي</label>
+              <select
+                value={editData.parent_line_id}
+                onChange={(e) => setEditData({...editData, parent_line_id: e.target.value})}
+                className="input-glass w-full"
+              >
+                <option value="">اختار الخط</option>
+                {(lines || []).map(line => (
+                  <option key={line.id} value={line.id}>
+                    {line.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">نوع المنطقة</label>
+              <select
+                value={editData.region_type}
+                onChange={(e) => setEditData({...editData, region_type: e.target.value})}
+                className="input-glass w-full"
+              >
+                <option value="urban">حضرية</option>
+                <option value="rural">ريفية</option>
+                <option value="industrial">صناعية</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">الوصف</label>
+              <textarea
+                value={editData.description}
+                onChange={(e) => setEditData({...editData, description: e.target.value})}
+                className="input-glass w-full h-20"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className="btn-primary px-4 py-2"
+            >
+              حفظ
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="btn-secondary px-4 py-2"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      ) : (
         <div>
-          <h4 className="text-lg font-bold">{area.name}</h4>
-          <p className="text-gray-600">{area.description}</p>
-        </div>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${
-          area.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {area.is_active ? 'نشط' : 'غير نشط'}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-blue-50 rounded p-3">
-          <div className="text-sm font-medium text-blue-800">مدير المنطقة</div>
-          <div className="font-bold text-blue-600">
-            {area.manager_info?.full_name || 'غير محدد'}
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h4 className="font-bold text-lg">{area.name || 'منطقة بدون اسم'}</h4>
+              <p className="text-sm text-gray-600">{area.code || 'بدون رمز'}</p>
+              <p className="text-sm text-gray-500">{area.description || 'بدون وصف'}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                تحرير
+              </button>
+              <button
+                onClick={() => onDelete && onDelete(area.id)}
+                className="text-red-600 hover:text-red-800 text-sm"
+              >
+                حذف
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 rounded p-3">
+              <div className="text-sm font-medium text-blue-800">الخط الرئيسي</div>
+              <div className="text-sm text-blue-600">
+                {area.parent_line_name || 'غير محدد'}
+              </div>
+            </div>
+            
+            <div className="bg-green-50 rounded p-3">
+              <div className="text-sm font-medium text-green-800">نوع المنطقة</div>
+              <div className="text-sm text-green-600">
+                {area.region_type === 'urban' ? 'حضرية' : 
+                 area.region_type === 'rural' ? 'ريفية' : 
+                 area.region_type === 'industrial' ? 'صناعية' : 'غير محدد'}
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 rounded p-3">
+              <div className="text-sm font-medium text-purple-800">العيادات</div>
+              <div className="text-xl font-bold text-purple-600">
+                {area.total_clinics || 0}
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 rounded p-3">
+              <div className="text-sm font-medium text-orange-800">الزيارات</div>
+              <div className="text-xl font-bold text-orange-600">
+                {area.total_visits || 0}
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="bg-green-50 rounded p-3">
-          <div className="text-sm font-medium text-green-800">الخط التابع له</div>
-          <div className="font-bold text-green-600">
-            {area.line_info?.name || 'غير محدد'}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 text-xs text-gray-500">
-        تم الإنشاء: {new Date(area.created_at).toLocaleDateString('ar-EG')}
-      </div>
+      )}
     </div>
   );
 };
