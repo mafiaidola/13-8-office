@@ -9978,17 +9978,6 @@ const EnhancedProductManagement = () => {
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLine = filterLine === 'all' || product.line === filterLine;
-    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
-    
-    return matchesSearch && matchesLine && matchesCategory;
-  });
-
-  const categories = [...new Set(products.map(p => p.category))];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -10015,98 +10004,7 @@ const EnhancedProductManagement = () => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="glass-effect p-4 rounded-xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">البحث</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-modern w-full"
-              placeholder="البحث في المنتجات..."
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">الخط</label>
-            <select
-              value={filterLine}
-              onChange={(e) => setFilterLine(e.target.value)}
-              className="form-modern w-full"
-            >
-              <option value="all">جميع الخطوط</option>
-              <option value="line_1">الخط الأول</option>
-              <option value="line_2">الخط الثاني</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">الفئة</label>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="form-modern w-full"
-            >
-              <option value="all">جميع الفئات</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex items-end">
-            <button
-              onClick={fetchProducts}
-              className="btn-primary w-full"
-            >
-              🔄 تحديث
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-effect p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-blue-400">
-            {filteredProducts.length}
-          </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            إجمالي المنتجات
-          </div>
-        </div>
-        
-        <div className="glass-effect p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-green-400">
-            {filteredProducts.filter(p => p.is_active).length}
-          </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            منتجات نشطة
-          </div>
-        </div>
-        
-        <div className="glass-effect p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-red-400">
-            {filteredProducts.filter(p => p.current_stock < 10).length}
-          </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            منتجات قليلة المخزون
-          </div>
-        </div>
-        
-        <div className="glass-effect p-4 rounded-xl text-center">
-          <div className="text-2xl font-bold text-purple-400">
-            {categories.length}
-          </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            الفئات المتاحة
-          </div>
-        </div>
-      </div>
-
-      {/* Products Table */}
+      {/* Products Table - No Search/Filter */}
       <div className="glass-effect rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -10115,14 +10013,17 @@ const EnhancedProductManagement = () => {
                 <th className="px-4 py-3 text-right text-sm font-medium">المنتج</th>
                 <th className="px-4 py-3 text-right text-sm font-medium">الفئة</th>
                 <th className="px-4 py-3 text-right text-sm font-medium">الخط</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">الأسعار</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">الوحدة</th>
+                {canSeePrices && (
+                  <th className="px-4 py-3 text-right text-sm font-medium">السعر</th>
+                )}
                 <th className="px-4 py-3 text-right text-sm font-medium">المخزون</th>
                 <th className="px-4 py-3 text-right text-sm font-medium">الحالة</th>
                 <th className="px-4 py-3 text-right text-sm font-medium">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <tr key={product.id} className="border-b border-white border-opacity-5 hover:bg-white hover:bg-opacity-5">
                   <td className="px-4 py-3">
                     <div className="font-medium">{product.name}</div>
@@ -10131,20 +10032,24 @@ const EnhancedProductManagement = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    {product.category}
+                    {product.category || '-'}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    {product.line === 'line_1' ? 'الخط الأول' : 'الخط الثاني'}
+                    {product.line_name || 'غير محدد'}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <div className="space-y-1">
-                      <div>1: {product.price_1}ج</div>
-                      <div>10: {product.price_10}ج</div>
-                      <div>25: {product.price_25}ج</div>
-                      <div>50: {product.price_50}ج</div>
-                      <div>100: {product.price_100}ج</div>
-                    </div>
+                    {product.unit}
                   </td>
+                  {canSeePrices && (
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{product.price} ج.م</span>
+                        <span className="text-xs text-gray-500">
+                          {product.price_type === 'per_vial' ? 'سعر الڤايل' : 'سعر العلبة'}
+                        </span>
+                      </div>
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-sm">
                     <span className={`inline-block px-2 py-1 rounded text-xs ${
                       product.current_stock < 10 ? 'bg-red-500 bg-opacity-20 text-red-400' :
@@ -10176,6 +10081,20 @@ const EnhancedProductManagement = () => {
                       </button>
                       
                       <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-400 hover:text-red-300"
+                        title="حذف"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
                         onClick={() => handleDeleteProduct(product.id)}
                         className="text-red-400 hover:text-red-300"
                         title="حذف"
