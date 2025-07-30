@@ -2921,8 +2921,14 @@ const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUser(response.data);
+      // /api/auth/me returns { success: true, user: {...} }
+      if (response.data.success && response.data.user) {
+        setUser(response.data.user);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
+      console.error('Token verification failed:', error);
       localStorage.removeItem('token');
     } finally {
       setLoading(false);
