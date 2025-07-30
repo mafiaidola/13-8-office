@@ -9855,16 +9855,32 @@ const EnhancedOrderCreation = ({ user }) => {
 // Enhanced Product Management for Admin
 const EnhancedProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [lines, setLines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterLine, setFilterLine] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const { user } = useAuth();
+
+  // Check if user can see prices
+  const canSeePrices = user && ['admin', 'accounting', 'محاسبة'].includes(user.role);
 
   useEffect(() => {
     fetchProducts();
+    fetchLines();
   }, []);
+
+  const fetchLines = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/lines`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setLines(response.data);
+    } catch (error) {
+      console.error('Error fetching lines:', error);
+      setLines([]);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -9875,29 +9891,41 @@ const EnhancedProductManagement = () => {
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
-      // Mock data for development
+      // Mock data for development with updated structure
       setProducts([
         {
           id: 'prod-001',
           name: 'دواء أ',
           description: 'دواء فعال للعلاج',
           category: 'أدوية',
-          unit: 'علبة',
-          line: 'line_1',
-          price_1: 100,
-          price_10: 90,
-          price_25: 80,
-          price_50: 70,
-          price_100: 60,
-          cashback_1: 0,
-          cashback_10: 2,
-          cashback_25: 5,
-          cashback_50: 8,
-          cashback_100: 10,
+          unit: 'ڤايل',
+          line_id: 'line-001',
+          line_name: 'خط القاهرة الكبرى',
+          price: 25.50,
+          price_type: 'per_vial', // per_vial or per_box
           current_stock: 150,
           is_active: true,
           created_at: '2024-01-01T10:00:00Z'
+        },
+        {
+          id: 'prod-002',
+          name: 'دواء ب',
+          description: 'مكمل غذائي',
+          category: 'مكملات',
+          unit: 'علبة',
+          line_id: 'line-002',
+          line_name: 'خط الإسكندرية',
+          price: 120.00,
+          price_type: 'per_box',
+          current_stock: 80,
+          is_active: true,
+          created_at: '2024-01-02T10:00:00Z'
         }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
       ]);
     } finally {
       setLoading(false);
