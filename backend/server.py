@@ -870,7 +870,15 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Include router
+# Include routers
+from routes.auth_routes import router as auth_router
+from routes.dashboard_routes import router as dashboard_router
+from routes.settings_routes import router as settings_router
+
+api_router.include_router(auth_router)
+api_router.include_router(dashboard_router)
+api_router.include_router(settings_router)
+
 app.include_router(api_router)
 
 @app.get("/")
