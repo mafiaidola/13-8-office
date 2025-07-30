@@ -7139,7 +7139,7 @@ const UltraModernStatsDashboard = ({ stats, user, userRole }) => {
           }
         ];
 
-        const quickActions = getQuickActionsForRole(userRole);
+        const quickActions = getQuickActionsForRole(userRole || user?.role || 'medical_rep');
 
         setDashboardData(prev => ({
           ...prev,
