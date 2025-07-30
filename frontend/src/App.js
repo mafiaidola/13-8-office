@@ -9862,7 +9862,33 @@ const EnhancedProductManagement = () => {
   const { user } = useAuth();
 
   // Check if user can see prices
-  const canSeePrices = user && ['admin', 'accounting', 'محاسبة'].includes(user.role);
+  const canSeePrices = user && ['admin', 'gm', 'accounting', 'محاسبة'].includes(user.role);
+
+  const handleCreateProduct = async (productData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/products`, productData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProducts();
+      setShowProductModal(false);
+    } catch (error) {
+      console.error('Error creating product:', error);
+    }
+  };
+
+  const handleUpdateProduct = async (productId, productData) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/products/${productId}`, productData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchProducts();
+      setShowProductModal(false);
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
