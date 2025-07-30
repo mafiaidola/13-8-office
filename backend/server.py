@@ -1121,7 +1121,7 @@ async def get_areas(current_user: User = Depends(get_current_user)):
 async def update_area(area_id: str, area_data: AreaCreate, current_user: User = Depends(get_current_user)):
     """تحديث منطقة - Update area"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm", "area_manager"]:
+    if current_user.role not in ["admin", "gm", "area_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المناطق")
     
     try:
@@ -1130,7 +1130,7 @@ async def update_area(area_id: str, area_data: AreaCreate, current_user: User = 
             raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
         
         # Role-based access control
-        if current_user["role"] == "area_manager" and existing_area.get("manager_id") != current_user["id"]:
+        if current_user.role == "area_manager" and existing_area.get("manager_id") != current_user.id:
             raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذه المنطقة")
         
         # Update area
