@@ -17949,9 +17949,8 @@ const MovementsLog = ({ movements, language }) => {
   );
 };
 
-// Dashboard Component
-const UltraModernDashboard = () => {
-  const { user } = useAuth();
+// Ultra Modern Dashboard Component
+const UltraModernDashboard = ({ stats, user, userRole }) => {
   const { language, t, isRTL } = useLanguage();
   const [dashboardData, setDashboardData] = useState({
     stats: {
