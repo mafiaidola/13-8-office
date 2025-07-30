@@ -28858,28 +28858,61 @@ const LinesManagement = () => {
       {/* Lines Management Tab */}
       {activeTab === 'lines' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold">🗺️ إدارة الخطوط</h3>
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary px-6 py-2"
+              onClick={() => {
+                console.log('إضافة خط جديد - فتح النموذج');
+                setShowCreateModal(true);
+              }}
+              className="btn-primary px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all"
+              style={{
+                background: 'var(--primary-gradient)',
+                color: 'white',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
             >
               ➕ إضافة خط جديد
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {lines.map((line) => (
-              <LineCard
-                key={line.id}
-                line={line}
-                users={users}
-                products={products}
-                onUpdate={updateLine}
-                onDelete={deleteLine}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2">جاري تحميل الخطوط...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {lines.length === 0 ? (
+                <div className="text-center py-12 glass-effect rounded-xl">
+                  <div className="text-4xl mb-4">🗺️</div>
+                  <h3 className="text-lg font-medium mb-2">لا توجد خطوط مضافة بعد</h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                    ابدأ بإضافة أول خط لإدارة المناطق والمنتجات
+                  </p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn-primary px-6 py-2"
+                  >
+                    ➕ إضافة أول خط
+                  </button>
+                </div>
+              ) : (
+                lines.map((line) => (
+                  <LineCard
+                    key={line.id}
+                    line={line}
+                    users={users}
+                    products={products}
+                    onUpdate={updateLine}
+                    onDelete={deleteLine}
+                  />
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 
