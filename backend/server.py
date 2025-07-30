@@ -878,7 +878,7 @@ async def get_orders(current_user: User = Depends(get_current_user)):
 async def create_line(line_data: LineCreate, current_user: User = Depends(get_current_user)):
     """إنشاء خط جديد - Create new line"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+    if current_user.role not in ["admin", "gm", "line_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء خطوط")
     
     try:
@@ -888,7 +888,7 @@ async def create_line(line_data: LineCreate, current_user: User = Depends(get_cu
             raise HTTPException(status_code=400, detail="رمز الخط موجود بالفعل")
         
         # Create line
-        line = Line(**line_data.dict(), created_by=current_user["id"])
+        line = Line(**line_data.dict(), created_by=current_user.id)
         
         # If manager is assigned, get manager name
         if line.manager_id:
