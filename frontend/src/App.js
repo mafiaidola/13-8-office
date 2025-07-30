@@ -10104,23 +10104,17 @@ const EnhancedProductManagement = () => {
 };
 
 // Product Modal Component
-const ProductModal = ({ product, onClose, onSave }) => {
+const ProductModal = ({ product, onClose, onSave, lines }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
     category: product?.category || '',
-    unit: product?.unit || '',
-    line: product?.line || 'line_1',
-    price_1: product?.price_1 || 0,
-    price_10: product?.price_10 || 0,
-    price_25: product?.price_25 || 0,
-    price_50: product?.price_50 || 0,
-    price_100: product?.price_100 || 0,
-    cashback_1: product?.cashback_1 || 0,
-    cashback_10: product?.cashback_10 || 0,
-    cashback_25: product?.cashback_25 || 0,
-    cashback_50: product?.cashback_50 || 0,
-    cashback_100: product?.cashback_100 || 0,
+    unit: product?.unit || 'ڤايل',
+    line_id: product?.line_id || '',
+    price: product?.price || 0,
+    price_type: product?.price_type || 'per_vial',
+    current_stock: product?.current_stock || 0,
+    is_active: product?.is_active !== undefined ? product.is_active : true
   });
 
   const handleSubmit = (e) => {
@@ -10130,11 +10124,12 @@ const ProductModal = ({ product, onClose, onSave }) => {
     } else {
       onSave(formData);
     }
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="modal-modern p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="modal-modern p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gradient">
             {product ? 'تعديل المنتج' : 'إضافة منتج جديد'}
@@ -10154,10 +10149,164 @@ const ProductModal = ({ product, onClose, onSave }) => {
           {/* Basic Information */}
           <div className="glass-effect p-4 rounded-xl">
             <h4 className="font-bold mb-4">معلومات أساسية</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">اسم المنتج *</label>
                 <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="form-modern w-full"
+                  placeholder="مثال: دواء الضغط 10 ملجم"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الوصف</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="form-modern w-full h-20"
+                  placeholder="وصف المنتج وطريقة الاستخدام..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الفئة (اختيارية)</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="form-modern w-full"
+                  placeholder="مثال: أدوية القلب والأوعية الدموية"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Unit and Line */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">الوحدة والخط</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">الوحدة *</label>
+                <select
+                  value={formData.unit}
+                  onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="ڤايل">ڤايل</option>
+                  <option value="علبة">علبة</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الخط *</label>
+                <select
+                  value={formData.line_id}
+                  onChange={(e) => setFormData({...formData, line_id: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="">اختار الخط</option>
+                  {(lines || []).map(line => (
+                    <option key={line.id} value={line.id}>
+                      {line.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Price */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">السعر</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">السعر (ج.م) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
+                  className="form-modern w-full"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">نوع السعر *</label>
+                <select
+                  value={formData.price_type}
+                  onChange={(e) => setFormData({...formData, price_type: e.target.value})}
+                  className="form-modern w-full"
+                  required
+                >
+                  <option value="per_vial">سعر الڤايل الواحد</option>
+                  <option value="per_box">سعر العلبة كاملة</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+
+
+          {/* Stock and Status */}
+          <div className="glass-effect p-4 rounded-xl">
+            <h4 className="font-bold mb-4">المخزون والحالة</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">المخزون الحالي</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.current_stock}
+                  onChange={(e) => setFormData({...formData, current_stock: parseInt(e.target.value) || 0})}
+                  className="form-modern w-full"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الحالة</label>
+                <select
+                  value={formData.is_active}
+                  onChange={(e) => setFormData({...formData, is_active: e.target.value === 'true'})}
+                  className="form-modern w-full"
+                >
+                  <option value={true}>نشط</option>
+                  <option value={false}>غير نشط</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <button
+              type="submit"
+              className="btn-primary flex-1"
+            >
+              {product ? 'تحديث المنتج' : 'إضافة المنتج'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary px-6"
+            >
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
