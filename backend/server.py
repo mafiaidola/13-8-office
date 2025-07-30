@@ -858,25 +858,6 @@ async def get_doctors(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/products")
-async def get_products(current_user: User = Depends(get_current_user)):
-    """الحصول على قائمة المنتجات"""
-    try:
-        query = {"is_active": True}
-        
-        # Filter by line if user has line assignment
-        if hasattr(current_user, 'line') and current_user.line:
-            query["line"] = current_user.line
-        
-        products = await db.products.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
-        
-        for product in products:
-            if "created_at" in product and isinstance(product["created_at"], datetime):
-                product["created_at"] = product["created_at"].isoformat()
-        
-        return products
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/warehouses")
 async def get_warehouses(current_user: User = Depends(get_current_user)):
