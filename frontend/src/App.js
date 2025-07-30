@@ -29010,22 +29010,18 @@ const LinesManagement = () => {
         </div>
       )}
 
-      {/* Areas Management Tab */}
-      {activeTab === 'areas' && (
+      {/* Districts Management Tab - keeping this separate */}
+      {activeTab === 'districts' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold">🏘️ إدارة المناطق</h3>
-            <CreateAreaModal
-              lines={lines}
-              users={getAreaManagers()}
-              onCreate={createArea}
-            />
+            <h3 className="text-xl font-bold">🏢 إدارة المقاطعات</h3>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {areas.map((area) => (
-              <AreaCard key={area.id} area={area} />
-            ))}
+          <div className="text-center py-12 glass-effect rounded-xl">
+            <div className="text-4xl mb-4">🏢</div>
+            <h3 className="text-lg font-medium mb-2">إدارة المقاطعات قيد التطوير</h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              ستكون متاحة قريباً لإدارة المقاطعات تحت المناطق
+            </p>
           </div>
         </div>
       )}
