@@ -21297,7 +21297,6 @@ const ComprehensiveAdminSettings = () => {
     { id: 'overview', label: 'نظرة عامة', icon: 'analytics' },
     { id: 'users', label: 'إدارة المستخدمين', icon: 'users' },
     { id: 'roles', label: 'الأدوار والصلاحيات', icon: 'security' },
-    { id: 'regions', label: 'المناطق والخطوط', icon: 'regions' },
     { id: 'products', label: 'إدارة المنتجات', icon: 'products' },
     { id: 'gps', label: 'نظام GPS', icon: 'gps' },
     { id: 'maps', label: 'خرائط جوجل', icon: 'maps' },
