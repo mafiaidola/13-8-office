@@ -29110,15 +29110,19 @@ const LineCard = ({ line, users, products, onUpdate, onDelete }) => {
 const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
   const [formData, setFormData] = useState({
     name: '',
+    name_en: '',
+    code: '',
     description: '',
-    line_manager_id: '',
+    manager_id: '',
+    assigned_products: [],
     coverage_areas: [],
-    products: []
+    color: '#3B82F6',
+    priority: 1
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.line_manager_id) return;
+    console.log('إرسال بيانات الخط:', formData);
     onCreate(formData);
   };
 
