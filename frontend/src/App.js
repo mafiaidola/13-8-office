@@ -286,8 +286,14 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   );
 };
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://467b9d15-958c-4759-a145-ae246bc11ccf.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
+
+// Debug logging for environment variables
+console.log('🔍 Environment Variables Debug:');
+console.log('REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
+console.log('BACKEND_URL:', BACKEND_URL);
+console.log('API:', API);
 
 const debounce = (func, delay) => {
   let timeoutId;
