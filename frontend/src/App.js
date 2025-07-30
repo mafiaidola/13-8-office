@@ -2926,16 +2926,23 @@ const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      console.log('🔑 login function called with:', username, password?.length, 'chars');
+      console.log('🔑 API URL:', `${API}/auth/login`);
+      
       const response = await axios.post(`${API}/auth/login`, {
         username,
         password
       });
       
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
+      console.log('✅ Login response received:', response.status, response.data);
+      
+      const { access_token, user: userData } = response.data;
+      localStorage.setItem('token', access_token);
       setUser(userData);
       return { success: true };
     } catch (error) {
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response?.data);
       return { 
         success: false, 
         error: error.response?.data?.detail || 'حدث خطأ في تسجيل الدخول'
