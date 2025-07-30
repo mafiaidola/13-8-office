@@ -29351,6 +29351,162 @@ const CreateLineModal = ({ users, products, areas, onClose, onCreate }) => {
   );
 };
 
+// Create Area Modal Component
+const CreateAreaModal = ({ lines, users, onClose, onCreate }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    name_en: '',
+    code: '',
+    description: '',
+    parent_line_id: '',
+    manager_id: '',
+    region_type: 'urban',
+    coordinates: {},
+    priority: 1
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('إرسال بيانات المنطقة:', formData);
+    onCreate(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-90vh overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">➕ إنشاء منطقة جديدة</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">اسم المنطقة *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="input-glass w-full"
+                  placeholder="مثال: منطقة مدينة نصر"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">رمز المنطقة *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="input-glass w-full"
+                  placeholder="مثال: NASR_01"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">الخط الرئيسي *</label>
+                <select
+                  value={formData.parent_line_id}
+                  onChange={(e) => setFormData({...formData, parent_line_id: e.target.value})}
+                  className="input-glass w-full"
+                  required
+                >
+                  <option value="">اختار الخط الرئيسي</option>
+                  {(lines || []).map(line => (
+                    <option key={line.id} value={line.id}>
+                      {line.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">مدير المنطقة</label>
+                <select
+                  value={formData.manager_id}
+                  onChange={(e) => setFormData({...formData, manager_id: e.target.value})}
+                  className="input-glass w-full"
+                >
+                  <option value="">اختار مدير المنطقة</option>
+                  {(users || []).map(manager => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">نوع المنطقة</label>
+                <select
+                  value={formData.region_type}
+                  onChange={(e) => setFormData({...formData, region_type: e.target.value})}
+                  className="input-glass w-full"
+                >
+                  <option value="urban">حضرية</option>
+                  <option value="rural">ريفية</option>
+                  <option value="industrial">صناعية</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">الأولوية</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({...formData, priority: parseInt(e.target.value)})}
+                  className="input-glass w-full"
+                >
+                  <option value={1}>عالية (1)</option>
+                  <option value={2}>متوسطة (2)</option>
+                  <option value={3}>منخفضة (3)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">الوصف</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                className="input-glass w-full h-20"
+                placeholder="وصف المنطقة والعيادات المغطاة..."
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="submit"
+                className="btn-primary px-6 py-2 flex-1"
+              >
+                إنشاء المنطقة
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-secondary px-6 py-2"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Area Card Component
 const AreaCard = ({ area, lines, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
