@@ -1186,7 +1186,7 @@ async def delete_area(area_id: str, current_user: User = Depends(get_current_use
 async def assign_products_to_line(line_id: str, assignment: LineProductAssignment, current_user: User = Depends(get_current_user)):
     """تخصيص منتجات للخط - Assign products to line"""
     # Check permissions
-    if current_user["role"] not in ["admin", "gm", "line_manager"]:
+    if current_user.role not in ["admin", "gm", "line_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بتخصيص المنتجات")
     
     try:
@@ -1196,7 +1196,7 @@ async def assign_products_to_line(line_id: str, assignment: LineProductAssignmen
             raise HTTPException(status_code=404, detail="الخط غير موجود")
         
         # Role-based access control
-        if current_user["role"] == "line_manager" and line.get("manager_id") != current_user["id"]:
+        if current_user.role == "line_manager" and line.get("manager_id") != current_user.id:
             raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذا الخط")
         
         # Verify products exist
@@ -1220,8 +1220,8 @@ async def assign_products_to_line(line_id: str, assignment: LineProductAssignmen
         
         # Record assignment history
         assignment_record = assignment.dict()
-        assignment_record["assigned_by"] = current_user["id"]
-        assignment_record["assigned_by_name"] = current_user.get("full_name", "")
+        assignment_record["assigned_by"] = current_user.id
+        assignment_record["assigned_by_name"] = current_user.full_name or ""
         await db.line_product_assignments.insert_one(assignment_record)
         
         return {"success": True, "message": "تم تخصيص المنتجات للخط بنجاح"}
