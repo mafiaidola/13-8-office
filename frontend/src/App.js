@@ -21469,10 +21469,6 @@ const ComprehensiveAdminSettings = () => {
           <AdminRoleManagement />
         )}
 
-        {activeTab === 'regions' && (
-          <AdminRegionManagement />
-        )}
-
         {activeTab === 'products' && (
           <AdminProductManagement />
         )}
