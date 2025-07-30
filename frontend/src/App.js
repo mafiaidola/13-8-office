@@ -28762,20 +28762,6 @@ const LinesManagement = () => {
     }
   };
 
-  const createArea = async (areaData) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/areas`, areaData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSuccess('تم إنشاء المنطقة بنجاح');
-      loadData();
-    } catch (error) {
-      console.error('Error creating area:', error);
-      setError('فشل في إنشاء المنطقة');
-    }
-  };
-
   // Get filtered users by role
   const getLineManagers = () => users.filter(u => u.role === 'line_manager');
   const getAreaManagers = () => users.filter(u => u.role === 'area_manager');
