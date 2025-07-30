@@ -1456,16 +1456,25 @@ async def get_products(current_user: User = Depends(get_current_user)):
                         {"$set": {"line_name": line["name"]}}
                     )
             
-            # Hide prices for non-admin users
-            if current_user.role not in ["admin", "gm", "accounting"]:
-                # Remove price-related fields for non-admin users
-                print(f"DEBUG: Hiding prices for user role: {current_user.role}")
-                product.pop("price", None)
-                product.pop("price_type", None)
-                product.pop("price_before_discount", None)
-                product.pop("discount_percentage", None)
+            # Hide prices for non-admin/accounting users
+            user_role = getattr(current_user, 'role', None)
+            print(f"DEBUG: User role is: {user_role}")
+            
+            if user_role not in ["admin", "gm", "accounting", "محاسبة"]:
+                # Remove all price-related fields for non-authorized users
+                print(f"DEBUG: Hiding prices for user role: {user_role}")
+                if "price" in product:
+                    del product["price"]
+                if "price_type" in product:
+                    del product["price_type"]
+                if "unit_price" in product:
+                    del product["unit_price"]
+                # Remove any legacy pricing fields
+                for price_field in ["price_1", "price_10", "price_25", "price_50", "price_100"]:
+                    if price_field in product:
+                        del product[price_field]
             else:
-                print(f"DEBUG: Showing prices for user role: {current_user.role}")
+                print(f"DEBUG: Showing prices for authorized user role: {user_role}")
         
         return products
     
