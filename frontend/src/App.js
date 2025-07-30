@@ -18629,17 +18629,6 @@ const MainApp = () => {
               </button>
             )}
 
-            {/* Region Management for GM, Admin, Line Managers */}
-            {(user.role === 'admin' || user.role === 'gm' || user.role === 'line_manager') && (
-              <button
-                onClick={() => setActiveTab('regions')}
-                className={`nav-item ${activeTab === 'regions' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
-              >
-                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🗺️</span>
-                {t('regionManagement')}
-              </button>
-            )}
-
             {/* Comprehensive Admin Settings for GM and Admin only */}
             {(user.role === 'admin' || user.role === 'gm') && (
               <button
