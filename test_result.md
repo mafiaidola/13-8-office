@@ -2021,10 +2021,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Dashboard Routes Authorization Fix Testing"
+  current_focus: []
   stuck_tasks: []
   completed_tasks:
+    - "Clinic Creation API Testing - حل خطأ إرسال الطلب"
     - "Comprehensive Accounting System - Overview API"
     - "Enhanced Invoice and Product System with Price Tiers"
     - "Monthly Planning System Integration"
