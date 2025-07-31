@@ -18977,9 +18977,13 @@ const MainApp = () => {
               </button>
             )}
 
-            {user.role === 'admin' && (
+            {/* Enhanced Products Management Tab - FIXED FOR ADMIN ACCESS */}
+            {(user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin') && (
               <button
-                onClick={() => setActiveTab('products')}
+                onClick={() => {
+                  console.log('🔍 Products tab clicked, user role:', user?.role);
+                  setActiveTab('products');
+                }}
                 className={`nav-item ${activeTab === 'products' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
               >
                 <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📦</span>
