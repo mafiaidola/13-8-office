@@ -1810,8 +1810,102 @@ async def get_planning_data(current_user: User = Depends(get_current_user)):
 
 
 # ============================================================================
-# DAILY LOGIN RECORDS APIs
+# SECRET LOCATION TRACKING APIs
 # ============================================================================
+
+@api_router.get("/admin/location-tracking")
+async def get_location_tracking_records(current_user: User = Depends(get_current_user)):
+    """جلب سجلات تتبع المواقع السرية - Get secret location tracking records"""
+    # Check admin permissions
+    if current_user.role not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذه البيانات")
+    
+    try:
+        # Get clinic registrations with location data
+        clinic_registrations = await db.clinics.find(
+            {"latitude": {"$exists": True, "$ne": 0.0}, "longitude": {"$exists": True, "$ne": 0.0}},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(100).to_list(100)
+        
+        # Get visit locations
+        visit_locations = await db.visits.find(
+            {"latitude": {"$exists": True, "$ne": 0.0}, "longitude": {"$exists": True, "$ne": 0.0}},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(100).to_list(100)
+        
+        # Format location tracking data
+        tracking_records = []
+        
+        # Add clinic registrations
+        for clinic in clinic_registrations:
+            if "created_at" in clinic and isinstance(clinic["created_at"], datetime):
+                clinic["created_at"] = clinic["created_at"].isoformat()
+            if "updated_at" in clinic and isinstance(clinic["updated_at"], datetime):
+                clinic["updated_at"] = clinic["updated_at"].isoformat()
+                
+            tracking_records.append({
+                "id": clinic.get("id", ""),
+                "type": "clinic_registration",
+                "title": f"تسجيل عيادة: {clinic.get('name', 'غير محدد')}",
+                "rep_name": clinic.get("created_by_name", "غير محدد"),
+                "rep_id": clinic.get("created_by", ""),
+                "location": {
+                    "latitude": clinic.get("latitude", 0.0),
+                    "longitude": clinic.get("longitude", 0.0),
+                    "address": clinic.get("address", "")
+                },
+                "timestamp": clinic.get("created_at", ""),
+                "details": {
+                    "clinic_name": clinic.get("name", ""),
+                    "doctor_name": clinic.get("doctor_name", ""),
+                    "phone": clinic.get("phone", ""),
+                    "specialization": clinic.get("specialization", "")
+                }
+            })
+        
+        # Add visit locations
+        for visit in visit_locations:
+            if "created_at" in visit and isinstance(visit["created_at"], datetime):
+                visit["created_at"] = visit["created_at"].isoformat()
+            if "visit_date" in visit and isinstance(visit["visit_date"], datetime):
+                visit["visit_date"] = visit["visit_date"].isoformat()
+                
+            tracking_records.append({
+                "id": visit.get("id", ""),
+                "type": "visit_location",
+                "title": f"زيارة عيادة: {visit.get('clinic_name', 'غير محدد')}",
+                "rep_name": visit.get("sales_rep_name", "غير محدد"),
+                "rep_id": visit.get("sales_rep_id", ""),
+                "location": {
+                    "latitude": visit.get("latitude", 0.0),
+                    "longitude": visit.get("longitude", 0.0),
+                    "address": visit.get("location_address", "")
+                },
+                "timestamp": visit.get("created_at", ""),
+                "details": {
+                    "clinic_name": visit.get("clinic_name", ""),
+                    "doctor_name": visit.get("doctor_name", ""),
+                    "visit_type": visit.get("visit_type", ""),
+                    "notes": visit.get("notes", "")
+                }
+            })
+        
+        # Sort by timestamp (newest first)
+        tracking_records.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        
+        return {
+            "success": True,
+            "data": tracking_records,
+            "total_records": len(tracking_records),
+            "clinic_registrations": len(clinic_registrations),
+            "visit_locations": len(visit_locations)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching location tracking records: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب سجلات تتبع المواقع")
+
+
 
 @api_router.get("/admin/login-records")
 async def get_daily_login_records(current_user: User = Depends(get_current_user)):
