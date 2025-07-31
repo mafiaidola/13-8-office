@@ -4894,3 +4894,53 @@ input:checked + .slider:before {
   background: rgba(76, 175, 80, 0.05);
   border-color: rgba(76, 175, 80, 0.2);
 }
+
+/* Work Information Enhanced Styles */
+.role-card {
+  @apply relative p-4 rounded-xl border border-white border-opacity-20 
+         cursor-pointer transition-all duration-300 text-center
+         hover:border-opacity-40 hover:scale-105 hover:shadow-lg;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.role-card.selected {
+  @apply border-orange-400 border-opacity-60 scale-105;
+  background: rgba(255, 107, 53, 0.1);
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+}
+
+.role-card:hover {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.role-card.selected:hover {
+  background: rgba(255, 107, 53, 0.15);
+}
+
+.role-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 mx-auto;
+  font-size: 1.5rem;
+}
+
+.role-label {
+  @apply text-sm font-medium;
+  color: var(--text-primary);
+}
+
+.role-card.selected .role-label {
+  @apply text-orange-300;
+}
+
+.work-field {
+  @apply space-y-2;
+}
+
+.work-field-label {
+  @apply flex items-center gap-2 text-sm font-bold mb-2;
+  color: var(--text-primary);
+}
+
+.work-field-icon {
+  @apply text-lg;
+}
