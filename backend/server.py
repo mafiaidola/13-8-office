@@ -813,26 +813,35 @@ async def get_visits(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/clinics")
 async def get_clinics(current_user: User = Depends(get_current_user)):
-    """الحصول على قائمة العيادات"""
+    """الحصول على قائمة العيادات - Get clinics based on user role"""
     try:
+        # Role-based filtering
         if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            # Medical reps see only their assigned clinics
             query = {"assigned_rep_id": current_user.id}
         elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER]:
+            # Admin and managers see all clinics
             query = {}
         else:
             raise HTTPException(status_code=403, detail="Insufficient permissions")
         
         clinics = await db.clinics.find(query, {"_id": 0}).sort("created_at", -1).limit(500).to_list(500)
         
+        # Fix datetime serialization
         for clinic in clinics:
             if "created_at" in clinic and isinstance(clinic["created_at"], datetime):
                 clinic["created_at"] = clinic["created_at"].isoformat()
             if "updated_at" in clinic and isinstance(clinic["updated_at"], datetime):
                 clinic["updated_at"] = clinic["updated_at"].isoformat()
         
+        print(f"🔍 DEBUG: User {current_user.role} requested clinics, found {len(clinics)} clinics")
         return clinics
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching clinics: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات العيادات")
 
 @api_router.get("/doctors")
 async def get_doctors(current_user: User = Depends(get_current_user)):
