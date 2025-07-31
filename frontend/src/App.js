@@ -25870,8 +25870,8 @@ const EnhancedUserManagementV2 = () => {
 
   const handleAddUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/auth/register`, userData, {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`${API}/users`, userData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await loadUserData();
