@@ -11487,6 +11487,24 @@ const EnhancedUserManagement = () => {
     </div>
   );
 
+  // Helper function to get role badge colors
+  const getRoleBadgeColor = (role) => {
+    const roleColors = {
+      'admin': 'badge-red',           // مدير النظام - أحمر
+      'gm': 'badge-purple',           // المدير العام - بنفسجي
+      'line_manager': 'badge-blue',   // مدير الخط - أزرق
+      'area_manager': 'badge-cyan',   // مدير المنطقة - سماوي
+      'district_manager': 'badge-teal', // مدير المنطقة المحلية - تيل
+      'key_account': 'badge-indigo',  // حسابات رئيسية - نيلي
+      'medical_rep': 'badge-green',   // مندوب طبي - أخضر
+      'manager': 'badge-orange',      // مدير - برتقالي
+      'accounting': 'badge-yellow',   // محاسب - أصفر
+      'warehouse_manager': 'badge-pink', // مدير المخزن - وردي
+      'warehouse_keeper': 'badge-gray'   // أمين المخزن - رمادي
+    };
+    return roleColors[role] || 'badge-secondary';
+  };
+
   // Filter users based on search term, role, and status
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
