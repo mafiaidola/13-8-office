@@ -1751,59 +1751,6 @@ async def update_clinic(clinic_id: str, clinic_data: dict, current_user: User = 
         raise HTTPException(status_code=500, detail="خطأ في تحديث العيادة")
 
 
-@api_router.get("/clinics")
-async def get_clinics(current_user: User = Depends(get_current_user)):
-    """الحصول على جميع العيادات - Get all clinics"""
-    try:
-        clinics = await db.clinics.find({}, {"_id": 0}).to_list(1000)
-        
-        # If no clinics in database, return mock data
-        if not clinics:
-            clinics = [
-                {
-                    "id": "clinic-1",
-                    "name": "عيادة د.أحمد محمد",
-                    "address": "شارع الجمهورية، المعادي، القاهرة",
-                    "phone": "+201234567890",
-                    "doctor_name": "د.أحمد محمد",
-                    "specialization": "باطنة",
-                    "latitude": 29.9602,
-                    "longitude": 31.2569,
-                    "area_id": "area-1",
-                    "area_name": "القاهرة الكبرى",
-                    "status": "active",
-                    "last_visit": "2024-01-15T10:30:00Z",
-                    "total_visits": 15,
-                    "debt_amount": 2500.00,
-                    "created_at": "2024-01-01T08:00:00Z",
-                    "is_active": True
-                },
-                {
-                    "id": "clinic-2",
-                    "name": "عيادة د.سارة أحمد",
-                    "address": "شارع النيل، المهندسين، الجيزة",
-                    "phone": "+201234567891",
-                    "doctor_name": "د.سارة أحمد", 
-                    "specialization": "أطفال",
-                    "latitude": 30.0626,
-                    "longitude": 31.2497,
-                    "area_id": "area-2",
-                    "area_name": "الجيزة",
-                    "status": "active",
-                    "last_visit": "2024-01-20T14:15:00Z",
-                    "total_visits": 8,
-                    "debt_amount": 0.00,
-                    "created_at": "2024-01-05T09:30:00Z",
-                    "is_active": True
-                }
-            ]
-        
-        return clinics
-    
-    except Exception as e:
-        print(f"Error fetching clinics: {str(e)}")
-        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات العيادات")
-
 
 @api_router.get("/clinics/stats")
 async def get_clinics_stats(current_user: User = Depends(get_current_user)):
