@@ -214,7 +214,14 @@ class ClinicRegistrationTester:
             if response.status_code == 200:
                 data = response.json()
                 success_message = data.get("message", "")
-                self.registered_clinic_id = data.get("clinic_id") or data.get("id")
+                
+                # Extract clinic ID from nested response structure
+                clinic_info = data.get("clinic", {})
+                self.registered_clinic_id = (
+                    data.get("clinic_id") or 
+                    data.get("id") or 
+                    clinic_info.get("id")
+                )
                 
                 self.log_result(
                     "Clinic Registration API Test",
