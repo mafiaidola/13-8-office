@@ -12,9 +12,66 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
 
-  // Enhanced Google Maps loader
+  // Enhanced Google Maps loader with better error handling
   const checkGoogleMapsLoaded = () => {
-    return window.google && window.google.maps && window.google.maps.Map;
+    return window.google && 
+           window.google.maps && 
+           window.google.maps.Map && 
+           window.google.maps.Marker;
+  };
+
+  // Force load Google Maps if not available
+  const loadGoogleMapsScript = () => {
+    return new Promise((resolve, reject) => {
+      if (checkGoogleMapsLoaded()) {
+        resolve();
+        return;
+      }
+
+      // Check if script already exists
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        // Wait for existing script to load
+        existingScript.addEventListener('load', () => {
+          if (checkGoogleMapsLoaded()) {
+            resolve();
+          } else {
+            setTimeout(() => {
+              if (checkGoogleMapsLoaded()) {
+                resolve();
+              } else {
+                reject(new Error('Google Maps failed to load'));
+              }
+            }, 2000);
+          }
+        });
+        existingScript.addEventListener('error', reject);
+        return;
+      }
+
+      // Create new script
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY || 'AIzaSyDzxZjDxPdcrnGKb66mT5BIvQzQWcnLp70'}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.addEventListener('load', () => {
+        if (checkGoogleMapsLoaded()) {
+          resolve();
+        } else {
+          setTimeout(() => {
+            if (checkGoogleMapsLoaded()) {
+              resolve();
+            } else {
+              reject(new Error('Google Maps API loaded but components not available'));
+            }
+          }, 1000);
+        }
+      });
+      
+      script.addEventListener('error', reject);
+      document.head.appendChild(script);
+    });
   };
 
   // Get current location when component mounts
