@@ -21379,7 +21379,16 @@ const AppContent = () => {
     console.log('🔍 AppContent: User state changed:', user);
     console.log('🔍 AppContent: Loading state:', loading);
     console.log('🔍 AppContent: Should show dashboard?', !!user);
+    console.log('🔍 AppContent: User exists?', user !== null);
+    console.log('🔍 AppContent: User details:', user ? { 
+      id: user.id, 
+      username: user.username, 
+      role: user.role 
+    } : 'No user');
   }, [user, loading]);
+
+  // Also log on every render
+  console.log('🔄 AppContent rendering with user:', !!user, 'loading:', loading);
 
   const handleQRScan = async (qrData) => {
     try {
