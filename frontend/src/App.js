@@ -11219,11 +11219,17 @@ const EnhancedUserManagement = () => {
     return `منذ ${Math.floor(diffInMinutes / 1440)} يوم`;
   };
 
-  // Legacy function for bulk actions
+  // Enhanced bulk action function with delete support
   const handleBulkAction = async () => {
     if (!bulkAction || selectedUsers.size === 0) return;
 
-    const confirmed = window.confirm(`هل أنت متأكد من تطبيق "${bulkAction}" على ${selectedUsers.size} مستخدم؟`);
+    const actionText = {
+      'activate': 'تنشيط',
+      'deactivate': 'تعطيل', 
+      'delete': 'حذف'
+    }[bulkAction];
+
+    const confirmed = window.confirm(`هل أنت متأكد من ${actionText} ${selectedUsers.size} مستخدم؟ ${bulkAction === 'delete' ? 'هذا الإجراء لا يمكن التراجع عنه!' : ''}`);
     if (!confirmed) return;
 
     try {
@@ -11237,16 +11243,21 @@ const EnhancedUserManagement = () => {
           return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
             headers: { Authorization: `Bearer ${token}` }
           });
+        } else if (bulkAction === 'delete') {
+          return axios.delete(`${API}/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
         }
       });
 
-      await Promise.all(promises);
-      setSuccess(`تم تطبيق الإجراء على ${selectedUsers.size} مستخدم`);
+      await Promise.all(promises.filter(Boolean));
+      setSuccess(`تم ${actionText} ${selectedUsers.size} مستخدم بنجاح`);
       setSelectedUsers(new Set());
       setBulkAction('');
-      fetchUsers();
+      fetchEnhancedUsers();
     } catch (error) {
-      setError('خطأ في تطبيق الإجراء الجماعي');
+      setError(`خطأ في ${actionText} المستخدمين`);
+      console.error('Bulk action error:', error);
     }
   };
 
