@@ -19134,14 +19134,17 @@ const MainApp = () => {
               </button>
             )}
             
-            {/* Lines Management for admin, GM, and line managers */}
-            {(['admin', 'gm', 'line_manager'].includes(user.role)) && (
+            {/* Lines Management for admin, GM, and line managers - ENHANCED FOR ADMIN ACCESS */}
+            {(user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin' || ['admin', 'gm', 'line_manager'].includes(user.role)) && (
               <button
-                onClick={() => setActiveTab('lines-management')}
+                onClick={() => {
+                  console.log('🔍 Lines management clicked, user role:', user?.role);
+                  setActiveTab('lines-management');
+                }}
                 className={`nav-item ${activeTab === 'lines-management' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
               >
                 <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🗺️</span>
-                إدارة الخطوط
+                إدارة الخطوط والمناطق
               </button>
             )}
             
