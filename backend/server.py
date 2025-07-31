@@ -1688,7 +1688,9 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "created_by": current_user.id,
-            "created_by_name": current_user.full_name or ""
+            "created_by_name": current_user.full_name or "",
+            # Fix: Set assigned_rep_id for medical reps so they can see their clinics
+            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None
         }
 
         # Insert into database
