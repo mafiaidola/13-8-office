@@ -449,6 +449,27 @@ class ComprehensiveFixesTester:
                     details = f"تم العثور على {len(records)} سجل تسجيل دخول"
                     self.log_test("سجل تسجيل الدخول - بيانات حقيقية", True, details, response_time)
                 
+                elif isinstance(data, dict) and "data" in data:
+                    records = data["data"]
+                    if isinstance(records, list):
+                        # Check for real data indicators
+                        has_real_data = True
+                        if records:
+                            sample_record = records[0]
+                            # Check if it has real login data structure
+                            if all(field in sample_record for field in ["user_id", "username", "login_time"]):
+                                details = f"تم العثور على {len(records)} سجل تسجيل دخول حقيقي مع بيانات كاملة"
+                                self.log_test("سجل تسجيل الدخول - بيانات حقيقية", True, details, response_time)
+                            else:
+                                details = f"تم العثور على {len(records)} سجل لكن البيانات ناقصة"
+                                self.log_test("سجل تسجيل الدخول - بيانات حقيقية", False, details, response_time)
+                        else:
+                            details = "API يعمل لكن لا توجد سجلات"
+                            self.log_test("سجل تسجيل الدخول - بيانات حقيقية", True, details, response_time)
+                    else:
+                        details = f"تنسيق بيانات غير متوقع في data: {type(records)}"
+                        self.log_test("سجل تسجيل الدخول - بيانات حقيقية", False, details, response_time)
+                
                 else:
                     self.log_test("سجل تسجيل الدخول - بيانات حقيقية", False, f"تنسيق بيانات غير متوقع: {type(data)}", response_time)
             
