@@ -27454,29 +27454,29 @@ const RepClinicRegistration = ({ user }) => {
     }));
   };
 
-  const handleMapClick = (location) => {
+  const handleMapClick = (location, longitude) => {
     // Handle both object format {lat, lng} and separate parameters
-    let latitude, longitude;
+    let latitude, lng;
     
     if (typeof location === 'object' && location.lat !== undefined) {
       latitude = location.lat;
-      longitude = location.lng;
+      lng = location.lng;
     } else {
       // Fallback for separate parameters (latitude, longitude)
       latitude = location;
-      longitude = arguments[1];
+      lng = longitude;
     }
     
-    console.log('Map clicked at:', latitude, longitude);
+    console.log('Map clicked at:', latitude, lng);
     
     setClinicData(prev => ({
       ...prev,
       latitude,
-      longitude
+      longitude: lng
     }));
     
     // Show success message
-    setSuccess(`تم تحديد موقع العيادة بنجاح! الإحداثيات: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+    setSuccess(`تم تحديد موقع العيادة بنجاح! الإحداثيات: ${latitude.toFixed(6)}, ${lng.toFixed(6)}`);
     
     // Clear success message after 3 seconds
     setTimeout(() => setSuccess(''), 3000);
