@@ -27814,6 +27814,18 @@ const RepClinicRegistration = ({ user }) => {
                   onLocationSelect={handleMapClick}
                   showCurrentLocation={true}
                 />
+                
+                {/* إرشادات الخريطة */}
+                <div className="mt-3 text-center">
+                  <p className="text-sm text-gray-600">
+                    انقر على الخريطة أو اسحب الدبوس الأحمر لتحديد موقع العيادة
+                  </p>
+                  {(!clinicData.latitude || !clinicData.longitude) && (
+                    <p className="text-xs text-red-600 mt-1">
+                      ⚠️ يجب تحديد موقع العيادة لإكمال التسجيل
+                    </p>
+                  )}
+                </div>
               </div>
 
               {clinicData.latitude && clinicData.longitude && (
