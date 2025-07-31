@@ -3374,7 +3374,7 @@ const AuthProvider = ({ children }) => {
 
   const value = {
     user,
-    login: performLogin,
+    login,
     logout,
     loading
   };
