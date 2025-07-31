@@ -1866,7 +1866,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Check if search query is a number (potential invoice number)
       const isInvoiceNumber = /^\d+$/.test(searchQuery.trim());
@@ -2981,7 +2981,7 @@ const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       // Verify token and get user info
       fetchUserInfo(token);
@@ -3531,7 +3531,7 @@ const AdminSettingsPage = () => {
   const loadAdminData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
       // Load permissions
@@ -3560,7 +3560,7 @@ const AdminSettingsPage = () => {
   const updatePermissions = async (updatedPermissions) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/permissions`, updatedPermissions, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -3577,7 +3577,7 @@ const AdminSettingsPage = () => {
   const updateDashboardConfig = async (updatedConfig) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/dashboard-config`, updatedConfig, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -3704,7 +3704,7 @@ const SupportTicketsTab = ({ loading }) => {
   const fetchTickets = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const params = new URLSearchParams(filters).toString();
       const response = await axios.get(`${API}/support/tickets?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -3719,7 +3719,7 @@ const SupportTicketsTab = ({ loading }) => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/support/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -3731,7 +3731,7 @@ const SupportTicketsTab = ({ loading }) => {
 
   const updateTicketStatus = async (ticketId, status) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/support/tickets/${ticketId}`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -3744,7 +3744,7 @@ const SupportTicketsTab = ({ loading }) => {
 
   const assignTicket = async (ticketId, assignedTo) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/support/tickets/${ticketId}`, { assigned_to: assignedTo }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -3758,7 +3758,7 @@ const SupportTicketsTab = ({ loading }) => {
     if (!replyText.trim() || !selectedTicket) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/support/tickets/${selectedTicket.id}/responses?response_text=${encodeURIComponent(replyText)}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -4659,7 +4659,7 @@ const SystemSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/settings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -4691,7 +4691,7 @@ const SystemSettings = () => {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/settings`, settings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -4898,7 +4898,7 @@ const NotificationsCenter = () => {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -4911,7 +4911,7 @@ const NotificationsCenter = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/notifications/${notificationId}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -5040,7 +5040,7 @@ const MedicalRepDashboard = ({ stats, user }) => {
 
   const fetchStockData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/sales-rep/warehouse-stock-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -5280,7 +5280,7 @@ const AdvancedAnalyticsDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const params = new URLSearchParams({
         time_range: timeRange,
         ...(userFilter && { user_filter: userFilter })
@@ -5303,7 +5303,7 @@ const AdvancedAnalyticsDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const params = new URLSearchParams({
         kpi_type: kpiType,
         period: timeRange
@@ -5788,7 +5788,7 @@ const AdminStatsDashboard = () => {
 
   const fetchEnhancedStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Fetch all stats in parallel
       const [statsRes, usersRes, visitsRes, ordersRes] = await Promise.all([
@@ -6101,7 +6101,7 @@ const ApprovalsDashboard = ({ user }) => {
 
   const fetchApprovalData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
       // Fetch my requests
@@ -6131,7 +6131,7 @@ const ApprovalsDashboard = ({ user }) => {
   const handleApprovalAction = async (requestId, action, notes = '') => {
     setActionLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/approvals/${requestId}/action`, 
         { action, notes }, 
         { headers: { Authorization: `Bearer ${token}` } }
@@ -6624,7 +6624,7 @@ const EnhancedVisitsLog = () => {
 
   const fetchVisits = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/visits/comprehensive`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -7722,7 +7722,7 @@ const AdminDailyLoginRecords = () => {
   const fetchLoginRecords = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/daily-login-records`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -8232,7 +8232,7 @@ const EnhancedAuthentication = ({ onAuthenticate, onSkip, user }) => {
 
   // Send authentication data to backend
   const sendAuthData = async (method, data) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     await axios.post(`${API}/users/daily-login`, {
       authentication_method: method,
       timestamp: new Date().toISOString(),
@@ -8496,7 +8496,7 @@ const SelfieCapture = ({ onCapture, onSkip }) => {
 
   const saveSelfie = async (imageData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/users/selfie`, {
         selfie_image: imageData,
         timestamp: new Date().toISOString(),
@@ -8646,7 +8646,7 @@ const DailyPlan = ({ user, onClose }) => {
 
   const fetchDailyPlan = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/${user.id}/daily-plan`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -8860,7 +8860,7 @@ const AdminFeatureControl = () => {
 
   const fetchFeatures = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/features/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -8874,7 +8874,7 @@ const AdminFeatureControl = () => {
 
   const toggleFeature = async (featureName, enabled) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/features/toggle`, {
         feature_name: featureName,
         enabled: enabled
@@ -8966,7 +8966,7 @@ const AdminSystemControl = () => {
 
   const checkSystemHealth = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/system-health`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -9131,7 +9131,7 @@ const EnhancedInvoiceManagement = () => {
 
   const fetchInvoices = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/invoices/list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -9164,7 +9164,7 @@ const EnhancedInvoiceManagement = () => {
 
   const fetchEditHistory = async (invoiceId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/invoices/${invoiceId}/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -9183,7 +9183,7 @@ const EnhancedInvoiceManagement = () => {
 
   const handleEditInvoice = async (invoiceId, changes) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/invoices/${invoiceId}`, {
         ...changes,
         edited_by: user.id,
@@ -9656,7 +9656,7 @@ const EnhancedOrderCreation = ({ user }) => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/products/by-line/${userLine}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -9711,7 +9711,7 @@ const EnhancedOrderCreation = ({ user }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const orderData = {
         customer_info: customerInfo,
         items: orderItems.map(item => ({
@@ -9945,7 +9945,7 @@ const EnhancedProductManagement = () => {
 
   const fetchLines = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/lines`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -9958,7 +9958,7 @@ const EnhancedProductManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/products`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -10003,7 +10003,7 @@ const EnhancedProductManagement = () => {
 
   const handleCreateProduct = async (productData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/products/admin/create`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -10018,7 +10018,7 @@ const EnhancedProductManagement = () => {
 
   const handleUpdateProduct = async (productId, productData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/products/${productId}/admin`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -10034,7 +10034,7 @@ const EnhancedProductManagement = () => {
   const handleDeleteProduct = async (productId) => {
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         await axios.delete(`${API}/products/${productId}/admin`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -10404,7 +10404,7 @@ const MiniProfile = ({ user, onClose }) => {
 
   const fetchTeamMembers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/team`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -10417,7 +10417,7 @@ const MiniProfile = ({ user, onClose }) => {
 
   const fetchProfileData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/${selectedUserId}/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -11102,7 +11102,7 @@ const EnhancedUserManagement = () => {
 
   const updateLastSeen = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/users/update-last-seen`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -11114,7 +11114,7 @@ const EnhancedUserManagement = () => {
   const fetchEnhancedUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const params = new URLSearchParams({
         page: currentPage,
         limit: 10,
@@ -11142,7 +11142,7 @@ const EnhancedUserManagement = () => {
 
   const handlePhotoUpload = async (userId, photoFile) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Convert to base64
       const reader = new FileReader();
@@ -11205,7 +11205,7 @@ const EnhancedUserManagement = () => {
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const promises = Array.from(selectedUsers).map(userId => {
         if (bulkAction === 'activate') {
           return axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
@@ -11234,7 +11234,7 @@ const EnhancedUserManagement = () => {
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/users/${userId}/toggle-status`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -11251,7 +11251,7 @@ const EnhancedUserManagement = () => {
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.delete(`${API}/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -11267,7 +11267,7 @@ const EnhancedUserManagement = () => {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/users`, newUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -11290,7 +11290,7 @@ const EnhancedUserManagement = () => {
     if (!selectedUser) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/users/${selectedUser.id}`, selectedUser, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -12146,7 +12146,7 @@ const useRealTimeAnalytics = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await axios.get(`${API}/analytics/realtime`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -12594,7 +12594,7 @@ const AdvancedReports = () => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const params = new URLSearchParams({
         report_type: reportType,
         start_date: dateRange.start_date,
@@ -12907,7 +12907,7 @@ const OfflineStatus = () => {
     if (offlineData.visits.length === 0 && offlineData.orders.length === 0) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.post(`${API}/offline/sync`, offlineData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -12969,7 +12969,7 @@ const AccountingDashboard = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Fetch pending orders (manager approved, waiting for accounting)
       const pendingRes = await axios.get(`${API}/orders?status=MANAGER_APPROVED`, {
@@ -12991,7 +12991,7 @@ const AccountingDashboard = () => {
 
   const approveOrder = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/orders/${orderId}/approve`, {
         notes: approvalNotes
       }, {
@@ -13330,7 +13330,7 @@ const WarehouseManagement = () => {
   const fetchWarehouseData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Fetch all warehouse data
       const [warehousesRes, statsRes, inventoryRes, ordersRes, movementsRes] = await Promise.all([
@@ -13625,7 +13625,7 @@ const ReportsSection = () => {
   const fetchInventoryReport = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/reports/inventory`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -13640,7 +13640,7 @@ const ReportsSection = () => {
   const fetchUsersReport = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/reports/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -13913,7 +13913,7 @@ const SalesRepDashboard = ({ stats, user }) => {
       }
       
       // محاولة التحقق من الخادم (اختياري)
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/selfie/today`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -14244,7 +14244,7 @@ const SalesRepPlanManagement = ({ user }) => {
 
   const fetchPlans = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/planning/monthly?month=${selectedMonth}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -14259,7 +14259,7 @@ const SalesRepPlanManagement = ({ user }) => {
 
   const fetchClinics = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -14272,7 +14272,7 @@ const SalesRepPlanManagement = ({ user }) => {
 
   const handleSavePlan = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const planData = {
         ...formData,
         rep_id: user.id,
@@ -14302,7 +14302,7 @@ const SalesRepPlanManagement = ({ user }) => {
   const handleDeletePlan = async (planId) => {
     if (window.confirm(language === 'ar' ? 'هل تريد حذف هذه الخطة؟' : 'Are you sure you want to delete this plan?')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         await axios.delete(`${API}/planning/monthly/${planId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -14673,7 +14673,7 @@ const AdminLocationTracking = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       if (activeTab === 'clinics') {
         const response = await axios.get(`${API}/admin/clinic-registrations-with-locations`, {
@@ -15188,7 +15188,7 @@ const AdminClinicsManagement = () => {
 
   const fetchClinics = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -15534,7 +15534,7 @@ const ClinicRegistration = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const requestData = {
         ...formData,
         doctor_specialty: formData.clinic_class,
@@ -15971,7 +15971,7 @@ const OrderCreation = () => {
   // جلب العيادات المتاحة للمندوب حسب منطقته
   const fetchClinicsForRep = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics/my-region`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -15984,7 +15984,7 @@ const OrderCreation = () => {
       console.error('Error fetching clinics:', error);
       // Fallback to all clinics if region-specific API doesn't exist
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await axios.get(`${API}/clinics`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -16003,7 +16003,7 @@ const OrderCreation = () => {
   // جلب بيانات المخزون للمندوب
   const fetchStockData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/sales-rep/warehouse-stock-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -16088,7 +16088,7 @@ const OrderCreation = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const selectedClinic = clinics.find(c => c.id === orderData.clinic_id);
       
       const requestData = {
@@ -16637,7 +16637,7 @@ const VisitRegistration = () => {
 
   const fetchClinics = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics/my-region`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -16769,7 +16769,7 @@ const VisitRegistration = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const selectedClinicData = clinics.find(c => c.id === selectedClinic);
       
       const visitData = {
@@ -17552,7 +17552,7 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
           onSave={async (updatedItem) => {
             // Handle inventory update
             try {
-              const token = localStorage.getItem('token');
+              const token = localStorage.getItem('access_token');
               await axios.patch(`${API}/inventory/${updatedItem.warehouse_id}/${updatedItem.product_id}`, {
                 quantity: updatedItem.quantity,
                 minimum_stock: updatedItem.minimum_stock
@@ -17592,7 +17592,7 @@ const OrdersManagement = ({ orders, onRefresh, language }) => {
 
   const handleApproveOrder = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/orders/${orderId}/review`, 
         { approved: true },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -17605,7 +17605,7 @@ const OrdersManagement = ({ orders, onRefresh, language }) => {
 
   const handleRejectOrder = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/orders/${orderId}/review`, 
         { approved: false },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -18373,7 +18373,7 @@ const MainApp = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/dashboard/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -18385,7 +18385,7 @@ const MainApp = () => {
 
   const fetchVisits = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/visits`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -18947,7 +18947,7 @@ const AccountingPage = () => {
   const loadAccountingData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
       // Load different data based on active tab
@@ -18982,7 +18982,7 @@ const AccountingPage = () => {
 
   const createExpense = async (expenseData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/accounting/expenses`, expenseData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -19200,7 +19200,7 @@ const UserDetailsModal = ({ user, onClose }) => {
 
   const fetchActivitySummary = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/${user.id}/activity-summary?days=7`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -19434,7 +19434,7 @@ const GamificationDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const user = JSON.parse(localStorage.getItem('user'));
       const headers = { Authorization: `Bearer ${token}` };
 
@@ -20199,7 +20199,7 @@ const GPSTrackingDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
       if (activeView === 'team') {
@@ -20978,7 +20978,7 @@ const AppContent = () => {
 
   const handleQRScan = async (qrData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.post(`${API}/qr/scan`, {
         content: qrData
       }, {
@@ -21065,7 +21065,7 @@ const ComprehensiveAdminSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/settings/comprehensive`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -21079,7 +21079,7 @@ const ComprehensiveAdminSettings = () => {
 
   const initializeSystem = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.post(`${API}/admin/initialize-system`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -21378,7 +21378,7 @@ const AdminUserManagement = () => {
 
   const updateSettings = async (newSettings) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/settings/user-management`, newSettings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -21555,7 +21555,7 @@ const AdminGPSSettings = () => {
 
   const updateSettings = async (newSettings) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/settings/gps`, newSettings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -21716,7 +21716,7 @@ const AdminThemeSettings = () => {
 
   const updateSettings = async (newSettings) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/settings/theme`, newSettings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -21842,7 +21842,7 @@ const AdminRoleManagement = () => {
 
   const updateRolePermissions = async (role, permissions) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/roles/${role}/permissions`, {
         permissions: permissions
       }, {
@@ -22147,7 +22147,7 @@ const AdminFeatureToggle = () => {
 
   const fetchFeatures = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/features/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -22161,7 +22161,7 @@ const AdminFeatureToggle = () => {
 
   const toggleFeature = async (featureName, enabled) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/features/toggle`, {
         feature_name: featureName,
         enabled: enabled
@@ -22266,7 +22266,7 @@ const AdminGoogleMapsSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/settings/google-maps`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -22278,7 +22278,7 @@ const AdminGoogleMapsSettings = () => {
 
   const fetchServicesStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/google-services-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -22291,7 +22291,7 @@ const AdminGoogleMapsSettings = () => {
   const testApiKey = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.post(`${API}/admin/test-google-maps-api`, {
         api_key: settings.google_maps_api_key
       }, {
@@ -22307,7 +22307,7 @@ const AdminGoogleMapsSettings = () => {
 
   const updateSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/settings/google-maps`, settings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -22618,7 +22618,7 @@ const AdminWebsiteSettings = () => {
 
   const updateConfig = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/settings/website-config`, config, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -22632,7 +22632,7 @@ const AdminWebsiteSettings = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         const response = await axios.get(`${API}/admin/settings/website-config`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -22890,7 +22890,7 @@ const AdminPerformanceMonitor = () => {
 
   const fetchMetrics = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/settings/performance-metrics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23075,7 +23075,7 @@ const EnhancedWarehouseManagement = () => {
 
   const fetchWarehouses = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/warehouses`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23089,7 +23089,7 @@ const EnhancedWarehouseManagement = () => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/products`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23101,7 +23101,7 @@ const EnhancedWarehouseManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23113,7 +23113,7 @@ const EnhancedWarehouseManagement = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/warehouses/analytics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23125,7 +23125,7 @@ const EnhancedWarehouseManagement = () => {
 
   const handleCreateWarehouse = async (warehouseData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/warehouses`, warehouseData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23141,7 +23141,7 @@ const EnhancedWarehouseManagement = () => {
 
   const handleEditWarehouse = async (warehouseId, warehouseData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/admin/warehouses/${warehouseId}`, warehouseData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23158,7 +23158,7 @@ const EnhancedWarehouseManagement = () => {
     if (!confirm('هل أنت متأكد من حذف هذا المخزن؟')) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.delete(`${API}/admin/warehouses/${warehouseId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23173,7 +23173,7 @@ const EnhancedWarehouseManagement = () => {
 
   const fetchWarehouseStock = async (warehouseId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/warehouses/${warehouseId}/stock`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23185,7 +23185,7 @@ const EnhancedWarehouseManagement = () => {
 
   const handleAddStock = async (warehouseId, stockData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/admin/warehouses/${warehouseId}/stock`, stockData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -23932,7 +23932,7 @@ const InvoiceManagement = () => {
 
   const fetchInvoices = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/accounting/invoices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -24153,7 +24153,7 @@ const WarehouseKeeperDashboard = () => {
   const loadWarehouseData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Load warehouses assigned to this keeper
       const warehouseResponse = await axios.get(`${API}/warehouses/assigned`, {
@@ -24197,7 +24197,7 @@ const WarehouseKeeperDashboard = () => {
 
   const loadWarehouseInventory = async (warehouseId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/warehouses/${warehouseId}/inventory`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -24232,7 +24232,7 @@ const WarehouseKeeperDashboard = () => {
 
   const handleStockAdjustment = async (productId, adjustment) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/inventory/adjust`, {
         warehouse_id: selectedWarehouse.id,
         product_id: productId,
@@ -24255,7 +24255,7 @@ const WarehouseKeeperDashboard = () => {
 
   const handleAddProduct = async (productData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/inventory/add-product`, {
         warehouse_id: selectedWarehouse.id,
         ...productData
@@ -25004,7 +25004,7 @@ const AdvancedApprovalSystem = () => {
   const loadApprovalData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Load pending approvals based on user role
       const pendingResponse = await axios.get(`${API}/approvals/pending`, {
@@ -25098,7 +25098,7 @@ const AdvancedApprovalSystem = () => {
 
   const handleApproval = async (orderId, action, notes = '') => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/approvals/process`, {
         order_id: orderId,
         action: action, // 'approve' or 'reject'
@@ -25786,7 +25786,7 @@ const EnhancedUserManagementV2 = () => {
   const loadUserData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Load users with enhanced data
       const usersResponse = await axios.get(`${API}/users/enhanced`, {
@@ -25885,7 +25885,7 @@ const EnhancedUserManagementV2 = () => {
 
   const handleEditUser = async (userData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/users/${selectedUser.id}`, userData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -25899,7 +25899,7 @@ const EnhancedUserManagementV2 = () => {
 
   const handleToggleUserStatus = async (userId, currentStatus) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/users/${userId}/status`, {
         is_active: !currentStatus
       }, {
@@ -26320,7 +26320,7 @@ const MonthlyPlanningSystem = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Load monthly plans
       const plansResponse = await axios.get(`${API}/planning/monthly`, {
@@ -26466,7 +26466,7 @@ const MonthlyPlanningSystem = () => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const planData = {
         ...newPlan,
         created_by: user.id,
@@ -26501,7 +26501,7 @@ const MonthlyPlanningSystem = () => {
 
   const handleCreatePlan = async (planData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/planning/create`, planData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -26514,7 +26514,7 @@ const MonthlyPlanningSystem = () => {
 
   const handleUpdatePlanStatus = async (planId, status) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/planning/${planId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -27214,7 +27214,7 @@ const RepClinicRegistration = ({ user }) => {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const clinicPayload = {
         ...clinicData,
         // معلومات العيادة العادية
@@ -27491,7 +27491,7 @@ const AdminClinicsWithTracking = () => {
   const fetchClinicsWithTracking = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/admin/clinics-with-tracking`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28047,7 +28047,7 @@ const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
 
   const handleAddNote = async (visitId, note) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/planning/visits/${visitId}/notes`, { note }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28067,7 +28067,7 @@ const PlanViewModal = ({ plan, canEdit, onClose, onUpdate }) => {
 
   const handleUpdateVisitStatus = async (visitId, status) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.patch(`${API}/planning/visits/${visitId}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28320,7 +28320,7 @@ const LinesManagement = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
       const [linesRes, areasRes, usersRes, productsRes] = await Promise.all([
@@ -28344,7 +28344,7 @@ const LinesManagement = () => {
 
   const createLine = async (lineData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/lines`, lineData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28359,7 +28359,7 @@ const LinesManagement = () => {
 
   const updateLine = async (lineId, lineData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/lines/${lineId}`, lineData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28373,7 +28373,7 @@ const LinesManagement = () => {
 
   const createArea = async (areaData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.post(`${API}/areas`, areaData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28388,7 +28388,7 @@ const LinesManagement = () => {
 
   const updateArea = async (areaId, areaData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/areas/${areaId}`, areaData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -28403,7 +28403,7 @@ const LinesManagement = () => {
   const deleteArea = async (areaId) => {
     if (window.confirm('هل أنت متأكد من حذف هذه المنطقة؟')) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         await axios.delete(`${API}/areas/${areaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -28420,7 +28420,7 @@ const LinesManagement = () => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الخط؟')) return;
     
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.delete(`${API}/lines/${lineId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29329,7 +29329,7 @@ const AdvancedUserManagement = () => {
   const loadEnhancedUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/enhanced`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29343,7 +29343,7 @@ const AdvancedUserManagement = () => {
 
   const viewUserPerformance = async (user) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/users/${user.id}/performance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29684,7 +29684,7 @@ const ProfessionalClinicsManagement = () => {
   const loadEnhancedClinics = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics/enhanced`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29698,7 +29698,7 @@ const ProfessionalClinicsManagement = () => {
 
   const viewClinicProfile = async (clinic) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${API}/clinics/${clinic.id}/mini-profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -29712,7 +29712,7 @@ const ProfessionalClinicsManagement = () => {
 
   const updateClinicClassification = async (clinicId, classification, notes) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await axios.put(`${API}/clinics/${clinicId}/classification`, {
         classification,
         notes
