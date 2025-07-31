@@ -27454,12 +27454,32 @@ const RepClinicRegistration = ({ user }) => {
     }));
   };
 
-  const handleMapClick = (latitude, longitude) => {
+  const handleMapClick = (location) => {
+    // Handle both object format {lat, lng} and separate parameters
+    let latitude, longitude;
+    
+    if (typeof location === 'object' && location.lat !== undefined) {
+      latitude = location.lat;
+      longitude = location.lng;
+    } else {
+      // Fallback for separate parameters (latitude, longitude)
+      latitude = location;
+      longitude = arguments[1];
+    }
+    
+    console.log('Map clicked at:', latitude, longitude);
+    
     setClinicData(prev => ({
       ...prev,
       latitude,
       longitude
     }));
+    
+    // Show success message
+    setSuccess(`تم تحديد موقع العيادة بنجاح! الإحداثيات: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => setSuccess(''), 3000);
   };
 
   const handleSubmit = async (e) => {
