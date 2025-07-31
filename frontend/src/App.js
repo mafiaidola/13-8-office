@@ -17284,10 +17284,20 @@ const VisitRegistration = () => {
                       <button
                         type="button"
                         onClick={() => convertVoiceToText(note.id)}
-                        className="btn-secondary text-xs px-3 py-1"
+                        className="btn-secondary text-xs px-3 py-1 flex items-center gap-1"
                         disabled={isLoading}
                       >
-                        📝 تحويل لنص
+                        {isLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                            <span>معالجة...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>📝</span>
+                            <span>تحويل لنص</span>
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -17302,6 +17312,24 @@ const VisitRegistration = () => {
               </div>
             )}
           </div>
+
+          {/* Additional Notes from Voice Conversion */}
+          {additionalNotes && (
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 text-green-700">ملاحظات إضافية (محولة من الصوت)</label>
+              <textarea
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                rows={6}
+                className="w-full p-3 rounded-lg border border-green-300 border-opacity-50 bg-green-50 bg-opacity-10"
+                placeholder="ستظهر هنا الملاحظات المحولة من التسجيلات الصوتية..."
+                readOnly={false}
+              />
+              <div className="text-xs text-green-600 mt-1">
+                💡 يمكنك تعديل هذه الملاحظات أو إضافة المزيد إليها
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submit Button */}
