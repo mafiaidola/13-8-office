@@ -27980,10 +27980,31 @@ const RepClinicRegistration = ({ user }) => {
                   <p className="text-sm text-gray-600">
                     انقر على الخريطة أو اسحب الدبوس الأحمر لتحديد موقع العيادة
                   </p>
+                  <div className="flex justify-center gap-4 mt-2 text-xs text-gray-500">
+                    <span>🎯 استخدم "دقة عالية" للحصول على موقع أكثر دقة</span>
+                    <span>🗺️ جرب عرض "مختلط" لرؤية أوضح</span>
+                  </div>
                   {(!clinicData.latitude || !clinicData.longitude) && (
-                    <p className="text-xs text-red-600 mt-1">
+                    <p className="text-xs text-red-600 mt-2">
                       ⚠️ يجب تحديد موقع العيادة لإكمال التسجيل
                     </p>
+                  )}
+                  {currentLocation && currentLocation.accuracy && (
+                    <div className="mt-2 text-xs">
+                      <span className="text-gray-500">دقة GPS الحالية: </span>
+                      <span className={`font-bold ${
+                        currentLocation.accuracy <= 10 ? 'text-green-600' :
+                        currentLocation.accuracy <= 50 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {Math.round(currentLocation.accuracy)} متر
+                      </span>
+                      {currentLocation.accuracy > 50 && (
+                        <span className="text-red-500 block mt-1">
+                          💡 للحصول على دقة أفضل، استخدم زر "دقة عالية" أو انتقل لمكان مفتوح
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
