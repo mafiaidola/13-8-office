@@ -27830,11 +27830,41 @@ const RepClinicRegistration = ({ user }) => {
 
               {clinicData.latitude && clinicData.longitude && (
                 <div className="bg-green-50 border border-green-200 rounded p-3">
-                  <p className="text-sm text-green-700">
-                    ✅ تم اختيار الموقع: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
+                  <p className="text-sm text-green-700 font-medium">
+                    ✅ تم تحديد موقع العيادة بنجاح
                   </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    الإحداثيات: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setClinicData(prev => ({ ...prev, latitude: null, longitude: null }))}
+                    className="text-xs text-red-600 hover:text-red-800 mt-2 underline"
+                  >
+                    إعادة تحديد الموقع
+                  </button>
                 </div>
               )}
+              
+              {/* زر استخدام موقعي الحالي للعيادة */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentLocation) {
+                    handleMapClick({
+                      lat: currentLocation.latitude,
+                      lng: currentLocation.longitude
+                    });
+                  } else {
+                    setError('لا يمكن تحديد موقعك الحالي');
+                  }
+                }}
+                className="w-full mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                disabled={!currentLocation}
+              >
+                <span>📍</span>
+                <span>استخدام موقعي الحالي للعيادة</span>
+              </button>
 
               {!clinicData.latitude && (
                 <div className="bg-blue-50 border border-blue-200 rounded p-3">
