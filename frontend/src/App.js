@@ -16747,6 +16747,7 @@ const VisitRegistration = () => {
   const [selectedClinic, setSelectedClinic] = useState('');
   const [doctorName, setDoctorName] = useState('');
   const [notes, setNotes] = useState('');
+  const [additionalNotes, setAdditionalNotes] = useState(''); // ملاحظات إضافية من تحويل الصوت
   const [voiceNotes, setVoiceNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [location, setLocation] = useState(null);
