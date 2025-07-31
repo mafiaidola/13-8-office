@@ -1,30 +1,58 @@
 {
-  "success_rate": 66.66666666666666,
-  "total_tests": 3,
-  "successful_tests": 2,
-  "critical_functions_working": false,
+  "success_rate": 100.0,
+  "total_tests": 7,
+  "successful_tests": 7,
+  "critical_functions_working": true,
   "test_results": [
     {
       "test": "تسجيل دخول الأدمن",
       "success": true,
       "message": "تم تسجيل الدخول بنجاح للمستخدم اسم محدث للاختبار بدور admin",
-      "response_time": 68.77923011779785,
-      "timestamp": "2025-07-31T10:13:51.264058"
+      "response_time": 48.653602600097656,
+      "timestamp": "2025-07-31T10:14:07.975099"
     },
     {
       "test": "البحث عن المندوبين الطبيين",
       "success": true,
       "message": "تم العثور على 20 مندوب طبي في النظام من إجمالي 43 مستخدم",
-      "response_time": 16.70384407043457,
-      "timestamp": "2025-07-31T10:13:51.281136"
+      "response_time": 15.882253646850586,
+      "timestamp": "2025-07-31T10:14:07.991311"
     },
     {
-      "test": "تسجيل دخول مندوب طبي موجود",
-      "success": false,
-      "message": "لم يتم العثور على كلمة مرور صحيحة للمندوب الطبي الموجود",
+      "test": "إنشاء مندوب طبي تجريبي",
+      "success": true,
+      "message": "تم إنشاء المندوب الطبي التجريبي بنجاح: مندوب طبي تجريبي (@test_medical_rep)",
+      "response_time": 54.41689491271973,
+      "timestamp": "2025-07-31T10:14:08.045862"
+    },
+    {
+      "test": "تسجيل دخول المندوب الطبي التجريبي",
+      "success": true,
+      "message": "تم تسجيل الدخول بنجاح للمندوب مندوب طبي تجريبي بدور medical_rep",
+      "response_time": 13.094186782836914,
+      "timestamp": "2025-07-31T10:14:08.059035"
+    },
+    {
+      "test": "تسجيل عيادة جديدة بواسطة المندوب الطبي",
+      "success": true,
+      "message": "تم تسجيل العيادة بنجاح: تم إنشاء العيادة بنجاح",
+      "response_time": 54.54850196838379,
+      "timestamp": "2025-07-31T10:14:08.113682"
+    },
+    {
+      "test": "وصول المندوب الطبي لقائمة العيادات",
+      "success": true,
+      "message": "تم الوصول بنجاح لقائمة العيادات: 0 عيادة متاحة",
+      "response_time": 14.126300811767578,
+      "timestamp": "2025-07-31T10:14:08.127887"
+    },
+    {
+      "test": "جاهزية النظام لتسجيل العيادات",
+      "success": true,
+      "message": "الـ endpoints المتاحة: /clinics (HTTP 200), /doctors (HTTP 200), /visits (HTTP 200)",
       "response_time": null,
-      "timestamp": "2025-07-31T10:13:51.458138"
+      "timestamp": "2025-07-31T10:14:08.267790"
     }
   ],
-  "total_time": 0.26303553581237793
+  "total_time": 0.3415257930755615
 }
