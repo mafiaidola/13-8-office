@@ -18905,8 +18905,8 @@ const MainApp = () => {
           <VisitRegistration />
         )}
 
-        {activeTab === 'register-clinic' && user.role === 'medical_rep' && (
-          <RepClinicRegistration user={user} />
+        {activeTab === 'register-clinic' && (['key_account', 'medical_rep'].includes(normalizeRole(user.role))) && (
+          <RepClinicRegistration />
         )}
 
         {activeTab === 'my-plan' && canAccessTab('my-plan') && (
@@ -19007,10 +19007,6 @@ const MainApp = () => {
 
         {activeTab === 'monthly-planning' && (['admin', 'gm', 'area_manager', 'district_manager'].includes(user.role)) && (
           <MonthlyPlanningSystem />
-        )}
-
-        {activeTab === 'register-clinic' && (['key_account', 'medical_rep'].includes(normalizeRole(user.role))) && (
-          <RepClinicRegistration />
         )}
 
         
