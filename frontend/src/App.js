@@ -3346,8 +3346,14 @@ const AuthProvider = ({ children }) => {
       console.log('🔑 Token stored in localStorage');
       
       console.log('🔑 About to call setUser with:', userData);
+      console.log('🔑 Current user state before setUser:', user);
       setUser(userData);
       console.log('🔑 setUser called - user state should update now');
+      
+      // Force a re-render by logging the state change
+      setTimeout(() => {
+        console.log('🔑 User state after setUser (500ms later):', user);
+      }, 500);
       
       return { success: true };
     } catch (error) {
