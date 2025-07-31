@@ -113,23 +113,35 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     }
   }, [latitude, longitude, onLocationSelect, currentLocation]);
 
-  // Wait for Google Maps to load
+  // Wait for Google Maps to load with better error handling
   useEffect(() => {
-    let checkInterval;
+    let mounted = true;
     
-    if (!isMapReady && !checkGoogleMapsLoaded()) {
-      checkInterval = setInterval(() => {
-        if (checkGoogleMapsLoaded()) {
+    const initializeGoogleMaps = async () => {
+      try {
+        await loadGoogleMapsScript();
+        if (mounted) {
           setIsMapReady(true);
-          clearInterval(checkInterval);
         }
-      }, 100);
-    } else if (checkGoogleMapsLoaded()) {
-      setIsMapReady(true);
+      } catch (error) {
+        console.error('Failed to load Google Maps:', error);
+        if (mounted) {
+          // Try fallback
+          setTimeout(() => {
+            if (checkGoogleMapsLoaded() && mounted) {
+              setIsMapReady(true);
+            }
+          }, 3000);
+        }
+      }
+    };
+
+    if (!isMapReady) {
+      initializeGoogleMaps();
     }
 
     return () => {
-      if (checkInterval) clearInterval(checkInterval);
+      mounted = false;
     };
   }, [isMapReady]);
 
