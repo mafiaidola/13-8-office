@@ -432,9 +432,48 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     <div className="w-full rounded-xl overflow-hidden relative">
       <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
       
-      {/* Control buttons */}
+      {/* Enhanced location control buttons */}
       {onLocationSelect && (
         <div className="absolute top-2 left-2 space-y-2">
+          <button
+            onClick={() => {
+              setIsLoadingLocation(true);
+              getHighAccuracyLocation()
+                .then((location) => {
+                  setCurrentLocation(location);
+                  setSelectedLocation(location);
+                  if (onLocationSelect) {
+                    onLocationSelect(location);
+                  }
+                  if (map) {
+                    map.setCenter(location);
+                    map.setZoom(19); // Very high zoom for accuracy
+                    updateDraggableMarker(map, location);
+                  }
+                  setIsLoadingLocation(false);
+                })
+                .catch((error) => {
+                  console.error('Error getting high accuracy location:', error);
+                  setIsLoadingLocation(false);
+                  alert('لا يمكن تحديد موقعك بدقة عالية. تأكد من تفعيل GPS وإعطاء الإذن للمتصفح.');
+                });
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg transition-colors flex items-center gap-2"
+            disabled={isLoadingLocation}
+          >
+            {isLoadingLocation ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>دقة عالية...</span>
+              </>
+            ) : (
+              <>
+                <span>🎯</span>
+                <span>دقة عالية</span>
+              </>
+            )}
+          </button>
+          
           <button
             onClick={() => {
               if (navigator.geolocation) {
@@ -443,7 +482,9 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
                   (position) => {
                     const location = {
                       lat: position.coords.latitude,
-                      lng: position.coords.longitude
+                      lng: position.coords.longitude,
+                      accuracy: position.coords.accuracy,
+                      timestamp: position.timestamp
                     };
                     setCurrentLocation(location);
                     setSelectedLocation(location);
@@ -460,6 +501,11 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
                     console.error('Error getting location:', error);
                     setIsLoadingLocation(false);
                     alert('لا يمكن تحديد موقعك الحالي. يرجى السماح للمتصفح بالوصول للموقع.');
+                  },
+                  {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
                   }
                 );
               }
@@ -481,6 +527,45 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
           </button>
         </div>
       )}
+      
+      {/* Accuracy indicator */}
+      {currentLocation && currentLocation.accuracy && (
+        <div className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-lg p-2 text-xs">
+          <div className="text-gray-600">دقة الموقع:</div>
+          <div className={`font-bold ${
+            currentLocation.accuracy <= 10 ? 'text-green-600' :
+            currentLocation.accuracy <= 50 ? 'text-yellow-600' :
+            'text-red-600'
+          }`}>
+            {Math.round(currentLocation.accuracy)}م
+          </div>
+          {currentLocation.accuracy > 50 && (
+            <div className="text-red-500 text-xs mt-1">⚠️ دقة منخفضة</div>
+          )}
+        </div>
+      )}
+      
+      {/* Map type controls */}
+      <div className="absolute bottom-2 left-2 space-x-2 flex">
+        <button
+          onClick={() => map && map.setMapTypeId('roadmap')}
+          className="bg-white hover:bg-gray-100 px-2 py-1 rounded text-xs shadow"
+        >
+          خريطة
+        </button>
+        <button
+          onClick={() => map && map.setMapTypeId('satellite')}
+          className="bg-white hover:bg-gray-100 px-2 py-1 rounded text-xs shadow"
+        >
+          قمر صناعي
+        </button>
+        <button
+          onClick={() => map && map.setMapTypeId('hybrid')}
+          className="bg-white hover:bg-gray-100 px-2 py-1 rounded text-xs shadow"
+        >
+          مختلط
+        </button>
+      </div>
       
       {/* Legend for different markers */}
       {(showCurrentLocation || showBothLocations || onLocationSelect) && (
