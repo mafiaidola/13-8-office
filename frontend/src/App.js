@@ -27265,11 +27265,45 @@ const RepClinicRegistration = ({ user }) => {
         }
       };
 
-      await axios.post(`${API}/clinics/register-by-rep`, clinicPayload, {
+      // إرسال طلب تسجيل العيادة مع تتبع مخفي
+      const response = await axios.post(`${API}/clinics`, clinicPayload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setSuccess('تم تسجيل العيادة بنجاح! العيادة معتمدة تلقائياً');
+      // تسجيل الحدث في سجل الأحداث للأدمن
+      await logAdminEvent({
+        action: 'clinic_registration',
+        user_id: currentUser?.id,
+        user_name: currentUser?.full_name || currentUser?.username,
+        details: {
+          clinic_name: clinicData.name,
+          clinic_location: {
+            latitude: clinicData.latitude,
+            longitude: clinicData.longitude
+          },
+          rep_location: currentLocation,
+          doctor_name: clinicData.doctor_name,
+          address: clinicData.address,
+          phone: clinicData.phone
+        },
+        timestamp: new Date().toISOString()
+      });
+
+      // تسجيل في Secret Location Tracking
+      await logSecretLocationTracking({
+        type: 'clinic_registration',
+        user_id: currentUser?.id,
+        user_name: currentUser?.full_name || currentUser?.username,
+        clinic_name: clinicData.name,
+        clinic_location: {
+          latitude: clinicData.latitude,
+          longitude: clinicData.longitude
+        },
+        rep_location: currentLocation,
+        timestamp: new Date().toISOString()
+      });
+
+      setSuccess('تم تسجيل العيادة بنجاح! تم حفظ جميع البيانات وتسجيل الحدث');
       
       // إعادة تعيين النموذج
       setClinicData({
