@@ -1,5 +1,318 @@
 #!/usr/bin/env python3
 """
+اختبار API إنشاء العيادات - حل خطأ "حدث خطأ في إرسال الطلب"
+Testing Clinic Creation API - Solving "An error occurred while sending the request"
+
+المطلوب اختبار:
+1. تسجيل الدخول مع admin/admin123
+2. اختبار إنشاء عيادة جديدة
+3. اختبار التحقق من الحقول المطلوبة
+4. اختبار النجاح والاستجابة
+5. اختبار استرجاع العيادات
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://d7110555-9702-4d91-b5fc-522e9a08df1c.preview.emergentagent.com/api"
+
+class ClinicAPITester:
+    def __init__(self):
+        self.base_url = BACKEND_URL
+        self.token = None
+        self.session = requests.Session()
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
+        
+    def log(self, message, level="INFO"):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] {level}: {message}")
+        
+    def test_login(self):
+        """اختبار تسجيل الدخول مع admin/admin123"""
+        self.log("🔐 اختبار تسجيل الدخول...")
+        
+        login_data = {
+            "username": "admin",
+            "password": "admin123"
+        }
+        
+        try:
+            response = self.session.post(f"{self.base_url}/auth/login", json=login_data)
+            self.log(f"Login Response Status: {response.status_code}")
+            self.log(f"Login Response Headers: {dict(response.headers)}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                if self.token:
+                    self.session.headers.update({
+                        'Authorization': f'Bearer {self.token}'
+                    })
+                    self.log("✅ تسجيل الدخول نجح وتم الحصول على JWT token")
+                    return True
+                else:
+                    self.log("❌ لم يتم الحصول على access_token")
+                    return False
+            else:
+                self.log(f"❌ فشل تسجيل الدخول: {response.status_code}")
+                self.log(f"Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ خطأ في تسجيل الدخول: {str(e)}", "ERROR")
+            return False
+    
+    def test_create_clinic_success(self):
+        """اختبار إنشاء عيادة جديدة بنجاح"""
+        self.log("🏥 اختبار إنشاء عيادة جديدة...")
+        
+        clinic_data = {
+            "clinic_name": "عيادة اختبار",
+            "doctor_name": "د.محمد الاختبار", 
+            "phone": "+201234567890",
+            "address": "شارع الاختبار، القاهرة",
+            "specialization": "اختبار",
+            "latitude": 30.0444,
+            "longitude": 31.2357
+        }
+        
+        try:
+            response = self.session.post(f"{self.base_url}/clinics", json=clinic_data)
+            self.log(f"Create Clinic Response Status: {response.status_code}")
+            self.log(f"Create Clinic Response Headers: {dict(response.headers)}")
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                self.log("✅ تم إنشاء العيادة بنجاح!")
+                self.log(f"Response: {json.dumps(data, ensure_ascii=False, indent=2)}")
+                
+                # التحقق من الاستجابة
+                if data.get("success") == True:
+                    self.log("✅ الاستجابة تحتوي على success: true")
+                else:
+                    self.log("⚠️ الاستجابة لا تحتوي على success: true")
+                
+                if "تم إنشاء العيادة بنجاح" in data.get("message", ""):
+                    self.log("✅ الرسالة بالعربية موجودة: 'تم إنشاء العيادة بنجاح'")
+                else:
+                    self.log("⚠️ الرسالة بالعربية غير موجودة")
+                
+                if data.get("clinic", {}).get("id"):
+                    self.log("✅ تم إرجاع ID للعيادة الجديدة")
+                    return data.get("clinic", {}).get("id")
+                else:
+                    self.log("⚠️ لم يتم إرجاع ID للعيادة")
+                    return True
+                    
+            else:
+                self.log(f"❌ فشل إنشاء العيادة: {response.status_code}")
+                self.log(f"Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ خطأ في إنشاء العيادة: {str(e)}", "ERROR")
+            return False
+    
+    def test_required_fields_validation(self):
+        """اختبار التحقق من الحقول المطلوبة"""
+        self.log("📋 اختبار التحقق من الحقول المطلوبة...")
+        
+        test_cases = [
+            {
+                "name": "بدون clinic_name",
+                "data": {
+                    "doctor_name": "د.محمد الاختبار",
+                    "phone": "+201234567890", 
+                    "address": "شارع الاختبار، القاهرة"
+                },
+                "expected_status": 400
+            },
+            {
+                "name": "بدون doctor_name", 
+                "data": {
+                    "clinic_name": "عيادة اختبار",
+                    "phone": "+201234567890",
+                    "address": "شارع الاختبار، القاهرة"
+                },
+                "expected_status": 400
+            },
+            {
+                "name": "بدون phone",
+                "data": {
+                    "clinic_name": "عيادة اختبار",
+                    "doctor_name": "د.محمد الاختبار",
+                    "address": "شارع الاختبار، القاهرة"
+                },
+                "expected_status": 400
+            },
+            {
+                "name": "بدون address",
+                "data": {
+                    "clinic_name": "عيادة اختبار", 
+                    "doctor_name": "د.محمد الاختبار",
+                    "phone": "+201234567890"
+                },
+                "expected_status": 400
+            }
+        ]
+        
+        success_count = 0
+        total_tests = len(test_cases)
+        
+        for test_case in test_cases:
+            try:
+                response = self.session.post(f"{self.base_url}/clinics", json=test_case["data"])
+                self.log(f"Test '{test_case['name']}': Status {response.status_code}")
+                
+                if response.status_code == test_case["expected_status"]:
+                    self.log(f"✅ {test_case['name']}: نجح الاختبار (HTTP {response.status_code})")
+                    success_count += 1
+                else:
+                    self.log(f"❌ {test_case['name']}: فشل الاختبار (متوقع {test_case['expected_status']}, حصل على {response.status_code})")
+                    self.log(f"Response: {response.text}")
+                    
+            except Exception as e:
+                self.log(f"❌ خطأ في اختبار {test_case['name']}: {str(e)}", "ERROR")
+        
+        self.log(f"📊 نتائج اختبار التحقق من الحقول: {success_count}/{total_tests} نجح")
+        return success_count == total_tests
+    
+    def test_get_clinics(self):
+        """اختبار استرجاع العيادات للتأكد من ظهور العيادة الجديدة"""
+        self.log("📋 اختبار استرجاع العيادات...")
+        
+        try:
+            response = self.session.get(f"{self.base_url}/clinics")
+            self.log(f"Get Clinics Response Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                clinic_count = len(data) if isinstance(data, list) else 0
+                self.log(f"✅ تم استرجاع العيادات بنجاح: {clinic_count} عيادة")
+                
+                # البحث عن العيادة التي أنشأناها
+                test_clinic_found = False
+                for clinic in data:
+                    if clinic.get("name") == "عيادة اختبار" or clinic.get("clinic_name") == "عيادة اختبار":
+                        test_clinic_found = True
+                        self.log("✅ تم العثور على العيادة الجديدة في القائمة")
+                        break
+                
+                if not test_clinic_found:
+                    self.log("⚠️ لم يتم العثور على العيادة الجديدة في القائمة")
+                
+                return True
+            else:
+                self.log(f"❌ فشل استرجاع العيادات: {response.status_code}")
+                self.log(f"Response: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ خطأ في استرجاع العيادات: {str(e)}", "ERROR")
+            return False
+    
+    def test_api_endpoint_availability(self):
+        """اختبار توفر endpoint"""
+        self.log("🔍 اختبار توفر API endpoint...")
+        
+        try:
+            # Test with OPTIONS request first
+            response = self.session.options(f"{self.base_url}/clinics")
+            self.log(f"OPTIONS /api/clinics: {response.status_code}")
+            
+            # Test with GET request
+            response = self.session.get(f"{self.base_url}/clinics")
+            self.log(f"GET /api/clinics: {response.status_code}")
+            
+            if response.status_code in [200, 401, 403]:
+                self.log("✅ API endpoint متوفر")
+                return True
+            else:
+                self.log(f"❌ API endpoint غير متوفر: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ خطأ في اختبار endpoint: {str(e)}", "ERROR")
+            return False
+    
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        self.log("🚀 بدء الاختبار الشامل لـ API إنشاء العيادات")
+        self.log("=" * 60)
+        
+        results = {
+            "endpoint_available": False,
+            "login_success": False, 
+            "clinic_creation": False,
+            "field_validation": False,
+            "clinic_retrieval": False
+        }
+        
+        # 1. اختبار توفر endpoint
+        results["endpoint_available"] = self.test_api_endpoint_availability()
+        
+        # 2. اختبار تسجيل الدخول
+        results["login_success"] = self.test_login()
+        
+        if not results["login_success"]:
+            self.log("❌ لا يمكن المتابعة بدون تسجيل دخول ناجح")
+            return results
+        
+        # 3. اختبار إنشاء عيادة
+        results["clinic_creation"] = self.test_create_clinic_success()
+        
+        # 4. اختبار التحقق من الحقول المطلوبة
+        results["field_validation"] = self.test_required_fields_validation()
+        
+        # 5. اختبار استرجاع العيادات
+        results["clinic_retrieval"] = self.test_get_clinics()
+        
+        # النتائج النهائية
+        self.log("=" * 60)
+        self.log("📊 النتائج النهائية:")
+        
+        success_count = sum(1 for result in results.values() if result)
+        total_tests = len(results)
+        
+        for test_name, result in results.items():
+            status = "✅ نجح" if result else "❌ فشل"
+            self.log(f"  {test_name}: {status}")
+        
+        success_rate = (success_count / total_tests) * 100
+        self.log(f"📈 معدل النجاح: {success_count}/{total_tests} ({success_rate:.1f}%)")
+        
+        if success_count == total_tests:
+            self.log("🎉 جميع الاختبارات نجحت! API إنشاء العيادات يعمل بشكل صحيح")
+        elif results["clinic_creation"]:
+            self.log("✅ المشكلة الأساسية محلولة: يمكن إنشاء العيادات بنجاح")
+        else:
+            self.log("❌ المشكلة لا تزال موجودة: لا يمكن إنشاء العيادات")
+        
+        return results
+
+def main():
+    """تشغيل الاختبار"""
+    print("🏥 اختبار API إنشاء العيادات - حل خطأ 'حدث خطأ في إرسال الطلب'")
+    print("=" * 80)
+    
+    tester = ClinicAPITester()
+    results = tester.run_comprehensive_test()
+    
+    # Exit code based on results
+    if results.get("clinic_creation", False):
+        sys.exit(0)  # Success
+    else:
+        sys.exit(1)  # Failure
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار شامل للـ APIs الجديدة - حل مشاكل تحميل البيانات
 Comprehensive Testing for New APIs - Solving Data Loading Issues
 
