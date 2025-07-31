@@ -19370,8 +19370,15 @@ const MainApp = () => {
           <ProfessionalClinicsManagement />
         )}
 
-        {activeTab === 'lines-management' && (['admin', 'gm', 'line_manager'].includes(user.role)) && (
-          <LinesManagement />
+        {/* Lines and Areas Management - ENHANCED FOR ADMIN ACCESS */}
+        {activeTab === 'lines-management' && (user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin' || ['admin', 'gm', 'line_manager'].includes(user.role)) && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white">🗺️ إدارة الخطوط والمناطق</h2>
+              <p className="text-gray-300">إدارة وتنظيم الخطوط والمناطق والمندوبين</p>
+            </div>
+            <LinesManagement />
+          </div>
         )}
 
         </div>
