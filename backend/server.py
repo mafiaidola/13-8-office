@@ -1687,8 +1687,8 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "is_active": True,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
-            "created_by": current_user["id"],
-            "created_by_name": current_user.get("full_name", "")
+            "created_by": current_user.id,
+            "created_by_name": current_user.full_name or ""
         }
 
         # Insert into database
