@@ -27162,6 +27162,8 @@ const RepClinicRegistration = ({ user }) => {
     address: '',
     phone: '',
     doctor_name: '',
+    clinic_class: 'Class A', // تصنيف العيادة
+    credit_status: 'green', // الحالة الائتمانية: green, yellow, red
     latitude: null,
     longitude: null,
     classification: 'class_c'
