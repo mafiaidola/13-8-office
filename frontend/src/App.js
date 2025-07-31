@@ -27662,7 +27662,16 @@ const RepClinicRegistration = ({ user }) => {
     try {
       const token = localStorage.getItem('access_token');
       const clinicPayload = {
-        ...clinicData,
+        // تطابق أسماء الحقول مع ما يتوقعه الباكند
+        clinic_name: clinicData.name,
+        address: clinicData.address,
+        phone: clinicData.phone,
+        doctor_name: clinicData.doctor_name,
+        classification: clinicData.clinic_class || clinicData.classification,
+        credit_status: clinicData.credit_status,
+        latitude: clinicData.latitude,
+        longitude: clinicData.longitude,
+        
         // معلومات العيادة العادية
         status: 'approved', // تلقائياً معتمدة بدون موافقة المدير
         added_by: currentUser?.id,
