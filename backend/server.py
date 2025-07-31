@@ -1692,10 +1692,12 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
         }
 
         # Insert into database
-        await db.clinics.insert_one(new_clinic)
+        result = await db.clinics.insert_one(new_clinic)
         
-        # Prepare response clinic data (handle datetime serialization)
+        # Prepare response clinic data (handle datetime serialization and remove _id)
         response_clinic = new_clinic.copy()
+        if "_id" in response_clinic:
+            del response_clinic["_id"]
         if "created_at" in response_clinic and isinstance(response_clinic["created_at"], datetime):
             response_clinic["created_at"] = response_clinic["created_at"].isoformat()
         if "updated_at" in response_clinic and isinstance(response_clinic["updated_at"], datetime):
