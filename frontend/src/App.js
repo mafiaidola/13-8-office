@@ -248,13 +248,21 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     }
   }, [map, currentLocation, selectedLocation, latitude, longitude, repLocation, showBothLocations, showCurrentLocation, onLocationSelect]);
 
-  if (!window.google || !window.google.maps) {
+  if (!isMapReady || (!window.google || !window.google.maps)) {
     return (
       <div className="h-80 glass-effect rounded-xl flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="font-bold">جاري تحميل الخريطة...</p>
-          <p className="text-sm opacity-75">Google Maps API</p>
+          <p className="text-sm opacity-75">انتظار Google Maps API</p>
+          {!window.google && (
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+            >
+              إعادة تحميل الصفحة
+            </button>
+          )}
         </div>
       </div>
     );
