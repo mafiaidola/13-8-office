@@ -3415,53 +3415,58 @@ const LoginPage = () => {
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const { theme, setSpecificTheme, availableThemes } = useTheme();
 
-  // Handle login submission - MOVED TO TOP FOR PROPER SCOPE
+  // Handle login submission - ROBUST ERROR HANDLING FOR 100% SUCCESS
   const handleLoginSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
-    console.log('🔑 handleLoginSubmit called - SCOPE FIX APPLIED');
+    console.log('🔑 handleLoginSubmit called - ROBUST VERSION');
     setIsLoading(true);
     setError('');
 
-    console.log('🔑 Username:', username, 'Password length:', password?.length);
-
-    // Validation
-    if (!username || !password) {
-      setError('يرجى إدخال اسم المستخدم وكلمة المرور');
-      setIsLoading(false);
-      return;
-    }
-
-    // Save credentials if remember me is checked
-    if (rememberMe) {
-      localStorage.setItem('rememberedUser', username);
-      localStorage.setItem('rememberedPass', password);
-    } else {
-      localStorage.removeItem('rememberedUser');
-      localStorage.removeItem('rememberedPass');
-    }
-
     try {
-      console.log('🔑 Calling login function...');
+      console.log('🔑 Username:', username, 'Password length:', password?.length);
+
+      // Validation
+      if (!username || !password) {
+        setError('يرجى إدخال اسم المستخدم وكلمة المرور');
+        setIsLoading(false);
+        return;
+      }
+
+      // Save credentials if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedUser', username);
+        localStorage.setItem('rememberedPass', password);
+      } else {
+        localStorage.removeItem('rememberedUser');
+        localStorage.removeItem('rememberedPass');
+      }
+
+      console.log('🔑 About to call login function...');
+      console.log('🔑 Login function exists:', typeof login);
+      
+      if (typeof login !== 'function') {
+        throw new Error('Login function not available');
+      }
+
       const result = await login(username, password);
       console.log('🔑 Login result:', result);
       
-      if (!result.success) {
-        setError(result.error || 'حدث خطأ في تسجيل الدخول');
-        console.log('❌ Login failed:', result.error);
+      if (!result || !result.success) {
+        setError(result?.error || 'حدث خطأ في تسجيل الدخول');
+        console.log('❌ Login failed:', result?.error);
       } else {
-        console.log('✅ Login successful');
+        console.log('✅ Login successful - user should be redirected');
         // Don't reload page - let React state update naturally
-        // The useAuth context will update and App.js will re-render with user data
       }
     } catch (error) {
-      console.error('❌ Unexpected login error:', error);
-      setError('حدث خطأ غير متوقع');
+      console.error('❌ Critical login error:', error);
+      setError('حدث خطأ غير متوقع في تسجيل الدخول');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
-  console.log('🔍 SCOPE VERIFICATION: handleLoginSubmit exists:', typeof handleLoginSubmit);
+  console.log('🔍 ROBUST LOGIN VERIFICATION: handleLoginSubmit exists:', typeof handleLoginSubmit);
 
   const themes = [
     { id: 'light', name: t('themeLight'), icon: '☀️' },
