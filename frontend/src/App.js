@@ -288,6 +288,56 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     <div className="w-full rounded-xl overflow-hidden relative">
       <div ref={mapRef} style={{ width: '100%', height: '400px' }} />
       
+      {/* Control buttons */}
+      {onLocationSelect && (
+        <div className="absolute top-2 left-2 space-y-2">
+          <button
+            onClick={() => {
+              if (navigator.geolocation) {
+                setIsLoadingLocation(true);
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    const location = {
+                      lat: position.coords.latitude,
+                      lng: position.coords.longitude
+                    };
+                    setCurrentLocation(location);
+                    setSelectedLocation(location);
+                    if (onLocationSelect) {
+                      onLocationSelect(location);
+                    }
+                    if (map) {
+                      map.setCenter(location);
+                      updateDraggableMarker(map, location);
+                    }
+                    setIsLoadingLocation(false);
+                  },
+                  (error) => {
+                    console.error('Error getting location:', error);
+                    setIsLoadingLocation(false);
+                    alert('لا يمكن تحديد موقعك الحالي. يرجى السماح للمتصفح بالوصول للموقع.');
+                  }
+                );
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg transition-colors flex items-center gap-2"
+            disabled={isLoadingLocation}
+          >
+            {isLoadingLocation ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>جاري التحديد...</span>
+              </>
+            ) : (
+              <>
+                <span>📍</span>
+                <span>موقعي الحالي</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+      
       {/* Legend for different markers */}
       {(showCurrentLocation || showBothLocations || onLocationSelect) && (
         <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-xs shadow-lg">
