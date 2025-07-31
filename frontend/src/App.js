@@ -27379,10 +27379,6 @@ const RepClinicRegistration = ({ user }) => {
               <span>تسجيل تلقائي للأحداث</span>
             </div>
             <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-success)' }}>
-              <span>📍</span>
-              <span>تتبع الموقع السري</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-success)' }}>
               <span>⚡</span>
               <span>اعتماد فوري</span>
             </div>
