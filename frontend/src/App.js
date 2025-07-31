@@ -3386,7 +3386,6 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// Login Component
 // Enhanced Login Page with Logo Support
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -3412,7 +3411,7 @@ const LoginPage = () => {
   const [supportSubmitting, setSupportSubmitting] = useState(false);
   const [supportSuccess, setSupportSuccess] = useState(false);
 
-  const { login } = useAuth();
+  const { login } = useAuth();  // Use the login function from AuthProvider
   const { language, changeLanguage, t, isRTL } = useLanguage();
   const { theme, setSpecificTheme, availableThemes } = useTheme();
 
