@@ -11634,6 +11634,7 @@ const EnhancedUserManagement = () => {
                 <option value="">اختر إجراء</option>
                 <option value="activate">تنشيط المحدد</option>
                 <option value="deactivate">تعطيل المحدد</option>
+                <option value="delete">حذف المحدد</option>
               </select>
             </div>
             <div className="flex items-end gap-2">
