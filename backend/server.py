@@ -1434,20 +1434,15 @@ async def get_products(current_user: User = Depends(get_current_user)):
     try:
         products = await db.products.find({}, {"_id": 0}).to_list(1000)
         
-        # Check user role once for price visibility
+        # Check user role for price visibility - FIXED: Include 'admin' role properly
         user_role = getattr(current_user, 'role', None)
-        print(f"🔍 PRICE VISIBILITY DEBUG: User role is: {user_role}")
-        should_hide_prices = user_role not in ["admin", "gm", "accounting", "محاسبة"]
         
-        print(f"🔍 PRICE VISIBILITY DEBUG: Should hide prices: {should_hide_prices}")
-        print(f"🔍 PRICE VISIBILITY DEBUG: Products count: {len(products)}")
+        # Admin, GM, and accounting roles can see prices
+        can_see_prices = user_role in ["admin", "gm", "accounting", "محاسبة", UserRole.ADMIN, UserRole.GM]
         
-        if should_hide_prices:
-            print(f"🔍 PRICE VISIBILITY DEBUG: Hiding prices for user role: {user_role}")
-        else:
-            print(f"🔍 PRICE VISIBILITY DEBUG: Showing prices for authorized user role: {user_role}")
+        print(f"🔍 PRODUCTS DEBUG: User role: {user_role}, Can see prices: {can_see_prices}, Products found: {len(products)}")
         
-        # Enrich products with line names if missing and handle price visibility
+        # Enrich products with line names if missing
         for i, product in enumerate(products):
             if not product.get("line_name") and product.get("line_id"):
                 line = await db.lines.find_one({"id": product["line_id"]})
@@ -1459,25 +1454,19 @@ async def get_products(current_user: User = Depends(get_current_user)):
                         {"$set": {"line_name": line["name"]}}
                     )
             
-            # Hide prices for non-admin/accounting users
-            if should_hide_prices:
-                print(f"🔍 PRICE VISIBILITY DEBUG: Processing product {i+1}, has price before: {'price' in product}")
+            # Handle datetime serialization
+            if "created_at" in product and isinstance(product["created_at"], datetime):
+                product["created_at"] = product["created_at"].isoformat()
+            if "updated_at" in product and isinstance(product["updated_at"], datetime):
+                product["updated_at"] = product["updated_at"].isoformat()
+            
+            # Hide prices ONLY for non-authorized users (not admin)
+            if not can_see_prices:
                 # Remove all price-related fields for non-authorized users
-                if "price" in product:
-                    del product["price"]
-                    print(f"🔍 PRICE VISIBILITY DEBUG: Removed price from product {i+1}")
-                if "price_type" in product:
-                    del product["price_type"]
-                    print(f"🔍 PRICE VISIBILITY DEBUG: Removed price_type from product {i+1}")
-                if "unit_price" in product:
-                    del product["unit_price"]
-                # Remove any legacy pricing fields
-                for price_field in ["price_1", "price_10", "price_25", "price_50", "price_100"]:
+                for price_field in ["price", "price_type", "unit_price", "price_1", "price_10", "price_25", "price_50", "price_100"]:
                     if price_field in product:
                         del product[price_field]
-                print(f"🔍 PRICE VISIBILITY DEBUG: Product {i+1} has price after: {'price' in product}")
         
-        print(f"🔍 PRICE VISIBILITY DEBUG: Returning {len(products)} products")
         return products
     
     except Exception as e:
