@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useRef, useCallb
 import "./App.css";
 import axios from "axios";
 
-// Enhanced Google Maps Component with Current Location and Draggable Pin
+// Enhanced Google Maps Component with better initialization
 const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLocation = true, repLocation = null, showBothLocations = false }) => {
   const mapRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -10,6 +10,12 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   const [map, setMap] = useState(null);
   const [draggableMarker, setDraggableMarker] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+
+  // Enhanced Google Maps loader
+  const checkGoogleMapsLoaded = () => {
+    return window.google && window.google.maps && window.google.maps.Map;
+  };
 
   // Get current location when component mounts
   useEffect(() => {
@@ -50,47 +56,71 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     }
   }, [latitude, longitude, onLocationSelect, currentLocation]);
 
+  // Wait for Google Maps to load
+  useEffect(() => {
+    let checkInterval;
+    
+    if (!isMapReady && !checkGoogleMapsLoaded()) {
+      checkInterval = setInterval(() => {
+        if (checkGoogleMapsLoaded()) {
+          setIsMapReady(true);
+          clearInterval(checkInterval);
+        }
+      }, 100);
+    } else if (checkGoogleMapsLoaded()) {
+      setIsMapReady(true);
+    }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
+  }, [isMapReady]);
+
   // Initialize map
   useEffect(() => {
-    if (window.google && window.google.maps && mapRef.current && !map && (currentLocation || latitude)) {
-      const mapCenter = {
-        lat: latitude || currentLocation?.lat || 30.0444,
-        lng: longitude || currentLocation?.lng || 31.2357
-      };
-
-      const newMap = new window.google.maps.Map(mapRef.current, {
-        zoom: 16, // Higher zoom for better precision
-        center: mapCenter,
-        mapTypeControl: true,
-        streetViewControl: false,
-        fullscreenControl: true,
-        zoomControl: true,
-        gestureHandling: 'greedy',
-        styles: [
-          {
-            featureType: "poi.business",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }]
-          }
-        ]
-      });
-
-      // Add click listener for manual selection
-      newMap.addListener('click', (event) => {
-        const location = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng()
+    if (isMapReady && mapRef.current && !map && (currentLocation || latitude)) {
+      try {
+        const mapCenter = {
+          lat: latitude || currentLocation?.lat || 30.0444,
+          lng: longitude || currentLocation?.lng || 31.2357
         };
-        setSelectedLocation(location);
-        if (onLocationSelect) {
-          onLocationSelect(location);
-        }
-        updateDraggableMarker(newMap, location);
-      });
 
-      setMap(newMap);
+        const newMap = new window.google.maps.Map(mapRef.current, {
+          zoom: 16,
+          center: mapCenter,
+          mapTypeControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true,
+          gestureHandling: 'greedy',
+          styles: [
+            {
+              featureType: "poi.business",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }]
+            }
+          ]
+        });
+
+        // Add click listener for manual selection
+        newMap.addListener('click', (event) => {
+          const location = {
+            lat: event.latLng.lat(),
+            lng: event.latLng.lng()
+          };
+          setSelectedLocation(location);
+          if (onLocationSelect) {
+            onLocationSelect(location);
+          }
+          updateDraggableMarker(newMap, location);
+        });
+
+        setMap(newMap);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
     }
-  }, [currentLocation, latitude, longitude, map, onLocationSelect]);
+  }, [isMapReady, currentLocation, latitude, longitude, map, onLocationSelect]);
 
   // Update draggable marker
   const updateDraggableMarker = (mapInstance, location) => {
