@@ -2535,6 +2535,7 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
     phone: user?.phone || '',
     role: user?.role || 'medical_rep',
     region_id: user?.region_id || '',
+    line_id: user?.line_id || '',
     direct_manager_id: user?.direct_manager_id || '',
     address: user?.address || '',
     national_id: user?.national_id || '',
