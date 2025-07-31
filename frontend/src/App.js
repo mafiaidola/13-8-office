@@ -603,7 +603,7 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   );
 };
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://1384a96c-dfd0-4864-9b66-42a6296e94b5.preview.emergentagent.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 // Debug logging for environment variables
