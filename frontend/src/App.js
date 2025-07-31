@@ -3024,7 +3024,7 @@ const AuthProvider = ({ children }) => {
       const { access_token, user: userData } = response.data;
       console.log('🔑 Extracted data:', { access_token: access_token?.substring(0, 20) + '...', userData });
       
-      localStorage.setItem('token', access_token);
+      localStorage.setItem('access_token', access_token);
       console.log('🔑 Token stored in localStorage');
       
       console.log('🔑 About to call setUser with:', userData);
