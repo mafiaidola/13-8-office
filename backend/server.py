@@ -1557,7 +1557,7 @@ async def get_gamification_stats(current_user: User = Depends(get_current_user))
             "leaderboard": [
                 {"name": "أحمد محمد", "points": 1800, "rank": 1},
                 {"name": "محمد أحمد", "points": 1500, "rank": 2},
-                {"name": current_user.get("full_name", "المستخدم الحالي"), "points": 1250, "rank": 3}
+                {"name": getattr(current_user, "full_name", "المستخدم الحالي"), "points": 1250, "rank": 3}
             ]
         }
         
