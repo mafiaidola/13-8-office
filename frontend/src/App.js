@@ -18898,9 +18898,6 @@ const MainApp = () => {
           <RepClinicRegistration />
         )}
 
-        {activeTab === 'users' && canAccessTab('users') && (
-          <AdvancedUserManagement />
-        )}
         
         {activeTab === 'clinics' && canAccessTab('clinics') && (
           <ProfessionalClinicsManagement />
