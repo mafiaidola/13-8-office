@@ -1,5 +1,315 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لإصلاح مشكلة إضافة المستخدمين بعد تصحيح الـ endpoints
+Comprehensive test for fixing user addition issue after endpoint corrections
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://1384a96c-dfd0-4864-9b66-42a6296e94b5.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class BackendTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.jwt_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, details="", response_time=0):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ نجح" if success else "❌ فشل"
+        self.test_results.append({
+            "test": test_name,
+            "status": status,
+            "success": success,
+            "details": details,
+            "response_time": f"{response_time:.2f}ms"
+        })
+        print(f"{status} | {test_name} | {response_time:.2f}ms | {details}")
+    
+    def test_admin_login(self):
+        """اختبار تسجيل دخول الأدمن"""
+        print("\n🔐 اختبار تسجيل دخول الأدمن...")
+        start_time = time.time()
+        
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/auth/login",
+                json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
+                timeout=10
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.jwt_token = data["access_token"]
+                    self.session.headers.update({"Authorization": f"Bearer {self.jwt_token}"})
+                    user_info = data.get("user", {})
+                    details = f"مستخدم: {user_info.get('full_name', 'غير محدد')}, دور: {user_info.get('role', 'غير محدد')}"
+                    self.log_test("تسجيل دخول الأدمن", True, details, response_time)
+                    return True
+                else:
+                    self.log_test("تسجيل دخول الأدمن", False, "لا يوجد access_token في الاستجابة", response_time)
+            else:
+                self.log_test("تسجيل دخول الأدمن", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل دخول الأدمن", False, f"خطأ: {str(e)}", response_time)
+        
+        return False
+    
+    def test_get_all_users(self):
+        """اختبار جلب جميع المستخدمين"""
+        print("\n👥 اختبار جلب جميع المستخدمين...")
+        start_time = time.time()
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users", timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                if isinstance(users, list):
+                    user_count = len(users)
+                    # Count users by role
+                    role_counts = {}
+                    demo_users = 0
+                    real_users = 0
+                    
+                    for user in users:
+                        role = user.get('role', 'غير محدد')
+                        role_counts[role] = role_counts.get(role, 0) + 1
+                        
+                        # Check if it's a demo user (basic heuristic)
+                        username = user.get('username', '').lower()
+                        if 'demo' in username or 'test' in username or username in ['admin', 'manager', 'sales_rep']:
+                            demo_users += 1
+                        else:
+                            real_users += 1
+                    
+                    role_summary = ", ".join([f"{role}: {count}" for role, count in role_counts.items()])
+                    details = f"إجمالي: {user_count} مستخدم | حقيقيين: {real_users} | تجريبيين: {demo_users} | الأدوار: {role_summary}"
+                    self.log_test("جلب جميع المستخدمين", True, details, response_time)
+                    return users
+                else:
+                    self.log_test("جلب جميع المستخدمين", False, "الاستجابة ليست قائمة", response_time)
+            else:
+                self.log_test("جلب جميع المستخدمين", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("جلب جميع المستخدمين", False, f"خطأ: {str(e)}", response_time)
+        
+        return []
+    
+    def test_get_available_lines(self):
+        """اختبار جلب الخطوط المتاحة"""
+        print("\n📍 اختبار جلب الخطوط المتاحة...")
+        start_time = time.time()
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/lines", timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                lines = response.json()
+                if isinstance(lines, list):
+                    line_count = len(lines)
+                    if line_count > 0:
+                        first_line = lines[0]
+                        line_id = first_line.get('id')
+                        line_name = first_line.get('name', 'غير محدد')
+                        details = f"عدد الخطوط: {line_count} | أول خط: {line_name} (ID: {line_id})"
+                        self.log_test("جلب الخطوط المتاحة", True, details, response_time)
+                        return lines
+                    else:
+                        self.log_test("جلب الخطوط المتاحة", False, "لا توجد خطوط متاحة", response_time)
+                else:
+                    self.log_test("جلب الخطوط المتاحة", False, "الاستجابة ليست قائمة", response_time)
+            else:
+                self.log_test("جلب الخطوط المتاحة", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("جلب الخطوط المتاحة", False, f"خطأ: {str(e)}", response_time)
+        
+        return []
+    
+    def test_create_new_user(self, line_id=None):
+        """اختبار إنشاء مستخدم جديد مع البيانات المحدثة"""
+        print("\n➕ اختبار إنشاء مستخدم جديد...")
+        start_time = time.time()
+        
+        # User data as specified in the request
+        user_data = {
+            "username": "fixed_user_test",
+            "password": "test123",
+            "full_name": "مستخدم محدث مع الخط",
+            "email": "fixed@example.com",
+            "phone": "01555666777",
+            "role": "medical_rep",
+            "address": "عنوان محدث",
+            "is_active": True
+        }
+        
+        # Add line_id if available
+        if line_id:
+            user_data["line_id"] = line_id
+        
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/users",
+                json=user_data,
+                timeout=10
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    user_info = result.get("user", {})
+                    user_id = user_info.get("id")
+                    username = user_info.get("username")
+                    full_name = user_info.get("full_name")
+                    role = user_info.get("role")
+                    details = f"مستخدم جديد: {full_name} ({username}) | دور: {role} | ID: {user_id}"
+                    self.log_test("إنشاء مستخدم جديد", True, details, response_time)
+                    return user_info
+                else:
+                    message = result.get("message", "لا توجد رسالة")
+                    self.log_test("إنشاء مستخدم جديد", False, f"فشل الإنشاء: {message}", response_time)
+            else:
+                self.log_test("إنشاء مستخدم جديد", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("إنشاء مستخدم جديد", False, f"خطأ: {str(e)}", response_time)
+        
+        return None
+    
+    def test_verify_new_user_in_list(self, target_username="fixed_user_test"):
+        """اختبار التأكد من ظهور المستخدم الجديد في القائمة"""
+        print("\n🔍 اختبار التأكد من ظهور المستخدم الجديد...")
+        start_time = time.time()
+        
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users", timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                if isinstance(users, list):
+                    # Look for the new user
+                    new_user = None
+                    for user in users:
+                        if user.get('username') == target_username:
+                            new_user = user
+                            break
+                    
+                    if new_user:
+                        full_name = new_user.get('full_name', 'غير محدد')
+                        role = new_user.get('role', 'غير محدد')
+                        email = new_user.get('email', 'غير محدد')
+                        phone = new_user.get('phone', 'غير محدد')
+                        details = f"المستخدم موجود: {full_name} | دور: {role} | إيميل: {email} | هاتف: {phone}"
+                        self.log_test("التأكد من ظهور المستخدم الجديد", True, details, response_time)
+                        return True
+                    else:
+                        total_users = len(users)
+                        usernames = [u.get('username', 'غير محدد') for u in users[:5]]  # First 5 usernames
+                        details = f"المستخدم غير موجود | إجمالي المستخدمين: {total_users} | أمثلة: {', '.join(usernames)}"
+                        self.log_test("التأكد من ظهور المستخدم الجديد", False, details, response_time)
+                else:
+                    self.log_test("التأكد من ظهور المستخدم الجديد", False, "الاستجابة ليست قائمة", response_time)
+            else:
+                self.log_test("التأكد من ظهور المستخدم الجديد", False, f"HTTP {response.status_code}: {response.text}", response_time)
+        
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("التأكد من ظهور المستخدم الجديد", False, f"خطأ: {str(e)}", response_time)
+        
+        return False
+    
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء الاختبار الشامل لإصلاح مشكلة إضافة المستخدمين")
+        print("=" * 80)
+        
+        # Step 1: Admin login
+        if not self.test_admin_login():
+            print("❌ فشل تسجيل دخول الأدمن - توقف الاختبار")
+            return
+        
+        # Step 2: Get all users (before adding new user)
+        initial_users = self.test_get_all_users()
+        initial_count = len(initial_users)
+        
+        # Step 3: Get available lines
+        available_lines = self.test_get_available_lines()
+        line_id = None
+        if available_lines:
+            line_id = available_lines[0].get('id')
+        
+        # Step 4: Create new user
+        new_user = self.test_create_new_user(line_id)
+        
+        # Step 5: Verify new user appears in list
+        user_found = self.test_verify_new_user_in_list()
+        
+        # Step 6: Get all users again (after adding new user)
+        final_users = self.test_get_all_users()
+        final_count = len(final_users)
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("📊 ملخص نتائج الاختبار الشامل")
+        print("=" * 80)
+        
+        success_count = sum(1 for result in self.test_results if result["success"])
+        total_tests = len(self.test_results)
+        success_rate = (success_count / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"🎯 نسبة النجاح: {success_rate:.1f}% ({success_count}/{total_tests} اختبار نجح)")
+        print(f"👥 عدد المستخدمين قبل الإضافة: {initial_count}")
+        print(f"👥 عدد المستخدمين بعد الإضافة: {final_count}")
+        print(f"➕ تم إضافة: {final_count - initial_count} مستخدم جديد")
+        
+        if line_id:
+            print(f"📍 تم استخدام خط بـ ID: {line_id}")
+        else:
+            print("⚠️ لم يتم العثور على خطوط متاحة")
+        
+        print(f"⏱️ إجمالي وقت الاختبار: {time.time() - self.start_time:.2f} ثانية")
+        
+        print("\n📋 تفاصيل النتائج:")
+        for result in self.test_results:
+            print(f"  {result['status']} {result['test']} ({result['response_time']})")
+            if result['details']:
+                print(f"      {result['details']}")
+        
+        # Final assessment
+        print("\n🏁 التقييم النهائي:")
+        if success_rate >= 80:
+            print("✅ الاختبار نجح بشكل ممتاز! نظام إضافة المستخدمين يعمل بشكل صحيح.")
+        elif success_rate >= 60:
+            print("⚠️ الاختبار نجح جزئياً. هناك بعض المشاكل التي تحتاج إصلاح.")
+        else:
+            print("❌ الاختبار فشل. هناك مشاكل جدية في نظام إضافة المستخدمين.")
+        
+        return success_rate >= 60
+
+if __name__ == "__main__":
+    tester = BackendTester()
+    tester.run_comprehensive_test()
+"""
 اختبار API إنشاء العيادات - حل خطأ "حدث خطأ في إرسال الطلب"
 Testing Clinic Creation API - Solving "An error occurred while sending the request"
 
