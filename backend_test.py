@@ -1,5 +1,425 @@
 #!/usr/bin/env python3
 """
+اختبار شامل للـ APIs الجديدة - حل مشاكل تحميل البيانات
+Comprehensive Testing for New APIs - Solving Data Loading Issues
+
+المطلوب اختبار:
+1. نظام التحفيز المتكامل - GET /api/gamification/stats, GET /api/incentive/data
+2. نظام تتبع GPS المتقدم - GET /api/gps/locations, GET /api/gps/stats
+3. نظام التخطيط - GET /api/planning/data
+4. إدارة العيادات المطور - GET /api/clinics, GET /api/clinics/stats
+5. سجل تسجيل الدخول - GET /api/admin/login-records
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://d7110555-9702-4d91-b5fc-522e9a08df1c.preview.emergentagent.com/api"
+ADMIN_CREDENTIALS = {"username": "admin", "password": "admin123"}
+
+class BackendTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.token = None
+        self.test_results = []
+        self.total_tests = 0
+        self.passed_tests = 0
+        
+    def log_test(self, test_name, success, details="", expected="", actual=""):
+        """تسجيل نتيجة الاختبار"""
+        self.total_tests += 1
+        if success:
+            self.passed_tests += 1
+            status = "✅ نجح"
+        else:
+            status = "❌ فشل"
+            
+        result = {
+            "test": test_name,
+            "status": status,
+            "success": success,
+            "details": details,
+            "expected": expected,
+            "actual": actual,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        print(f"{status} - {test_name}")
+        if details:
+            print(f"   📝 {details}")
+        if not success and expected:
+            print(f"   🎯 متوقع: {expected}")
+            print(f"   📊 فعلي: {actual}")
+        print()
+
+    def login_admin(self):
+        """تسجيل دخول الأدمن"""
+        try:
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json=ADMIN_CREDENTIALS)
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+                self.log_test("تسجيل دخول الأدمن", True, f"تم الحصول على JWT token بنجاح")
+                return True
+            else:
+                self.log_test("تسجيل دخول الأدمن", False, f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("تسجيل دخول الأدمن", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def test_gamification_stats(self):
+        """اختبار نظام التحفيز - GET /api/gamification/stats"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/gamification/stats")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من البنية المطلوبة
+                required_fields = ["success", "data"]
+                if all(field in data for field in required_fields):
+                    stats_data = data["data"]
+                    stats_fields = ["total_points", "current_level", "achievements", "leaderboard"]
+                    
+                    if all(field in stats_data for field in stats_fields):
+                        self.log_test("نظام التحفيز - إحصائيات", True, 
+                                    f"النقاط: {stats_data['total_points']}, المستوى: {stats_data['current_level']}, الإنجازات: {len(stats_data['achievements'])}")
+                        return True
+                    else:
+                        missing = [f for f in stats_fields if f not in stats_data]
+                        self.log_test("نظام التحفيز - إحصائيات", False, 
+                                    f"حقول مفقودة في البيانات: {missing}")
+                        return False
+                else:
+                    self.log_test("نظام التحفيز - إحصائيات", False, 
+                                f"بنية الاستجابة غير صحيحة: {data}")
+                    return False
+            else:
+                self.log_test("نظام التحفيز - إحصائيات", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("نظام التحفيز - إحصائيات", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_incentive_data(self):
+        """اختبار بيانات التحفيز - GET /api/incentive/data"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/incentive/data")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من وجود بيانات التحفيز
+                if "success" in data and data["success"]:
+                    incentive_data = data.get("data", {})
+                    expected_fields = ["weekly_challenges", "monthly_goals", "point_history", "rewards"]
+                    
+                    found_fields = [f for f in expected_fields if f in incentive_data]
+                    if found_fields:
+                        self.log_test("بيانات التحفيز", True, 
+                                    f"تم العثور على: {', '.join(found_fields)}")
+                        return True
+                    else:
+                        self.log_test("بيانات التحفيز", False, 
+                                    f"لا توجد بيانات تحفيز متوقعة في الاستجابة")
+                        return False
+                else:
+                    self.log_test("بيانات التحفيز", False, 
+                                f"استجابة غير ناجحة: {data}")
+                    return False
+            else:
+                self.log_test("بيانات التحفيز", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("بيانات التحفيز", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_gps_locations(self):
+        """اختبار مواقع GPS - GET /api/gps/locations"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/gps/locations")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من بيانات المواقع
+                if isinstance(data, list):
+                    self.log_test("مواقع GPS", True, 
+                                f"تم العثور على {len(data)} موقع GPS")
+                    return True
+                elif isinstance(data, dict) and "locations" in data:
+                    locations = data["locations"]
+                    self.log_test("مواقع GPS", True, 
+                                f"تم العثور على {len(locations)} موقع GPS")
+                    return True
+                else:
+                    self.log_test("مواقع GPS", False, 
+                                f"تنسيق بيانات غير متوقع: {type(data)}")
+                    return False
+            else:
+                self.log_test("مواقع GPS", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("مواقع GPS", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_gps_stats(self):
+        """اختبار إحصائيات GPS - GET /api/gps/stats"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/gps/stats")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من إحصائيات GPS
+                expected_fields = ["connected_users", "daily_visits", "coverage_areas", "active_tracking"]
+                found_fields = []
+                
+                if isinstance(data, dict):
+                    for field in expected_fields:
+                        if field in data:
+                            found_fields.append(field)
+                
+                if found_fields:
+                    self.log_test("إحصائيات GPS", True, 
+                                f"الحقول المتاحة: {', '.join(found_fields)}")
+                    return True
+                else:
+                    self.log_test("إحصائيات GPS", False, 
+                                f"لا توجد إحصائيات GPS متوقعة")
+                    return False
+            else:
+                self.log_test("إحصائيات GPS", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("إحصائيات GPS", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_planning_data(self):
+        """اختبار بيانات التخطيط - GET /api/planning/data"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/planning/data")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من بيانات التخطيط
+                expected_fields = ["monthly_goals", "current_progress", "weekly_schedule", "targets"]
+                found_fields = []
+                
+                if isinstance(data, dict):
+                    for field in expected_fields:
+                        if field in data:
+                            found_fields.append(field)
+                
+                if found_fields:
+                    self.log_test("بيانات التخطيط", True, 
+                                f"البيانات المتاحة: {', '.join(found_fields)}")
+                    return True
+                else:
+                    self.log_test("بيانات التخطيط", False, 
+                                f"لا توجد بيانات تخطيط متوقعة")
+                    return False
+            else:
+                self.log_test("بيانات التخطيط", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("بيانات التخطيط", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_clinics_enhanced(self):
+        """اختبار إدارة العيادات المطور - GET /api/clinics"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/clinics")
+            if response.status_code == 200:
+                data = response.json()
+                
+                if isinstance(data, list):
+                    clinics_count = len(data)
+                    
+                    # التحقق من جودة البيانات
+                    if clinics_count > 0:
+                        sample_clinic = data[0]
+                        required_fields = ["id", "name"]
+                        has_required = all(field in sample_clinic for field in required_fields)
+                        
+                        if has_required:
+                            self.log_test("إدارة العيادات المطور", True, 
+                                        f"تم العثور على {clinics_count} عيادة مع بيانات صحيحة")
+                            return True
+                        else:
+                            self.log_test("إدارة العيادات المطور", False, 
+                                        f"بيانات العيادات ناقصة - الحقول المطلوبة مفقودة")
+                            return False
+                    else:
+                        self.log_test("إدارة العيادات المطور", True, 
+                                    f"لا توجد عيادات في النظام (قاعدة بيانات فارغة)")
+                        return True
+                else:
+                    self.log_test("إدارة العيادات المطور", False, 
+                                f"تنسيق استجابة غير متوقع: {type(data)}")
+                    return False
+            else:
+                self.log_test("إدارة العيادات المطور", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("إدارة العيادات المطور", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_clinics_stats(self):
+        """اختبار إحصائيات العيادات - GET /api/clinics/stats"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/clinics/stats")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من إحصائيات العيادات
+                expected_fields = ["total_clinics", "active_clinics", "pending_approval", "debt_status"]
+                found_fields = []
+                
+                if isinstance(data, dict):
+                    for field in expected_fields:
+                        if field in data:
+                            found_fields.append(field)
+                
+                if found_fields:
+                    self.log_test("إحصائيات العيادات", True, 
+                                f"الإحصائيات المتاحة: {', '.join(found_fields)}")
+                    return True
+                else:
+                    self.log_test("إحصائيات العيادات", False, 
+                                f"لا توجد إحصائيات عيادات متوقعة")
+                    return False
+            else:
+                self.log_test("إحصائيات العيادات", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("إحصائيات العيادات", False, f"خطأ: {str(e)}")
+            return False
+
+    def test_admin_login_records(self):
+        """اختبار سجل تسجيل الدخول - GET /api/admin/login-records"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/admin/login-records")
+            if response.status_code == 200:
+                data = response.json()
+                
+                # التحقق من سجلات تسجيل الدخول
+                if isinstance(data, list):
+                    self.log_test("سجل تسجيل الدخول", True, 
+                                f"تم العثور على {len(data)} سجل تسجيل دخول")
+                    return True
+                elif isinstance(data, dict) and "records" in data:
+                    records = data["records"]
+                    self.log_test("سجل تسجيل الدخول", True, 
+                                f"تم العثور على {len(records)} سجل تسجيل دخول")
+                    return True
+                else:
+                    self.log_test("سجل تسجيل الدخول", False, 
+                                f"تنسيق بيانات غير متوقع: {type(data)}")
+                    return False
+            elif response.status_code == 403:
+                self.log_test("سجل تسجيل الدخول", False, 
+                            f"ممنوع - تحقق من صلاحيات الأدمن")
+                return False
+            else:
+                self.log_test("سجل تسجيل الدخول", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("سجل تسجيل الدخول", False, f"خطأ: {str(e)}")
+            return False
+
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء الاختبار الشامل للـ APIs الجديدة - حل مشاكل تحميل البيانات")
+        print("=" * 80)
+        print()
+
+        # تسجيل الدخول أولاً
+        if not self.login_admin():
+            print("❌ فشل في تسجيل الدخول - إيقاف الاختبارات")
+            return
+
+        print("📋 اختبار الـ APIs المطلوبة:")
+        print()
+
+        # 1. نظام التحفيز المتكامل
+        print("1️⃣ نظام التحفيز المتكامل:")
+        self.test_gamification_stats()
+        self.test_incentive_data()
+
+        # 2. نظام تتبع GPS المتقدم  
+        print("2️⃣ نظام تتبع GPS المتقدم:")
+        self.test_gps_locations()
+        self.test_gps_stats()
+
+        # 3. نظام التخطيط
+        print("3️⃣ نظام التخطيط:")
+        self.test_planning_data()
+
+        # 4. إدارة العيادات المطور
+        print("4️⃣ إدارة العيادات المطور:")
+        self.test_clinics_enhanced()
+        self.test_clinics_stats()
+
+        # 5. سجل تسجيل الدخول
+        print("5️⃣ سجل تسجيل الدخول:")
+        self.test_admin_login_records()
+
+        # النتائج النهائية
+        self.print_final_results()
+
+    def print_final_results(self):
+        """طباعة النتائج النهائية"""
+        print("=" * 80)
+        print("📊 النتائج النهائية:")
+        print()
+        
+        success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+        
+        print(f"✅ الاختبارات الناجحة: {self.passed_tests}")
+        print(f"❌ الاختبارات الفاشلة: {self.total_tests - self.passed_tests}")
+        print(f"📈 نسبة النجاح: {success_rate:.1f}%")
+        print()
+        
+        # تفاصيل الاختبارات الفاشلة
+        failed_tests = [test for test in self.test_results if not test["success"]]
+        if failed_tests:
+            print("❌ الاختبارات الفاشلة:")
+            for test in failed_tests:
+                print(f"   • {test['test']}: {test['details']}")
+            print()
+        
+        # تقييم عام
+        if success_rate >= 90:
+            print("🎉 ممتاز! جميع الـ APIs تعمل بشكل صحيح")
+        elif success_rate >= 70:
+            print("✅ جيد! معظم الـ APIs تعمل مع بعض المشاكل البسيطة")
+        elif success_rate >= 50:
+            print("⚠️ متوسط! يحتاج إصلاحات في عدة APIs")
+        else:
+            print("❌ ضعيف! يحتاج عمل كبير لإصلاح الـ APIs")
+        
+        print()
+        print("🎯 الهدف: استبدال 'فشل في تحميل البيانات' ببيانات حقيقية")
+        
+        if success_rate >= 80:
+            print("✅ تم تحقيق الهدف بنجاح!")
+        else:
+            print("❌ الهدف لم يتحقق بعد - يحتاج مزيد من العمل")
+
+if __name__ == "__main__":
+    tester = BackendTester()
+    tester.run_comprehensive_test()
+"""
 اختبار نهائي شامل لنظام إدارة المنتجات بعد الإصلاحات
 Final Comprehensive Test for Product Management System After Fixes
 
