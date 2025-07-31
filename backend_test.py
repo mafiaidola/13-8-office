@@ -335,6 +335,11 @@ class BackendTester:
                     self.log_test("سجل تسجيل الدخول", True, 
                                 f"تم العثور على {len(records)} سجل تسجيل دخول")
                     return True
+                elif isinstance(data, dict) and "data" in data:
+                    records = data["data"]
+                    self.log_test("سجل تسجيل الدخول", True, 
+                                f"تم العثور على {len(records)} سجل تسجيل دخول")
+                    return True
                 else:
                     self.log_test("سجل تسجيل الدخول", False, 
                                 f"تنسيق بيانات غير متوقع: {type(data)}")
