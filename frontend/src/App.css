@@ -4895,6 +4895,87 @@ input:checked + .slider:before {
   border-color: rgba(76, 175, 80, 0.2);
 }
 
+/* Clinic Classification Cards */
+.clinic-class-card {
+  @apply relative p-4 rounded-xl border border-white border-opacity-20 
+         cursor-pointer transition-all duration-300 text-center
+         hover:border-opacity-40 hover:scale-105 hover:shadow-lg;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.clinic-class-card.selected {
+  @apply border-blue-400 border-opacity-60 scale-105;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.clinic-class-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 mx-auto;
+  font-size: 1.5rem;
+}
+
+.clinic-class-label {
+  @apply text-sm font-medium;
+  color: var(--text-primary);
+}
+
+.clinic-class-card.selected .clinic-class-label {
+  @apply text-blue-300;
+}
+
+/* Credit Status Cards */
+.credit-status-card {
+  @apply relative p-4 rounded-xl border cursor-pointer transition-all duration-300
+         hover:scale-105 hover:shadow-lg flex items-center gap-3 min-h-[80px];
+  backdrop-filter: blur(10px);
+}
+
+.credit-status-card.green {
+  @apply border-green-300 bg-green-50 bg-opacity-10;
+}
+
+.credit-status-card.green.selected {
+  @apply border-green-400 border-opacity-80 bg-green-100 bg-opacity-20;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.credit-status-card.yellow {
+  @apply border-yellow-300 bg-yellow-50 bg-opacity-10;
+}
+
+.credit-status-card.yellow.selected {
+  @apply border-yellow-400 border-opacity-80 bg-yellow-100 bg-opacity-20;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+}
+
+.credit-status-card.red {
+  @apply border-red-300 bg-red-50 bg-opacity-10;
+}
+
+.credit-status-card.red.selected {
+  @apply border-red-400 border-opacity-80 bg-red-100 bg-opacity-20;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.credit-status-icon {
+  @apply text-2xl;
+}
+
+.credit-status-content {
+  @apply flex-1;
+}
+
+.credit-status-title {
+  @apply font-bold text-sm;
+  color: var(--text-primary);
+}
+
+.credit-status-desc {
+  @apply text-xs mt-1;
+  color: var(--text-secondary);
+}
+
 /* Role Badge Colors */
 .badge-red {
   @apply bg-red-100 text-red-800 border border-red-200;
