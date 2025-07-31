@@ -27387,6 +27387,36 @@ const RepClinicRegistration = ({ user }) => {
           </div>
         </div>
 
+        {/* حالة موقع المندوب */}
+        <div className="glass-effect p-4 rounded-xl mb-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <span>📍</span>
+              <span>حالة موقعك الحالي</span>
+            </h3>
+            <div className="flex items-center gap-2">
+              {currentLocation ? (
+                <div className="flex items-center gap-2 text-green-600">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">تم تحديد الموقع بنجاح</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-yellow-600">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">جاري تحديد الموقع...</span>
+                </div>
+              )}
+            </div>
+          </div>
+          {currentLocation && (
+            <div className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span>دقة الموقع: {Math.round(currentLocation.accuracy)}م</span>
+              <span className="mx-2">•</span>
+              <span>تم التحديث: {new Date(currentLocation.timestamp).toLocaleTimeString('ar-EG')}</span>
+            </div>
+          )}
+        </div>
+
         {/* تحذير الموقع */}
         {locationError && (
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
