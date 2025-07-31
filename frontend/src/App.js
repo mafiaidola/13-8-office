@@ -3477,9 +3477,9 @@ const LoginPage = () => {
     }
 
     try {
-      console.log('🔑 Calling performLogin function...');
-      const result = await performLogin(username, password);
-      console.log('🔑 PerformLogin result:', result);
+      console.log('🔑 Calling login function...');
+      const result = await login(username, password);
+      console.log('🔑 Login result:', result);
       
       if (!result.success) {
         setError(result.error || 'حدث خطأ في تسجيل الدخول');
