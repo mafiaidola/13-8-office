@@ -2724,30 +2724,68 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
 
           {/* Work Information */}
           <div className="glass-effect p-6 rounded-xl">
-            <h4 className="text-lg font-bold mb-4">معلومات العمل</h4>
+            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+              💼 معلومات العمل
+            </h4>
+            
+            {/* Job Title Selection Grid */}
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-4">المسمى الوظيفي *:</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {[
+                  { value: 'admin', label: 'مدير النظام', icon: '👑', color: 'from-purple-500 to-pink-600' },
+                  { value: 'gm', label: 'المدير العام', icon: '🏢', color: 'from-blue-500 to-indigo-600' },
+                  { value: 'line_manager', label: 'مدير الخط', icon: '📊', color: 'from-green-500 to-teal-600' },
+                  { value: 'area_manager', label: 'مدير المنطقة', icon: '🗺️', color: 'from-yellow-500 to-orange-600' },
+                  { value: 'district_manager', label: 'مدير المنطقة المحلية', icon: '📍', color: 'from-red-500 to-pink-600' },
+                  { value: 'key_account', label: 'حسابات رئيسية', icon: '🔑', color: 'from-indigo-500 to-purple-600' },
+                  { value: 'medical_rep', label: 'مندوب طبي', icon: '👨‍⚕️', color: 'from-cyan-500 to-blue-600' },
+                  { value: 'warehouse_keeper', label: 'أمين المخزن', icon: '📦', color: 'from-gray-500 to-slate-600' },
+                  { value: 'accounting', label: 'محاسب', icon: '🧮', color: 'from-emerald-500 to-green-600' }
+                ].map((role) => (
+                  <div
+                    key={role.value}
+                    className={`role-card ${formData.role === role.value ? 'selected' : ''}`}
+                    onClick={() => setFormData({...formData, role: role.value})}
+                  >
+                    <div className={`role-icon bg-gradient-to-br ${role.color}`}>
+                      {role.icon}
+                    </div>
+                    <div className="role-label">{role.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Additional Work Fields Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">المسمى الوظيفي *:</label>
+              {/* Line Assignment */}
+              <div className="work-field">
+                <label className="work-field-label">
+                  <span className="work-field-icon">🏷️</span>
+                  الخط:
+                </label>
                 <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  value={formData.line_id}
+                  onChange={(e) => setFormData({...formData, line_id: e.target.value})}
                   className="form-modern w-full"
-                  required
+                  disabled={loadingLines}
                 >
-                  <option value="">اختر الدور</option>
-                  <option value="admin">مدير النظام</option>
-                  <option value="gm">المدير العام</option>
-                  <option value="line_manager">مدير الخط</option>
-                  <option value="area_manager">مدير المنطقة</option>
-                  <option value="district_manager">مدير المنطقة المحلية</option>
-                  <option value="key_account">حسابات رئيسية</option>
-                  <option value="medical_rep">مندوب طبي</option>
-                  <option value="warehouse_keeper">أمين المخزن</option>
-                  <option value="accounting">محاسب</option>
+                  <option value="">{loadingLines ? 'جاري التحميل...' : 'اختر الخط'}</option>
+                  {availableLines.map(line => (
+                    <option key={line.id} value={line.id}>
+                      {line.name} ({line.code})
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">المنطقة:</label>
+
+              {/* Region */}
+              <div className="work-field">
+                <label className="work-field-label">
+                  <span className="work-field-icon">🌍</span>
+                  المنطقة:
+                </label>
                 <select
                   value={formData.region_id}
                   onChange={(e) => setFormData({...formData, region_id: e.target.value})}
@@ -2759,8 +2797,13 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">المدير المباشر:</label>
+
+              {/* Direct Manager */}
+              <div className="work-field">
+                <label className="work-field-label">
+                  <span className="work-field-icon">👤</span>
+                  المدير المباشر:
+                </label>
                 <select
                   value={formData.direct_manager_id}
                   onChange={(e) => setFormData({...formData, direct_manager_id: e.target.value})}
