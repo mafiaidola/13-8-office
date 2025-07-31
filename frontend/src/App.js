@@ -3499,51 +3499,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
-    console.log('🔑 handleLoginSubmit called');
-    setIsLoading(true);
-    setError('');
-
-    console.log('🔑 Username:', username, 'Password length:', password?.length);
-
-    // Validation
-    if (!username || !password) {
-      setError('يرجى إدخال اسم المستخدم وكلمة المرور');
-      setIsLoading(false);
-      return;
-    }
-
-    // Save credentials if remember me is checked
-    if (rememberMe) {
-      localStorage.setItem('rememberedUser', username);
-      localStorage.setItem('rememberedPass', password);
-    } else {
-      localStorage.removeItem('rememberedUser');
-      localStorage.removeItem('rememberedPass');
-    }
-
-    try {
-      console.log('🔑 Calling login function...');
-      const result = await login(username, password);
-      console.log('🔑 Login result:', result);
-      
-      if (!result.success) {
-        setError(result.error || 'حدث خطأ في تسجيل الدخول');
-        console.log('❌ Login failed:', result.error);
-      } else {
-        console.log('✅ Login successful');
-        // Don't reload page - let React state update naturally
-        // The useAuth context will update and App.js will re-render with user data
-      }
-    } catch (error) {
-      console.error('❌ Unexpected login error:', error);
-      setError('حدث خطأ غير متوقع');
-    }
-    
-    setIsLoading(false);
-  };
-
   const handleSupportSubmit = async (e) => {
     e.preventDefault();
     setSupportSubmitting(true);
