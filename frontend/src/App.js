@@ -18761,10 +18761,6 @@ const MainApp = () => {
           <ProfessionalDashboard stats={stats} user={user} userRole="admin" />
         )}
 
-        {activeTab === 'clinic-registration' && canAccessTab('clinic') && (
-          <ClinicRegistration />
-        )}
-
         {activeTab === 'clinics-management' && canAccessTab('clinics-management') && (
           <AdminClinicsWithTracking />
         )}
