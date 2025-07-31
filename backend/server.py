@@ -1536,6 +1536,297 @@ async def delete_product(product_id: str, current_user: User = Depends(get_curre
         raise HTTPException(status_code=500, detail="خطأ في حذف المنتج")
 
 
+# ============================================================================
+# GAMIFICATION/INCENTIVE SYSTEM APIs
+# ============================================================================
+
+@api_router.get("/gamification/stats")
+async def get_gamification_stats(current_user: User = Depends(get_current_user)):
+    """إحصائيات نظام التحفيز - Get gamification statistics"""
+    try:
+        # Mock data for development - should be replaced with real database queries
+        stats = {
+            "total_points": 1250,
+            "current_level": "الذهبي",
+            "next_level_points": 1500,
+            "achievements": [
+                {"id": "1", "name": "زيارة 50 عيادة", "icon": "🏆", "completed": True},
+                {"id": "2", "name": "هدف شهري 100%", "icon": "🎯", "completed": True},
+                {"id": "3", "name": "تحسين الأداء", "icon": "📈", "completed": False}
+            ],
+            "leaderboard": [
+                {"name": "أحمد محمد", "points": 1800, "rank": 1},
+                {"name": "محمد أحمد", "points": 1500, "rank": 2},
+                {"name": current_user.get("full_name", "المستخدم الحالي"), "points": 1250, "rank": 3}
+            ]
+        }
+        
+        return {"success": True, "data": stats}
+    
+    except Exception as e:
+        print(f"Error fetching gamification stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات التحفيز")
+
+
+@api_router.get("/incentive/data")
+async def get_incentive_data(current_user: User = Depends(get_current_user)):
+    """بيانات نظام التحفيز المتكامل - Get integrated incentive data"""
+    try:
+        # Mock incentive data
+        data = {
+            "current_month": {
+                "target": 100,
+                "achieved": 75,
+                "percentage": 75,
+                "reward": 1500
+            },
+            "weekly_challenges": [
+                {"name": "زيارة 15 عيادة", "progress": 12, "target": 15, "reward": 200},
+                {"name": "تسجيل 20 طلب", "progress": 18, "target": 20, "reward": 300},
+                {"name": "تحديث 10 ملفات", "progress": 8, "target": 10, "reward": 150}
+            ],
+            "bonuses": [
+                {"type": "هدف شهري", "amount": 500, "date": "2024-01-01"},
+                {"type": "أداء متميز", "amount": 300, "date": "2024-01-15"}
+            ]
+        }
+        
+        return {"success": True, "data": data}
+    
+    except Exception as e:
+        print(f"Error fetching incentive data: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات التحفيز")
+
+
+# ============================================================================
+# GPS TRACKING SYSTEM APIs
+# ============================================================================
+
+@api_router.get("/gps/locations")
+async def get_gps_locations(current_user: User = Depends(get_current_user)):
+    """مواقع GPS للمستخدمين - Get GPS locations"""
+    try:
+        # Mock GPS data
+        locations = [
+            {
+                "user_id": "user-1",
+                "user_name": "أحمد محمد",
+                "latitude": 30.0444,
+                "longitude": 31.2357,
+                "last_update": datetime.utcnow().isoformat(),
+                "status": "online",
+                "current_clinic": "عيادة د.محمد"
+            },
+            {
+                "user_id": "user-2", 
+                "user_name": "محمد أحمد",
+                "latitude": 30.0626,
+                "longitude": 31.2497,
+                "last_update": datetime.utcnow().isoformat(),
+                "status": "offline",
+                "current_clinic": "في الطريق"
+            }
+        ]
+        
+        return {"success": True, "data": locations}
+    
+    except Exception as e:
+        print(f"Error fetching GPS locations: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات GPS")
+
+
+@api_router.get("/gps/stats")
+async def get_gps_stats(current_user: User = Depends(get_current_user)):
+    """إحصائيات GPS - Get GPS statistics"""
+    try:
+        stats = {
+            "total_users": 25,
+            "online_users": 18,
+            "offline_users": 7,
+            "total_visits_today": 45,
+            "average_visit_time": 25,
+            "coverage_areas": 12
+        }
+        
+        return {"success": True, "data": stats}
+    
+    except Exception as e:
+        print(f"Error fetching GPS stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب إحصائيات GPS")
+
+
+# ============================================================================
+# CLINICS MANAGEMENT APIs
+# ============================================================================
+
+@api_router.get("/clinics")
+async def get_clinics(current_user: User = Depends(get_current_user)):
+    """الحصول على جميع العيادات - Get all clinics"""
+    try:
+        clinics = await db.clinics.find({}, {"_id": 0}).to_list(1000)
+        
+        # If no clinics in database, return mock data
+        if not clinics:
+            clinics = [
+                {
+                    "id": "clinic-1",
+                    "name": "عيادة د.أحمد محمد",
+                    "address": "شارع الجمهورية، المعادي، القاهرة",
+                    "phone": "+201234567890",
+                    "doctor_name": "د.أحمد محمد",
+                    "specialization": "باطنة",
+                    "latitude": 29.9602,
+                    "longitude": 31.2569,
+                    "area_id": "area-1",
+                    "area_name": "القاهرة الكبرى",
+                    "status": "active",
+                    "last_visit": "2024-01-15T10:30:00Z",
+                    "total_visits": 15,
+                    "debt_amount": 2500.00,
+                    "created_at": "2024-01-01T08:00:00Z",
+                    "is_active": True
+                },
+                {
+                    "id": "clinic-2",
+                    "name": "عيادة د.سارة أحمد",
+                    "address": "شارع النيل، المهندسين، الجيزة",
+                    "phone": "+201234567891",
+                    "doctor_name": "د.سارة أحمد", 
+                    "specialization": "أطفال",
+                    "latitude": 30.0626,
+                    "longitude": 31.2497,
+                    "area_id": "area-2",
+                    "area_name": "الجيزة",
+                    "status": "active",
+                    "last_visit": "2024-01-20T14:15:00Z",
+                    "total_visits": 8,
+                    "debt_amount": 0.00,
+                    "created_at": "2024-01-05T09:30:00Z",
+                    "is_active": True
+                }
+            ]
+        
+        return clinics
+    
+    except Exception as e:
+        print(f"Error fetching clinics: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات العيادات")
+
+
+@api_router.get("/clinics/stats")
+async def get_clinics_stats(current_user: User = Depends(get_current_user)):
+    """إحصائيات العيادات - Get clinics statistics"""
+    try:
+        stats = {
+            "total_clinics": 125,
+            "active_clinics": 118,
+            "inactive_clinics": 7,
+            "new_clinics_this_month": 12,
+            "total_visits_this_month": 450,
+            "average_visits_per_clinic": 3.6,
+            "total_debt": 125000.00,
+            "clinics_with_debt": 35
+        }
+        
+        return {"success": True, "data": stats}
+    
+    except Exception as e:
+        print(f"Error fetching clinics stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب إحصائيات العيادات")
+
+
+# ============================================================================
+# PLANNING SYSTEM APIs  
+# ============================================================================
+
+@api_router.get("/planning/data")
+async def get_planning_data(current_user: User = Depends(get_current_user)):
+    """بيانات التخطيط - Get planning data"""
+    try:
+        planning_data = {
+            "monthly_targets": {
+                "visits": 100,
+                "sales": 50000,
+                "new_clinics": 5
+            },
+            "current_progress": {
+                "visits": 75,
+                "sales": 38500,
+                "new_clinics": 3
+            },
+            "weekly_schedule": [
+                {"day": "الأحد", "planned_visits": 8, "completed_visits": 6},
+                {"day": "الاثنين", "planned_visits": 10, "completed_visits": 8},
+                {"day": "الثلاثاء", "planned_visits": 9, "completed_visits": 9},
+                {"day": "الأربعاء", "planned_visits": 8, "completed_visits": 5},
+                {"day": "الخميس", "planned_visits": 7, "completed_visits": 0}
+            ]
+        }
+        
+        return {"success": True, "data": planning_data}
+    
+    except Exception as e:
+        print(f"Error fetching planning data: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب بيانات التخطيط")
+
+
+# ============================================================================
+# DAILY LOGIN RECORDS APIs
+# ============================================================================
+
+@api_router.get("/admin/login-records")
+async def get_daily_login_records(current_user: User = Depends(get_current_user)):
+    """سجل تسجيل الدخول اليومي - Get daily login records"""
+    # Check admin permissions
+    if current_user["role"] not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بعرض سجلات تسجيل الدخول")
+    
+    try:
+        # Mock login records data
+        today = datetime.utcnow().date()
+        records = [
+            {
+                "user_id": "usr-1",
+                "user_name": "أحمد محمد",
+                "role": "medical_rep",
+                "login_time": "08:30:00",
+                "logout_time": "17:45:00",
+                "total_hours": "9h 15m",
+                "location": "القاهرة",
+                "device": "موبايل",
+                "status": "مكتمل"
+            },
+            {
+                "user_id": "usr-2", 
+                "user_name": "سارة أحمد",
+                "role": "sales_rep",
+                "login_time": "09:00:00",
+                "logout_time": "18:00:00", 
+                "total_hours": "9h 00m",
+                "location": "الجيزة",
+                "device": "تابلت",
+                "status": "مكتمل"
+            },
+            {
+                "user_id": "usr-3",
+                "user_name": "محمد علي",
+                "role": "medical_rep", 
+                "login_time": "08:45:00",
+                "logout_time": None,
+                "total_hours": "متصل الآن",
+                "location": "الإسكندرية",
+                "device": "موبايل",
+                "status": "متصل"
+            }
+        ]
+        
+        return {"success": True, "data": records, "date": today.isoformat()}
+    
+    except Exception as e:
+        print(f"Error fetching login records: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب سجلات تسجيل الدخول")
+
+
 # Include routers
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
