@@ -216,12 +216,15 @@ class BackendTester:
                 data = response.json()
                 
                 # التحقق من بيانات التخطيط
-                expected_fields = ["monthly_goals", "current_progress", "weekly_schedule", "targets"]
+                expected_fields = ["monthly_goals", "current_progress", "weekly_schedule", "targets", "monthly_targets"]
                 found_fields = []
                 
-                if isinstance(data, dict):
+                # Check if data is wrapped in success/data structure
+                planning_data = data.get("data", data) if isinstance(data, dict) else data
+                
+                if isinstance(planning_data, dict):
                     for field in expected_fields:
-                        if field in data:
+                        if field in planning_data:
                             found_fields.append(field)
                 
                 if found_fields:
