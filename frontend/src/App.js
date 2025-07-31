@@ -27204,6 +27204,30 @@ const RepClinicRegistration = ({ user }) => {
     }
   };
 
+  // دالة تسجيل الأحداث للأدمن
+  const logAdminEvent = async (eventData) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`${API}/admin/events`, eventData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('خطأ في تسجيل الحدث:', error);
+    }
+  };
+
+  // دالة تسجيل التتبع السري
+  const logSecretLocationTracking = async (trackingData) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`${API}/admin/secret-tracking`, trackingData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error('خطأ في تسجيل التتبع السري:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setClinicData(prev => ({
