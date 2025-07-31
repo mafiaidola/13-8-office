@@ -11123,12 +11123,13 @@ const EnhancedUserManagement = () => {
         ...(statusFilter && { status_filter: statusFilter })
       });
       
-      const response = await axios.get(`${API}/users/enhanced-list?${params}`, {
+      const response = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setUsers(response.data.users);
-      setTotalPages(response.data.total_pages);
+      setUsers(response.data);
+      // Remove pagination since /api/users returns simple array
+      setTotalPages(1);
     } catch (error) {
       setError('خطأ في تحميل المستخدمين');
       console.error('Error fetching users:', error);
