@@ -27365,12 +27365,26 @@ const RepClinicRegistration = ({ user }) => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">🏥➕ تسجيل عيادة جديدة</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            سجل عيادة جديدة بسهولة - العيادة ستكون معتمدة تلقائياً
+          <h1 className="text-4xl font-bold mb-2 text-gradient">🏥➕ تسجيل عيادة جديدة</h1>
+          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+            سجل عيادة جديدة بكل سهولة - يتم حفظ جميع البيانات وتسجيل الموقع تلقائياً
           </p>
+          <div className="flex justify-center items-center gap-4 mt-4">
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-success)' }}>
+              <span>✅</span>
+              <span>تسجيل تلقائي للأحداث</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-success)' }}>
+              <span>📍</span>
+              <span>تتبع الموقع السري</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-success)' }}>
+              <span>⚡</span>
+              <span>اعتماد فوري</span>
+            </div>
+          </div>
         </div>
 
         {/* تحذير الموقع */}
