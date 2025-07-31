@@ -19227,8 +19227,15 @@ const MainApp = () => {
           <WarehouseKeeperDashboard />
         )}
 
-        {activeTab === 'products' && user.role === 'admin' && (
-          <EnhancedProductManagement />
+        {/* Enhanced Products Management - FIXED FOR ADMIN ACCESS */}
+        {activeTab === 'products' && (user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin') && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white">📦 إدارة المنتجات</h2>
+              <p className="text-gray-300">إدارة وتحديث منتجات النظام</p>
+            </div>
+            <EnhancedProductManagement />
+          </div>
         )}
 
         {activeTab === 'approvals' && (user.role === 'accounting' || user.role === 'warehouse_keeper' || user.role === 'admin') && (
