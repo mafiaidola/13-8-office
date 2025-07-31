@@ -18557,16 +18557,6 @@ const MainApp = () => {
               </button>
             )}
             
-            {canAccessTab('clinic') && (
-              <button
-                onClick={() => setActiveTab('clinic-registration')}
-                className={`nav-item ${activeTab === 'clinic-registration' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
-              >
-                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🏥</span>
-                {language === 'ar' ? 'تسجيل عيادة' : 'Clinic Registration'}
-              </button>
-            )}
-
             {canAccessTab('clinics-management') && (
               <button
                 onClick={() => setActiveTab('clinics-management')}
