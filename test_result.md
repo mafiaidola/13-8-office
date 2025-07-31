@@ -74,9 +74,21 @@
 ##         agent: "testing"
 ##         comment: "✅ اختبار dashboard_routes.py المُصلح اكتمل بنجاح بنسبة 80% (4/5 اختبارات نجحت). المشكلة الرئيسية تم حلها! النتائج: 1) تسجيل الدخول admin/admin123 يعمل مع JWT token 2) Authorization Header يقبل Bearer token بشكل صحيح 3) /api/dashboard/stats يعيد إحصائيات كاملة (25 مستخدم، 2 عيادة، 3 زيارات، 6 مناديب نشطين) 4) حماية Authorization Header تعمل (HTTP 403 بدون authorization). مشكلة بسيطة: invalid token handling يعيد 500 بدلاً من 401 لكن لا يؤثر على الوظائف الأساسية. النظام جاهز للإنتاج!"
 ##
-## agent_communication:
-##     -agent: "main"
-##     -message: "تم حل مشكلة 'Missing or invalid authorization header' بنجاح في dashboard_routes.py. استخدمت FastAPI HTTPBearer dependency injection بدلاً من manual parameter handling. الباكند يعمل بنسبة 80% نجاح والمشكلة الأساسية محلولة. هل تريد اختبار الفرونت إند الآن؟"
+  - task: "User Registration Work Information UI Enhancement"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء تحسين واجهة 'معلومات العمل' في تسجيل المستخدمين الجديدة. المطلوب: 1) تحويل القوائم المنسدلة إلى grid منظم مع أيقونات 2) إضافة حقل الخط المرتبط بـ Lines/Areas Management 3) إضافة أيقونات للمسميات الوظيفية للتحسين البصري والتنظيم"
+
+agent_communication:
+    -agent: "main"
+    -message: "بدء تطوير تحسينات واجهة إدارة المستخدمين - قسم معلومات العمل. سأقوم بتحويل التصميم إلى grid منظم مع أيقونات وإضافة حقل الخط. المطلوب اختبار الباكند أولاً للتأكد من وجود Lines APIs ثم تحديث الواجهة الأمامية."
 
 # Protocol Guidelines for Main agent
 #
