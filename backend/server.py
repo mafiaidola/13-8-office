@@ -1659,6 +1659,78 @@ async def get_gps_stats(current_user: User = Depends(get_current_user)):
 # CLINICS MANAGEMENT APIs
 # ============================================================================
 
+@api_router.post("/clinics")
+async def create_clinic(clinic_data: dict, current_user: User = Depends(get_current_user)):
+    """إنشاء عيادة جديدة - Create new clinic"""
+    try:
+        # Validate required fields
+        required_fields = ["clinic_name", "doctor_name", "phone", "address"]
+        for field in required_fields:
+            if field not in clinic_data or not clinic_data[field]:
+                raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+
+        # Create new clinic with unique ID
+        new_clinic = {
+            "id": str(uuid.uuid4()),
+            "name": clinic_data["clinic_name"],
+            "doctor_name": clinic_data["doctor_name"],
+            "phone": clinic_data["phone"],
+            "address": clinic_data["address"],
+            "specialization": clinic_data.get("specialization", ""),
+            "latitude": clinic_data.get("latitude", 0.0),
+            "longitude": clinic_data.get("longitude", 0.0),
+            "area_id": clinic_data.get("area_id", ""),
+            "area_name": clinic_data.get("area_name", ""),
+            "status": "active",
+            "total_visits": 0,
+            "debt_amount": 0.0,
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user["id"],
+            "created_by_name": current_user.get("full_name", "")
+        }
+
+        # Insert into database
+        await db.clinics.insert_one(new_clinic)
+        
+        return {
+            "success": True, 
+            "message": "تم إنشاء العيادة بنجاح",
+            "clinic": new_clinic
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating clinic: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إنشاء العيادة")
+
+
+@api_router.put("/clinics/{clinic_id}")
+async def update_clinic(clinic_id: str, clinic_data: dict, current_user: User = Depends(get_current_user)):
+    """تحديث عيادة - Update clinic"""
+    try:
+        existing_clinic = await db.clinics.find_one({"id": clinic_id})
+        if not existing_clinic:
+            raise HTTPException(status_code=404, detail="العيادة غير موجودة")
+
+        # Update clinic data
+        update_data = clinic_data.copy()
+        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_by"] = current_user["id"]
+
+        await db.clinics.update_one({"id": clinic_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث العيادة بنجاح"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating clinic: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث العيادة")
+
+
 @api_router.get("/clinics")
 async def get_clinics(current_user: User = Depends(get_current_user)):
     """الحصول على جميع العيادات - Get all clinics"""
