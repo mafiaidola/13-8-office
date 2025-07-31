@@ -25838,11 +25838,11 @@ const EnhancedUserManagementV2 = () => {
       });
       setRegions(regionsResponse.data);
       
-      // Load managers (users who can be managers)
-      const managersResponse = await axios.get(`${API}/users/managers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setManagers(managersResponse.data);
+      // Load managers from users with manager roles
+      const allUsers = usersResponse.data;
+      const managerRoles = ['admin', 'gm', 'line_manager', 'area_manager', 'district_manager', 'manager'];
+      const managersFromUsers = allUsers.filter(user => managerRoles.includes(user.role));
+      setManagers(managersFromUsers);
       
     } catch (error) {
       console.error('Error loading user data:', error);
