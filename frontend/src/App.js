@@ -10283,8 +10283,22 @@ const EnhancedProductManagement = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { user } = useAuth();
 
-  // Check if user can see prices
-  const canSeePrices = user && ['admin', 'gm', 'accounting', 'محاسبة'].includes(user.role);
+  // Check if user can see prices - FIXED FOR ADMIN
+  const canSeePrices = user && (
+    user.role === 'admin' || 
+    user.role === 'gm' || 
+    user.role === 'accounting' || 
+    user.role === 'محاسبة' ||
+    ['admin', 'gm', 'accounting', 'محاسبة'].includes(user.role)
+  );
+  
+  // Debug: Log user role and canSeePrices
+  console.log('🔍 PRICE VISIBILITY DEBUG:', {
+    userRole: user?.role,
+    userExists: !!user,
+    canSeePrices: canSeePrices,
+    adminCheck: user?.role === 'admin'
+  });
 
   useEffect(() => {
     fetchProducts();
