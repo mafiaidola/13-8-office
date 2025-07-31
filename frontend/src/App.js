@@ -2545,6 +2545,36 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
     password: ''
   });
   const [photoPreview, setPhotoPreview] = useState(user?.profile_photo || null);
+  const [availableLines, setAvailableLines] = useState([]);
+  const [loadingLines, setLoadingLines] = useState(false);
+
+  // Load available lines from API
+  React.useEffect(() => {
+    const loadLines = async () => {
+      setLoadingLines(true);
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/lines`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const lines = await response.json();
+          setAvailableLines(lines);
+        } else {
+          console.error('Failed to load lines:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading lines:', error);
+      } finally {
+        setLoadingLines(false);
+      }
+    };
+
+    loadLines();
+  }, []);
 
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
