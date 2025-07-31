@@ -1069,41 +1069,72 @@ async def delete_line(line_id: str, current_user: User = Depends(get_current_use
 # ============================================================================
 
 @api_router.post("/areas")
-async def create_area(area_data: AreaCreate, current_user: User = Depends(get_current_user)):
+async def create_area(area_data: dict, current_user: User = Depends(get_current_user)):
     """إنشاء منطقة جديدة - Create new area"""
     # Check permissions
-    if current_user.role not in ["admin", "gm", "area_manager"]:
+    if current_user.role not in ["admin", "gm", "area_manager", "line_manager"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء مناطق")
     
     try:
+        # Validate required fields
+        required_fields = ["name", "code"]
+        for field in required_fields:
+            if field not in area_data or not area_data[field]:
+                raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+        
         # Check if area code already exists
-        existing_area = await db.areas.find_one({"code": area_data.code})
+        existing_area = await db.areas.find_one({"code": area_data["code"]})
         if existing_area:
             raise HTTPException(status_code=400, detail="رمز المنطقة موجود بالفعل")
         
-        # Create area
-        area = Area(**area_data.dict(), created_by=current_user.id)
+        # Create new area
+        new_area = {
+            "id": str(uuid.uuid4()),
+            "name": area_data["name"],
+            "code": area_data["code"],
+            "description": area_data.get("description", ""),
+            "parent_line_id": area_data.get("parent_line_id", ""),
+            "parent_line_name": "",
+            "manager_id": area_data.get("manager_id", ""),
+            "manager_name": "",
+            "is_active": area_data.get("is_active", True),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user.id
+        }
         
         # If parent line is assigned, get line name
-        if area.parent_line_id:
-            line = await db.lines.find_one({"id": area.parent_line_id})
+        if new_area["parent_line_id"]:
+            line = await db.lines.find_one({"id": new_area["parent_line_id"]})
             if line:
-                area.parent_line_name = line.get("name", "")
+                new_area["parent_line_name"] = line.get("name", "")
         
         # If manager is assigned, get manager name
-        if area.manager_id:
-            manager = await db.users.find_one({"id": area.manager_id})
+        if new_area["manager_id"]:
+            manager = await db.users.find_one({"id": new_area["manager_id"]})
             if manager:
-                area.manager_name = manager.get("full_name", "")
+                new_area["manager_name"] = manager.get("full_name", "")
         
-        await db.areas.insert_one(area.dict())
+        # Insert into database
+        await db.areas.insert_one(new_area)
         
-        return {"success": True, "message": "تم إنشاء المنطقة بنجاح", "area": area}
+        # Prepare response (handle datetime serialization)
+        response_area = new_area.copy()
+        if "_id" in response_area:
+            del response_area["_id"]
+        if "created_at" in response_area and isinstance(response_area["created_at"], datetime):
+            response_area["created_at"] = response_area["created_at"].isoformat()
+        if "updated_at" in response_area and isinstance(response_area["updated_at"], datetime):
+            response_area["updated_at"] = response_area["updated_at"].isoformat()
+        
+        print(f"✅ SUCCESS: Created area '{new_area['name']}' with code '{new_area['code']}'")
+        
+        return {"success": True, "message": "تم إنشاء المنطقة بنجاح", "area": response_area}
     
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error creating area: {str(e)}")
+        print(f"❌ ERROR creating area: {str(e)}")
         raise HTTPException(status_code=500, detail="خطأ في إنشاء المنطقة")
 
 
