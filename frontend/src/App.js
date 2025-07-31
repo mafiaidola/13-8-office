@@ -27598,22 +27598,6 @@ const RepClinicRegistration = ({ user }) => {
             </div>
           </div>
 
-          {/* معلومات للأدمن فقط */}
-          <div className="bg-gray-50 border rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-gray-600 mb-2">معلومات التسجيل (مخفية عن المندوب)</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500">
-              <div>
-                <strong>المسجل:</strong> {currentUser?.full_name || currentUser?.username}
-              </div>
-              <div>
-                <strong>موقع المندوب:</strong> {currentLocation ? 'تم الحصول عليه ✅' : 'جاري التحديد...'}
-              </div>
-              <div>
-                <strong>وقت التسجيل:</strong> {new Date().toLocaleString('ar-EG')}
-              </div>
-            </div>
-          </div>
-
           {/* أزرار التحكم */}
           <div className="flex justify-end gap-4">
             <button
