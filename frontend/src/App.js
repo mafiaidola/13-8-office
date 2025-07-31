@@ -3631,10 +3631,7 @@ const LoginPage = () => {
           {/* Login Form */}
           {activeForm === 'login' && (
             <form 
-              onSubmit={(e) => {
-                console.log('🔑 Form submitted!');
-                handleLoginSubmit(e);
-              }}
+              onSubmit={handleLoginSubmit}
               className="login-form"
             >
               <div className="form-group">
