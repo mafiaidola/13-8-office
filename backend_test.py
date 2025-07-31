@@ -156,6 +156,11 @@ class BackendTester:
                     self.log_test("مواقع GPS", True, 
                                 f"تم العثور على {len(locations)} موقع GPS")
                     return True
+                elif isinstance(data, dict) and "data" in data:
+                    locations = data["data"]
+                    self.log_test("مواقع GPS", True, 
+                                f"تم العثور على {len(locations)} موقع GPS")
+                    return True
                 else:
                     self.log_test("مواقع GPS", False, 
                                 f"تنسيق بيانات غير متوقع: {type(data)}")
