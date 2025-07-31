@@ -25832,8 +25832,8 @@ const EnhancedUserManagementV2 = () => {
       });
       setUsers(usersResponse.data);
       
-      // Load regions
-      const regionsResponse = await axios.get(`${API}/regions/list`, {
+      // Load regions from areas API
+      const regionsResponse = await axios.get(`${API}/areas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setRegions(regionsResponse.data);
