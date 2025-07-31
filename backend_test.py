@@ -181,12 +181,15 @@ class BackendTester:
                 data = response.json()
                 
                 # التحقق من إحصائيات GPS
-                expected_fields = ["connected_users", "daily_visits", "coverage_areas", "active_tracking"]
+                expected_fields = ["connected_users", "daily_visits", "coverage_areas", "active_tracking", "total_users", "online_users"]
                 found_fields = []
                 
-                if isinstance(data, dict):
+                # Check if data is wrapped in success/data structure
+                stats_data = data.get("data", data) if isinstance(data, dict) else data
+                
+                if isinstance(stats_data, dict):
                     for field in expected_fields:
-                        if field in data:
+                        if field in stats_data:
                             found_fields.append(field)
                 
                 if found_fields:
