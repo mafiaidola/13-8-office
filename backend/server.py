@@ -1778,7 +1778,7 @@ async def get_planning_data(current_user: User = Depends(get_current_user)):
 async def get_daily_login_records(current_user: User = Depends(get_current_user)):
     """سجل تسجيل الدخول اليومي - Get daily login records"""
     # Check admin permissions
-    if current_user["role"] not in ["admin", "gm"]:
+    if current_user.role not in ["admin", "gm"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بعرض سجلات تسجيل الدخول")
     
     try:
