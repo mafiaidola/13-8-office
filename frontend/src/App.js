@@ -227,18 +227,21 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
         };
 
         const newMap = new window.google.maps.Map(mapRef.current, {
-          zoom: 16,
+          zoom: 18, // Higher zoom for better precision (was 16)
           center: mapCenter,
           mapTypeControl: true,
-          streetViewControl: false,
+          streetViewControl: true, // Enable street view for better reference
           fullscreenControl: true,
           zoomControl: true,
+          scaleControl: true, // Add scale control for distance reference
+          rotateControl: true, // Add rotate control
           gestureHandling: 'greedy',
+          mapTypeId: 'hybrid', // Hybrid view for better accuracy reference
           styles: [
             {
               featureType: "poi.business",
               elementType: "labels",
-              stylers: [{ visibility: "off" }]
+              stylers: [{ visibility: "on" }] // Show POI labels for reference
             }
           ]
         });
