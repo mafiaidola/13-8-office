@@ -3645,7 +3645,16 @@ const LoginPage = () => {
           {/* Login Form */}
           {activeForm === 'login' && (
             <form 
-              onSubmit={handleLoginSubmit}
+              onSubmit={(e) => {
+                console.log('🔥 FORM onSubmit triggered!');
+                console.log('🔥 handleLoginSubmit exists:', typeof handleLoginSubmit);
+                if (typeof handleLoginSubmit === 'function') {
+                  handleLoginSubmit(e);
+                } else {
+                  console.error('❌ handleLoginSubmit is not a function!');
+                  e.preventDefault();
+                }
+              }}
               className="login-form"
             >
               <div className="form-group">
