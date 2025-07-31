@@ -27502,18 +27502,68 @@ const RepClinicRegistration = ({ user }) => {
                 />
               </div>
 
+              {/* تصنيف العيادة الجديد */}
               <div>
-                <label className="block text-sm font-medium mb-2">تصنيف العيادة</label>
-                <select
-                  name="classification"
-                  value={clinicData.classification}
-                  onChange={handleInputChange}
-                  className="input-glass w-full"
-                >
-                  <option value="class_a">فئة A - عيادة كبيرة</option>
-                  <option value="class_b">فئة B - عيادة متوسطة</option>
-                  <option value="class_c">فئة C - عيادة صغيرة</option>
-                </select>
+                <label className="block text-sm font-medium mb-4">تصنيف العيادة *</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { value: 'Class A Star', label: 'Class A Star', icon: '⭐', color: 'from-yellow-400 to-yellow-600' },
+                    { value: 'Class A', label: 'Class A', icon: '🥇', color: 'from-blue-500 to-blue-600' },
+                    { value: 'Class B', label: 'Class B', icon: '🥈', color: 'from-green-500 to-green-600' },
+                    { value: 'Class C', label: 'Class C', icon: '🥉', color: 'from-orange-500 to-orange-600' },
+                    { value: 'Class D', label: 'Class D', icon: '📋', color: 'from-gray-500 to-gray-600' }
+                  ].map((clinicClass) => (
+                    <div
+                      key={clinicClass.value}
+                      className={`clinic-class-card ${clinicData.clinic_class === clinicClass.value ? 'selected' : ''}`}
+                      onClick={() => setClinicData({...clinicData, clinic_class: clinicClass.value})}
+                    >
+                      <div className={`clinic-class-icon bg-gradient-to-br ${clinicClass.color}`}>
+                        {clinicClass.icon}
+                      </div>
+                      <div className="clinic-class-label">{clinicClass.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* التصنيف الائتماني */}
+              <div>
+                <label className="block text-sm font-medium mb-4">التصنيف الائتماني للعيادة</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div
+                    className={`credit-status-card green ${clinicData.credit_status === 'green' ? 'selected' : ''}`}
+                    onClick={() => setClinicData({...clinicData, credit_status: 'green'})}
+                  >
+                    <div className="credit-status-icon">🟢</div>
+                    <div className="credit-status-content">
+                      <div className="credit-status-title">عيادة جديدة</div>
+                      <div className="credit-status-desc">أو ائتمان جيد</div>
+                    </div>
+                  </div>
+                  
+                  <div
+                    className={`credit-status-card yellow ${clinicData.credit_status === 'yellow' ? 'selected' : ''}`}
+                    onClick={() => setClinicData({...clinicData, credit_status: 'yellow'})}
+                  >
+                    <div className="credit-status-icon">🟡</div>
+                    <div className="credit-status-content">
+                      <div className="credit-status-title">يوجد مديونيات</div>
+                      <div className="credit-status-desc">مربوط بقسم الحسابات</div>
+                    </div>
+                  </div>
+                  
+                  <div
+                    className={`credit-status-card red ${clinicData.credit_status === 'red' ? 'selected' : ''}`}
+                    onClick={() => setClinicData({...clinicData, credit_status: 'red'})}
+                  >
+                    <div className="credit-status-icon">🔴</div>
+                    <div className="credit-status-content">
+                      <div className="credit-status-title">مديونية متأخرة</div>
+                      <div className="credit-status-desc">يستحق التحذير</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
