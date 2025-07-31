@@ -2204,8 +2204,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus: 
+    - "Comprehensive Frontend Testing - Critical Login Issue"
+  stuck_tasks: 
+    - "Comprehensive Frontend Testing - Critical Login Issue"
   completed_tasks:
     - "Clinic Creation API Testing - حل خطأ إرسال الطلب"
     - "Comprehensive Accounting System - Overview API"
