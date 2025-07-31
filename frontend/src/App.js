@@ -11115,21 +11115,42 @@ const EnhancedUserManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: 10,
-        ...(searchTerm && { search: searchTerm }),
-        ...(roleFilter && { role_filter: roleFilter }),
-        ...(statusFilter && { status_filter: statusFilter })
-      });
       
       const response = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setUsers(response.data);
-      // Remove pagination since /api/users returns simple array
-      setTotalPages(1);
+      let allUsers = response.data || [];
+      
+      // Apply client-side filtering
+      if (searchTerm) {
+        allUsers = allUsers.filter(user => 
+          user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      if (roleFilter && roleFilter !== 'all') {
+        allUsers = allUsers.filter(user => user.role === roleFilter);
+      }
+      
+      if (statusFilter && statusFilter !== 'all') {
+        allUsers = allUsers.filter(user => 
+          statusFilter === 'active' ? user.is_active !== false : user.is_active === false
+        );
+      }
+      
+      // Apply sorting
+      allUsers.sort((a, b) => {
+        const aValue = a[sortBy] || '';
+        const bValue = b[sortBy] || '';
+        return aValue.localeCompare(bValue);
+      });
+      
+      setUsers(allUsers);
+      console.log(`✅ Loaded ${allUsers.length} users successfully`);
+      
     } catch (error) {
       setError('خطأ في تحميل المستخدمين');
       console.error('Error fetching users:', error);
