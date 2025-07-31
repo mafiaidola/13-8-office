@@ -1,0 +1,30 @@
+{
+  "success_rate": 66.66666666666666,
+  "total_tests": 3,
+  "successful_tests": 2,
+  "critical_functions_working": false,
+  "test_results": [
+    {
+      "test": "تسجيل دخول الأدمن",
+      "success": true,
+      "message": "تم تسجيل الدخول بنجاح للمستخدم اسم محدث للاختبار بدور admin",
+      "response_time": 68.77923011779785,
+      "timestamp": "2025-07-31T10:13:51.264058"
+    },
+    {
+      "test": "البحث عن المندوبين الطبيين",
+      "success": true,
+      "message": "تم العثور على 20 مندوب طبي في النظام من إجمالي 43 مستخدم",
+      "response_time": 16.70384407043457,
+      "timestamp": "2025-07-31T10:13:51.281136"
+    },
+    {
+      "test": "تسجيل دخول مندوب طبي موجود",
+      "success": false,
+      "message": "لم يتم العثور على كلمة مرور صحيحة للمندوب الطبي الموجود",
+      "response_time": null,
+      "timestamp": "2025-07-31T10:13:51.458138"
+    }
+  ],
+  "total_time": 0.26303553581237793
+}
