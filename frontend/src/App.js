@@ -3003,7 +3003,7 @@ const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Token verification failed:', error);
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
     } finally {
       setLoading(false);
     }
