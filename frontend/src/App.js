@@ -3730,6 +3730,11 @@ const LoginPage = () => {
                 type="submit"
                 disabled={isLoading}
                 className="submit-btn login-btn"
+                onClick={(e) => {
+                  console.log('🔥 BUTTON clicked!');
+                  console.log('🔥 Button type:', e.currentTarget.type);
+                  console.log('🔥 Form will submit...');
+                }}
               >
                 {isLoading ? (
                   <div className="loading-content">
