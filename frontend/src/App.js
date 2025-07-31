@@ -3328,9 +3328,9 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password) => {
+  const performLogin = async (username, password) => {
     try {
-      console.log('🔑 login function called with:', username, password?.length, 'chars');
+      console.log('🔑 performLogin function called with:', username, password?.length, 'chars');
       console.log('🔑 API URL:', `${API}/auth/login`);
       
       const response = await axios.post(`${API}/auth/login`, {
