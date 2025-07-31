@@ -25786,8 +25786,8 @@ const EnhancedUserManagementV2 = () => {
     try {
       const token = localStorage.getItem('access_token');
       
-      // Load users with enhanced data
-      const usersResponse = await axios.get(`${API}/users/enhanced`, {
+      // Load users
+      const usersResponse = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(usersResponse.data);
