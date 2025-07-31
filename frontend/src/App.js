@@ -74,16 +74,68 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
     });
   };
 
-  // Get current location when component mounts
+  // Enhanced geolocation with higher accuracy
+  const getHighAccuracyLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported'));
+        return;
+      }
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 20000, // Increased timeout for better accuracy
+        maximumAge: 0 // Always get fresh location
+      };
+
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      const tryGetLocation = () => {
+        attempts++;
+        
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const accuracy = position.coords.accuracy;
+            console.log(`Location attempt ${attempts}: accuracy ${accuracy}m`);
+            
+            // If accuracy is good enough (< 50m) or we've tried enough times
+            if (accuracy <= 50 || attempts >= maxAttempts) {
+              resolve({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: accuracy,
+                timestamp: position.timestamp
+              });
+            } else {
+              // Try again for better accuracy
+              setTimeout(tryGetLocation, 2000);
+            }
+          },
+          (error) => {
+            console.error(`Location attempt ${attempts} failed:`, error);
+            if (attempts >= maxAttempts) {
+              reject(error);
+            } else {
+              // Try again with slightly different settings
+              setTimeout(tryGetLocation, 2000);
+            }
+          },
+          options
+        );
+      };
+
+      tryGetLocation();
+    });
+  };
+
+  // Get current location when component mounts with enhanced accuracy
   useEffect(() => {
     if (navigator.geolocation && !currentLocation) {
       setIsLoadingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
+      
+      getHighAccuracyLocation()
+        .then((location) => {
           setCurrentLocation(location);
           setIsLoadingLocation(false);
           
@@ -92,24 +144,44 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
             setSelectedLocation(location);
             onLocationSelect(location);
           }
-        },
-        (error) => {
-          console.error('Error getting current location:', error);
+        })
+        .catch((error) => {
+          console.error('Error getting high accuracy location:', error);
           setIsLoadingLocation(false);
-          // Fallback to Cairo coordinates
-          const fallback = { lat: 30.0444, lng: 31.2357 };
-          setCurrentLocation(fallback);
-          if (!latitude && !longitude && onLocationSelect) {
-            setSelectedLocation(fallback);
-            onLocationSelect(fallback);
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
-        }
-      );
+          
+          // Fallback to standard geolocation
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: position.timestamp
+              };
+              setCurrentLocation(location);
+              
+              if (!latitude && !longitude && onLocationSelect) {
+                setSelectedLocation(location);
+                onLocationSelect(location);
+              }
+            },
+            (fallbackError) => {
+              console.error('Fallback location also failed:', fallbackError);
+              // Final fallback to Cairo coordinates
+              const fallback = { lat: 30.0444, lng: 31.2357, accuracy: 10000, timestamp: Date.now() };
+              setCurrentLocation(fallback);
+              if (!latitude && !longitude && onLocationSelect) {
+                setSelectedLocation(fallback);
+                onLocationSelect(fallback);
+              }
+            },
+            {
+              enableHighAccuracy: false, // Fallback with less accuracy but faster
+              timeout: 10000,
+              maximumAge: 60000
+            }
+          );
+        });
     }
   }, [latitude, longitude, onLocationSelect, currentLocation]);
 
