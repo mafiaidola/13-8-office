@@ -3470,10 +3470,8 @@ const LoginPage = () => {
       console.log('❌ Login failed:', result.error);
     } else {
       console.log('✅ Login successful');
-      // Force a page refresh to update the user state
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Don't reload page - let React state update naturally
+      // The useAuth context will update and App.js will re-render with user data
     }
     
     setIsLoading(false);
