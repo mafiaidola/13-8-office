@@ -15794,6 +15794,7 @@ const AdminClinicsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
