@@ -13584,6 +13584,22 @@ const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language })
     { warehouse: 'مخزن جليم', message: `${t.stockShortage} فيتامين د3`, type: 'shortage', priority: 'high' }
   ];
 
+  // Add logging to debug
+  console.log('🔍 WarehouseDashboard render:', { 
+    warehousesCount: warehouses?.length || 0, 
+    loading, 
+    language 
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="ml-3">Loading warehouses...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Stats Overview */}
