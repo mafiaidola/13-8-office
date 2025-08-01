@@ -10983,7 +10983,7 @@ const MiniProfile = ({ user, onClose }) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-red-400">🗺️</span>
-                  <span>{profileData.territory_info.region_name}</span>
+                  <span>{profileData?.territory_info?.region_name || 'غير محددة'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-yellow-400">👥</span>
