@@ -10373,15 +10373,20 @@ const EnhancedProductManagement = () => {
   const handleCreateProduct = async (productData) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post(`${API}/products/admin/create`, productData, {
+      console.log('🔧 Creating product with data:', productData);
+      
+      const response = await axios.post(`${API}/products`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('✅ Product created successfully:', response.data);
       fetchProducts();
       setShowProductModal(false);
       alert('تم إنشاء المنتج بنجاح');
     } catch (error) {
-      console.error('Error creating product:', error);
-      alert('حدث خطأ أثناء إنشاء المنتج');
+      console.error('❌ Error creating product:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إنشاء المنتج';
+      alert(`خطأ في إنشاء المنتج: ${errorMessage}`);
     }
   };
 
