@@ -11316,7 +11316,7 @@ const MiniProfileTerritory = ({ data }) => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>المنطقة:</span>
-              <span className="font-bold text-blue-400">{data.region_name}</span>
+              <span className="font-bold text-blue-400">{data?.region_name || 'غير محددة'}</span>
             </div>
             <div className="flex justify-between">
               <span>المقاطعة:</span>
