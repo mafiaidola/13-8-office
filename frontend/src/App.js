@@ -31634,22 +31634,6 @@ const CreateOrderForm = ({ onSubmit, onCancel, language, loading }) => {
 // Professional Clinic Card Component
 const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
   const [showClassificationModal, setShowClassificationModal] = useState(false);
-  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
-  const { language } = useLanguage();
-  const [loading, setLoading] = useState(false);
-
-  const handleCreateOrder = async (orderData) => {
-    setLoading(true);
-    try {
-      // Handle order creation logic here
-      console.log('Creating order:', orderData);
-      setShowCreateOrderModal(false);
-    } catch (error) {
-      console.error('Error creating order:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
   
   const classificationColor = getClassificationColor(clinic.classification);
   
