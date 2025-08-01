@@ -27623,51 +27623,11 @@ const EnhancedUserManagementV2 = () => {
       
     } catch (error) {
       console.error('Error loading user data:', error);
-      // Mock data for development
-      setUsers([
-        {
-          id: 'user-001',
-          username: 'ahmed.mohamed',
-          full_name: 'أحمد محمد علي',
-          email: 'ahmed@company.com',
-          phone: '01234567890',
-          role: 'medical_rep',
-          region_id: 'region-001',
-          region_name: 'القاهرة',
-          direct_manager_id: 'manager-001',
-          direct_manager_name: 'محمد السيد',
-          profile_photo: null,
-          address: 'مدينة نصر، القاهرة',
-          national_id: '12345678901234',
-          hire_date: '2023-01-15',
-          is_active: true,
-          performance_score: 85,
-          total_visits: 156,
-          total_orders: 89
-        },
-        {
-          id: 'user-002',
-          username: 'fatma.ahmed',
-          full_name: 'فاطمة أحمد حسن',
-          email: 'fatma@company.com',
-          phone: '01098765432',
-          role: 'warehouse_keeper',
-          region_id: 'region-002',
-          region_name: 'الجيزة',
-          direct_manager_id: 'manager-002',
-          direct_manager_name: 'أمينة المخزن',
-          profile_photo: null,
-          address: 'المهندسين، الجيزة',
-          national_id: '98765432109876',
-          hire_date: '2023-03-20',
-          is_active: true,
-          performance_score: 92,
-          total_visits: 0,
-          total_orders: 0
-        }
-      ]);
-      
-      setRegions([
+      // Show error message instead of mock data
+      alert('خطأ في تحميل بيانات المستخدمين. يرجى المحاولة مرة أخرى.');
+      setUsers([]);
+      setRegions([]);
+      setManagers([]);
         { id: 'region-001', name: 'القاهرة', manager_id: 'manager-001' },
         { id: 'region-002', name: 'الجيزة', manager_id: 'manager-002' },
         { id: 'region-003', name: 'الإسكندرية', manager_id: 'manager-003' }
