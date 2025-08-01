@@ -13978,17 +13978,35 @@ const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language })
 
       {/* Warehouses Grid */}
       <div className="card-modern p-6">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <span>🏪</span>
-          <span>{t.warehouseDetails}</span>
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <span>🏪</span>
+            <span>{t.warehouseDetails}</span>
+          </h3>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setShowAddWarehouseModal(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <span>➕</span>
+              <span>{language === 'ar' ? 'إضافة مخزن' : 'Add Warehouse'}</span>
+            </button>
+            <button 
+              onClick={() => setShowWarehouseSettingsModal(true)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <span>⚙️</span>
+              <span>{language === 'ar' ? 'إعدادات' : 'Settings'}</span>
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {warehouses.map((warehouse) => {
             const warehouseInventory = inventory.filter(item => item.warehouse === warehouse.name);
             const lowStockItems = warehouseInventory.filter(item => item.quantity <= item.min_stock);
             
             return (
-              <div key={warehouse.id} className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg">
+              <div key={warehouse.id} className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg hover:shadow-lg transition-shadow">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-bold text-lg text-gray-800">{warehouse.name}</h4>
@@ -14016,9 +14034,20 @@ const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language })
                   </div>
                 </div>
                 
-                <button className="btn-primary w-full mt-4 text-sm">
-                  {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
-                </button>
+                <div className="flex gap-2 mt-4">
+                  <button 
+                    onClick={() => handleViewWarehouseDetails(warehouse)}
+                    className="btn-primary flex-1 text-sm"
+                  >
+                    {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
+                  </button>
+                  <button 
+                    onClick={() => handleEditWarehouse(warehouse)}
+                    className="btn-secondary px-3 text-sm"
+                  >
+                    ✏️
+                  </button>
+                </div>
               </div>
             );
           })}
