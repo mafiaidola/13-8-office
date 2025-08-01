@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 import time
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class ArabicReviewTester:

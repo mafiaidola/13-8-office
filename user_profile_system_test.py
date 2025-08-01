@@ -24,7 +24,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 
 class UserProfileSystemTester:
     def __init__(self):

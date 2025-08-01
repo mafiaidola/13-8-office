@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -327,7 +327,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 
 class ClinicAPITester:
     def __init__(self):
@@ -640,7 +640,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"username": "admin", "password": "admin123"}
 
 class BackendTester:
@@ -1088,7 +1088,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 
 class ProductManagementTester:
     def __init__(self):
@@ -1798,7 +1798,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BASE_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 class LinesAreasTestSuite:
@@ -2630,7 +2630,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class BackendTester:
@@ -3205,7 +3205,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://f2197ea7-eee2-46ef-a955-b20bd04f5bb1.preview.emergentagent.com/api"
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
 
 class EnhancedUserManagementTester:
     def __init__(self):
