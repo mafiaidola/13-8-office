@@ -16823,21 +16823,12 @@ const ClinicRegistrationForm = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <span className="mr-3">{t.loading}</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gradient">{t.title}</h2>
+        <h2 className="text-2xl font-bold text-gradient">تسجيل عيادة جديدة</h2>
         <div className="text-sm opacity-75">
-          {clinics.length} عيادة مسجلة
+          نظام تسجيل العيادات
         </div>
       </div>
 
