@@ -18977,6 +18977,20 @@ const MainApp = () => {
               </button>
             )}
 
+            {/* Daily Login Records for Admin - NEW ADDITION */}
+            {(user.role === 'admin' || user.role === 'gm') && (
+              <button
+                onClick={() => {
+                  console.log('🔍 Daily login records clicked, user role:', user?.role);
+                  setActiveTab('daily-login-records');
+                }}
+                className={`nav-item ${activeTab === 'daily-login-records' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>📊</span>
+                سجل تسجيل الدخول اليومي
+              </button>
+            )}
+
             {/* Enhanced Products Management Tab - FIXED FOR ADMIN ACCESS */}
             {(user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin') && (
               <button
