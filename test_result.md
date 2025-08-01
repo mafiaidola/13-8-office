@@ -227,6 +227,21 @@ agent_communication:
 user_problem_statement: "تم حل مشكلة زر 'إنشاء طلبية جديدة' في تبويب الطلبات. تم إضافة modal كامل مع CreateOrderForm component للسماح للأدمن بإنشاء طلبيات جديدة بواجهة تفاعلية شاملة."
 
 frontend:
+  - task: "Clinic Registration Navigation Fix - إصلاح تسجيل العيادات"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "المستخدم أبلغ أن تسجيل العيادات اختفى بعد التعديلات الأخيرة. تم اكتشاف المشكلة باستخدام troubleshoot_agent: عدم تطابق في فحص الأدوار بين navigation button (السطر 20173) و component rendering (السطر 20425). Navigation button يفحص user.role مباشرة بينما component يستخدم normalizeRole(user.role)."
+      - working: true
+        agent: "main"
+        comment: "✅ تم حل المشكلة بنجاح! السبب الجذري: navigation button في السطر 20173 كان يفحص ['key_account', 'medical_rep'].includes(user.role) بينما component rendering في السطر 20425 يفحص ['key_account', 'medical_rep'].includes(normalizeRole(user.role)). هذا يعني أن المستخدمين بدور 'sales_rep' (الذي يتحول إلى 'medical_rep' بواسطة normalizeRole) لا يمكنهم رؤية زر التنقل. الإصلاح: تغيير السطر 20173 لاستخدام normalizeRole(user.role) للحصول على تطابق في منطق فحص الأدوار. تم أيضاً حذف modal خاطئ كان يسبب أخطاء ESLint."
+
   - task: "Orders Tab Create New Order Button Fix - إصلاح زر إنشاء طلبية جديدة"
     implemented: true
     working: true
