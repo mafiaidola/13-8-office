@@ -16804,24 +16804,6 @@ const ClinicRegistrationForm = () => {
     clinic_image: ''
   });
 
-  useEffect(() => {
-    fetchClinics();
-  }, []);
-
-  const fetchClinics = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${API}/clinics`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setClinics(response.data);
-    } catch (error) {
-      console.error('Error fetching clinics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
