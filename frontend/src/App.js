@@ -27958,7 +27958,7 @@ const EnhancedUserManagementV2 = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المنطقة:</span>
-                  <span className="text-sm">{user.region_name}</span>
+                  <span className="text-sm">{user?.region_name || 'غير محددة'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المدير المباشر:</span>
