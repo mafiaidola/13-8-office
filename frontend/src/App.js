@@ -31354,6 +31354,283 @@ const ProfessionalClinicsManagement = () => {
   );
 };
 
+// Create Order Form Component
+const CreateOrderForm = ({ onSubmit, onCancel, language, loading }) => {
+  const [formData, setFormData] = useState({
+    clinic_id: '',
+    doctor_name: '',
+    items: [{ product_name: '', quantity: 1, unit_price: 0 }],
+    notes: '',
+    total_amount: 0
+  });
+
+  const [products, setProducts] = useState([]);
+  const [clinics, setClinics] = useState([]);
+
+  useEffect(() => {
+    fetchProducts();
+    fetchClinics();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  const fetchClinics = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/clinics`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClinics(response.data);
+    } catch (error) {
+      console.error('Error fetching clinics:', error);
+    }
+  };
+
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...formData.items];
+    newItems[index][field] = value;
+    
+    // Calculate total for this item
+    if (field === 'quantity' || field === 'unit_price') {
+      newItems[index].total = newItems[index].quantity * newItems[index].unit_price;
+    }
+    
+    setFormData({
+      ...formData,
+      items: newItems,
+      total_amount: newItems.reduce((sum, item) => sum + (item.total || 0), 0)
+    });
+  };
+
+  const addItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, { product_name: '', quantity: 1, unit_price: 0, total: 0 }]
+    });
+  };
+
+  const removeItem = (index) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      items: newItems,
+      total_amount: newItems.reduce((sum, item) => sum + (item.total || 0), 0)
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  const t = language === 'ar' ? {
+    clinic: 'العيادة',
+    doctor: 'الطبيب',
+    products: 'المنتجات',
+    product: 'المنتج',
+    quantity: 'الكمية',
+    unitPrice: 'سعر الوحدة',
+    total: 'الإجمالي',
+    notes: 'ملاحظات',
+    addProduct: 'إضافة منتج',
+    remove: 'حذف',
+    totalAmount: 'المبلغ الإجمالي',
+    create: 'إنشاء',
+    cancel: 'إلغاء',
+    selectClinic: 'اختر العيادة',
+    selectProduct: 'اختر المنتج'
+  } : {
+    clinic: 'Clinic',
+    doctor: 'Doctor',
+    products: 'Products',
+    product: 'Product',
+    quantity: 'Quantity',
+    unitPrice: 'Unit Price',
+    total: 'Total',
+    notes: 'Notes',
+    addProduct: 'Add Product',
+    remove: 'Remove',
+    totalAmount: 'Total Amount',
+    create: 'Create',
+    cancel: 'Cancel',
+    selectClinic: 'Select Clinic',
+    selectProduct: 'Select Product'
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Clinic Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t.clinic}
+        </label>
+        <select
+          value={formData.clinic_id}
+          onChange={(e) => setFormData({ ...formData, clinic_id: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">{t.selectClinic}</option>
+          {clinics.map(clinic => (
+            <option key={clinic.id} value={clinic.id}>
+              {clinic.name} - {clinic.doctor_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Doctor Name */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t.doctor}
+        </label>
+        <input
+          type="text"
+          value={formData.doctor_name}
+          onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      {/* Products */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {t.products}
+          </label>
+          <button
+            type="button"
+            onClick={addItem}
+            className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+          >
+            {t.addProduct}
+          </button>
+        </div>
+        
+        <div className="space-y-3">
+          {formData.items.map((item, index) => (
+            <div key={index} className="grid grid-cols-12 gap-2 items-end">
+              <div className="col-span-4">
+                <select
+                  value={item.product_name}
+                  onChange={(e) => {
+                    const selectedProduct = products.find(p => p.name === e.target.value);
+                    handleItemChange(index, 'product_name', e.target.value);
+                    if (selectedProduct) {
+                      handleItemChange(index, 'unit_price', selectedProduct.price || 0);
+                    }
+                  }}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  required
+                >
+                  <option value="">{t.selectProduct}</option>
+                  {products.map(product => (
+                    <option key={product.id} value={product.name}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder={t.quantity}
+                />
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.unit_price}
+                  onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder={t.unitPrice}
+                />
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="text"
+                  value={`${(item.quantity * item.unit_price).toFixed(2)} ج.م`}
+                  readOnly
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-gray-50"
+                />
+              </div>
+              <div className="col-span-2">
+                {formData.items.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    className="w-full text-red-600 hover:text-red-800 text-sm"
+                  >
+                    {t.remove}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t.notes}
+        </label>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          rows="3"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Total Amount */}
+      <div className="bg-gray-50 p-3 rounded-md">
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-gray-700">{t.totalAmount}:</span>
+          <span className="text-lg font-bold text-green-600">
+            {formData.total_amount.toFixed(2)} ج.م
+          </span>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-4">
+        <button
+          type="submit"
+          disabled={loading || formData.items.length === 0}
+          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? (language === 'ar' ? 'جاري الإنشاء...' : 'Creating...') : t.create}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+        >
+          {t.cancel}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 // Professional Clinic Card Component
 const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
   const [showClassificationModal, setShowClassificationModal] = useState(false);
