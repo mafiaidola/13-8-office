@@ -19477,10 +19477,20 @@ const MovementsLog = ({ movements, language }) => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <button className="btn-info text-xs px-2 py-1" title={t.review}>
+                        <button 
+                          onClick={() => handleReviewMovement(movement.id)}
+                          className="btn-info text-xs px-2 py-1" 
+                          title={t.review}
+                          disabled={loading}
+                        >
                           👁️
                         </button>
-                        <button className="btn-danger text-xs px-2 py-1" title={t.cancel}>
+                        <button 
+                          onClick={() => handleCancelMovement(movement.id)}
+                          className="btn-danger text-xs px-2 py-1" 
+                          title={t.cancel}
+                          disabled={loading}
+                        >
                           ❌
                         </button>
                       </div>
