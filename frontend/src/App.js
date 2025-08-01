@@ -11053,7 +11053,7 @@ const MiniProfileSummary = ({ data }) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="glass-effect p-4 rounded-xl text-center">
           <div className="text-3xl font-bold text-blue-400">
-            {data.sales_activity.total_orders}
+            {data?.sales_activity?.total_orders || 0}
           </div>
           <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
             إجمالي الطلبات
