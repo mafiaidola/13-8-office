@@ -376,7 +376,7 @@ const DashboardLayout = () => {
           {/* Current Tab Component */}
           <div className="tab-content">
             <ComponentRenderer
-              componentName={SYSTEM_TABS[activeTab.toUpperCase()]?.component}
+              componentName={Object.values(SYSTEM_TABS).find(tab => tab.id === activeTab)?.component}
               user={user}
               language={language}
               isRTL={isRTL}
