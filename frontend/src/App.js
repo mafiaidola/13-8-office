@@ -16538,6 +16538,12 @@ const LinesManagement = () => {
                         <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
                           ✏️ تحرير
                         </button>
+                        <button 
+                          onClick={() => handleDeleteArea(area.id)}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                        >
+                          🗑️ حذف
+                        </button>
                       </div>
                     </div>
                   </div>
