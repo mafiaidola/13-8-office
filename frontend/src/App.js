@@ -604,7 +604,7 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
 };
 
 // Fixed backend URL configuration - PRODUCTION STABLE VERSION
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 const API = `${BACKEND_URL}/api`;
 
 // Comprehensive debugging for stability
