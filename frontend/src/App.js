@@ -10414,14 +10414,19 @@ const EnhancedProductManagement = () => {
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
       try {
         const token = localStorage.getItem('access_token');
-        await axios.delete(`${API}/products/${productId}/admin`, {
+        console.log('🔧 Deleting product:', productId);
+        
+        const response = await axios.delete(`${API}/products/${productId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        console.log('✅ Product deleted successfully:', response.data);
         fetchProducts();
         alert('تم حذف المنتج بنجاح');
       } catch (error) {
-        console.error('Error deleting product:', error);
-        alert('حدث خطأ أثناء حذف المنتج');
+        console.error('❌ Error deleting product:', error);
+        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف المنتج';
+        alert(`خطأ في حذف المنتج: ${errorMessage}`);
       }
     }
   };
