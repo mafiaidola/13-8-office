@@ -11147,18 +11147,18 @@ const MiniProfileSummary = ({ data }) => {
           <span>👤</span>
           <span>المدير المباشر</span>
         </h4>
-        {data.team_info.direct_manager ? (
+        {data?.team_info?.direct_manager ? (
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center text-white font-bold">
-              {data.team_info.direct_manager.name.charAt(0)}
+              {data.team_info.direct_manager.name?.charAt(0) || '?'}
             </div>
             <div>
-              <div className="font-bold">{data.team_info.direct_manager.name}</div>
+              <div className="font-bold">{data.team_info.direct_manager.name || 'غير محدد'}</div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {data.team_info.direct_manager.role}
+                {data.team_info.direct_manager.role || 'غير محدد'}
               </div>
               <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {data.team_info.direct_manager.phone}
+                {data.team_info.direct_manager.phone || 'غير محدد'}
               </div>
             </div>
           </div>
