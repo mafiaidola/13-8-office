@@ -16098,62 +16098,268 @@ const AdminClinicsManagement = () => {
 
       {/* Clinic Details Modal */}
       {showModal && selectedClinic && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">تفاصيل العيادة</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">اسم العيادة</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.name}</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">تفاصيل العيادة: {selectedClinic.name}</h3>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">اسم الطبيب</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.doctor_name || 'غير محدد'}</p>
+
+              {/* Tabs */}
+              <div className="mb-6">
+                <nav className="flex space-x-8 rtl:space-x-reverse">
+                  <button
+                    onClick={() => setActiveTab('basic')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'basic'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    المعلومات الأساسية
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('advanced')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'advanced'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    التفاصيل المتقدمة
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'orders'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    الطلبات والمديونية
+                  </button>
+                </nav>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">التخصص</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.specialization || 'غير محدد'}</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">رقم الهاتف</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.phone || 'غير محدد'}</p>
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700">العنوان</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.address || 'غير محدد'}</p>
-              </div>
-              
-              {selectedClinic.notes && (
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">ملاحظات</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedClinic.notes}</p>
+
+              {/* Tab Content */}
+              {activeTab === 'basic' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">اسم العيادة</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.name || 'غير محدد'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">اسم الطبيب</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.doctor_name || 'غير محدد'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">التخصص</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.specialization || 'غير محدد'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">رقم الهاتف</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.phone || 'غير محدد'}</p>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">العنوان</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.address || 'غير محدد'}</p>
+                  </div>
+                  
+                  {selectedClinic.notes && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700">ملاحظات</label>
+                      <p className="mt-1 text-sm text-gray-900">{selectedClinic.notes}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">تاريخ التسجيل</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedClinic.created_at ? new Date(selectedClinic.created_at).toLocaleString('ar-EG') : 'غير محدد'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">مُسجل من قِبل</label>
+                    <p className="mt-1 text-sm text-gray-900 font-semibold text-blue-600">
+                      {selectedClinic.created_by_name || 'غير محدد'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">موقع التسجيل</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedClinic.latitude && selectedClinic.longitude 
+                        ? `${selectedClinic.latitude.toFixed(6)}, ${selectedClinic.longitude.toFixed(6)}`
+                        : 'غير محدد'
+                      }
+                    </p>
+                    {selectedClinic.latitude && selectedClinic.longitude && (
+                      <button
+                        onClick={() => window.open(`https://maps.google.com/?q=${selectedClinic.latitude},${selectedClinic.longitude}`, '_blank')}
+                        className="mt-1 text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        🗺️ عرض على الخريطة
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">تاريخ التسجيل</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {selectedClinic.created_at ? new Date(selectedClinic.created_at).toLocaleString('ar-EG') : 'غير محدد'}
-                </p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">مُسجل من قِبل</label>
-                <p className="mt-1 text-sm text-gray-900">{selectedClinic.created_by_name || 'غير محدد'}</p>
-              </div>
+
+              {activeTab === 'advanced' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">تصنيف العيادة</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedClinic.classification === 'A' ? 'bg-green-100 text-green-800' :
+                        selectedClinic.classification === 'B' ? 'bg-blue-100 text-blue-800' :
+                        selectedClinic.classification === 'C' ? 'bg-yellow-100 text-yellow-800' :
+                        selectedClinic.classification === 'D' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedClinic.classification ? `فئة ${selectedClinic.classification}` : 'غير مصنف'}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">الحالة الائتمانية</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedClinic.credit_status === 'green' ? 'bg-green-100 text-green-800' :
+                        selectedClinic.credit_status === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                        selectedClinic.credit_status === 'red' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {selectedClinic.credit_status === 'green' ? '🟢 ممتاز' :
+                         selectedClinic.credit_status === 'yellow' ? '🟡 متوسط' :
+                         selectedClinic.credit_status === 'red' ? '🔴 ضعيف' :
+                         '⚪ غير محدد'}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">المنطقة المضمومة</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedClinic.area_name || 'غير محددة'}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">الخط التابع له</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedClinic.lines ? (
+                        <span className="space-x-2 rtl:space-x-reverse">
+                          {selectedClinic.lines.split(',').map((line, index) => (
+                            <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {line.trim()}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        'غير محدد'
+                      )}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">آخر زيارة</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {selectedClinic.last_visit_date ? 
+                        new Date(selectedClinic.last_visit_date).toLocaleDateString('ar-EG') : 
+                        'لم تتم زيارة بعد'
+                      }
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">عدد الزيارات</label>
+                    <p className="mt-1 text-sm text-gray-900 font-semibold text-blue-600">
+                      {selectedClinic.visits_count || 0} زيارة
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'orders' && (
+                <div className="space-y-6">
+                  {/* Financial Summary */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-green-600">إجمالي الطلبات</p>
+                          <p className="text-2xl font-bold text-green-900">
+                            {selectedClinic.total_orders || 0}
+                          </p>
+                        </div>
+                        <div className="text-green-500 text-2xl">📦</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-yellow-600">إجمالي المديونية</p>
+                          <p className="text-2xl font-bold text-yellow-900">
+                            {selectedClinic.total_debt ? `${selectedClinic.total_debt} ج.م` : '0 ج.م'}
+                          </p>
+                        </div>
+                        <div className="text-yellow-500 text-2xl">💳</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-blue-600">باقي المديونية</p>
+                          <p className="text-2xl font-bold text-blue-900">
+                            {selectedClinic.remaining_debt ? `${selectedClinic.remaining_debt} ج.م` : '0 ج.م'}
+                          </p>
+                        </div>
+                        <div className="text-blue-500 text-2xl">💰</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Orders */}
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-3">آخر الطلبات</h4>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      {selectedClinic.recent_orders && selectedClinic.recent_orders.length > 0 ? (
+                        <div className="space-y-3">
+                          {selectedClinic.recent_orders.map((order, index) => (
+                            <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
+                              <div>
+                                <p className="font-medium text-gray-900">طلب رقم: {order.id}</p>
+                                <p className="text-sm text-gray-600">
+                                  {new Date(order.created_at).toLocaleDateString('ar-EG')} - {order.status}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium text-gray-900">{order.total_amount} ج.م</p>
+                                <p className="text-sm text-gray-600">{order.items_count} منتج</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-gray-500 py-4">لا توجد طلبات حتى الآن</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
