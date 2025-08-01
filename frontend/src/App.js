@@ -16144,7 +16144,579 @@ const AdminClinicsManagement = () => {
   );
 };
 
-// Enhanced Lines Management Component - IMPROVEMENTS
+// Enhanced Lines Management Component - COMPLETE FUNCTIONALITY
+const LinesManagement = () => {
+  const [lines, setLines] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAreaModal, setShowAreaModal] = useState(false);
+  const [createType, setCreateType] = useState('line'); // 'line' or 'area'
+  const [formData, setFormData] = useState({
+    name: '',
+    code: '',
+    description: '',
+    manager_id: '',
+    parent_line_id: ''
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [linesRes, areasRes, usersRes, productsRes] = await Promise.all([
+        axios.get(`${API}/lines`, { headers }),
+        axios.get(`${API}/areas`, { headers }),
+        axios.get(`${API}/users`, { headers }),
+        axios.get(`${API}/products`, { headers })
+      ]);
+
+      setLines(linesRes.data || []);
+      setAreas(areasRes.data || []);
+      setUsers(usersRes.data || []);
+      setProducts(productsRes.data || []);
+      setError('');
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError('خطأ في تحميل البيانات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateLine = async () => {
+    if (!formData.name || !formData.code) {
+      alert('يرجى ملء جميع الحقول المطلوبة');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.post(`${API}/lines`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('✅ Line created successfully:', response.data);
+      setLines(prev => [...prev, response.data.line || response.data]);
+      setShowCreateModal(false);
+      setFormData({ name: '', code: '', description: '', manager_id: '', parent_line_id: '' });
+      alert('تم إنشاء الخط بنجاح');
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('❌ Error creating line:', error);
+      alert('خطأ في إنشاء الخط: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleCreateArea = async () => {
+    if (!formData.name || !formData.code) {
+      alert('يرجى ملء جميع الحقول المطلوبة');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.post(`${API}/areas`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('✅ Area created successfully:', response.data);
+      setAreas(prev => [...prev, response.data.area || response.data]);
+      setShowAreaModal(false);
+      setFormData({ name: '', code: '', description: '', manager_id: '', parent_line_id: '' });
+      alert('تم إنشاء المنطقة بنجاح');
+      loadData(); // Refresh data
+    } catch (error) {
+      console.error('❌ Error creating area:', error);
+      alert('خطأ في إنشاء المنطقة: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const getLineManagers = () => users.filter(u => u.role === 'line_manager');
+  const getAreaManagers = () => users.filter(u => u.role === 'area_manager');
+  const getProductsByLine = (lineId) => products.filter(p => p.line_id === lineId);
+
+  const tabs = [
+    { id: 'overview', label: 'نظرة عامة', icon: '📊' },
+    { id: 'lines', label: 'إدارة الخطوط', icon: '🗺️' }
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header with Statistics */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">🗺️ إدارة الخطوط والمناطق</h1>
+        <p className="text-sm text-gray-300">إدارة شاملة للخطوط والمناطق مع ربط المديرين والمنتجات</p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-blue-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">إجمالي الخطوط</p>
+              <p className="text-2xl font-bold">{lines.length}</p>
+            </div>
+            <span className="text-3xl">🗺️</span>
+          </div>
+        </div>
+
+        <div className="bg-green-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">إجمالي المناطق</p>
+              <p className="text-2xl font-bold">{areas.length}</p>
+            </div>
+            <span className="text-3xl">📍</span>
+          </div>
+        </div>
+
+        <div className="bg-purple-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">مديري الخطوط</p>
+              <p className="text-2xl font-bold">{getLineManagers().length}</p>
+            </div>
+            <span className="text-3xl">👨‍💼</span>
+          </div>
+        </div>
+
+        <div className="bg-orange-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">مديري المناطق</p>
+              <p className="text-2xl font-bold">{getAreaManagers().length}</p>
+            </div>
+            <span className="text-3xl">👩‍💼</span>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 mb-6 bg-white/10 rounded-lg p-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? 'bg-white text-gray-800'
+                : 'text-white hover:bg-white/20'
+            }`}
+          >
+            <span className="mr-2">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Lines Management Tab */}
+      {activeTab === 'lines' && (
+        <div className="space-y-8">
+          {/* Lines Section */}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">🗺️ إدارة الخطوط</h3>
+              <button
+                onClick={() => {
+                  console.log('إضافة خط جديد - فتح النموذج');
+                  setCreateType('line');
+                  setShowCreateModal(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors"
+              >
+                <span>➕</span>
+                <span>إضافة خط جديد</span>
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <span className="mr-3 text-white">جاري تحميل الخطوط...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {lines.map((line) => (
+                  <div key={line.id} className="bg-white/10 rounded-lg p-6 hover:bg-white/15 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-lg text-white">{line.name}</h4>
+                        <p className="text-sm text-gray-300">كود: {line.code}</p>
+                      </div>
+                      <span className="text-2xl">🗺️</span>
+                    </div>
+
+                    {line.description && (
+                      <p className="text-sm text-gray-300 mb-4">{line.description}</p>
+                    )}
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">المدير:</span>
+                        <span className="text-white">{line.manager_name || 'غير محدد'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">المناطق:</span>
+                        <span className="text-white">{areas.filter(a => a.parent_line_id === line.id).length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">المنتجات:</span>
+                        <span className="text-white">{getProductsByLine(line.id).length}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-white/20">
+                      <div className="flex space-x-2 rtl:space-x-reverse">
+                        <button className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                          👁️ عرض
+                        </button>
+                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                          ✏️ تحرير
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {lines.length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <span className="text-4xl mb-4 block">🗺️</span>
+                    <p className="text-gray-400 mb-4">لا توجد خطوط مُنشأة بعد</p>
+                    <button
+                      onClick={() => {
+                        setCreateType('line');
+                        setShowCreateModal(true);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+                    >
+                      ➕ إنشاء أول خط
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Areas Section */}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">📍 إدارة المناطق</h3>
+              <button
+                onClick={() => {
+                  console.log('إضافة منطقة جديدة - فتح النموذج');
+                  setCreateType('area');
+                  setShowAreaModal(true);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 rtl:space-x-reverse transition-colors"
+              >
+                <span>➕</span>
+                <span>إضافة منطقة جديدة</span>
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <span className="mr-3 text-white">جاري تحميل المناطق...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {areas.map((area) => (
+                  <div key={area.id} className="bg-white/10 rounded-lg p-6 hover:bg-white/15 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-lg text-white">{area.name}</h4>
+                        <p className="text-sm text-gray-300">كود: {area.code}</p>
+                      </div>
+                      <span className="text-2xl">📍</span>
+                    </div>
+
+                    {area.description && (
+                      <p className="text-sm text-gray-300 mb-4">{area.description}</p>
+                    )}
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">الخط الأساسي:</span>
+                        <span className="text-white">{area.parent_line_name || 'غير محدد'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">المدير:</span>
+                        <span className="text-white">{area.manager_name || 'غير محدد'}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-white/20">
+                      <div className="flex space-x-2 rtl:space-x-reverse">
+                        <button className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                          👁️ عرض
+                        </button>
+                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                          ✏️ تحرير
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {areas.length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <span className="text-4xl mb-4 block">📍</span>
+                    <p className="text-gray-400 mb-4">لا توجد مناطق مُنشأة بعد</p>
+                    <button
+                      onClick={() => {
+                        setCreateType('area');
+                        setShowAreaModal(true);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg"
+                    >
+                      ➕ إنشاء أول منطقة
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          <h3 className="text-xl font-bold text-center mb-6">📊 نظرة عامة على الخطوط والمناطق</h3>
+          
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white/10 rounded-lg p-6 text-center">
+              <span className="text-4xl mb-4 block">🗺️</span>
+              <h4 className="text-lg font-bold text-white mb-2">إدارة الخطوط</h4>
+              <p className="text-gray-300 mb-4">إنشاء وإدارة الخطوط الجغرافية</p>
+              <button
+                onClick={() => setActiveTab('lines')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+              >
+                إدارة الخطوط
+              </button>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-6 text-center">
+              <span className="text-4xl mb-4 block">📍</span>
+              <h4 className="text-lg font-bold text-white mb-2">إدارة المناطق</h4>
+              <p className="text-gray-300 mb-4">إنشاء وإدارة المناطق التابعة للخطوط</p>
+              <button
+                onClick={() => setActiveTab('lines')}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg"
+              >
+                إدارة المناطق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Line Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-800">➕ إنشاء خط جديد</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الخط *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="أدخل اسم الخط..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">كود الخط *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="أدخل كود الخط..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows="3"
+                  placeholder="وصف اختياري للخط..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مدير الخط</label>
+                <select
+                  value={formData.manager_id}
+                  onChange={(e) => setFormData({...formData, manager_id: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">اختر مدير الخط...</option>
+                  {getLineManagers().map(manager => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.full_name || manager.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 rtl:space-x-reverse mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleCreateLine}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                إنشاء الخط
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Area Modal */}
+      {showAreaModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-800">➕ إنشاء منطقة جديدة</h3>
+              <button
+                onClick={() => setShowAreaModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المنطقة *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="أدخل اسم المنطقة..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">كود المنطقة *</label>
+                <input
+                  type="text"
+                  value={formData.code}
+                  onChange={(e) => setFormData({...formData, code: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="أدخل كود المنطقة..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">الخط الأساسي</label>
+                <select
+                  value={formData.parent_line_id}
+                  onChange={(e) => setFormData({...formData, parent_line_id: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">اختر الخط الأساسي...</option>
+                  {lines.map(line => (
+                    <option key={line.id} value={line.id}>
+                      {line.name} ({line.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows="3"
+                  placeholder="وصف اختياري للمنطقة..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">مدير المنطقة</label>
+                <select
+                  value={formData.manager_id}
+                  onChange={(e) => setFormData({...formData, manager_id: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">اختر مدير المنطقة...</option>
+                  {getAreaManagers().map(manager => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.full_name || manager.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 rtl:space-x-reverse mt-6">
+              <button
+                onClick={() => setShowAreaModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleCreateArea}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                إنشاء المنطقة
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Enhanced Product Management with Role-Based Permissions - FINAL VERSION
 
 const ClinicRegistration = () => {
   const [formData, setFormData] = useState({
