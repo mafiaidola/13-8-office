@@ -10987,7 +10987,7 @@ const MiniProfile = ({ user, onClose }) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-yellow-400">👥</span>
-                  <span>{profileData.team_info.direct_manager?.name || 'لا يوجد'}</span>
+                  <span>{profileData?.team_info?.direct_manager?.name || 'لا يوجد'}</span>
                 </div>
               </div>
             </div>
