@@ -10393,15 +10393,20 @@ const EnhancedProductManagement = () => {
   const handleUpdateProduct = async (productId, productData) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.put(`${API}/products/${productId}/admin`, productData, {
+      console.log('🔧 Updating product:', productId, 'with data:', productData);
+      
+      const response = await axios.put(`${API}/products/${productId}`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('✅ Product updated successfully:', response.data);
       fetchProducts();
       setShowProductModal(false);
       alert('تم تحديث المنتج بنجاح');
     } catch (error) {
-      console.error('Error updating product:', error);
-      alert('حدث خطأ أثناء تحديث المنتج');
+      console.error('❌ Error updating product:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث المنتج';
+      alert(`خطأ في تحديث المنتج: ${errorMessage}`);
     }
   };
 
