@@ -15770,6 +15770,7 @@ const LocationComparisonMap = ({ location1, location2, distance }) => {
   );
 };
 
+// Enhanced Lines Management Component - IMPROVEMENTS
 const AdminClinicsManagement = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
