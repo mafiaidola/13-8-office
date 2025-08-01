@@ -19032,30 +19032,68 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
 const OrdersManagement = ({ orders, onRefresh, language }) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleApproveOrder = async (orderId) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('access_token');
-      await axios.patch(`${API}/orders/${orderId}/review`, 
+      const response = await axios.patch(`${API}/orders/${orderId}/review`, 
         { approved: true },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log('✅ Order approved:', response.data);
+      alert('تم اعتماد الطلبية بنجاح');
       onRefresh();
     } catch (error) {
-      console.error('Error approving order:', error);
+      console.error('❌ Error approving order:', error);
+      alert('خطأ في اعتماد الطلبية: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRejectOrder = async (orderId) => {
+    if (window.confirm('هل أنت متأكد من رفض هذه الطلبية؟')) {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('access_token');
+        const response = await axios.patch(`${API}/orders/${orderId}/review`, 
+          { approved: false },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        console.log('✅ Order rejected:', response.data);
+        alert('تم رفض الطلبية');
+        onRefresh();
+      } catch (error) {
+        console.error('❌ Error rejecting order:', error);
+        alert('خطأ في رفض الطلبية: ' + (error.response?.data?.detail || error.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleCreateOrder = async (orderData) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('access_token');
-      await axios.patch(`${API}/orders/${orderId}/review`, 
-        { approved: false },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.post(`${API}/orders`, orderData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('✅ Order created by admin:', response.data);
+      alert('تم إنشاء الطلبية بنجاح وتسجيلها كمديونية في النظام');
+      setShowCreateOrderModal(false);
       onRefresh();
     } catch (error) {
-      console.error('Error rejecting order:', error);
+      console.error('❌ Error creating order:', error);
+      alert('خطأ في إنشاء الطلبية: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
     }
   };
   const t = language === 'ar' ? {
