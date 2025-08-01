@@ -13897,6 +13897,21 @@ const WarehouseManagement = () => {
 
 // Warehouse Dashboard Component
 const WarehouseDashboard = ({ stats, warehouses, inventory, loading, language }) => {
+  const [showAddWarehouseModal, setShowAddWarehouseModal] = useState(false);
+  const [showWarehouseSettingsModal, setShowWarehouseSettingsModal] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [showWarehouseDetails, setShowWarehouseDetails] = useState(false);
+
+  const handleViewWarehouseDetails = (warehouse) => {
+    setSelectedWarehouse(warehouse);
+    setShowWarehouseDetails(true);
+  };
+
+  const handleEditWarehouse = (warehouse) => {
+    setSelectedWarehouse(warehouse);
+    setShowAddWarehouseModal(true);
+  };
+
   const t = language === 'ar' ? {
     warehouseOverview: 'نظرة عامة على المخازن',
     urgentActions: '🚨 إجراءات عاجلة مطلوبة',
