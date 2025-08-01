@@ -19258,6 +19258,28 @@ const MainApp = () => {
           <WarehouseKeeperDashboard />
         )}
 
+        {/* Daily Login Records - NEW COMPONENT */}
+        {activeTab === 'daily-login-records' && (user.role === 'admin' || user.role === 'gm') && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white">📊 سجل تسجيل الدخول اليومي</h2>
+              <p className="text-gray-300">مراقبة تسجيل دخول المستخدمين والتحقق من الهوية البيومترية</p>
+            </div>
+            <DailyLoginRecords />
+          </div>
+        )}
+
+        {/* Admin Clinics Management - NEW COMPONENT */}
+        {activeTab === 'admin-clinics' && (user.role === 'admin' || user.role === 'gm') && (
+          <div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white">🏥 إدارة العيادات (أدمن)</h2>
+              <p className="text-gray-300">إدارة شاملة للعيادات والأطباء والموافقات</p>
+            </div>
+            <AdminClinicsManagement />
+          </div>
+        )}
+
         {/* Enhanced Products Management - FIXED FOR ADMIN ACCESS */}
         {activeTab === 'products' && (user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin') && (
           <div>
