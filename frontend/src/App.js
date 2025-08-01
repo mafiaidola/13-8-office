@@ -16263,6 +16263,50 @@ const LinesManagement = () => {
   const getAreaManagers = () => users.filter(u => u.role === 'area_manager');
   const getProductsByLine = (lineId) => products.filter(p => p.line_id === lineId);
 
+  const handleDeleteLine = async (lineId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا الخط؟ سيتم حذفه نهائياً.')) {
+      try {
+        const token = localStorage.getItem('access_token');
+        console.log('🔧 Deleting line:', lineId);
+        
+        const response = await axios.delete(`${API}/lines/${lineId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('✅ Line deleted successfully:', response.data);
+        setLines(prev => prev.filter(line => line.id !== lineId));
+        alert('تم حذف الخط بنجاح');
+        loadData(); // Refresh data
+      } catch (error) {
+        console.error('❌ Error deleting line:', error);
+        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف الخط';
+        alert(`خطأ في حذف الخط: ${errorMessage}`);
+      }
+    }
+  };
+
+  const handleDeleteArea = async (areaId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه المنطقة؟ سيتم حذفها نهائياً.')) {
+      try {
+        const token = localStorage.getItem('access_token');
+        console.log('🔧 Deleting area:', areaId);
+        
+        const response = await axios.delete(`${API}/areas/${areaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('✅ Area deleted successfully:', response.data);
+        setAreas(prev => prev.filter(area => area.id !== areaId));
+        alert('تم حذف المنطقة بنجاح');
+        loadData(); // Refresh data
+      } catch (error) {
+        console.error('❌ Error deleting area:', error);
+        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف المنطقة';
+        alert(`خطأ في حذف المنطقة: ${errorMessage}`);
+      }
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'نظرة عامة', icon: '📊' },
     { id: 'lines', label: 'إدارة الخطوط', icon: '🗺️' }
