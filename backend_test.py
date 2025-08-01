@@ -1,5 +1,391 @@
 #!/usr/bin/env python3
 """
+اختبار شامل سريع لـ APIs إدارة الطلبات (Orders Management) في النظام
+Quick comprehensive test for Orders Management APIs in the system
+
+المطلوب اختبار:
+1) تسجيل دخول admin/admin123 للحصول على JWT token
+2) اختبار GET /api/orders/pending للحصول على الطلبات المعلقة
+3) اختبار POST /api/orders لإنشاء طلبية جديدة
+4) اختبار PATCH /api/orders/{id}/review لاعتماد/رفض الطلبيات
+5) التأكد من أن جميع APIs تعمل بشكل صحيح
+
+الهدف: التأكد من أن الباكند جاهز لدعم زر "إنشاء طلبية جديدة" في الواجهة الأمامية.
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BASE_URL = "https://4bd6a5b6-7d69-4d01-ab9e-6f0ddd678934.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class OrdersManagementTester:
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.token = None
+        self.headers = {"Content-Type": "application/json"}
+        self.test_results = []
+        self.created_order_id = None
+        
+    def log_result(self, test_name, success, message, response_time=None):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ نجح" if success else "❌ فشل"
+        time_info = f" ({response_time:.2f}ms)" if response_time else ""
+        result = f"{status} {test_name}{time_info}: {message}"
+        self.test_results.append(result)
+        print(result)
+        
+    def test_admin_login(self):
+        """اختبار تسجيل دخول الأدمن"""
+        print("\n🔐 اختبار تسجيل دخول admin/admin123...")
+        
+        login_data = {
+            "username": ADMIN_USERNAME,
+            "password": ADMIN_PASSWORD
+        }
+        
+        try:
+            start_time = time.time()
+            response = requests.post(f"{self.base_url}/auth/login", 
+                                   json=login_data, 
+                                   headers=self.headers,
+                                   timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.token = data["access_token"]
+                    self.headers["Authorization"] = f"Bearer {self.token}"
+                    user_info = data.get("user", {})
+                    self.log_result("تسجيل دخول الأدمن", True, 
+                                  f"نجح تسجيل الدخول - المستخدم: {user_info.get('full_name', 'admin')}, الدور: {user_info.get('role', 'admin')}", 
+                                  response_time)
+                    return True
+                else:
+                    self.log_result("تسجيل دخول الأدمن", False, "لا يوجد access_token في الاستجابة", response_time)
+                    return False
+            else:
+                self.log_result("تسجيل دخول الأدمن", False, f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("تسجيل دخول الأدمن", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def test_get_pending_orders(self):
+        """اختبار GET /api/orders/pending للحصول على الطلبات المعلقة"""
+        print("\n📋 اختبار GET /api/orders/pending...")
+        
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.base_url}/orders/pending", 
+                                  headers=self.headers,
+                                  timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_result("GET /api/orders/pending", True, 
+                                  f"تم جلب {len(data)} طلب معلق بنجاح", response_time)
+                    return True
+                else:
+                    self.log_result("GET /api/orders/pending", True, 
+                                  f"تم جلب الطلبات المعلقة بنجاح - النوع: {type(data)}", response_time)
+                    return True
+            elif response.status_code == 404:
+                self.log_result("GET /api/orders/pending", False, 
+                              "API endpoint غير موجود - قد يحتاج تطبيق", response_time)
+                return False
+            else:
+                self.log_result("GET /api/orders/pending", False, 
+                              f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("GET /api/orders/pending", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def get_test_data_for_order(self):
+        """الحصول على البيانات المطلوبة لإنشاء طلب اختبار"""
+        print("\n🔍 جمع البيانات المطلوبة لإنشاء الطلب...")
+        
+        # Get clinics
+        try:
+            response = requests.get(f"{self.base_url}/clinics", headers=self.headers, timeout=10)
+            clinics = response.json() if response.status_code == 200 else []
+            print(f"   العيادات المتاحة: {len(clinics)}")
+        except:
+            clinics = []
+        
+        # Get warehouses
+        try:
+            response = requests.get(f"{self.base_url}/warehouses", headers=self.headers, timeout=10)
+            warehouses = response.json() if response.status_code == 200 else []
+            print(f"   المخازن المتاحة: {len(warehouses)}")
+        except:
+            warehouses = []
+        
+        # Get products
+        try:
+            response = requests.get(f"{self.base_url}/products", headers=self.headers, timeout=10)
+            products = response.json() if response.status_code == 200 else []
+            print(f"   المنتجات المتاحة: {len(products)}")
+        except:
+            products = []
+        
+        return clinics, warehouses, products
+    
+    def test_create_order(self):
+        """اختبار POST /api/orders لإنشاء طلبية جديدة"""
+        print("\n📦 اختبار POST /api/orders لإنشاء طلبية جديدة...")
+        
+        # Get test data
+        clinics, warehouses, products = self.get_test_data_for_order()
+        
+        if not clinics:
+            self.log_result("إنشاء طلب جديد", False, "لا توجد عيادات متاحة لإنشاء الطلب")
+            return False
+        
+        if not warehouses:
+            self.log_result("إنشاء طلب جديد", False, "لا توجد مخازن متاحة لإنشاء الطلب")
+            return False
+        
+        if not products:
+            self.log_result("إنشاء طلب جديد", False, "لا توجد منتجات متاحة لإنشاء الطلب")
+            return False
+        
+        # Create test order data
+        order_data = {
+            "clinic_id": clinics[0]["id"],
+            "warehouse_id": warehouses[0]["id"],
+            "items": [
+                {
+                    "product_id": products[0]["id"],
+                    "quantity": 2
+                }
+            ],
+            "notes": "طلب اختبار من نظام الاختبار الآلي",
+            "line": "خط اختبار",
+            "area_id": "منطقة اختبار",
+            "debt_warning_acknowledged": True,
+            "debt_override_reason": "اختبار النظام"
+        }
+        
+        try:
+            start_time = time.time()
+            response = requests.post(f"{self.base_url}/orders", 
+                                   json=order_data, 
+                                   headers=self.headers,
+                                   timeout=15)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "order_id" in data:
+                    self.created_order_id = data["order_id"]
+                    order_number = data.get("order_number", "غير محدد")
+                    total_amount = data.get("total_amount", 0)
+                    self.log_result("إنشاء طلب جديد", True, 
+                                  f"تم إنشاء الطلب بنجاح - رقم الطلب: {order_number}, المبلغ: {total_amount} ج.م", 
+                                  response_time)
+                    return True
+                else:
+                    self.log_result("إنشاء طلب جديد", True, 
+                                  f"تم إنشاء الطلب بنجاح - الاستجابة: {data}", response_time)
+                    return True
+            elif response.status_code == 400:
+                error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
+                self.log_result("إنشاء طلب جديد", False, 
+                              f"خطأ في البيانات المرسلة: {error_data}", response_time)
+                return False
+            else:
+                self.log_result("إنشاء طلب جديد", False, 
+                              f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("إنشاء طلب جديد", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def test_get_all_orders(self):
+        """اختبار GET /api/orders للحصول على جميع الطلبات"""
+        print("\n📋 اختبار GET /api/orders للحصول على جميع الطلبات...")
+        
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.base_url}/orders", 
+                                  headers=self.headers,
+                                  timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_result("GET /api/orders", True, 
+                                  f"تم جلب {len(data)} طلب بنجاح", response_time)
+                    
+                    # Show some order details
+                    if data:
+                        recent_order = data[0]
+                        order_info = f"آخر طلب: ID={recent_order.get('id', 'N/A')[:8]}..., الحالة={recent_order.get('status', 'N/A')}"
+                        print(f"   {order_info}")
+                    
+                    return True
+                else:
+                    self.log_result("GET /api/orders", True, 
+                                  f"تم جلب الطلبات بنجاح - النوع: {type(data)}", response_time)
+                    return True
+            else:
+                self.log_result("GET /api/orders", False, 
+                              f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("GET /api/orders", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def test_order_review(self):
+        """اختبار PATCH /api/orders/{id}/review لاعتماد/رفض الطلبيات"""
+        print("\n✅ اختبار PATCH /api/orders/{id}/review...")
+        
+        if not self.created_order_id:
+            self.log_result("مراجعة الطلب", False, "لا يوجد طلب تم إنشاؤه للمراجعة")
+            return False
+        
+        # Test approval
+        review_data = {
+            "action": "approve",
+            "review_notes": "تم اعتماد الطلب من نظام الاختبار الآلي"
+        }
+        
+        try:
+            start_time = time.time()
+            response = requests.patch(f"{self.base_url}/orders/{self.created_order_id}/review", 
+                                    json=review_data, 
+                                    headers=self.headers,
+                                    timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log_result("مراجعة الطلب (اعتماد)", True, 
+                              f"تم اعتماد الطلب بنجاح - الاستجابة: {data}", response_time)
+                return True
+            elif response.status_code == 404:
+                self.log_result("مراجعة الطلب (اعتماد)", False, 
+                              "API endpoint غير موجود - قد يحتاج تطبيق", response_time)
+                return False
+            else:
+                self.log_result("مراجعة الطلب (اعتماد)", False, 
+                              f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("مراجعة الطلب (اعتماد)", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def test_order_status_check(self):
+        """اختبار فحص حالة الطلب بعد المراجعة"""
+        print("\n🔍 اختبار فحص حالة الطلب بعد المراجعة...")
+        
+        if not self.created_order_id:
+            self.log_result("فحص حالة الطلب", False, "لا يوجد طلب للفحص")
+            return False
+        
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.base_url}/orders/{self.created_order_id}", 
+                                  headers=self.headers,
+                                  timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                status = data.get("status", "غير محدد")
+                self.log_result("فحص حالة الطلب", True, 
+                              f"حالة الطلب: {status}", response_time)
+                return True
+            elif response.status_code == 404:
+                self.log_result("فحص حالة الطلب", False, 
+                              "API endpoint غير موجود أو الطلب غير موجود", response_time)
+                return False
+            else:
+                self.log_result("فحص حالة الطلب", False, 
+                              f"HTTP {response.status_code}: {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_result("فحص حالة الطلب", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل لإدارة الطلبات"""
+        print("🚀 بدء الاختبار الشامل لـ APIs إدارة الطلبات (Orders Management)")
+        print("=" * 80)
+        
+        test_start_time = time.time()
+        
+        # Test sequence
+        tests = [
+            ("تسجيل دخول الأدمن", self.test_admin_login),
+            ("جلب الطلبات المعلقة", self.test_get_pending_orders),
+            ("إنشاء طلب جديد", self.test_create_order),
+            ("جلب جميع الطلبات", self.test_get_all_orders),
+            ("مراجعة الطلب", self.test_order_review),
+            ("فحص حالة الطلب", self.test_order_status_check)
+        ]
+        
+        passed_tests = 0
+        total_tests = len(tests)
+        
+        for test_name, test_func in tests:
+            if test_func():
+                passed_tests += 1
+        
+        # Calculate results
+        success_rate = (passed_tests / total_tests) * 100
+        total_time = time.time() - test_start_time
+        
+        print("\n" + "=" * 80)
+        print("📊 نتائج الاختبار الشامل لإدارة الطلبات:")
+        print(f"✅ الاختبارات الناجحة: {passed_tests}/{total_tests}")
+        print(f"📈 معدل النجاح: {success_rate:.1f}%")
+        print(f"⏱️  الوقت الإجمالي: {total_time:.2f} ثانية")
+        
+        if success_rate >= 80:
+            print("🎉 النتيجة: النظام جاهز لدعم زر 'إنشاء طلبية جديدة' في الواجهة الأمامية!")
+        elif success_rate >= 60:
+            print("⚠️  النتيجة: النظام يعمل جزئياً - يحتاج بعض الإصلاحات")
+        else:
+            print("❌ النتيجة: النظام يحتاج إصلاحات كبيرة قبل الاستخدام")
+        
+        print("\n📋 تفاصيل النتائج:")
+        for result in self.test_results:
+            print(f"   {result}")
+        
+        return success_rate >= 80
+
+def main():
+    """تشغيل اختبار إدارة الطلبات"""
+    tester = OrdersManagementTester()
+    success = tester.run_comprehensive_test()
+    
+    if success:
+        print(f"\n🎯 الخلاصة النهائية: الباكند جاهز لدعم إدارة الطلبات!")
+        exit(0)
+    else:
+        print(f"\n🚨 الخلاصة النهائية: الباكند يحتاج إصلاحات في إدارة الطلبات!")
+        exit(1)
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار سريع لمشكلة إدارة المنتجات - المستخدم لا يستطيع الإضافة أو الحذف
 Quick test for product management issue - User cannot add or delete products
 
