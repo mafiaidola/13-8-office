@@ -19146,10 +19146,20 @@ const OrdersManagement = ({ orders, onRefresh, language }) => {
   return (
     <div className="space-y-6">
       <div className="card-modern p-6">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <span>🛒</span>
-          <span>{t.ordersTitle}</span>
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <span>🛒</span>
+            <span>{t.ordersTitle}</span>
+          </h3>
+          <button
+            onClick={() => setShowCreateOrderModal(true)}
+            className="btn-primary flex items-center gap-2"
+            disabled={loading}
+          >
+            <span>➕</span>
+            <span>{language === 'ar' ? 'إنشاء طلبية جديدة' : 'Create New Order'}</span>
+          </button>
+        </div>
 
         <div className="table-modern overflow-x-auto">
           <table className="min-w-full">
