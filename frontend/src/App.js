@@ -16145,11 +16145,9 @@ const AdminClinicsManagement = () => {
 };
 
 // Enhanced Lines Management Component - IMPROVEMENTS
-  const [clinics, setClinics] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedClinic, setSelectedClinic] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const { language } = useLanguage();
+
+const ClinicRegistration = () => {
+  const [formData, setFormData] = useState({
 
   const t = language === 'ar' ? {
     title: 'إدارة العيادات',
