@@ -27731,6 +27731,44 @@ const EnhancedUserManagementV2 = () => {
               </button>
             </div>
           </div>
+          
+          {/* Bulk Actions */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-white border-opacity-20">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm">تحديد الكل ({filteredUsers.length})</span>
+              </label>
+              
+              {selectedUsers.length > 0 && (
+                <span className="text-sm bg-blue-100 bg-opacity-20 text-blue-400 px-3 py-1 rounded">
+                  تم تحديد {selectedUsers.length} مستخدم
+                </span>
+              )}
+            </div>
+            
+            {selectedUsers.length > 0 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBulkDelete}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  🗑️ حذف المحدد ({selectedUsers.length})
+                </button>
+                <button
+                  onClick={() => setSelectedUsers([])}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                >
+                  إلغاء التحديد
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Users Grid */}
