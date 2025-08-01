@@ -20422,7 +20422,7 @@ const MainApp = () => {
           <VisitRegistration />
         )}
 
-        {activeTab === 'register-clinic' && (['key_account', 'medical_rep'].includes(normalizeRole(user.role))) && (
+        {activeTab === 'register-clinic' && (['key_account', 'medical_rep', 'admin'].includes(normalizeRole(user.role))) && (
           <RepClinicRegistration />
         )}
 
