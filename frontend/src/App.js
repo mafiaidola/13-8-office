@@ -16718,7 +16718,7 @@ const LinesManagement = () => {
 
 // Enhanced Product Management with Role-Based Permissions - FINAL VERSION
 
-const EnhancedProductManagement = () => {
+const ClinicRegistrationForm = () => {
   const [formData, setFormData] = useState({
     clinic_name: '',
     clinic_phone: '',
