@@ -27549,6 +27549,63 @@ const EnhancedUserManagementV2 = () => {
     return users.filter(user => user.region_id === regionId);
   };
 
+  // Bulk selection functions
+  const handleSelectUser = (userId) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const filteredUserIds = filteredUsers.map(user => user.id);
+    setSelectedUsers(
+      selectedUsers.length === filteredUserIds.length ? [] : filteredUserIds
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) {
+      alert('يرجى اختيار مستخدمين للحذف');
+      return;
+    }
+
+    if (!window.confirm(`هل أنت متأكد من حذف ${selectedUsers.length} مستخدم؟`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      for (const userId of selectedUsers) {
+        await axios.delete(`${API}/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      
+      alert(`تم حذف ${selectedUsers.length} مستخدم بنجاح`);
+      setSelectedUsers([]);
+      loadUserData();
+    } catch (error) {
+      console.error('Error bulk deleting users:', error);
+      alert('حدث خطأ أثناء حذف المستخدمين');
+    }
+  };
+
+  // Filtered users for display
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = !searchTerm || 
+      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRegion = filterRegion === 'all' || user.region_id === filterRegion;
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    
+    return matchesSearch && matchesRegion && matchesRole;
+  });
+
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <div className="container mx-auto px-4 py-8">
