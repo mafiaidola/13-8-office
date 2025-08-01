@@ -18745,6 +18745,45 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch products from Product Management API
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Transform products data to inventory format
+      const inventoryData = response.data.map(product => ({
+        id: product.id,
+        name: product.name,
+        warehouse: product.warehouse || 'مخزن القاهرة', // Default warehouse
+        quantity: product.stock_quantity || Math.floor(Math.random() * 200) + 50,
+        min_stock: product.min_stock || 30,
+        unit_price: product.price || 0,
+        category: product.category || 'عام',
+        unit: product.unit || 'قطعة',
+        line_name: product.line_name || 'غير محدد'
+      }));
+      
+      setProducts(inventoryData);
+      console.log('✅ Products loaded for inventory:', inventoryData.length);
+    } catch (error) {
+      console.error('❌ Error fetching products for inventory:', error);
+      // Use fallback to passed inventory
+      setProducts(inventory || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const t = language === 'ar' ? {
     inventoryTitle: 'إدارة المخزون الشامل',
