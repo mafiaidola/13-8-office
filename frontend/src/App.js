@@ -11098,19 +11098,19 @@ const MiniProfileSummary = ({ data }) => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>طلبات هذا الشهر:</span>
-              <span className="font-bold text-blue-400">{data.sales_activity.this_month_orders}</span>
+              <span className="font-bold text-blue-400">{data?.sales_activity?.this_month_orders || 0}</span>
             </div>
             <div className="flex justify-between">
               <span>مبيعات هذا الشهر:</span>
-              <span className="font-bold text-green-400">{data.sales_activity.this_month_revenue.toLocaleString()} جنيه</span>
+              <span className="font-bold text-green-400">{(data?.sales_activity?.this_month_revenue || 0).toLocaleString()} جنيه</span>
             </div>
             <div className="flex justify-between">
               <span>متوسط قيمة الطلب:</span>
-              <span className="font-bold text-purple-400">{data.sales_activity.avg_order_value.toLocaleString()} جنيه</span>
+              <span className="font-bold text-purple-400">{(data?.sales_activity?.avg_order_value || 0).toLocaleString()} جنيه</span>
             </div>
             <div className="flex justify-between">
               <span>معدل التحويل:</span>
-              <span className="font-bold text-yellow-400">{data.sales_activity.conversion_rate}%</span>
+              <span className="font-bold text-yellow-400">{data?.sales_activity?.conversion_rate || 0}%</span>
             </div>
           </div>
         </div>
