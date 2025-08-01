@@ -19148,6 +19148,20 @@ const MainApp = () => {
               </button>
             )}
             
+            {/* Admin Clinics Management - NEW ADDITION */}
+            {(user.role === 'admin' || user.role === 'gm') && (
+              <button
+                onClick={() => {
+                  console.log('🔍 Admin clinics management clicked, user role:', user?.role);
+                  setActiveTab('admin-clinics');
+                }}
+                className={`nav-item ${activeTab === 'admin-clinics' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
+              >
+                <span className={`${isRTL ? 'mr-1.5' : 'ml-1.5'}`}>🏥</span>
+                إدارة العيادات (أدمن)
+              </button>
+            )}
+
             {/* Lines Management for admin, GM, and line managers - ENHANCED FOR ADMIN ACCESS */}
             {(user.role === 'admin' || user.role === 'Admin' || user?.role?.toLowerCase() === 'admin' || ['admin', 'gm', 'line_manager'].includes(user.role)) && (
               <button
