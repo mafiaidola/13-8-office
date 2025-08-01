@@ -20527,10 +20527,6 @@ const MainApp = () => {
           <AdminLocationTracking />
         )}
 
-        {activeTab === 'daily-login-records' && canAccessTab('daily-login-records') && (
-          <AdminDailyLoginRecords />
-        )}
-
         {activeTab === 'order-creation' && user.role === 'sales_rep' && (
           <OrderCreation />
         )}
@@ -20551,7 +20547,7 @@ const MainApp = () => {
           <WarehouseKeeperDashboard />
         )}
 
-        {/* Daily Login Records - NEW COMPONENT */}
+        {/* Daily Login Records - ONLY ONE COMPONENT */}
         {activeTab === 'daily-login-records' && (user.role === 'admin' || user.role === 'gm') && (
           <div>
             <div className="mb-4">
