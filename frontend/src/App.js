@@ -14579,6 +14579,231 @@ const SalesRepDashboard = ({ stats, user }) => {
 };
 
 // Clinic Registration Component
+// Daily Login Records Component - NEW ADDITION
+const DailyLoginRecords = () => {
+  const [loginRecords, setLoginRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [filterRole, setFilterRole] = useState('all');
+  const [stats, setStats] = useState({
+    total_logins: 0,
+    biometric_verified: 0,
+    unique_users: 0
+  });
+
+  useEffect(() => {
+    loadLoginRecords();
+  }, [selectedDate, filterRole]);
+
+  const loadLoginRecords = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/admin/login-records`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { date: selectedDate, role: filterRole !== 'all' ? filterRole : null }
+      });
+      
+      setLoginRecords(response.data.data || []);
+      setStats({
+        total_logins: response.data.total_logins || 0,
+        biometric_verified: response.data.biometric_verified || 0,
+        unique_users: response.data.data ? new Set(response.data.data.map(r => r.user_id)).size : 0
+      });
+    } catch (error) {
+      console.error('Error loading login records:', error);
+      setLoginRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBiometricIcon = (type) => {
+    switch (type) {
+      case 'fingerprint': return '👆';
+      case 'selfie': return '🤳';
+      case 'face': return '👤';
+      default: return '🔐';
+    }
+  };
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'admin': return 'bg-red-500';
+      case 'medical_rep': return 'bg-blue-500';
+      case 'sales_rep': return 'bg-green-500';
+      case 'line_manager': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-blue-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">إجمالي تسجيلات الدخول</p>
+              <p className="text-2xl font-bold">{stats.total_logins}</p>
+            </div>
+            <span className="text-3xl">📊</span>
+          </div>
+        </div>
+
+        <div className="bg-green-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">تم التحقق بيومترياً</p>
+              <p className="text-2xl font-bold">{stats.biometric_verified}</p>
+            </div>
+            <span className="text-3xl">🔐</span>
+          </div>
+        </div>
+
+        <div className="bg-purple-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">مستخدمين فريدين</p>
+              <p className="text-2xl font-bold">{stats.unique_users}</p>
+            </div>
+            <span className="text-3xl">👥</span>
+          </div>
+        </div>
+
+        <div className="bg-orange-600 rounded-lg p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">معدل التحقق</p>
+              <p className="text-2xl font-bold">
+                {stats.total_logins > 0 ? Math.round((stats.biometric_verified / stats.total_logins) * 100) : 0}%
+              </p>
+            </div>
+            <span className="text-3xl">📈</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white/10 rounded-lg p-4">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">التاريخ</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="px-3 py-2 rounded border bg-white/20 text-white placeholder-white/60"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-1">الدور</label>
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="px-3 py-2 rounded border bg-white/20 text-white"
+            >
+              <option value="all">جميع الأدوار</option>
+              <option value="admin">أدمن</option>
+              <option value="medical_rep">مندوب طبي</option>
+              <option value="sales_rep">مندوب مبيعات</option>
+              <option value="line_manager">مدير خط</option>
+            </select>
+          </div>
+
+          <button
+            onClick={loadLoginRecords}
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            🔄 تحديث
+          </button>
+        </div>
+      </div>
+
+      {/* Login Records Table */}
+      <div className="bg-white/10 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-white/20">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المستخدم</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الدور</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">وقت الدخول</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الموقع</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الجهاز</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">التحقق البيومتري</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center text-white">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      <span className="mr-2">جارٍ التحميل...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : loginRecords.length > 0 ? (
+                loginRecords.map((record, index) => (
+                  <tr key={record.id || index} className="hover:bg-white/5">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-white">
+                        <div className="font-medium">{record.full_name}</div>
+                        <div className="text-gray-300">@{record.username}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white ${getRoleColor(record.role)}`}>
+                        {record.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {new Date(record.login_time).toLocaleString('ar-EG')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      📍 {record.location || 'غير محدد'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      📱 {record.device || 'غير محدد'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-1">{getBiometricIcon(record.biometric_type)}</span>
+                        <span className={`text-sm ${record.biometric_verified ? 'text-green-400' : 'text-red-400'}`}>
+                          {record.biometric_verified ? 'مُتحقق' : 'غير مُتحقق'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        record.status === 'نشط' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {record.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center text-white">
+                    <div className="text-gray-400">
+                      <span className="text-4xl mb-2 block">📊</span>
+                      لا توجد سجلات تسجيل دخول للتاريخ المحدد
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Admin Clinics Management Component
 // Sales Rep Plan Management Component
 const SalesRepPlanManagement = ({ user }) => {
