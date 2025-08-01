@@ -603,15 +603,17 @@ const SimpleGoogleMap = ({ latitude, longitude, onLocationSelect, showCurrentLoc
   );
 };
 
-// Fixed backend URL configuration - use environment variable or localhost for development
+// Fixed backend URL configuration - PRODUCTION STABLE VERSION
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
 const API = `${BACKEND_URL}/api`;
 
-// Debug logging for environment variables
-console.log('🔍 Environment Variables Debug:');
+// Comprehensive debugging for stability
+console.log('🔍 STABILITY CHECK - Environment Variables:');
 console.log('REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
 console.log('BACKEND_URL:', BACKEND_URL);
 console.log('API:', API);
+console.log('🔍 STABILITY CHECK - React Version:', React.version);
+console.log('🔍 STABILITY CHECK - Window object available:', typeof window !== 'undefined');
 console.log('API:', API);
 
 const debounce = (func, delay) => {
