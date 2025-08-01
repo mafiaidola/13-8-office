@@ -20170,7 +20170,7 @@ const MainApp = () => {
               </button>
             )}
 
-            {['key_account', 'medical_rep'].includes(normalizeRole(user.role)) && (
+            {(['key_account', 'medical_rep', 'admin'].includes(normalizeRole(user.role))) && (
               <button
                 onClick={() => setActiveTab('register-clinic')}
                 className={`nav-item ${activeTab === 'register-clinic' ? 'active' : ''} flex items-center whitespace-nowrap px-3 py-2 text-sm`}
