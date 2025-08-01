@@ -27774,10 +27774,18 @@ const EnhancedUserManagementV2 = () => {
         {/* Users Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredUsers.map((user) => (
-            <div key={user.id} className="glass-effect p-6 rounded-xl hover:scale-105 transition-transform">
+            <div key={user.id} className={`glass-effect p-6 rounded-xl hover:scale-105 transition-transform ${
+              selectedUsers.includes(user.id) ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+            }`}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={() => handleSelectUser(user.id)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <div className={`w-12 h-12 bg-gradient-to-r ${getRoleColor(user.role)} rounded-full flex items-center justify-center text-white font-bold`}>
                     {user.profile_photo ? (
                       <img src={user.profile_photo} alt={user.full_name} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
@@ -27791,11 +27799,14 @@ const EnhancedUserManagementV2 = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <span className={`px-2 py-1 rounded text-xs font-bold ${
                     user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {user.is_active ? 'نشط' : 'غير نشط'}
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${getRoleTextColor(user.role)}`}>
+                    {getRoleText(user.role)}
                   </span>
                 </div>
               </div>
