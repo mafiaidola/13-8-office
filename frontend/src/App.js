@@ -27593,19 +27593,6 @@ const EnhancedUserManagementV2 = () => {
     }
   };
 
-  // Filtered users for display
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchTerm || 
-      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRegion = filterRegion === 'all' || user.region_id === filterRegion;
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    
-    return matchesSearch && matchesRegion && matchesRole;
-  });
-
   return (
     <div style={{ background: 'var(--gradient-dark)', color: 'var(--text-primary)', minHeight: '100vh' }}>
       <div className="container mx-auto px-4 py-8">
