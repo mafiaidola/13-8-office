@@ -27849,10 +27849,13 @@ const EnhancedUserManagementV2 = () => {
               >
                 <option value="all">جميع الأدوار</option>
                 <option value="admin">مدير النظام</option>
+                <option value="gm">المدير العام</option>
+                <option value="finance">مدير مالي</option>
+                <option value="line_manager">مدير الخط</option>
                 <option value="area_manager">مدير المنطقة</option>
+                <option value="district_manager">مدير المنطقة المحلية</option>
+                <option value="key_account">حسابات رئيسية</option>
                 <option value="medical_rep">مندوب طبي</option>
-                <option value="warehouse_keeper">أمين المخزن</option>
-                <option value="accounting">محاسب</option>
               </select>
             </div>
             <div>
