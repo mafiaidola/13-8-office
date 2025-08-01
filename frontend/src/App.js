@@ -16149,42 +16149,15 @@ const AdminClinicsManagement = () => {
 const ClinicRegistration = () => {
   const [formData, setFormData] = useState({
     clinic_name: '',
-    title: 'إدارة العيادات',
-    clinicName: 'اسم العيادة',
-    address: 'العنوان',
-    registrationDate: 'تاريخ التسجيل',
-    registrationTime: 'وقت التسجيل',
-    location: 'الموقع',
-    phone: 'الهاتف',
-    classification: 'التصنيف',
-    accountingManager: 'مسؤول الحسابات',
-    workingHours: 'ساعات العمل',
-    line: 'الخط',
-    actions: 'الإجراءات',
-    viewDetails: 'عرض التفاصيل',
-    viewOnMap: 'عرض على الخريطة',
-    noData: 'لا توجد عيادات مسجلة',
-    loading: 'جاري التحميل...',
-    close: 'إغلاق'
-  } : {
-    title: 'Clinics Management',
-    clinicName: 'Clinic Name',
-    address: 'Address',
-    registrationDate: 'Registration Date',
-    registrationTime: 'Registration Time',
-    location: 'Location',
-    phone: 'Phone',
-    classification: 'Classification',
-    accountingManager: 'Accounting Manager',
-    workingHours: 'Working Hours',
-    line: 'Line',
-    actions: 'Actions',
-    viewDetails: 'View Details',
-    viewOnMap: 'View on Map',
-    noData: 'No clinics registered',
-    loading: 'Loading...',
-    close: 'Close'
-  };
+    clinic_phone: '',
+    doctor_name: '',
+    clinic_class: '',
+    doctor_address: '',
+    clinic_manager_name: '',
+    address: '',
+    notes: '',
+    clinic_image: ''
+  });
 
   useEffect(() => {
     fetchClinics();
