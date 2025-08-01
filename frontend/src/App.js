@@ -3054,15 +3054,14 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
               <label className="block text-sm font-bold mb-4">المسمى الوظيفي *:</label>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[
-                  { value: 'admin', label: 'مدير النظام', icon: '👑', color: 'from-purple-500 to-pink-600' },
-                  { value: 'gm', label: 'المدير العام', icon: '🏢', color: 'from-blue-500 to-indigo-600' },
-                  { value: 'line_manager', label: 'مدير الخط', icon: '📊', color: 'from-green-500 to-teal-600' },
-                  { value: 'area_manager', label: 'مدير المنطقة', icon: '🗺️', color: 'from-yellow-500 to-orange-600' },
-                  { value: 'district_manager', label: 'مدير المنطقة المحلية', icon: '📍', color: 'from-red-500 to-pink-600' },
-                  { value: 'key_account', label: 'حسابات رئيسية', icon: '🔑', color: 'from-indigo-500 to-purple-600' },
-                  { value: 'medical_rep', label: 'مندوب طبي', icon: '👨‍⚕️', color: 'from-cyan-500 to-blue-600' },
-                  { value: 'warehouse_keeper', label: 'أمين المخزن', icon: '📦', color: 'from-gray-500 to-slate-600' },
-                  { value: 'accounting', label: 'محاسب', icon: '🧮', color: 'from-emerald-500 to-green-600' }
+                  { value: 'admin', label: 'مدير النظام', icon: '👑', color: 'from-red-500 to-red-700' },
+                  { value: 'gm', label: 'المدير العام', icon: '🏢', color: 'from-purple-500 to-purple-700' },
+                  { value: 'finance', label: 'مدير مالي', icon: '💰', color: 'from-emerald-500 to-emerald-700' },
+                  { value: 'line_manager', label: 'مدير الخط', icon: '📊', color: 'from-blue-500 to-blue-700' },
+                  { value: 'area_manager', label: 'مدير المنطقة', icon: '🗺️', color: 'from-green-500 to-green-700' },
+                  { value: 'district_manager', label: 'مدير المنطقة المحلية', icon: '📍', color: 'from-yellow-500 to-yellow-700' },
+                  { value: 'key_account', label: 'حسابات رئيسية', icon: '🔑', color: 'from-indigo-500 to-indigo-700' },
+                  { value: 'medical_rep', label: 'مندوب طبي', icon: '👨‍⚕️', color: 'from-teal-500 to-teal-700' }
                 ].map((role) => (
                   <div
                     key={role.value}
