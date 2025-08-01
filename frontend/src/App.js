@@ -18,7 +18,7 @@ import { ComponentRenderer } from './components/Core/ComponentRegistry.js';
 import { useTranslation } from './localization/translations.js';
 
 // API Configuration
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
 // Context Definitions
 const ThemeContext = createContext();
