@@ -11131,11 +11131,11 @@ const MiniProfileSummary = ({ data }) => {
             </div>
             <div className="flex justify-between">
               <span>العيادات النشطة:</span>
-              <span className="font-bold text-purple-400">{data.territory_info.active_clinics}/{data.territory_info.assigned_clinics}</span>
+              <span className="font-bold text-purple-400">{data?.territory_info?.active_clinics || 0}/{data?.territory_info?.assigned_clinics || 0}</span>
             </div>
             <div className="flex justify-between">
               <span>نسبة التغطية:</span>
-              <span className="font-bold text-orange-400">{data.territory_info.coverage_percentage}%</span>
+              <span className="font-bold text-orange-400">{data?.territory_info?.coverage_percentage || 0}%</span>
             </div>
           </div>
         </div>
