@@ -31358,6 +31358,8 @@ const ProfessionalClinicsManagement = () => {
 const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification, getClassificationColor, getClassificationLabel }) => {
   const [showClassificationModal, setShowClassificationModal] = useState(false);
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const { language } = useLanguage();
+  const [loading, setLoading] = useState(false);
   
   const classificationColor = getClassificationColor(clinic.classification);
   
