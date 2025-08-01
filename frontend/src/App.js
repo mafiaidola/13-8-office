@@ -19250,6 +19250,49 @@ const MovementsLog = ({ movements, language }) => {
   const [filterDate, setFilterDate] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [loading, setLoading] = useState(false);
+
+  const handleReviewMovement = async (movementId) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('access_token');
+      const response = await axios.post(`${API}/movements/${movementId}/review`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('✅ Movement reviewed:', response.data);
+      alert('تم مراجعة الحركة بنجاح');
+      // Refresh movements data
+      window.location.reload();
+    } catch (error) {
+      console.error('❌ Error reviewing movement:', error);
+      alert('خطأ في مراجعة الحركة: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelMovement = async (movementId) => {
+    if (window.confirm('هل أنت متأكد من إلغاء هذه الحركة؟')) {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('access_token');
+        const response = await axios.delete(`${API}/movements/${movementId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        console.log('✅ Movement cancelled:', response.data);
+        alert('تم إلغاء الحركة');
+        // Refresh movements data
+        window.location.reload();
+      } catch (error) {
+        console.error('❌ Error cancelling movement:', error);
+        alert('خطأ في إلغاء الحركة: ' + (error.response?.data?.detail || error.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const t = language === 'ar' ? {
     movementsTitle: 'سجل حركات المخزن',
