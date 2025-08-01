@@ -18825,10 +18825,10 @@ const InventoryManagement = ({ inventory, warehouses, onRefresh, language }) => 
     view: 'View'
   };
 
-  const filteredInventory = inventory.filter(item => {
+  const filteredInventory = products.filter(item => {
     const matchesWarehouse = selectedWarehouse === 'all' || item.warehouse === selectedWarehouse;
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter; 
     return matchesWarehouse && matchesSearch && matchesCategory;
   });
 
