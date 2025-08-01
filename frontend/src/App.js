@@ -2874,7 +2874,7 @@ const UserManagementModal = ({ mode = 'add', user = null, regions, managers, onC
     const loadLines = async () => {
       setLoadingLines(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/lines`, {
+        const response = await fetch(`${API}/lines`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
             'Content-Type': 'application/json'
