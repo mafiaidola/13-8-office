@@ -11080,7 +11080,7 @@ const MiniProfileSummary = ({ data }) => {
         
         <div className="glass-effect p-4 rounded-xl text-center">
           <div className="text-3xl font-bold text-purple-400">
-            {data.territory_info.assigned_clinics}
+            {data?.territory_info?.assigned_clinics || 0}
           </div>
           <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
             العيادات المسؤول عنها
