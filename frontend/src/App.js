@@ -27628,16 +27628,6 @@ const EnhancedUserManagementV2 = () => {
       setUsers([]);
       setRegions([]);
       setManagers([]);
-        { id: 'region-001', name: 'القاهرة', manager_id: 'manager-001' },
-        { id: 'region-002', name: 'الجيزة', manager_id: 'manager-002' },
-        { id: 'region-003', name: 'الإسكندرية', manager_id: 'manager-003' }
-      ]);
-      
-      setManagers([
-        { id: 'manager-001', name: 'محمد السيد', role: 'area_manager' },
-        { id: 'manager-002', name: 'أمينة المخزن', role: 'warehouse_manager' },
-        { id: 'manager-003', name: 'سعد أحمد', role: 'district_manager' }
-      ]);
     } finally {
       setLoading(false);
     }
