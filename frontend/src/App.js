@@ -31723,12 +31723,6 @@ const ProfessionalClinicCard = ({ clinic, onViewProfile, onUpdateClassification,
           📊 الملف التفصيلي
         </button>
         <button
-          onClick={() => setShowCreateOrderModal(true)}
-          className="btn-success text-sm px-3 py-2"
-        >
-          🛒 طلبية
-        </button>
-        <button
           onClick={() => setShowClassificationModal(true)}
           className="btn-secondary text-sm px-3 py-2"
         >
