@@ -27565,14 +27565,12 @@ const EnhancedUserManagementV2 = () => {
     const roleColors = {
       admin: 'from-red-500 to-red-700',
       gm: 'from-purple-500 to-purple-700', 
+      finance: 'from-emerald-500 to-emerald-700',
       line_manager: 'from-blue-500 to-blue-700',
       area_manager: 'from-green-500 to-green-700',
       district_manager: 'from-yellow-500 to-yellow-700',
       key_account: 'from-indigo-500 to-indigo-700',
-      medical_rep: 'from-teal-500 to-teal-700',
-      warehouse_keeper: 'from-orange-500 to-orange-700',
-      sales_rep: 'from-pink-500 to-pink-700',
-      accounting: 'from-cyan-500 to-cyan-700'
+      medical_rep: 'from-teal-500 to-teal-700'
     };
     return roleColors[role] || 'from-gray-500 to-gray-700';
   };
@@ -27581,14 +27579,12 @@ const EnhancedUserManagementV2 = () => {
     const roleColors = {
       admin: 'text-red-800 bg-red-100',
       gm: 'text-purple-800 bg-purple-100', 
+      finance: 'text-emerald-800 bg-emerald-100',
       line_manager: 'text-blue-800 bg-blue-100',
       area_manager: 'text-green-800 bg-green-100',
       district_manager: 'text-yellow-800 bg-yellow-100',
       key_account: 'text-indigo-800 bg-indigo-100',
-      medical_rep: 'text-teal-800 bg-teal-100',
-      warehouse_keeper: 'text-orange-800 bg-orange-100',
-      sales_rep: 'text-pink-800 bg-pink-100',
-      accounting: 'text-cyan-800 bg-cyan-100'
+      medical_rep: 'text-teal-800 bg-teal-100'
     };
     return roleColors[role] || 'text-gray-800 bg-gray-100';
   };
