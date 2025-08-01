@@ -27962,7 +27962,7 @@ const EnhancedUserManagementV2 = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>المدير المباشر:</span>
-                  <span className="text-sm">{user.direct_manager_name}</span>
+                  <span className="text-sm">{user?.direct_manager_name || 'غير محدد'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>الإيميل:</span>
