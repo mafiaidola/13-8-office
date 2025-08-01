@@ -16832,204 +16832,60 @@ const ClinicRegistrationForm = () => {
         </div>
       </div>
 
-      {clinics.length === 0 ? (
-        <div className="text-center py-12">
-          <span className="text-4xl mb-4 block">🏥</span>
-          <p className="text-lg font-semibold">{t.noData}</p>
-        </div>
-      ) : (
-        <div className="glass-effect rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.clinicName}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.address}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.registrationDate}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.registrationTime}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.phone}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.classification}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.line}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase">{t.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clinics.map((clinic) => (
-                  <tr key={clinic.id} className="hover:bg-gray-50 hover:bg-opacity-5 transition-colors border-b border-gray-800">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{clinic.name}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{clinic.address}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{formatDate(clinic.created_at)}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{formatTime(clinic.created_at)}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{clinic.phone}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        {clinic.classification || 'غير محدد'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                        {clinic.line || 'غير محدد'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedClinic(clinic);
-                            setShowDetails(true);
-                          }}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs transition-colors"
-                        >
-                          {t.viewDetails}
-                        </button>
-                        {clinic.latitude && clinic.longitude && (
-                          <button
-                            onClick={() => {
-                              const googleMapsUrl = `https://www.google.com/maps?q=${clinic.latitude},${clinic.longitude}`;
-                              window.open(googleMapsUrl, '_blank');
-                            }}
-                            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs transition-colors"
-                          >
-                            🗺️ {t.viewOnMap}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Simple Clinic Registration Form */}
+      <div className="glass-effect rounded-xl p-6">
+        <h3 className="text-lg font-bold mb-4">تسجيل عيادة جديدة</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">اسم العيادة</label>
+            <input 
+              type="text" 
+              value={formData.clinic_name}
+              onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="أدخل اسم العيادة"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">اسم الطبيب</label>
+            <input 
+              type="text" 
+              value={formData.doctor_name}
+              onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="أدخل اسم الطبيب"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
+            <input 
+              type="text" 
+              value={formData.clinic_phone}
+              onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="أدخل رقم الهاتف"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">العنوان</label>
+            <input 
+              type="text" 
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="أدخل العنوان"
+            />
           </div>
         </div>
-      )}
-
-      {/* Clinic Details Modal */}
-      {showDetails && selectedClinic && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="glass-effect rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold">{selectedClinic.name}</h3>
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="text-red-400 hover:text-red-300 transition-colors"
-                >
-                  ✕ {t.close}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Clinic Info */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-lg border-b border-gray-700 pb-2">معلومات العيادة</h4>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.clinicName}</label>
-                      <div className="text-lg font-semibold">{selectedClinic.name}</div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.address}</label>
-                      <div>{selectedClinic.address}</div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.phone}</label>
-                      <div>{selectedClinic.phone}</div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.classification}</label>
-                      <div>{selectedClinic.classification || 'غير محدد'}</div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.line}</label>
-                      <div>{selectedClinic.line || 'غير محدد'}</div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium opacity-75">{t.registrationDate}</label>
-                      <div>{formatDate(selectedClinic.created_at)} في {formatTime(selectedClinic.created_at)}</div>
-                    </div>
-
-                    {selectedClinic.accounting_manager_name && (
-                      <div>
-                        <label className="block text-sm font-medium opacity-75">{t.accountingManager}</label>
-                        <div>{selectedClinic.accounting_manager_name}</div>
-                        {selectedClinic.accounting_manager_phone && (
-                          <div className="text-sm opacity-75">{selectedClinic.accounting_manager_phone}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Map */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-lg border-b border-gray-700 pb-2">الموقع على الخريطة</h4>
-                  
-                  {selectedClinic.latitude && selectedClinic.longitude ? (
-                    <div>
-                      <SimpleGoogleMap
-                        latitude={selectedClinic.latitude}
-                        longitude={selectedClinic.longitude}
-                        showCurrentLocation={false}
-                      />
-                      <div className="mt-3 text-sm text-center">
-                        <p>📍 الإحداثيات: {selectedClinic.latitude.toFixed(6)}, {selectedClinic.longitude.toFixed(6)}</p>
-                        <a
-                          href={`https://www.google.com/maps?q=${selectedClinic.latitude},${selectedClinic.longitude}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                        >
-                          🔗 فتح في خرائط جوجل
-                        </a>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-64 glass-effect rounded-xl flex items-center justify-center">
-                      <div className="text-center">
-                        <span className="text-4xl mb-2 block">📍</span>
-                        <p>لا توجد إحداثيات مسجلة لهذه العيادة</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Working Hours */}
-              {selectedClinic.working_hours && (
-                <div className="mt-6">
-                  <h4 className="font-bold text-lg border-b border-gray-700 pb-2 mb-4">{t.workingHours}</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Object.entries(selectedClinic.working_hours).map(([day, hours]) => (
-                      <div key={day} className="text-center">
-                        <div className="font-medium text-sm">{day}</div>
-                        <div className="text-xs opacity-75">
-                          {hours.start} - {hours.end}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        <div className="mt-4">
+          <button 
+            onClick={() => alert('سيتم إضافة وظيفة التسجيل قريباً')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+          >
+            تسجيل العيادة
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };
