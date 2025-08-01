@@ -16148,8 +16148,7 @@ const AdminClinicsManagement = () => {
 
 const ClinicRegistration = () => {
   const [formData, setFormData] = useState({
-
-  const t = language === 'ar' ? {
+    clinic_name: '',
     title: 'إدارة العيادات',
     clinicName: 'اسم العيادة',
     address: 'العنوان',
