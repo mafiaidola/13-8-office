@@ -11123,11 +11123,11 @@ const MiniProfileSummary = ({ data }) => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>المنطقة:</span>
-              <span className="font-bold text-blue-400">{data.territory_info.region_name}</span>
+              <span className="font-bold text-blue-400">{data?.territory_info?.region_name || 'غير محددة'}</span>
             </div>
             <div className="flex justify-between">
               <span>المقاطعة:</span>
-              <span className="font-bold text-green-400">{data.territory_info.district_name}</span>
+              <span className="font-bold text-green-400">{data?.territory_info?.district_name || 'غير محددة'}</span>
             </div>
             <div className="flex justify-between">
               <span>العيادات النشطة:</span>
