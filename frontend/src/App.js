@@ -27387,19 +27387,6 @@ const EnhancedUserManagementV2 = () => {
     return roleColors[role] || 'text-gray-800 bg-gray-100';
   };
 
-  // Filtered users for display
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchTerm || 
-      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRegion = filterRegion === 'all' || user.region_id === filterRegion;
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    
-    return matchesSearch && matchesRegion && matchesRole;
-  });
-
   useEffect(() => {
     loadUserData();
   }, []);
