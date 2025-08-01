@@ -1,5 +1,398 @@
 #!/usr/bin/env python3
 """
+اختبار سريع لمشكلة إدارة المنتجات - المستخدم لا يستطيع الإضافة أو الحذف
+Quick test for product management issue - User cannot add or delete products
+
+المطلوب اختبار:
+1. تسجيل دخول admin/admin123
+2. اختبار POST /api/products - إضافة منتج جديد
+3. اختبار DELETE /api/products/{id} - حذف منتج موجود
+4. فحص رسائل الخطأ إذا فشلت العمليات
+5. فحص الصلاحيات - تأكيد أن المستخدم admin له صلاحيات كاملة
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://88e771ef-8689-4c57-adf3-f00b0f131fdc.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+def print_test_header(test_name):
+    print(f"\n{'='*60}")
+    print(f"🧪 {test_name}")
+    print(f"{'='*60}")
+
+def print_success(message):
+    print(f"✅ {message}")
+
+def print_error(message):
+    print(f"❌ {message}")
+
+def print_info(message):
+    print(f"ℹ️  {message}")
+
+def test_admin_login():
+    """اختبار تسجيل دخول الأدمن"""
+    print_test_header("اختبار تسجيل دخول admin/admin123")
+    
+    try:
+        start_time = time.time()
+        
+        login_data = {
+            "username": ADMIN_USERNAME,
+            "password": ADMIN_PASSWORD
+        }
+        
+        response = requests.post(f"{BACKEND_URL}/auth/login", json=login_data, timeout=10)
+        end_time = time.time()
+        
+        print_info(f"Response Status: {response.status_code}")
+        print_info(f"Response Time: {(end_time - start_time)*1000:.2f}ms")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data:
+                print_success(f"تسجيل الدخول نجح! JWT Token: {data['access_token'][:50]}...")
+                print_info(f"User Info: {data.get('user', {})}")
+                return data["access_token"]
+            else:
+                print_error("لا يوجد access_token في الاستجابة")
+                print_info(f"Response: {data}")
+                return None
+        else:
+            print_error(f"فشل تسجيل الدخول: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print_error(f"خطأ في تسجيل الدخول: {str(e)}")
+        return None
+
+def test_get_lines(token):
+    """الحصول على قائمة الخطوط المتاحة"""
+    print_test_header("الحصول على قائمة الخطوط المتاحة")
+    
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(f"{BACKEND_URL}/lines", headers=headers, timeout=10)
+        
+        print_info(f"Response Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            lines = response.json()
+            print_success(f"تم جلب {len(lines)} خط")
+            
+            if lines:
+                first_line = lines[0]
+                print_info(f"أول خط متاح: {first_line.get('name', 'غير محدد')} (ID: {first_line.get('id', 'غير محدد')})")
+                return first_line.get('id')
+            else:
+                print_error("لا توجد خطوط متاحة")
+                return None
+        else:
+            print_error(f"فشل في جلب الخطوط: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            return None
+            
+    except Exception as e:
+        print_error(f"خطأ في جلب الخطوط: {str(e)}")
+        return None
+
+def test_create_product(token, line_id):
+    """اختبار إضافة منتج جديد"""
+    print_test_header("اختبار POST /api/products - إضافة منتج جديد")
+    
+    try:
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        
+        # البيانات المطلوبة حسب المراجعة العربية
+        product_data = {
+            "name": "منتج اختبار المشكلة",
+            "unit": "ڤايل",
+            "price": 25.0,
+            "line_id": line_id,
+            "price_type": "fixed",
+            "description": "منتج اختبار لفحص مشكلة الإضافة والحذف",
+            "category": "اختبار",
+            "current_stock": 100,
+            "is_active": True
+        }
+        
+        print_info(f"بيانات المنتج: {json.dumps(product_data, ensure_ascii=False, indent=2)}")
+        
+        start_time = time.time()
+        response = requests.post(f"{BACKEND_URL}/products", json=product_data, headers=headers, timeout=10)
+        end_time = time.time()
+        
+        print_info(f"Response Status: {response.status_code}")
+        print_info(f"Response Time: {(end_time - start_time)*1000:.2f}ms")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_success("تم إنشاء المنتج بنجاح!")
+            print_info(f"Response: {json.dumps(data, ensure_ascii=False, indent=2)}")
+            
+            if "product" in data and "id" in data["product"]:
+                product_id = data["product"]["id"]
+                print_success(f"Product ID: {product_id}")
+                return product_id
+            else:
+                print_error("لا يوجد product ID في الاستجابة")
+                return None
+        else:
+            print_error(f"فشل في إنشاء المنتج: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            # فحص رسائل الخطأ التفصيلية
+            try:
+                error_data = response.json()
+                print_info(f"تفاصيل الخطأ: {json.dumps(error_data, ensure_ascii=False, indent=2)}")
+            except:
+                pass
+            
+            return None
+            
+    except Exception as e:
+        print_error(f"خطأ في إنشاء المنتج: {str(e)}")
+        return None
+
+def test_get_products(token):
+    """اختبار جلب قائمة المنتجات"""
+    print_test_header("اختبار GET /api/products - جلب قائمة المنتجات")
+    
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(f"{BACKEND_URL}/products", headers=headers, timeout=10)
+        
+        print_info(f"Response Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            products = response.json()
+            print_success(f"تم جلب {len(products)} منتج")
+            
+            # البحث عن منتج للحذف
+            test_product = None
+            for product in products:
+                if "اختبار" in product.get("name", ""):
+                    test_product = product
+                    break
+            
+            if not test_product and products:
+                test_product = products[0]  # أخذ أول منتج
+            
+            if test_product:
+                print_info(f"منتج للاختبار: {test_product.get('name', 'غير محدد')} (ID: {test_product.get('id', 'غير محدد')})")
+                return test_product.get('id'), products
+            else:
+                print_error("لا توجد منتجات للاختبار")
+                return None, products
+        else:
+            print_error(f"فشل في جلب المنتجات: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            return None, []
+            
+    except Exception as e:
+        print_error(f"خطأ في جلب المنتجات: {str(e)}")
+        return None, []
+
+def test_delete_product(token, product_id):
+    """اختبار حذف منتج"""
+    print_test_header(f"اختبار DELETE /api/products/{product_id} - حذف منتج")
+    
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        start_time = time.time()
+        response = requests.delete(f"{BACKEND_URL}/products/{product_id}", headers=headers, timeout=10)
+        end_time = time.time()
+        
+        print_info(f"Response Status: {response.status_code}")
+        print_info(f"Response Time: {(end_time - start_time)*1000:.2f}ms")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_success("تم حذف المنتج بنجاح!")
+            print_info(f"Response: {json.dumps(data, ensure_ascii=False, indent=2)}")
+            return True
+        else:
+            print_error(f"فشل في حذف المنتج: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            # فحص رسائل الخطأ التفصيلية
+            try:
+                error_data = response.json()
+                print_info(f"تفاصيل الخطأ: {json.dumps(error_data, ensure_ascii=False, indent=2)}")
+            except:
+                pass
+            
+            return False
+            
+    except Exception as e:
+        print_error(f"خطأ في حذف المنتج: {str(e)}")
+        return False
+
+def test_admin_permissions(token):
+    """فحص صلاحيات الأدمن"""
+    print_test_header("فحص صلاحيات المستخدم admin")
+    
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # اختبار الوصول لقائمة المستخدمين (صلاحية أدمن)
+        response = requests.get(f"{BACKEND_URL}/users", headers=headers, timeout=10)
+        
+        print_info(f"اختبار GET /api/users - Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            users = response.json()
+            print_success(f"الأدمن يمكنه الوصول لقائمة المستخدمين ({len(users)} مستخدم)")
+        else:
+            print_error(f"الأدمن لا يمكنه الوصول لقائمة المستخدمين: {response.status_code}")
+        
+        # اختبار الوصول للخطوط
+        response = requests.get(f"{BACKEND_URL}/lines", headers=headers, timeout=10)
+        print_info(f"اختبار GET /api/lines - Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            lines = response.json()
+            print_success(f"الأدمن يمكنه الوصول لقائمة الخطوط ({len(lines)} خط)")
+        else:
+            print_error(f"الأدمن لا يمكنه الوصول لقائمة الخطوط: {response.status_code}")
+        
+        # اختبار الوصول للمناطق
+        response = requests.get(f"{BACKEND_URL}/areas", headers=headers, timeout=10)
+        print_info(f"اختبار GET /api/areas - Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            areas = response.json()
+            print_success(f"الأدمن يمكنه الوصول لقائمة المناطق ({len(areas)} منطقة)")
+        else:
+            print_error(f"الأدمن لا يمكنه الوصول لقائمة المناطق: {response.status_code}")
+            
+        return True
+        
+    except Exception as e:
+        print_error(f"خطأ في فحص الصلاحيات: {str(e)}")
+        return False
+
+def main():
+    """الدالة الرئيسية للاختبار"""
+    print("🚀 بدء اختبار مشكلة إدارة المنتجات")
+    print(f"🌐 Backend URL: {BACKEND_URL}")
+    print(f"👤 Admin Credentials: {ADMIN_USERNAME}/{ADMIN_PASSWORD}")
+    print(f"⏰ وقت الاختبار: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # متغيرات النتائج
+    results = {
+        "login_success": False,
+        "lines_available": False,
+        "product_create_success": False,
+        "product_delete_success": False,
+        "admin_permissions_ok": False,
+        "total_tests": 5,
+        "passed_tests": 0
+    }
+    
+    # 1. اختبار تسجيل الدخول
+    token = test_admin_login()
+    if token:
+        results["login_success"] = True
+        results["passed_tests"] += 1
+    else:
+        print_error("🚨 فشل تسجيل الدخول - لا يمكن متابعة الاختبارات")
+        print_final_results(results)
+        return
+    
+    # 2. اختبار جلب الخطوط
+    line_id = test_get_lines(token)
+    if line_id:
+        results["lines_available"] = True
+        results["passed_tests"] += 1
+    else:
+        print_error("🚨 لا توجد خطوط متاحة - لا يمكن إنشاء منتج")
+        print_final_results(results)
+        return
+    
+    # 3. اختبار فحص الصلاحيات
+    if test_admin_permissions(token):
+        results["admin_permissions_ok"] = True
+        results["passed_tests"] += 1
+    
+    # 4. اختبار إنشاء منتج
+    created_product_id = test_create_product(token, line_id)
+    if created_product_id:
+        results["product_create_success"] = True
+        results["passed_tests"] += 1
+    
+    # 5. اختبار حذف منتج
+    # أولاً نحصل على قائمة المنتجات لنجد منتج للحذف
+    product_to_delete_id, all_products = test_get_products(token)
+    
+    if created_product_id:
+        # حذف المنتج الذي أنشأناه
+        if test_delete_product(token, created_product_id):
+            results["product_delete_success"] = True
+            results["passed_tests"] += 1
+    elif product_to_delete_id:
+        # حذف منتج موجود
+        if test_delete_product(token, product_to_delete_id):
+            results["product_delete_success"] = True
+            results["passed_tests"] += 1
+    
+    # طباعة النتائج النهائية
+    print_final_results(results)
+
+def print_final_results(results):
+    """طباعة النتائج النهائية"""
+    print(f"\n{'='*60}")
+    print("📊 النتائج النهائية - Final Results")
+    print(f"{'='*60}")
+    
+    success_rate = (results["passed_tests"] / results["total_tests"]) * 100
+    
+    print(f"✅ الاختبارات الناجحة: {results['passed_tests']}/{results['total_tests']}")
+    print(f"📈 معدل النجاح: {success_rate:.1f}%")
+    
+    print(f"\n📋 تفاصيل النتائج:")
+    print(f"   1. تسجيل دخول admin/admin123: {'✅ نجح' if results['login_success'] else '❌ فشل'}")
+    print(f"   2. توفر الخطوط: {'✅ متوفرة' if results['lines_available'] else '❌ غير متوفرة'}")
+    print(f"   3. صلاحيات الأدمن: {'✅ صحيحة' if results['admin_permissions_ok'] else '❌ مشكلة'}")
+    print(f"   4. إضافة منتج جديد: {'✅ نجح' if results['product_create_success'] else '❌ فشل'}")
+    print(f"   5. حذف منتج: {'✅ نجح' if results['product_delete_success'] else '❌ فشل'}")
+    
+    print(f"\n🎯 التحليل:")
+    if success_rate >= 80:
+        print("✅ النظام يعمل بشكل جيد - المشكلة قد تكون في الواجهة الأمامية")
+    elif success_rate >= 60:
+        print("⚠️ النظام يعمل جزئياً - يحتاج بعض الإصلاحات")
+    else:
+        print("❌ النظام به مشاكل كبيرة - يحتاج إصلاحات شاملة")
+    
+    print(f"\n💡 التوصيات:")
+    if not results["login_success"]:
+        print("   - فحص بيانات تسجيل الدخول وإعدادات JWT")
+    if not results["lines_available"]:
+        print("   - إضافة خطوط في قاعدة البيانات")
+    if not results["admin_permissions_ok"]:
+        print("   - فحص صلاحيات المستخدم admin")
+    if not results["product_create_success"]:
+        print("   - فحص API إنشاء المنتجات والحقول المطلوبة")
+    if not results["product_delete_success"]:
+        print("   - فحص API حذف المنتجات والصلاحيات")
+    
+    if results["product_create_success"] and results["product_delete_success"]:
+        print("   ✅ APIs الباكند تعمل بشكل صحيح - المشكلة في الواجهة الأمامية")
+        print("   - فحص استدعاءات API في React")
+        print("   - فحص معالجة الأخطاء في الواجهة الأمامية")
+        print("   - فحص endpoints المستخدمة في الفرونت إند")
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار شامل لإصلاح مشكلة إضافة المستخدمين بعد تصحيح الـ endpoints
 Comprehensive test for fixing user addition issue after endpoint corrections
 """
