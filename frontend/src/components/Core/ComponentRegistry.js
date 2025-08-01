@@ -165,6 +165,9 @@ export const ComponentRenderer = ({ componentName, ...props }) => {
         <div className="mt-4 text-sm text-gray-500">
           المكونات المتاحة: {Object.keys(COMPONENT_REGISTRY).join(', ')}
         </div>
+        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+          <p className="text-sm">تم استخدام مكون افتراضي لعرض المحتوى</p>
+        </div>
       </div>
     );
   }
