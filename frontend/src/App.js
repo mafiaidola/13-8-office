@@ -11243,7 +11243,7 @@ const MiniProfileDebt = ({ data }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-effect p-4 rounded-xl text-center">
           <div className="text-2xl font-bold text-red-400">
-            {data.total_debt.toLocaleString()}
+            {(data?.total_debt || 0).toLocaleString()}
           </div>
           <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
             إجمالي المديونية (جنيه)
