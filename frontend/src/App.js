@@ -27685,14 +27685,12 @@ const EnhancedUserManagementV2 = () => {
     const roles = {
       admin: 'مدير النظام',
       gm: 'المدير العام',
+      finance: 'مدير مالي',
       line_manager: 'مدير الخط',
       area_manager: 'مدير المنطقة',
       district_manager: 'مدير المنطقة المحلية',
       key_account: 'حسابات رئيسية',
-      medical_rep: 'مندوب طبي',
-      warehouse_keeper: 'أمين المخزن',
-      sales_rep: 'مندوب مبيعات',
-      accounting: 'محاسب'
+      medical_rep: 'مندوب طبي'
     };
     return roles[role] || role;
   };
