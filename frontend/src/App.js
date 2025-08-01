@@ -11062,7 +11062,7 @@ const MiniProfileSummary = ({ data }) => {
         
         <div className="glass-effect p-4 rounded-xl text-center">
           <div className="text-3xl font-bold text-green-400">
-            {data.sales_activity.total_revenue.toLocaleString()}
+            {(data?.sales_activity?.total_revenue || 0).toLocaleString()}
           </div>
           <div className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
             إجمالي المبيعات (جنيه)
