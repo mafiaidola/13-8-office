@@ -79,13 +79,39 @@ const AuthProvider = ({ children }) => {
         return;
       }
 
-      const response = await axios.get(`${API}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Try to verify token with backend
+      try {
+        const response = await axios.get(`${API}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      if (response.data && response.data.user) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
+        if (response.data && response.data.user) {
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        }
+      } catch (authError) {
+        console.error('Auth verification failed:', authError);
+        // If auth verification fails, try to decode token locally as fallback
+        try {
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          if (tokenPayload.exp > Date.now() / 1000) {
+            // Token is still valid, create user object from token
+            const user = {
+              id: tokenPayload.user_id,
+              username: tokenPayload.username,
+              role: tokenPayload.role,
+              full_name: tokenPayload.username
+            };
+            setUser(user);
+            setIsAuthenticated(true);
+          } else {
+            // Token expired
+            localStorage.removeItem('access_token');
+          }
+        } catch (tokenError) {
+          console.error('Token decode failed:', tokenError);
+          localStorage.removeItem('access_token');
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
