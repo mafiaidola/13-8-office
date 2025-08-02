@@ -119,7 +119,11 @@ const ThemeProvider = ({ children }) => {
       isRTL,
       setIsRTL,
       toggleLanguage,
-      toggleTheme
+      changeTheme,
+      getCurrentTheme,
+      availableThemes: AVAILABLE_THEMES,
+      showGlobalSearch,
+      setShowGlobalSearch
     }}>
       {children}
     </ThemeContext.Provider>
