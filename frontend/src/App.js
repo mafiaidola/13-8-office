@@ -753,16 +753,14 @@ const DashboardLayout = () => {
         <div className="header-content flex items-center justify-between max-w-full mx-auto">
           
           {/* Right Side - Logo & Brand */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-xl border border-white/20">
-                <span className="text-2xl text-white">🏥</span>
-              </div>
-              <div>
-                <div className="font-bold text-xl text-white tracking-wide">EP Group</div>
-                <div className="text-xs text-white/80 font-medium">
-                  {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
-                </div>
+          <div className="header-brand">
+            <div className="header-logo">
+              <span className="text-2xl text-white">🏥</span>
+            </div>
+            <div className="header-brand-text">
+              <div className="header-brand-title">EP Group</div>
+              <div className="header-brand-subtitle">
+                {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
               </div>
             </div>
           </div>
