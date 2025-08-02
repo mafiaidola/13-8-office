@@ -601,9 +601,12 @@ class BackendTester:
             self.log_test("Error Handling & Validation", False, response_time, details)
 
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 STARTING ENHANCED EP GROUP BACKEND TESTING - PHASE 1 UI SUPPORT")
+        """Run all backend tests for all 3 phases"""
+        print("🚀 STARTING COMPREHENSIVE EP GROUP BACKEND TESTING - ALL 3 PHASES")
         print(f"Backend URL: {self.base_url}")
+        print("Phase 1: Enhanced UI/UX - COMPLETE")
+        print("Phase 2: Debt & Collection Management - COMPLETE") 
+        print("Phase 3: Admin Dashboard Enhancement - TESTING")
         print("=" * 80)
         
         # Authentication is required for most tests
@@ -612,18 +615,30 @@ class BackendTester:
             return self.generate_report()
         
         # Run all test suites
+        print("\n🎯 TESTING CORE SYSTEM APIs (Phase 1 Support)")
         self.test_user_management()
         self.test_product_management()
         self.test_clinic_management()
         self.test_dashboard_data()
         self.test_lines_areas_management()
         self.test_user_profile_apis()
-        self.test_system_health()
+        
+        # Phase 2 Testing
+        self.test_phase2_debt_collection_apis()
+        
+        # Phase 3 Testing
+        self.test_phase3_dashboard_enhancement()
+        
+        # Integration Testing
+        self.test_cross_module_integration()
+        
+        # System Stability
+        self.test_system_stability()
         
         return self.generate_report()
     
     def generate_report(self):
-        """Generate comprehensive test report"""
+        """Generate comprehensive test report for all 3 phases"""
         total_time = time.time() - self.start_time
         total_tests = len(self.test_results)
         passed_tests = sum(1 for result in self.test_results if result["success"])
@@ -633,13 +648,42 @@ class BackendTester:
         avg_response_time = sum(result["response_time_ms"] for result in self.test_results) / total_tests if total_tests > 0 else 0
         
         print("\n" + "=" * 80)
-        print("📊 ENHANCED BACKEND TESTING REPORT - PHASE 1 UI SUPPORT")
+        print("📊 COMPREHENSIVE BACKEND TESTING REPORT - ALL 3 PHASES")
         print("=" * 80)
         print(f"🎯 Overall Success Rate: {success_rate:.1f}% ({passed_tests}/{total_tests} tests passed)")
         print(f"⏱️  Total Testing Time: {total_time:.2f} seconds")
         print(f"🚀 Average Response Time: {avg_response_time:.2f}ms")
         print(f"✅ Passed Tests: {passed_tests}")
         print(f"❌ Failed Tests: {failed_tests}")
+        
+        # Phase-specific analysis
+        phase1_tests = [r for r in self.test_results if any(keyword in r["test"] for keyword in 
+                       ["Login", "Users", "Products", "Clinics", "Dashboard Statistics", "Lines", "Profile"])]
+        phase2_tests = [r for r in self.test_results if any(keyword in r["test"] for keyword in 
+                       ["Debt", "Collection"])]
+        phase3_tests = [r for r in self.test_results if any(keyword in r["test"] for keyword in 
+                       ["Enhanced Dashboard", "Activity", "GPS"])]
+        integration_tests = [r for r in self.test_results if any(keyword in r["test"] for keyword in 
+                           ["Integration", "Stability", "Error Handling"])]
+        
+        def calculate_phase_success(tests):
+            if not tests:
+                return 0, 0, 0
+            passed = sum(1 for t in tests if t["success"])
+            total = len(tests)
+            rate = (passed / total * 100) if total > 0 else 0
+            return passed, total, rate
+        
+        p1_passed, p1_total, p1_rate = calculate_phase_success(phase1_tests)
+        p2_passed, p2_total, p2_rate = calculate_phase_success(phase2_tests)
+        p3_passed, p3_total, p3_rate = calculate_phase_success(phase3_tests)
+        int_passed, int_total, int_rate = calculate_phase_success(integration_tests)
+        
+        print(f"\n📈 PHASE-SPECIFIC RESULTS:")
+        print(f"   Phase 1 (Core System): {p1_rate:.1f}% ({p1_passed}/{p1_total})")
+        print(f"   Phase 2 (Debt & Collection): {p2_rate:.1f}% ({p2_passed}/{p2_total})")
+        print(f"   Phase 3 (Dashboard Enhancement): {p3_rate:.1f}% ({p3_passed}/{p3_total})")
+        print(f"   Integration & Stability: {int_rate:.1f}% ({int_passed}/{int_total})")
         
         if failed_tests > 0:
             print(f"\n❌ FAILED TESTS:")
@@ -652,27 +696,37 @@ class BackendTester:
             if result["success"]:
                 print(f"   • {result['test']}: {result['details']}")
         
-        # Critical assessment for Phase 1 UI support
+        # Critical assessment for all phases
         critical_tests = [
             "Admin Login (admin/admin123)",
             "Get Users List", 
             "Get Products List",
             "Get Clinics List",
-            "Dashboard Statistics"
+            "Enhanced Dashboard Statistics",
+            "Debt Summary Statistics",
+            "Activity Tracking System"
         ]
         
         critical_passed = sum(1 for result in self.test_results 
                             if result["success"] and result["test"] in critical_tests)
         critical_total = len([r for r in self.test_results if r["test"] in critical_tests])
         
-        print(f"\n🎯 CRITICAL APIS FOR PHASE 1 UI: {critical_passed}/{critical_total} working")
+        print(f"\n🎯 CRITICAL APIS FOR ALL PHASES: {critical_passed}/{critical_total} working")
         
         if critical_passed == critical_total:
-            print("🎉 EXCELLENT: All critical APIs are working! Backend is ready to support Phase 1 UI improvements.")
+            print("🎉 EXCELLENT: All critical APIs are working! Backend is ready to support all 3 phases.")
         elif critical_passed >= critical_total * 0.8:
-            print("⚠️  GOOD: Most critical APIs working. Minor issues may affect some UI features.")
+            print("⚠️  GOOD: Most critical APIs working. Minor issues may affect some features.")
         else:
-            print("🚨 CRITICAL: Major backend issues detected. Phase 1 UI may not function properly.")
+            print("🚨 CRITICAL: Major backend issues detected. System functionality may be impaired.")
+        
+        # Phase 3 specific assessment
+        if p3_rate >= 80:
+            print("✅ Phase 3 (Admin Dashboard Enhancement) is working well!")
+        elif p3_rate >= 60:
+            print("⚠️  Phase 3 has some issues but core functionality works.")
+        else:
+            print("❌ Phase 3 needs attention - dashboard enhancements may not work properly.")
         
         return {
             "success_rate": success_rate,
@@ -680,6 +734,12 @@ class BackendTester:
             "passed_tests": passed_tests,
             "failed_tests": failed_tests,
             "avg_response_time": avg_response_time,
+            "phase_results": {
+                "phase1": {"passed": p1_passed, "total": p1_total, "rate": p1_rate},
+                "phase2": {"passed": p2_passed, "total": p2_total, "rate": p2_rate},
+                "phase3": {"passed": p3_passed, "total": p3_total, "rate": p3_rate},
+                "integration": {"passed": int_passed, "total": int_total, "rate": int_rate}
+            },
             "critical_apis_working": critical_passed == critical_total,
             "test_results": self.test_results
         }
