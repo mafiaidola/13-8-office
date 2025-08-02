@@ -2031,12 +2031,12 @@ input:focus, select:focus, textarea:focus {
   padding: 0 0.875rem;
 }
 
-/* Theme Dropdown - Professional Design */
+/* Theme Dropdown - Professional Design - FIXED Z-INDEX */
 .theme-dropdown-enhanced {
   position: absolute;
   top: calc(100% + 0.75rem);
   right: 0;
-  z-index: 9999;
+  z-index: 10000; /* Fixed: Higher z-index than dashboard content */
   min-width: 16rem;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(25px);
