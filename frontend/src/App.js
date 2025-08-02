@@ -768,30 +768,19 @@ const DashboardLayout = () => {
           </div>
 
           {/* Center - Search & Quick Actions */}
-          <div className="flex-1 max-w-2xl mx-8 flex items-center gap-4">
+          <div className="header-search">
             {/* Global Search */}
-            <div className="flex-1">
-              <button
-                onClick={() => setShowGlobalSearch(true)}
-                className="w-full px-6 py-3 bg-white/15 border border-white/30 rounded-xl hover:bg-white/25 transition-all duration-200 flex items-center gap-3 text-white/80 hover:text-white shadow-lg backdrop-blur-lg hover:shadow-xl"
-              >
-                <span className="text-lg">🔍</span>
-                <span className="flex-1 text-right text-sm font-medium">
-                  {language === 'ar' ? 'البحث الشامل (فواتير، أطباء، عيادات، مستخدمين)...' : 'Global Search (invoices, doctors, clinics, users)...'}
-                </span>
-                <span className="text-xs bg-white/25 px-3 py-1.5 rounded-lg border border-white/30 font-mono">
-                  Ctrl+K
-                </span>
-              </button>
-            </div>
-            
-            {/* Quick Action Button */}
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 shadow-lg hover:shadow-xl"
-              title={language === 'ar' ? (sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة') : (sidebarCollapsed ? 'Expand Menu' : 'Collapse Menu')}
+              onClick={() => setShowGlobalSearch(true)}
+              className="header-search-btn"
             >
-              <span className="text-lg">{sidebarCollapsed ? '📋' : '📌'}</span>
+              <span className="text-lg">🔍</span>
+              <span className="flex-1 text-right">
+                {language === 'ar' ? 'البحث الشامل (فواتير، أطباء، عيادات، مستخدمين)...' : 'Global Search (invoices, doctors, clinics, users)...'}
+              </span>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded-lg border border-white/20 font-mono opacity-75">
+                Ctrl+K
+              </span>
             </button>
           </div>
 
