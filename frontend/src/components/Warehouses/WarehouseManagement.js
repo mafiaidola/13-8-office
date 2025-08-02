@@ -1,4 +1,4 @@
-// Enhanced Warehouse Management Component - إدارة المخازن المحسنة
+// Enhanced Warehouse Management Component - إدارة المخازن المحسنة المطورة
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
@@ -6,7 +6,9 @@ import axios from 'axios';
 const WarehouseManagement = ({ user, language, isRTL }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [warehouses, setWarehouses] = useState([]);
-  const [inventory, setInventory] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [availableManagers, setAvailableManagers] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [warehouseStats, setWarehouseStats] = useState({});
   const [movements, setMovements] = useState([]);
@@ -18,76 +20,133 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   
   const { t } = useTranslation(language);
-  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
-  // Egyptian warehouses configuration
-  const egyptianWarehouses = [
-    { id: 'WH_CAIRO', name: 'مخزن القاهرة', city: 'Cairo', region: 'Greater Cairo' },
-    { id: 'WH_ALEX', name: 'مخزن الإسكندرية', city: 'Alexandria', region: 'Alexandria' },
-    { id: 'WH_GIZA', name: 'مخزن الجيزة', city: 'Giza', region: 'Greater Cairo' },
-    { id: 'WH_MANSOURA', name: 'مخزن المنصورة', city: 'Mansoura', region: 'Dakahlia' },
-    { id: 'WH_ASWAN', name: 'مخزن أسوان', city: 'Aswan', region: 'Upper Egypt' }
+  // Egyptian regions configuration
+  const egyptianRegions = [
+    { id: 'cairo_greater', name: 'القاهرة الكبرى', cities: ['القاهرة', 'الجيزة', 'القليوبية'] },
+    { id: 'alexandria', name: 'الإسكندرية', cities: ['الإسكندرية', 'البحيرة', 'مطروح'] },
+    { id: 'delta', name: 'الدلتا', cities: ['الدقهلية', 'الشرقية', 'كفر الشيخ', 'الغربية'] },
+    { id: 'canal', name: 'قناة السويس', cities: ['الإسماعيلية', 'بورسعيد', 'السويس'] },
+    { id: 'upper_egypt', name: 'صعيد مصر', cities: ['أسيوط', 'سوهاج', 'قنا', 'الأقصر', 'أسوان'] },
+    { id: 'sinai', name: 'سيناء', cities: ['شمال سيناء', 'جنوب سيناء'] }
+  ];
+
+  // Sample products for warehouse inventory
+  const availableProducts = [
+    { id: 'prod-001', name: 'أموكسيسيلين 500mg', unit: 'ڤايل', category: 'مضادات حيوية' },
+    { id: 'prod-002', name: 'فيتامين د3', unit: 'علبة', category: 'فيتامينات' },
+    { id: 'prod-003', name: 'أنسولين طويل المفعول', unit: 'قلم', category: 'هرمونات' },
+    { id: 'prod-004', name: 'مسكن للألم', unit: 'شريط', category: 'مسكنات' },
+    { id: 'prod-005', name: 'مضاد التهاب', unit: 'علبة', category: 'مضادات التهاب' },
+    { id: 'prod-006', name: 'شراب السعال', unit: 'زجاجة', category: 'أدوية الجهاز التنفسي' },
+    { id: 'prod-007', name: 'كريم موضعي', unit: 'أنبوبة', category: 'أدوية موضعية' },
+    { id: 'prod-008', name: 'قطرة للعين', unit: 'عبوة', category: 'أدوية العيون' }
   ];
 
   useEffect(() => {
     fetchWarehouseData();
+    fetchRegions();
+    fetchAvailableManagers();
   }, []);
+
+  const fetchRegions = () => {
+    setRegions(egyptianRegions);
+  };
+
+  const fetchAvailableManagers = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      // In real implementation, this would fetch users with accounting or warehouse_manager roles
+      const response = await axios.get(`${API}/users?role=accounting,warehouse_manager`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setAvailableManagers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching managers:', error);
+      // Mock data for development
+      setAvailableManagers([
+        { id: 'user-001', full_name: 'أحمد محمد الحسابات', role: 'accounting', department: 'المحاسبة' },
+        { id: 'user-002', full_name: 'سارة أحمد أمينة المخزن', role: 'warehouse_manager', department: 'المخازن' },
+        { id: 'user-003', full_name: 'محمد علي المسؤول المالي', role: 'accounting', department: 'المحاسبة' },
+        { id: 'user-004', full_name: 'فاطمة سعد مديرة المخزن', role: 'warehouse_manager', department: 'المخازن' }
+      ]);
+    }
+  };
 
   const fetchWarehouseData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
       
-      // Mock data for development
+      // Enhanced mock data for development
       setWarehouses([
         { 
           id: 'WH_CAIRO', 
           name: 'مخزن القاهرة الرئيسي', 
           city: 'القاهرة', 
-          region: 'القاهرة الكبرى',
-          capacity: 5000,
-          current_stock: 3200,
-          products_count: 156,
-          manager: 'أحمد محمد',
-          status: 'active'
+          regions: ['cairo_greater', 'delta'], // Multiple regions
+          region_names: ['القاهرة الكبرى', 'الدلتا'],
+          managers: ['user-001', 'user-002'], // Multiple managers
+          manager_names: ['أحمد محمد الحسابات', 'سارة أحمد أمينة المخزن'],
+          status: 'active',
+          products_inventory: {
+            'prod-001': { quantity: 150, min_quantity: 20, max_quantity: 300 },
+            'prod-002': { quantity: 80, min_quantity: 15, max_quantity: 200 },
+            'prod-003': { quantity: 45, min_quantity: 10, max_quantity: 100 },
+            'prod-004': { quantity: 200, min_quantity: 50, max_quantity: 500 }
+          },
+          created_at: '2024-01-01T00:00:00Z'
         },
         { 
           id: 'WH_ALEX', 
           name: 'مخزن الإسكندرية', 
           city: 'الإسكندرية', 
-          region: 'الإسكندرية',
-          capacity: 3000,
-          current_stock: 2100,
-          products_count: 89,
-          manager: 'محمد أحمد',
-          status: 'active'
+          regions: ['alexandria'], 
+          region_names: ['الإسكندرية'],
+          managers: ['user-003'],
+          manager_names: ['محمد علي المسؤول المالي'],
+          status: 'active',
+          products_inventory: {
+            'prod-001': { quantity: 90, min_quantity: 20, max_quantity: 200 },
+            'prod-002': { quantity: 120, min_quantity: 25, max_quantity: 250 },
+            'prod-005': { quantity: 65, min_quantity: 15, max_quantity: 150 }
+          },
+          created_at: '2024-01-05T00:00:00Z'
         },
         { 
           id: 'WH_GIZA', 
           name: 'مخزن الجيزة', 
           city: 'الجيزة', 
-          region: 'القاهرة الكبرى',
-          capacity: 2500,
-          current_stock: 1800,
-          products_count: 67,
-          manager: 'سارة علي',
-          status: 'maintenance'
+          regions: ['cairo_greater'], 
+          region_names: ['القاهرة الكبرى'],
+          managers: ['user-002', 'user-004'],
+          manager_names: ['سارة أحمد أمينة المخزن', 'فاطمة سعد مديرة المخزن'],
+          status: 'maintenance',
+          products_inventory: {
+            'prod-003': { quantity: 25, min_quantity: 10, max_quantity: 80 },
+            'prod-004': { quantity: 180, min_quantity: 50, max_quantity: 400 },
+            'prod-006': { quantity: 95, min_quantity: 20, max_quantity: 200 }
+          },
+          created_at: '2024-01-10T00:00:00Z'
         }
       ]);
 
-      setWarehouseStats({
-        totalWarehouses: 3,
-        totalCapacity: 10500,
-        totalCurrentStock: 7100,
-        totalProducts: 312,
-        occupancyRate: 67.6
-      });
+      setProducts(availableProducts);
 
-      setInventory([
-        { id: 1, name: 'أموكسيسيلين 500mg', warehouse: 'مخزن القاهرة', stock: 150, min_stock: 20, status: 'good' },
-        { id: 2, name: 'فيتامين د3', warehouse: 'مخزن الإسكندرية', stock: 15, min_stock: 25, status: 'low' },
-        { id: 3, name: 'أنسولين', warehouse: 'مخزن الجيزة', stock: 5, min_stock: 10, status: 'critical' }
-      ]);
+      // Calculate enhanced stats
+      const totalWarehouses = 3;
+      const totalProducts = availableProducts.length;
+      const activeWarehouses = 2;
+      
+      setWarehouseStats({
+        totalWarehouses,
+        totalProducts,
+        activeWarehouses,
+        totalManagers: 4,
+        totalRegionsCovered: 3
+      });
 
       setPendingOrders([
         { id: 'ORD-001', clinic: 'عيادة د.أحمد', warehouse: 'مخزن القاهرة', status: 'pending_warehouse', items: 5, total: 1500 },
