@@ -106,6 +106,12 @@ export const COMPONENT_REGISTRY = {
   ),
 
   // Visit Management
+  VisitManagement: createLazyComponent(
+    () => import('../Visits/VisitManagement'),
+    'جاري تحميل إدارة الزيارات وسجل الدخول...'
+  ),
+
+  // Visit Management
   VisitRegistration: createLazyComponent(
     () => import('../Visits/VisitRegistration'),
     'جاري تحميل تسجيل الزيارات...'
