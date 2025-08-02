@@ -725,22 +725,24 @@ const DashboardLayout = () => {
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <header className="dashboard-header fixed top-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3 z-40">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <header className="dashboard-header fixed top-0 left-0 right-0 bg-white/20 backdrop-blur-xl border-b border-white/30 px-6 py-4 z-40 shadow-lg">
+        <div className="flex items-center justify-between max-w-full mx-auto">
           {/* Left Side - Logo & Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/20"
               title={language === 'ar' ? 'طي/فتح الشريط الجانبي' : 'Toggle Sidebar'}
             >
-              ☰
+              <span className="text-lg">☰</span>
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🏥</span>
-              <div className="hidden md:block">
-                <div className="font-bold text-lg">EP Group</div>
-                <div className="text-xs opacity-75">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-xl text-white">🏥</span>
+              </div>
+              <div>
+                <div className="font-bold text-xl text-white">EP Group</div>
+                <div className="text-xs text-white/70">
                   {language === 'ar' ? 'نظام إدارة طبي شامل' : 'Complete Medical System'}
                 </div>
               </div>
@@ -748,55 +750,82 @@ const DashboardLayout = () => {
           </div>
 
           {/* Center - Search */}
-          <div className="flex-1 max-w-md mx-4">
+          <div className="flex-1 max-w-lg mx-6">
             <button
               onClick={() => setShowGlobalSearch(true)}
-              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-2 text-white/70 hover:text-white"
+              className="w-full px-5 py-3 bg-white/15 border border-white/25 rounded-xl hover:bg-white/25 transition-all duration-200 flex items-center gap-3 text-white/80 hover:text-white shadow-lg backdrop-blur-lg"
             >
-              <span>🔍</span>
-              <span className="text-sm">
-                {language === 'ar' ? 'البحث في النظام...' : 'Search system...'}
+              <span className="text-lg">🔍</span>
+              <span className="flex-1 text-right text-sm font-medium">
+                {language === 'ar' ? 'البحث في النظام (فواتير، أطباء، عيادات، مستخدمين)...' : 'Search system...'}
               </span>
-              <span className="ml-auto text-xs bg-white/20 px-2 py-1 rounded">
+              <span className="text-xs bg-white/20 px-3 py-1 rounded-lg border border-white/20">
                 Ctrl+K
               </span>
             </button>
           </div>
 
           {/* Right Side - User Info & Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Theme Selector */}
-            <ThemeSelector
-              language={language}
-              availableThemes={availableThemes}
-              currentTheme={theme}
-              onThemeChange={changeTheme}
-            />
+            <div className="relative">
+              <button
+                onClick={() => setShowThemes(!showThemes)}
+                className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/20 flex items-center gap-2"
+                title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
+              >
+                <span className="text-lg">🎨</span>
+                <span className="text-sm font-medium hidden lg:inline text-white">
+                  {language === 'ar' ? availableThemes[theme]?.name.ar : availableThemes[theme]?.name.en}
+                </span>
+              </button>
+
+              {showThemes && (
+                <div className="absolute top-full right-0 mt-2 bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 py-2 min-w-[220px] z-50 shadow-2xl">
+                  {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
+                    <button
+                      key={themeKey}
+                      onClick={() => {
+                        changeTheme(themeKey);
+                        setShowThemes(false);
+                      }}
+                      className={`w-full px-4 py-3 text-right hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
+                        theme === themeKey ? 'bg-white/25 border-l-4 border-blue-400' : ''
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${themeConfig.colors.primary} shadow-lg`}></div>
+                      <span className="font-medium text-white">{language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}</span>
+                      {theme === themeKey && <span className="ml-auto text-blue-400 text-lg">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm font-medium"
+              className="px-4 py-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 text-sm font-bold text-white border border-white/20"
               title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
             >
               {language === 'ar' ? 'EN' : 'عربي'}
             </button>
 
             {/* User Menu */}
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
-              <div className="text-right hidden md:block">
-                <div className="font-medium text-sm">{user?.full_name || user?.username}</div>
-                <div className="text-xs opacity-75">{user?.role}</div>
+            <div className="flex items-center gap-3 bg-white/20 rounded-xl px-4 py-3 border border-white/20 shadow-lg">
+              <div className="text-right">
+                <div className="font-bold text-sm text-white">{user?.full_name || user?.username}</div>
+                <div className="text-xs text-white/70">{user?.role}</div>
               </div>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
                 {(user?.full_name || user?.username || 'U').charAt(0).toUpperCase()}
               </div>
               <button
                 onClick={logout}
-                className="p-1 rounded hover:bg-red-500/20 text-red-300 transition-colors ml-1"
+                className="p-2 rounded-lg hover:bg-red-500/30 text-red-300 hover:text-red-200 transition-all duration-200"
                 title={t('auth', 'logout')}
               >
-                🚪
+                <span className="text-lg">🚪</span>
               </button>
             </div>
           </div>
