@@ -1,0 +1,513 @@
+// Clinic Mini Profile Component - الملف التعريفي المصغر للعيادة
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../localization/translations.js';
+import axios from 'axios';
+
+const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [profileData, setProfileData] = useState({
+    orders: [],
+    debts: [],
+    visits: [],
+    payments: []
+  });
+  const [loading, setLoading] = useState(true);
+  
+  const { t } = useTranslation(language);
+  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+
+  useEffect(() => {
+    if (clinic?.id) {
+      fetchClinicProfile();
+    }
+  }, [clinic?.id]);
+
+  const fetchClinicProfile = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('access_token');
+      
+      // Mock data for clinic profile
+      setProfileData({
+        orders: [
+          {
+            id: 'order-001',
+            order_number: 'ORD-2024-001',
+            date: '2024-02-01T10:30:00Z',
+            total_amount: 1250.00,
+            status: 'delivered',
+            items_count: 5,
+            rep_name: 'محمد علي أحمد'
+          },
+          {
+            id: 'order-002',
+            order_number: 'ORD-2024-002',
+            date: '2024-01-28T14:15:00Z',
+            total_amount: 850.00,
+            status: 'pending',
+            items_count: 3,
+            rep_name: 'سارة محمود'
+          },
+          {
+            id: 'order-003',
+            order_number: 'ORD-2024-003',
+            date: '2024-01-25T09:45:00Z',
+            total_amount: 650.00,
+            status: 'cancelled',
+            items_count: 2,
+            rep_name: 'أحمد حسام'
+          }
+        ],
+        debts: [
+          {
+            id: 'debt-001',
+            invoice_number: 'INV-2024-001',
+            due_date: '2024-02-15T00:00:00Z',
+            original_amount: 1250.00,
+            paid_amount: 750.00,
+            remaining_amount: 500.00,
+            days_overdue: 0,
+            status: 'partial'
+          },
+          {
+            id: 'debt-002',
+            invoice_number: 'INV-2024-002',
+            due_date: '2024-01-30T00:00:00Z',
+            original_amount: 850.00,
+            paid_amount: 0.00,
+            remaining_amount: 850.00,
+            days_overdue: 5,
+            status: 'overdue'
+          }
+        ],
+        visits: [
+          {
+            id: 'visit-001',
+            visit_date: '2024-02-01T09:30:00Z',
+            rep_name: 'محمد علي أحمد',
+            visit_type: 'routine',
+            duration_minutes: 45,
+            order_created: true,
+            order_value: 1250.00,
+            notes: 'زيارة روتينية، تم عرض المنتجات الجديدة'
+          },
+          {
+            id: 'visit-002',
+            visit_date: '2024-01-28T11:00:00Z',
+            rep_name: 'سارة محمود',
+            visit_type: 'follow_up',
+            duration_minutes: 30,
+            order_created: false,
+            order_value: 0,
+            notes: 'متابعة الطلب السابق'
+          },
+          {
+            id: 'visit-003',
+            visit_date: '2024-01-25T14:30:00Z',
+            rep_name: 'أحمد حسام',
+            visit_type: 'presentation',
+            duration_minutes: 60,
+            order_created: true,
+            order_value: 650.00,
+            notes: 'عرض منتجات جديدة للموسم'
+          }
+        ],
+        payments: [
+          {
+            id: 'pay-001',
+            payment_date: '2024-02-02T15:20:00Z',
+            amount: 750.00,
+            method: 'cash',
+            invoice_number: 'INV-2024-001',
+            reference: 'REF-001'
+          },
+          {
+            id: 'pay-002',
+            payment_date: '2024-01-20T10:30:00Z',
+            amount: 1000.00,
+            method: 'bank_transfer',
+            invoice_number: 'INV-2023-025',
+            reference: 'TRF-445'
+          }
+        ]
+      });
+
+    } catch (error) {
+      console.error('خطأ في جلب بيانات العيادة:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ar-EG', {
+      style: 'currency',
+      currency: 'EGP',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString('ar-EG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getOrderStatusLabel = (status) => {
+    const labels = {
+      'pending': 'معلق',
+      'approved': 'معتمد',
+      'delivered': 'تم التسليم',
+      'cancelled': 'ملغي'
+    };
+    return labels[status] || status;
+  };
+
+  const getOrderStatusColor = (status) => {
+    const colors = {
+      'pending': 'bg-yellow-500/20 text-yellow-300',
+      'approved': 'bg-blue-500/20 text-blue-300',
+      'delivered': 'bg-green-500/20 text-green-300',
+      'cancelled': 'bg-red-500/20 text-red-300'
+    };
+    return colors[status] || 'bg-gray-500/20 text-gray-300';
+  };
+
+  const getDebtStatusColor = (status) => {
+    const colors = {
+      'paid': 'bg-green-500/20 text-green-300',
+      'partial': 'bg-yellow-500/20 text-yellow-300',
+      'pending': 'bg-blue-500/20 text-blue-300',
+      'overdue': 'bg-red-500/20 text-red-300'
+    };
+    return colors[status] || 'bg-gray-500/20 text-gray-300';
+  };
+
+  const calculateTotals = () => {
+    const totalOrders = profileData.orders.length;
+    const totalOrderValue = profileData.orders.reduce((sum, order) => sum + order.total_amount, 0);
+    const totalDebt = profileData.debts.reduce((sum, debt) => sum + debt.remaining_amount, 0);
+    const totalVisits = profileData.visits.length;
+    const totalPayments = profileData.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+    return {
+      totalOrders,
+      totalOrderValue,
+      totalDebt,
+      totalVisits,
+      totalPayments
+    };
+  };
+
+  const totals = calculateTotals();
+
+  const renderOverview = () => (
+    <div className="space-y-6">
+      {/* Clinic Info */}
+      <div className="bg-white/5 rounded-xl p-4">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-2xl text-white">🏥</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold">{clinic.clinic_name}</h3>
+            <p className="text-lg opacity-75">{clinic.doctor_name}</p>
+            <p className="text-sm opacity-60">{clinic.specialty}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`px-2 py-1 rounded text-xs ${clinic.classification ? 
+                clinic.classification === 'A' ? 'bg-green-500/20 text-green-300' :
+                clinic.classification === 'B' ? 'bg-yellow-500/20 text-yellow-300' :
+                'bg-red-500/20 text-red-300' : 'bg-gray-500/20 text-gray-300'
+              }`}>
+                تصنيف {clinic.classification || 'غير محدد'}
+              </span>
+              <span className={`px-2 py-1 rounded text-xs ${
+                clinic.credit_status === 'good' ? 'bg-green-500/20 text-green-300' :
+                clinic.credit_status === 'average' ? 'bg-yellow-500/20 text-yellow-300' :
+                'bg-red-500/20 text-red-300'
+              }`}>
+                حالة ائتمانية: {clinic.credit_status === 'good' ? 'جيدة' : 
+                              clinic.credit_status === 'average' ? 'متوسطة' : 'ضعيفة'}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="text-center">
+            <div className="font-bold text-lg">{totals.totalOrders}</div>
+            <div className="opacity-75">إجمالي الطلبات</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg text-green-400">{formatCurrency(totals.totalOrderValue)}</div>
+            <div className="opacity-75">قيمة الطلبات</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg text-red-400">{formatCurrency(totals.totalDebt)}</div>
+            <div className="opacity-75">إجمالي المديونية</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg">{totals.totalVisits}</div>
+            <div className="opacity-75">عدد الزيارات</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white/5 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📦</span>
+            <div>
+              <div className="font-medium">آخر طلب</div>
+              <div className="text-sm opacity-75">
+                {profileData.orders.length > 0 
+                  ? `${profileData.orders[0].order_number} - ${formatCurrency(profileData.orders[0].total_amount)}`
+                  : 'لا توجد طلبات'
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/5 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏥</span>
+            <div>
+              <div className="font-medium">آخر زيارة</div>
+              <div className="text-sm opacity-75">
+                {profileData.visits.length > 0 
+                  ? `${formatDate(profileData.visits[0].visit_date)} - ${profileData.visits[0].rep_name}`
+                  : 'لا توجد زيارات'
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/5 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💰</span>
+            <div>
+              <div className="font-medium">آخر دفعة</div>
+              <div className="text-sm opacity-75">
+                {profileData.payments.length > 0 
+                  ? `${formatDate(profileData.payments[0].payment_date)} - ${formatCurrency(profileData.payments[0].amount)}`
+                  : 'لا توجد دفعات'
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderOrders = () => (
+    <div className="space-y-4">
+      {profileData.orders.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2">📦</div>
+          <p className="text-gray-400">لا توجد طلبات</p>
+        </div>
+      ) : (
+        profileData.orders.map(order => (
+          <div key={order.id} className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium text-blue-400">{order.order_number}</div>
+              <span className={`px-2 py-1 rounded text-xs ${getOrderStatusColor(order.status)}`}>
+                {getOrderStatusLabel(order.status)}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="opacity-75">التاريخ:</div>
+                <div>{formatDate(order.date)}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المبلغ:</div>
+                <div className="font-medium">{formatCurrency(order.total_amount)}</div>
+              </div>
+              <div>
+                <div className="opacity-75">عدد العناصر:</div>
+                <div>{order.items_count}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المندوب:</div>
+                <div>{order.rep_name}</div>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const renderDebts = () => (
+    <div className="space-y-4">
+      {profileData.debts.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2">💳</div>
+          <p className="text-gray-400">لا توجد مديونيات</p>
+        </div>
+      ) : (
+        profileData.debts.map(debt => (
+          <div key={debt.id} className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium text-orange-400">{debt.invoice_number}</div>
+              <span className={`px-2 py-1 rounded text-xs ${getDebtStatusColor(debt.status)}`}>
+                {debt.status === 'overdue' ? `متأخر ${debt.days_overdue} يوم` : debt.status}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="opacity-75">تاريخ الاستحقاق:</div>
+                <div>{formatDate(debt.due_date)}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المبلغ الأصلي:</div>
+                <div>{formatCurrency(debt.original_amount)}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المبلغ المدفوع:</div>
+                <div className="text-green-400">{formatCurrency(debt.paid_amount)}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المبلغ المتبقي:</div>
+                <div className="text-red-400 font-medium">{formatCurrency(debt.remaining_amount)}</div>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const renderVisits = () => (
+    <div className="space-y-4">
+      {profileData.visits.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2">🏥</div>
+          <p className="text-gray-400">لا توجد زيارات</p>
+        </div>
+      ) : (
+        profileData.visits.map(visit => (
+          <div key={visit.id} className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium">{formatDateTime(visit.visit_date)}</div>
+              <div className="text-sm">
+                {visit.visit_type === 'routine' ? 'روتينية' :
+                 visit.visit_type === 'follow_up' ? 'متابعة' :
+                 visit.visit_type === 'presentation' ? 'عرض منتجات' : visit.visit_type}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+              <div>
+                <div className="opacity-75">المندوب:</div>
+                <div>{visit.rep_name}</div>
+              </div>
+              <div>
+                <div className="opacity-75">المدة:</div>
+                <div>{visit.duration_minutes} دقيقة</div>
+              </div>
+              <div>
+                <div className="opacity-75">طلب:</div>
+                <div className={visit.order_created ? 'text-green-400' : 'text-gray-400'}>
+                  {visit.order_created 
+                    ? `تم - ${formatCurrency(visit.order_value)}`
+                    : 'لم يتم'
+                  }
+                </div>
+              </div>
+            </div>
+            {visit.notes && (
+              <div className="text-sm opacity-75 bg-white/5 rounded p-2">
+                <div className="opacity-75 mb-1">ملاحظات:</div>
+                <div>{visit.notes}</div>
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 border border-white/20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>جاري تحميل ملف العيادة...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
+        {/* Header */}
+        <div className="sticky top-0 bg-white/10 backdrop-blur-lg border-b border-white/20 p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">الملف التعريفي للعيادة</h2>
+            <button
+              onClick={onClose}
+              className="text-white/70 hover:text-white text-2xl"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-white/10">
+          <div className="flex overflow-x-auto">
+            {[
+              { id: 'overview', name: 'نظرة عامة', icon: '📊' },
+              { id: 'orders', name: 'الطلبات', icon: '📦' },
+              { id: 'debts', name: 'المديونيات', icon: '💳' },
+              { id: 'visits', name: 'سجل الزيارات', icon: '🏥' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-blue-300 border-b-2 border-blue-400 bg-white/5'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                {tab.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'orders' && renderOrders()}
+          {activeTab === 'debts' && renderDebts()}
+          {activeTab === 'visits' && renderVisits()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ClinicMiniProfile;
