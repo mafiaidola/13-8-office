@@ -406,7 +406,11 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       onClick={() => setClinicData(prev => ({ ...prev, credit_status: creditStatus.value }))}
                       className={`w-full p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-3 hover:scale-105 ${
                         clinicData.credit_status === creditStatus.value
-                          ? `border-${creditStatus.bgColor}-400 bg-${creditStatus.bgColor}-500/20 text-${creditStatus.bgColor}-300 shadow-lg shadow-${creditStatus.bgColor}-500/20`
+                          ? creditStatus.value === 'green' 
+                            ? 'border-green-400 bg-green-500/20 text-green-300 shadow-lg shadow-green-500/20'
+                            : creditStatus.value === 'yellow'
+                            ? 'border-yellow-400 bg-yellow-500/20 text-yellow-300 shadow-lg shadow-yellow-500/20'
+                            : 'border-red-400 bg-red-500/20 text-red-300 shadow-lg shadow-red-500/20'
                           : 'border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/40'
                       }`}
                     >
