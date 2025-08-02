@@ -714,9 +714,9 @@ const ActivityTracking = ({ user, language, isRTL }) => {
 
   const renderAllActivities = () => (
     <div className="space-y-6">
-      {/* Filters */}
+      {/* Enhanced Filters */}
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">البحث</label>
             <input
@@ -724,7 +724,7 @@ const ActivityTracking = ({ user, language, isRTL }) => {
               placeholder="ابحث في الأنشطة..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
@@ -738,9 +738,12 @@ const ActivityTracking = ({ user, language, isRTL }) => {
               <option value="all">جميع الأنشطة</option>
               <option value="visit_registration">تسجيل الزيارات</option>
               <option value="clinic_registration">تسجيل العيادات</option>
+              <option value="order_creation">إنشاء الطلبات</option>
               <option value="order_approval">اعتماد الطلبات</option>
               <option value="product_update">تحديث المنتجات</option>
+              <option value="user_creation">إنشاء المستخدمين</option>
               <option value="login">تسجيل الدخول</option>
+              <option value="system_access">دخول النظام</option>
             </select>
           </div>
           
@@ -754,6 +757,7 @@ const ActivityTracking = ({ user, language, isRTL }) => {
               <option value="today">اليوم</option>
               <option value="yesterday">أمس</option>
               <option value="week">هذا الأسبوع</option>
+              <option value="month">هذا الشهر</option>
               <option value="all">جميع الفترات</option>
             </select>
           </div>
@@ -765,77 +769,163 @@ const ActivityTracking = ({ user, language, isRTL }) => {
                 setFilterType('all');
                 setFilterDate('today');
               }}
-              className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="w-full bg-gray-600/50 text-white px-4 py-2 rounded-lg hover:bg-gray-600/70 transition-colors"
             >
               إعادة تعيين
+            </button>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={fetchData}
+              className="w-full bg-blue-600/50 text-white px-4 py-2 rounded-lg hover:bg-blue-600/70 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>🔄</span>
+              تحديث
+            </button>
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="mt-4 flex items-center justify-between text-sm opacity-75">
+          <div>
+            عرض {filteredActivities.length} من أصل {activities.length} نشاط
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={() => exportData('json')}
+              className="flex items-center gap-1 text-blue-400 hover:text-blue-300"
+            >
+              <span>💾</span>
+              تصدير JSON
+            </button>
+            <button
+              onClick={() => exportData('csv')}
+              className="flex items-center gap-1 text-green-400 hover:text-green-300"
+            >
+              <span>📊</span>
+              تصدير CSV
             </button>
           </div>
         </div>
       </div>
 
-      {/* Activities List */}
+      {/* Activities Table */}
       <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-6 py-4 text-right text-sm font-medium">النشاط</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">المستخدم</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الهدف</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الوقت</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الموقع</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الجهاز</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">التفاصيل</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">النشاط</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">المستخدم</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الهدف</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الوقت</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الموقع</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الجهاز</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {filteredActivities.map((activity) => (
-                <tr key={activity.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+              {filteredActivities.map((activity, index) => (
+                <tr 
+                  key={activity.id} 
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{getActivityIcon(activity.type)}</span>
                       <div>
-                        <div className="font-medium">{activity.action}</div>
-                        <span className={`inline-block px-2 py-1 rounded text-xs ${getActivityColor(activity.type)}`}>
+                        <div className="font-medium text-white">{activity.action}</div>
+                        <span className={`inline-block px-2 py-1 rounded text-xs mt-1 ${getActivityColor(activity.type)}`}>
                           {activity.type.replace('_', ' ')}
                         </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium">{activity.user_name}</div>
-                    <div className="text-sm opacity-75">{activity.user_role}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium">{activity.target_name}</div>
-                    <div className="text-sm opacity-75">{activity.target_type}</div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {formatDateTime(activity.timestamp)}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span>📍</span>
-                      <span className="text-xs">{activity.location?.address}</span>
-                    </div>
-                    <div className="text-xs opacity-60">
-                      دقة: {activity.location?.accuracy}m
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
+                        <span className="text-sm">👤</span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{activity.user_name}</div>
+                        <div className="text-sm opacity-75 capitalize">{activity.user_role?.replace('_', ' ')}</div>
+                      </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-white">{activity.target_name || 'غير محدد'}</div>
+                    <div className="text-sm opacity-75 capitalize">{activity.target_type?.replace('_', ' ')}</div>
+                  </td>
                   <td className="px-6 py-4 text-sm">
-                    <div>{activity.device_info}</div>
-                    <div className="text-xs opacity-60">{activity.ip_address}</div>
+                    <div className="text-white">{formatDateTime(activity.timestamp)}</div>
+                    <div className="text-xs opacity-60">{getRelativeTime(activity.timestamp)}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm max-w-xs">
+                    {activity.location ? (
+                      <div>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span>📍</span>
+                          <span className="text-xs truncate">{activity.location.address}</span>
+                        </div>
+                        <div className="text-xs opacity-60">
+                          دقة: {activity.location.accuracy?.toFixed(1) || 'غير محددة'}م
+                        </div>
+                        {activity.location.latitude && activity.location.longitude && (
+                          <div className="text-xs opacity-60 mt-1">
+                            {activity.location.latitude.toFixed(4)}, {activity.location.longitude.toFixed(4)}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">غير متوفر</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-white">
+                        {activity.device_info?.operating_system || 'غير محدد'}
+                      </div>
+                      <div className="text-xs opacity-60">
+                        {activity.device_info?.browser || 'غير محدد'}
+                      </div>
+                      <div className="text-xs opacity-60">
+                        {activity.device_info?.device_type || 'غير محدد'}
+                      </div>
+                      {activity.device_info?.ip_address && (
+                        <div className="text-xs opacity-50">
+                          IP: {activity.device_info.ip_address}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => {
-                        // Show activity details modal
-                        alert(`تفاصيل النشاط:\n${JSON.stringify(activity.details, null, 2)}`);
-                      }}
-                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
-                    >
-                      عرض التفاصيل
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => showActivityDetails(activity)}
+                        className="px-3 py-1 bg-blue-600/50 text-white rounded hover:bg-blue-600/70 transition-colors text-xs"
+                        title="عرض التفاصيل الكاملة"
+                      >
+                        تفاصيل
+                      </button>
+                      {activity.location?.latitude && activity.location?.longitude && (
+                        <button
+                          onClick={() => {
+                            if (GOOGLE_MAPS_API_KEY) {
+                              const mapUrl = `https://www.google.com/maps?q=${activity.location.latitude},${activity.location.longitude}`;
+                              window.open(mapUrl, '_blank');
+                            } else {
+                              alert(`الموقع: ${activity.location.latitude}, ${activity.location.longitude}`);
+                            }
+                          }}
+                          className="px-3 py-1 bg-green-600/50 text-white rounded hover:bg-green-600/70 transition-colors text-xs"
+                          title="عرض على الخريطة"
+                        >
+                          خريطة
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -844,11 +934,37 @@ const ActivityTracking = ({ user, language, isRTL }) => {
         </div>
       </div>
 
+      {/* Empty State */}
       {filteredActivities.length === 0 && (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-white/5 rounded-xl">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-bold mb-2">لا توجد أنشطة</h3>
-          <p className="text-gray-600">لم يتم العثور على أنشطة مطابقة للفلترة المحددة</p>
+          <h3 className="text-xl font-bold mb-2 text-white">لا توجد أنشطة</h3>
+          <p className="text-gray-400 mb-4">لم يتم العثور على أنشطة مطابقة للفلترة المحددة</p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setFilterType('all');
+              setFilterDate('all');
+            }}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            إعادة تعيين الفلاتر
+          </button>
+        </div>
+      )}
+
+      {/* Pagination Placeholder */}
+      {filteredActivities.length > 50 && (
+        <div className="flex justify-center items-center gap-4 py-4">
+          <button className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+            السابق
+          </button>
+          <span className="text-sm opacity-75">
+            الصفحة 1 من 1
+          </span>
+          <button className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+            التالي
+          </button>
         </div>
       )}
     </div>
