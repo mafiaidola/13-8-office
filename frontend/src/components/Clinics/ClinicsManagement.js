@@ -379,6 +379,15 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
                         <button
                           onClick={() => {
                             setSelectedClinic(clinic);
+                            setShowProfileModal(true);
+                          }}
+                          className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-xs"
+                        >
+                          ملف العيادة
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedClinic(clinic);
                             setShowClinicModal(true);
                           }}
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
