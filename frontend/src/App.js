@@ -983,7 +983,7 @@ const DashboardLayout = () => {
 
         .dashboard-sidebar {
           position: fixed;
-          left: 0;
+          right: 0;
           top: 80px;
           bottom: 0;
           z-index: 30;
@@ -993,7 +993,7 @@ const DashboardLayout = () => {
         .dashboard-main {
           background: ${currentThemeConfig.colors.card};
           backdrop-filter: blur(10px);
-          transition: margin-left 0.3s ease;
+          transition: margin-right 0.3s ease;
         }
 
         .tab-content {
