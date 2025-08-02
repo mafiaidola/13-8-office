@@ -373,6 +373,31 @@ const ThemeSelector = ({ language, availableThemes, currentTheme, onThemeChange 
     </div>
   );
 };
+
+// Keyboard Shortcuts Handler
+const KeyboardShortcuts = ({ onSearchOpen }) => {
+  useEffect(() => {
+    const handleKeydown = (event) => {
+      // Ctrl+K or Cmd+K for search
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        onSearchOpen();
+      }
+      
+      // Escape to close modals
+      if (event.key === 'Escape') {
+        // This will be handled by individual modal components
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, [onSearchOpen]);
+
+  return null;
+};
+
+// Custom Hooks
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
