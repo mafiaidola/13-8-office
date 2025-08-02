@@ -276,27 +276,55 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  {t('clinics', 'specialization')}
+                <label className="block text-sm font-medium mb-3">
+                  التخصص الطبي *
                 </label>
-                <select
-                  name="specialization"
-                  value={clinicData.specialization}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">اختر التخصص</option>
-                  <option value="general">طب عام</option>
-                  <option value="internal">باطنة</option>
-                  <option value="cardiology">قلب</option>
-                  <option value="dermatology">جلدية</option>
-                  <option value="orthopedics">عظام</option>
-                  <option value="pediatrics">أطفال</option>
-                  <option value="gynecology">نساء وولادة</option>
-                  <option value="neurology">مخ وأعصاب</option>
-                  <option value="ophthalmology">عيون</option>
-                  <option value="ent">أنف وأذن وحنجرة</option>
-                </select>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {[
+                    { value: 'general', label: 'طب عام', icon: '🏥' },
+                    { value: 'internal', label: 'باطنة', icon: '🫀' },
+                    { value: 'cardiology', label: 'قلب', icon: '💓' },
+                    { value: 'dermatology', label: 'جلدية', icon: '🧴' },
+                    { value: 'orthopedics', label: 'عظام', icon: '🦴' },
+                    { value: 'pediatrics', label: 'أطفال', icon: '👶' },
+                    { value: 'gynecology', label: 'نساء وولادة', icon: '🤱' },
+                    { value: 'neurology', label: 'مخ وأعصاب', icon: '🧠' },
+                    { value: 'ophthalmology', label: 'عيون', icon: '👁️' },
+                    { value: 'ent', label: 'أنف وأذن', icon: '👂' }
+                  ].map((specialty) => (
+                    <button
+                      key={specialty.value}
+                      type="button"
+                      onClick={() => setClinicData(prev => ({ ...prev, specialization: specialty.value }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-2 hover:scale-105 ${
+                        clinicData.specialization === specialty.value
+                          ? 'border-green-400 bg-green-500/20 text-green-300 shadow-lg shadow-green-500/20'
+                          : 'border-white/20 bg-white/10 hover:bg-white/20 hover:border-green-300/50'
+                      }`}
+                    >
+                      <span className="text-2xl">{specialty.icon}</span>
+                      <span className="text-xs font-medium text-center leading-tight">{specialty.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {clinicData.specialization && (
+                  <div className="mt-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <span className="text-sm text-green-300">
+                      ✅ تم اختيار: {[
+                        { value: 'general', label: 'طب عام' },
+                        { value: 'internal', label: 'باطنة' },
+                        { value: 'cardiology', label: 'قلب' },
+                        { value: 'dermatology', label: 'جلدية' },
+                        { value: 'orthopedics', label: 'عظام' },
+                        { value: 'pediatrics', label: 'أطفال' },
+                        { value: 'gynecology', label: 'نساء وولادة' },
+                        { value: 'neurology', label: 'مخ وأعصاب' },
+                        { value: 'ophthalmology', label: 'عيون' },
+                        { value: 'ent', label: 'أنف وأذن وحنجرة' }
+                      ].find(s => s.value === clinicData.specialization)?.label}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
