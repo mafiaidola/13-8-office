@@ -171,10 +171,13 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
         doctor_name: '',
         clinic_class: 'Class A',
         credit_status: 'green',
-        specialization: '',
+        // إزالة specialization
         latitude: currentLocation?.latitude || null,
         longitude: currentLocation?.longitude || null,
-        classification: 'class_c'
+        classification: 'class_c',
+        // إعادة تعيين حقول المسؤول الجديدة
+        manager_name: '',
+        manager_phone: ''
       });
 
     } catch (error) {
