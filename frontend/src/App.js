@@ -905,24 +905,33 @@ const DashboardLayout = () => {
         }
 
         .dashboard-header {
-          position: sticky;
+          position: fixed;
           top: 0;
-          z-index: 100;
-          height: 70px;
+          left: 0;
+          right: 0;
+          z-index: 40;
+          height: 80px;
+          backdrop-filter: blur(20px);
         }
 
         .dashboard-content {
-          min-height: calc(100vh - 70px);
+          padding-top: 80px;
+          min-height: 100vh;
         }
 
         .dashboard-sidebar {
-          min-height: calc(100vh - 70px);
+          position: fixed;
+          left: 0;
+          top: 80px;
+          bottom: 0;
+          z-index: 30;
           overflow-y: auto;
         }
 
         .dashboard-main {
           background: ${currentThemeConfig.colors.card};
           backdrop-filter: blur(10px);
+          transition: margin-left 0.3s ease;
         }
 
         .tab-content {
