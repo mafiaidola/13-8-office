@@ -324,7 +324,238 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
   );
 };
 
-// Warehouse Dashboard Component
+// Enhanced Warehouse Dashboard Component
+const EnhancedWarehouseDashboard = ({ 
+  stats, 
+  warehouses, 
+  products,
+  loading, 
+  language,
+  onAddWarehouse,
+  onEditWarehouse, 
+  onViewDetails,
+  getWarehouseStatusColor
+}) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p>جاري تحميل بيانات المخازن...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const getProductStockStatus = (warehouse, productId) => {
+    const inventory = warehouse.products_inventory[productId];
+    if (!inventory) return 'none';
+    if (inventory.quantity <= inventory.min_quantity) return 'critical';
+    if (inventory.quantity <= inventory.min_quantity * 1.5) return 'low';
+    return 'good';
+  };
+
+  const getStockStatusColor = (status) => {
+    switch (status) {
+      case 'good': return 'bg-green-500/20 text-green-300';
+      case 'low': return 'bg-yellow-500/20 text-yellow-300';
+      case 'critical': return 'bg-red-500/20 text-red-300';
+      case 'none': return 'bg-gray-500/20 text-gray-300';
+      default: return 'bg-gray-500/20 text-gray-300';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-75 mb-1">إجمالي المخازن</p>
+              <p className="text-3xl font-bold">{stats.totalWarehouses || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <span className="text-2xl">🏭</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-75 mb-1">إجمالي المنتجات</p>
+              <p className="text-3xl font-bold">{stats.totalProducts || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+              <span className="text-2xl">📦</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-75 mb-1">المخازن النشطة</p>
+              <p className="text-3xl font-bold">{stats.activeWarehouses || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <span className="text-2xl">✅</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-75 mb-1">إجمالي المسؤولين</p>
+              <p className="text-3xl font-bold">{stats.totalManagers || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center">
+              <span className="text-2xl">👥</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-75 mb-1">المناطق المغطاة</p>
+              <p className="text-3xl font-bold">{stats.totalRegionsCovered || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center">
+              <span className="text-2xl">🗺️</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <button
+          onClick={onAddWarehouse}
+          className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+        >
+          <span>➕</span>
+          إضافة مخزن جديد
+        </button>
+      </div>
+
+      {/* Enhanced Warehouses List with Product Inventory Tables */}
+      <div className="grid grid-cols-1 gap-8">
+        {warehouses.map((warehouse) => (
+          <div key={warehouse.id} className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            {/* Warehouse Header */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-2xl font-bold">{warehouse.name}</h3>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getWarehouseStatusColor(warehouse.status)}`}>
+                    {warehouse.status === 'active' ? '✅ نشط' : warehouse.status === 'maintenance' ? '🔧 صيانة' : '❌ غير نشط'}
+                  </span>
+                </div>
+                <p className="text-lg opacity-75 mb-1">{warehouse.city}</p>
+                
+                {/* Regions */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm opacity-60">المناطق:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {warehouse.region_names?.map((region, index) => (
+                      <span key={index} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                        {region}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Managers */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm opacity-60">المسؤولين:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {warehouse.manager_names?.map((manager, index) => (
+                      <span key={index} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
+                        {manager}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onViewDetails(warehouse)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  📊 التفاصيل
+                </button>
+                <button
+                  onClick={() => onEditWarehouse(warehouse)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  ✏️ تعديل
+                </button>
+              </div>
+            </div>
+
+            {/* Products Inventory Table */}
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span>📦</span>
+                جدول المنتجات والكميات المتاحة
+              </h4>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">المنتج</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الفئة</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الوحدة</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الكمية المتاحة</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الحد الأدنى</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => {
+                      const inventory = warehouse.products_inventory[product.id];
+                      const status = getProductStockStatus(warehouse, product.id);
+                      
+                      return (
+                        <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-4 font-medium text-white">{product.name}</td>
+                          <td className="py-3 px-4 text-white/70">{product.category}</td>
+                          <td className="py-3 px-4 text-white/70">{product.unit}</td>
+                          <td className="py-3 px-4">
+                            {inventory ? (
+                              <span className="text-white font-medium">{inventory.quantity}</span>
+                            ) : (
+                              <span className="text-gray-400">0</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-white/70">
+                            {inventory ? inventory.min_quantity : '-'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStockStatusColor(status)}`}>
+                              {status === 'good' ? '✅ جيد' : 
+                               status === 'low' ? '⚠️ منخفض' : 
+                               status === 'critical' ? '🚨 حرج' : '❌ غير متوفر'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 const WarehouseDashboard = ({ 
   stats, 
   warehouses, 
