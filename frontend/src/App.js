@@ -232,7 +232,147 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom Hooks
+// Global Search Component
+const GlobalSearchModal = ({ onClose, language, isRTL }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSearch = async (query) => {
+    if (!query.trim()) return;
+    setLoading(true);
+    
+    // Simulate search across different modules
+    setTimeout(() => {
+      const mockResults = [
+        { id: 1, type: 'user', title: 'مستخدم', description: 'أحمد محمد - مندوب طبي', module: 'إدارة المستخدمين' },
+        { id: 2, type: 'clinic', title: 'عيادة', description: 'عيادة الدكتور سامي - القاهرة', module: 'إدارة العيادات' },
+        { id: 3, type: 'product', title: 'منتج', description: 'أموكسيسيلين 500mg', module: 'إدارة المنتجات' },
+      ].filter(item => item.description.includes(query));
+      
+      setSearchResults(mockResults);
+      setLoading(false);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-2xl mx-4 border border-white/20">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold">
+            {language === 'ar' ? 'البحث الشامل' : 'Global Search'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="relative mb-6">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={language === 'ar' ? 'ابحث في النظام...' : 'Search the system...'}
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+            autoFocus
+          />
+          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/50">
+            🔍
+          </span>
+        </div>
+
+        {loading && (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+            <p className="text-white/70">جاري البحث...</p>
+          </div>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-white/80 mb-3">نتائج البحث ({searchResults.length})</h4>
+            {searchResults.map(result => (
+              <div key={result.id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {result.type === 'user' ? '👤' : result.type === 'clinic' ? '🏥' : '📦'}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-medium">{result.description}</div>
+                    <div className="text-sm text-white/60">{result.module}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {searchQuery && !loading && searchResults.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">🔍</div>
+            <p className="text-white/70">لا توجد نتائج مطابقة</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Theme Selector Component
+const ThemeSelector = ({ language, availableThemes, currentTheme, onThemeChange }) => {
+  const [showThemes, setShowThemes] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowThemes(!showThemes)}
+        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-2"
+        title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
+      >
+        <span>🎨</span>
+        <span className="text-sm hidden md:inline">
+          {language === 'ar' ? availableThemes[currentTheme]?.name.ar : availableThemes[currentTheme]?.name.en}
+        </span>
+      </button>
+
+      {showThemes && (
+        <div className="absolute top-full right-0 mt-2 bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 py-2 min-w-[200px] z-50">
+          {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
+            <button
+              key={themeKey}
+              onClick={() => {
+                onThemeChange(themeKey);
+                setShowThemes(false);
+              }}
+              className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors flex items-center gap-3 ${
+                currentTheme === themeKey ? 'bg-white/20' : ''
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${themeConfig.colors.primary}`}></div>
+              <span>{language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}</span>
+              {currentTheme === themeKey && <span className="ml-auto">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
