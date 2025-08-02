@@ -471,100 +471,240 @@ const ActivityTracking = ({ user, language, isRTL }) => {
   };
 
   const renderOverview = () => {
-    const totalActivities = activities.length;
-    const todayActivities = activities.filter(act => 
+    const totalActivities = stats?.total_activities || activities.length;
+    const todayActivities = stats?.today_activities || activities.filter(act => 
       new Date(act.timestamp).toDateString() === new Date().toDateString()
     ).length;
-    const visitCount = activities.filter(act => act.type === 'visit_registration').length;
-    const clinicRegistrationCount = activities.filter(act => act.type === 'clinic_registration').length;
+    const weekActivities = stats?.week_activities || activities.length;
+    const monthActivities = stats?.month_activities || activities.length;
 
     return (
       <div className="space-y-6">
-        {/* Statistics */}
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <span className="text-xl">📊</span>
+              <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-lg">
+                <span className="text-2xl">📊</span>
               </div>
               <div>
-                <div className="text-2xl font-bold">{totalActivities}</div>
+                <div className="text-3xl font-bold text-blue-400">{totalActivities}</div>
                 <div className="text-sm opacity-75">إجمالي الأنشطة</div>
+                <div className="text-xs text-blue-300 mt-1">جميع الفترات</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <span className="text-xl">📅</span>
+              <div className="p-3 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg">
+                <span className="text-2xl">📅</span>
               </div>
               <div>
-                <div className="text-2xl font-bold">{todayActivities}</div>
+                <div className="text-3xl font-bold text-green-400">{todayActivities}</div>
                 <div className="text-sm opacity-75">أنشطة اليوم</div>
+                <div className="text-xs text-green-300 mt-1">{getRelativeTime(new Date().toISOString())}</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <span className="text-xl">🏥</span>
+              <div className="p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-lg">
+                <span className="text-2xl">📅</span>
               </div>
               <div>
-                <div className="text-2xl font-bold">{visitCount}</div>
-                <div className="text-sm opacity-75">زيارات مسجلة</div>
+                <div className="text-3xl font-bold text-purple-400">{weekActivities}</div>
+                <div className="text-sm opacity-75">أنشطة الأسبوع</div>
+                <div className="text-xs text-purple-300 mt-1">آخر 7 أيام</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <span className="text-xl">➕</span>
+              <div className="p-3 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg">
+                <span className="text-2xl">🗓️</span>
               </div>
               <div>
-                <div className="text-2xl font-bold">{clinicRegistrationCount}</div>
-                <div className="text-sm opacity-75">عيادات مسجلة</div>
+                <div className="text-3xl font-bold text-orange-400">{monthActivities}</div>
+                <div className="text-sm opacity-75">أنشطة الشهر</div>
+                <div className="text-xs text-orange-300 mt-1">آخر 30 يوم</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Types Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>📈</span>
+              توزيع الأنشطة حسب النوع
+            </h3>
+            <div className="space-y-3">
+              {Object.entries(stats?.activities_by_type || {}).map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{getActivityIcon(type)}</span>
+                    <span className="text-sm">{type.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-white/10 rounded-full h-2">
+                      <div 
+                        className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(count / totalActivities) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>👥</span>
+              أكثر المستخدمين نشاطاً
+            </h3>
+            <div className="space-y-3">
+              {Object.entries(stats?.activities_by_user || {}).slice(0, 5).map(([username, count]) => (
+                <div key={username} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
+                      <span className="text-sm">👤</span>
+                    </div>
+                    <span className="text-sm font-medium">{username}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-20 bg-white/10 rounded-full h-2">
+                      <div 
+                        className="h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(count / Math.max(...Object.values(stats?.activities_by_user || {}))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium w-8 text-right">{count}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Recent Activities */}
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h3 className="text-lg font-bold mb-4">آخر الأنشطة</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <span>⏰</span>
+              آخر الأنشطة
+            </h3>
+            <button
+              onClick={() => setActiveTab('all_activities')}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              عرض الكل →
+            </button>
+          </div>
           <div className="space-y-3">
             {activities.slice(0, 5).map(activity => (
-              <div key={activity.id} className="flex items-center gap-4 p-4 bg-white/5 rounded-lg">
+              <div key={activity.id} className="flex items-center gap-4 p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                   onClick={() => showActivityDetails(activity)}>
                 <div className="text-2xl">{getActivityIcon(activity.type)}</div>
                 <div className="flex-1">
                   <div className="font-medium">{activity.action}</div>
                   <div className="text-sm opacity-75">{activity.user_name} - {activity.target_name}</div>
                   <div className="text-xs opacity-60 flex items-center gap-2 mt-1">
                     <span>📍</span>
-                    <span>{activity.location?.address}</span>
+                    <span>{activity.location?.address || 'غير محدد'}</span>
                     <span>•</span>
-                    <span>{formatDateTime(activity.timestamp)}</span>
+                    <span>{getRelativeTime(activity.timestamp)}</span>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-lg border text-xs ${getActivityColor(activity.type)}`}>
-                  {activity.type.replace('_', ' ')}
-                </span>
+                <div className="text-right">
+                  <span className={`px-3 py-1 rounded-lg border text-xs ${getActivityColor(activity.type)}`}>
+                    {activity.type.replace('_', ' ')}
+                  </span>
+                  <div className="text-xs opacity-60 mt-1">{formatDateTime(activity.timestamp)}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Activity Map Placeholder */}
+        {/* Most Active Locations */}
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h3 className="text-lg font-bold mb-4">خريطة الأنشطة</h3>
-          <div className="bg-white/5 rounded-lg p-8 text-center">
-            <div className="text-4xl mb-4">🗺️</div>
-            <h4 className="text-xl font-bold mb-2">خريطة تفاعلية للأنشطة</h4>
-            <p className="text-gray-400 mb-4">عرض جميع الأنشطة والحركات على الخريطة مع تفاصيل الموقع والوقت</p>
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-              عرض الخريطة التفاعلية (يتطلب Google Maps API)
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span>🗺️</span>
+            أكثر المواقع نشاطاً
+          </h3>
+          {stats?.most_active_locations?.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stats.most_active_locations.slice(0, 6).map((location, index) => (
+                <div key={index} className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">📍</span>
+                    <span className="text-sm font-medium">{location.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs opacity-75">عدد الأنشطة</span>
+                    <span className="text-sm font-bold text-blue-400">{location.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">🗺️</div>
+              <p>لا توجد بيانات مواقع متاحة</p>
+            </div>
+          )}
+          
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowMap(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center gap-2 mx-auto"
+            >
+              <span>🗺️</span>
+              عرض الخريطة التفاعلية
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <span>⚡</span>
+            إجراءات سريعة
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => exportData('json')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>📊</span>
+              <span>تصدير JSON</span>
+            </button>
+            <button
+              onClick={() => exportData('csv')}
+              className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 py-3 rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>📈</span>
+              <span>تصدير CSV</span>
+            </button>
+            <button
+              onClick={() => fetchData()}
+              className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 py-3 rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>🔄</span>
+              <span>تحديث البيانات</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('gps_tracking')}
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>🛰️</span>
+              <span>تتبع GPS</span>
             </button>
           </div>
         </div>
