@@ -19,30 +19,42 @@ from models.activity_models import (
 router = APIRouter()
 security = HTTPBearer()
 
-# JWT Configuration
-SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-here")
-ALGORITHM = "HS256"
+# JWT Configuration - Match main server configuration
+JWT_SECRET_KEY = "your-secret-key-change-in-production"
+JWT_ALGORITHM = "HS256"
+
+def decode_jwt_token(token: str) -> dict:
+    """Decode JWT token - same as main server"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """التحقق من صحة المستخدم الحالي"""
+    """التحقق من صحة المستخدم الحالي - Compatible with main server"""
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        payload = decode_jwt_token(token)
+        user_id = payload.get("user_id")  # Match main server payload structure
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        # Return user info from token
+        # Return user info from token - match main server structure
         return {
             "id": user_id,
             "username": payload.get("username"),
             "role": payload.get("role", "user"),
             "full_name": payload.get("full_name", "")
         }
-    except jwt.PyJWTError:
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
