@@ -1,18 +1,31 @@
 <analysis>
-The previous AI engineer focused on refactoring a monolithic React frontend () into a modular architecture, centralizing configuration in  and using  and . This involved migrating functionalities into dedicated components, though many were initially placeholders. Key technical issues addressed included UI stability, login, data consistency, and API URL fixes in components. Despite backend stability, frontend development was iterative, with bugs (e.g., product add/delete, under development messages) appearing or regressing after refactoring. The AI engineer attempted to implement themes, improve global search, centralize modal styling, and integrate new modules like Accounting, Visits, and Activity Tracking. The process was heavily driven by detailed user feedback, often in Arabic, leading to continuous bug fixing and feature enhancements. The current state is mid-fix for persistent parsing errors in , identified after attempting to integrate a new Activity Tracking module, reflecting ongoing challenges in establishing a stable, fully functional modular frontend.
+The previous AI engineer initiated the development of a full-stack enterprise application from scratch, moving from a monolithic structure to a modular React frontend with a FastAPI backend. This involved extensive refactoring, centralizing configuration in , and creating dynamic components. Key efforts included implementing dynamic themes, integrating global search, and adding new modules like Accounting, Visits, and Activity Tracking. Despite iterative bug fixes and feature enhancements, particularly in product, clinic, and user management, the project faced persistent issues. The AI engineer frequently claimed successful completion of tasks, only for the user to report re-emerging or unresolved bugs, indicating a discrepancy between implemented fixes and desired functionality. The trajectory concludes with the user explicitly re-stating many previously fixed issues, specifically regarding theme functionality, header styling, and core module functionality, to which the AI engineer has just begun to respond.
 </analysis>
 
 <product_requirements>
-The EP Group System is an enterprise application for multi-level user and warehouse management. It supports Arabic/English localization, dynamic themes, global search, CRUD operations, invoicing, hierarchical order approval, and monthly planning. Initial work concentrated on fixing core bugs and enhancing user, product, warehouse, and daily login modules. Recent focus shifted to refining user management (consolidated roles, Lines Management grid, colored user cards, bulk actions, hierarchical roles, region/line linking, profile viewing), clinic management (merging tabs, interactive classification/credit, hiding sensitive info, draggable map, speech-to-text for visit registration, admin view for registration source/details), product management (simplified table, unit dropdowns, line linking, price visibility, working add/delete), warehouse management (dashboard buttons, consistent inventory, functional orders/movement log), and daily login records (remove duplicates). A critical new requirement was architectural refinement for centralized code structure, single control points, logical organization, and ensuring no regressions. The user explicitly requested 5 themes (modern, minimal, glassy, dark, white), comprehensive frontend testing, re-enabled global search by invoice/doctor/clinic/user, centered/less transparent pop-ups, restoration of Google Maps in clinic registration, activity tracking for registrations/orders/visits with GPS/timestamps, a dedicated admin tracking section, biometric/selfie login for medical reps, and a planning system.
+The EP Group System is an enterprise application for multi-level user and warehouse management, supporting Arabic/English localization, dynamic themes, global search, CRUD operations, invoicing, hierarchical order approval, and monthly planning. Key requirements included:
+1.  **Modular Architecture:** Centralized control points and logical organization to prevent regressions.
+2.  **UI/UX:** Dynamic themes (Modern, Minimal, Glassy, Dark, White, and a newly requested Neon theme with orange/dark neon colors), improved header formatting (glassy on scroll), centered/less transparent pop-ups, comprehensive global search (invoice, doctor, clinic, user), and interactive icon-based dropdowns for clinic registration.
+3.  **Core Modules:**
+    *   **User Management:** Consolidated roles, Lines Management grid, colored user cards, bulk actions, hierarchical roles, region/line linking, profile viewing. A highly detailed performance card showing approved orders, debts, remaining debts, approved clinics, visits (weekly/monthly/yearly), direct manager, line, and region. Add/delete user buttons on the user card.
+    *   **Clinic Management:** Merging tabs, interactive classification/credit, hiding sensitive info, draggable Google Maps integration (with GPS capture for admin), speech-to-text for visit registration, admin view for registration source/details.
+    *   **Product Management:** Simplified table, unit dropdowns, line linking, price visibility, functional add/delete (a recurring bug).
+    *   **Warehouse Management:** Dashboard buttons, consistent inventory, functional orders/movement log.
+    *   **Daily Login Records:** Remove duplicates, provide detailed logs (IP, location on Google Map, device type, biometric/selfie status) for admin only.
+4.  **Activity & GPS Tracking:** Comprehensive logging for all rep/manager actions (orders, visits, debts) with date, time, and GPS location on Google Maps, visible only to admin.
+5.  **Visit Management:** A new Visit option for medical reps. All visit data (clinic, managers, effectiveness, order status, direct manager) for admin (with GPS) and managers (without GPS) in a visit log.
+6.  **Representative Dashboard:** Redesign to show Week/Month/Year selector, aggregated stats (total visits, approved clinics, orders, debts, unvisited clinics), quick actions (New Visit, New Clinic Registration, Create Debt/Order, System Support Request), and recent activity specific to the rep.
+7.  **Authentication:** Biometric/selfie login for medical reps.
+8.  **Planning System:** A comprehensive planning system for admins, managers, and users.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-Stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
--   **Frontend Modularity**: Centralized , , , .
--   **UI/UX**: i18n/L10n (Arabic/English, RTL), Tailwind CSS, Component-based design, Modals, Dynamic Theming.
--   **API Design**: RESTful APIs, Pydantic, JWT authentication, Role-Based Access Control (RBAC), Modular API routing.
--   **Environment Variables**: , .
--   **Geolocation & Maps**: Google Maps API integration.
+-   **Frontend Modularity**:  for centralized configuration,  for dynamic menu,  for dynamic component rendering,  for i18n.
+-   **UI/UX**: Dynamic Theming (CSS variables), Tailwind CSS, Responsive Design, Global Search, Modals, RTL support.
+-   **API Design**: RESTful APIs, Pydantic, JWT authentication, Role-Based Access Control (RBAC).
+-   **Geolocation**: Google Maps API integration, GPS logging, OpenStreetMap fallback.
+-   **Activity Logging**: Centralized utility for tracking user actions.
 </key_technical_concepts>
 
 <code_architecture>
@@ -22,57 +35,57 @@ The application follows a full-stack architecture with React.js for the frontend
 
 **Key Files and Changes:**
 
-*   ****: Refactored as the main orchestrator, dynamically rendering UI via , , and . The  definition was moved here. Recent edits involved fixing theme application logic and passing  for global search functionality.
-*   ****: Original  content, kept for reference during migration. No changes were made to this file during the recent trajectory.
-*   ****: **NEWLY CREATED**. Centralizes roles, tabs, permissions, and component mappings. Critical for modularity and access control. It has undergone multiple edits to add new tabs (Accounting, Visits, Activity Tracking) but has also been the source of persistent  issues, leading to its full recreation by the AI engineer in the last steps.
-*   ****: **NEWLY CREATED**. Renders the dynamic navigation menu based on  and user roles. No specific changes were noted in the trajectory, but it relies on .
-*   ****: **NEWLY CREATED**. Dynamically renders components by matching active tabs to components. Many components initially render under development placeholders. Updated to include , , and .
-*   ****: **NEWLY CREATED**. Centralizes translatable strings. No direct changes observed.
-*   ** (various)**:
-    *   ****: Initially displayed under development. Fixed API URL and needs comprehensive functionality (add/delete, details button, price visibility).
-    *   ****: Initially displayed under development. Recreated based on  pattern and later updated to include .
-    *   ****: Fixed API URL issue.
-    *   ** (under Geographic)**: Created as a placeholder.
-    *   ****: Created as a placeholder.
-    *   ****: **NEWLY CREATED**. Added to integrate financial features.
-    *   ****: **NEWLY CREATED**. Added for visit registration and tracking.
-    *   ****: **NEWLY CREATED**. To display detailed clinic information.
-    *   ****: **NEWLY CREATED**. For activity and GPS tracking.
-*   ****: Main FastAPI entry. Minor bug fixes for clinic creation, duplicate endpoints, and product price visibility.
-*   ** & **: Created for geographic features, confirmed functional.
-*   ****: Created to fix clinic registration data reception.
-*   ****: Defines global styles. Significant changes made to implement 5 dynamic themes, improve header styling, and adjust modal transparency. Repeatedly required fixes due to syntax errors.
-*   ****: Modified for proxy settings to backend URL.
-*   ****: Modified to include theme selection, global search input, and overall styling improvements.
-*   ****: Updated to handle broader search functionality (invoice, doctor, clinic, user) and receive  prop.
+*   ****: The main application orchestrator.
+    *   **Changes:** Updated  to include the new neon theme. Modified theme application logic to correctly remove old theme classes when switching to neon. Refactored header and navigation system layout to position the sidebar on the right.
+*   ****: Global styles.
+    *   **Changes:** Added CSS variables and styles for the new neon theme (primary, secondary, text, background, card, border colors) to enable dynamic theming. Contains extensive styling for components, header, and modals.
+*   ****: Centralized configuration for roles, tabs, permissions, and component mappings.
+    *   **Changes:** Added neon to . It was previously recreated to fix parsing errors and later updated to include the  tab.
+*   ****: **NEWLY CREATED**. Component for displaying activity logs and GPS data.
+    *   **Changes:** Implemented UI for overall view, statistics, activity table, and integrated Google Maps. Designed to consume data from backend activity APIs.
+*   ****: **NEWLY CREATED**. A utility function for logging user activities from various frontend components.
+    *   **Changes:** Provides a standardized way to send activity data to the backend API.
+*   ****: **NEWLY CREATED**. Pydantic models for structured activity log entries.
+    *   **Changes:** Defines data schemas for activity events, user actions, and activity statistics.
+*   ****: **NEWLY CREATED**. FastAPI routes for activity logging and retrieval.
+    *   **Changes:** Implements API endpoints for POSTing new activities and GETting activity logs and statistics for admin view.
+*   ****: Main FastAPI application entry point.
+    *   **Changes:** Integrated  by including its router, fixing an  related to relative imports by changing  to .
+*   ****: Manages product CRUD operations.
+    *   **Changes:** Attempts were made to integrate  into product add/delete/update operations, but faced repeated linting and logic errors. User reports add/delete product functionality is still broken.
+*   ****: Manages clinic CRUD operations.
+    *   **Changes:** Successfully integrated  for clinic add/update/delete operations and for logging entry into the section.
+*   ****: Handles clinic registration by representatives.
+    *   **Changes:** Transformed dropdowns for specialization, classification, and credit status into interactive icon-based selections. Replaced the basic display of latitude/longitude with an interactive Google Maps component, including a fallback to OpenStreetMap, and refined control buttons.
+*   ****: Manages user accounts.
+    *   **Changes:** A placeholder  was created and integrated to enable the add user button. Attempts were made to enhance the  to show more detailed user statistics, though full implementation details of the card's content are not fully visible.
+*   ****: Environment variables for the frontend.
+    *   **Changes:** Confirmed  is present.
 </code_architecture>
 
 <pending_tasks>
--   **Theme System**: Fully fix and verify the 5 dynamic themes functionality across the application.
--   **Header Formatting**: Complete the styling and functionality of the header, including language selection and global search button.
--   **Global Search Enhancement**: Implement the comprehensive global search to include invoice numbers, doctor names, clinic names, and user names, ensuring results are actionable.
--   **Modal Styling**: Ensure all pop-up modals are consistently centered and have appropriate, reduced transparency.
--   **Google Maps Integration**: Restore and verify Google Maps functionality, specifically in clinic registration and any other relevant pages.
--   **Activity & GPS Tracking**: Implement detailed logging of actions (clinic registration, visits, orders) including user, timestamp, and GPS location. Create the dedicated Tracking section for admin to view this data.
--   **Product Management Functionality**: Modify the product delete button to perform actual deletion, not just activation/deactivation. Add a product details button.
--   **Clinic Registration UI**: Update dropdowns in clinic registration to be more interactive and modern, potentially using SVG icons.
--   **Clinic Management Dashboard**: Redesign the clinic management overview to show Active Clinics, Inactive Clinics, and all Categories interactively, allowing filtering by status and category with professional styling.
--   **Biometric/Selfie Verification & Planning System**: Implement biometric/selfie verification for medical rep daily login and a comprehensive planning system for admins, managers, and users.
+-   **Themes:** Fully fix the theme system to globally apply chosen styles (including Neon), not just icons. Implement header transformation (glassy effect) on scroll.
+-   **User Management:** Detail the User Performance Card (approved orders, debts, remaining debts, approved clinics, visits (week/month/year), direct manager, line, region). Implement Edit and Delete buttons on the user card.
+-   **Product Management:** Fix Add Product and Delete Product functionalities.
+-   **Visit Functionality (Reps):** Create a new Visit option for reps with specific form fields (clinic selection, multi-manager selection, visit effectiveness, order status).
+-   **Activity & GPS Tracking:** Ensure all rep/manager movements (orders, visits, debts) are logged with GPS for admin, and visit details without GPS for managers in a visit log.
+-   **Visit & Login Management (Admin):** Make these sections admin-only. Detail login logs (IP, location on map, device, biometric/selfie) and ensure visit logs are comprehensive and error-free.
+-   **Representative Dashboard Redesign:** Remove icon row, implement Week/Month/Year selector for aggregated stats (visits, approved clinics, orders, debts, unvisited clinics). Add quick action buttons (New Visit, New Clinic Registration, Create Debt/Order, Support). Refine recent activity section to be rep-specific.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was addressing a detailed bug report from the user. The primary focus was on resolving persistent issues with the frontend's styling and functionality, as well as integrating new core features.
+Immediately prior to this summary, the previous AI engineer had just concluded a testing phase, claiming 100% completion of previously requested updates. However, the user provided extensive new feedback (Chat Message 295), indicating that many critical issues persist and new feature requirements have been specified.
 
-Specifically, the engineer:
-1.  **Attempted to fix the Theme System**: This involved modifying  and  to correctly apply the dynamic themes, which the user reported as still not working.
-2.  **Addressed Header Formatting**: Edits were made to  and  to improve the header's appearance and integrate global search/theme toggles, but the user reported it was still unformatted. A missing  state was added to .
-3.  **Reduced Modal Transparency**:  was updated to lessen the transparency of pop-up modals, as requested by the user.
-4.  **Initiated Activity Tracking Module**: A new component, , was created under .
-5.  **Attempted Integration of Activity Tracking**: The engineer was in the process of adding the new  tab to  and . This proved problematic, leading to persistent  issues in . The engineer tried multiple fixes for this, ultimately deciding to delete and recreate the  file to resolve the syntax errors.
+The user's latest report explicitly states that:
+1.  **Themes are still not working correctly**, merely acting as useless icons and not changing the entire page's appearance. The header also needs professional reformatting and a glassy effect on scroll.
+2.  **User Management** requires a more detailed performance card with specific metrics (orders, debts, visits) and Edit / Delete buttons directly on the card.
+3.  **Product Management** has regressed, as adding and deleting products is currently non-functional.
+4.  New **Visit option** with detailed logging requirements (GPS for admin, specific form fields) and **Visit & Login Management** for admin-only viewing with comprehensive logs are critical.
+5.  **Representative Dashboard** needs a complete redesign.
 
-The current state is that the  file has just been recreated (or its content entirely replaced) to fix parsing errors related to adding the  module. The frontend services were restarted, but the outcome of this specific fix and the state of the broader issues reported in Chat Message 179 (e.g., theme, product delete, Google Maps) are yet to be fully confirmed or addressed.
+The AI engineer's immediate response (Chat Message 296) was to acknowledge these new requirements and prioritize fixing the themes and header. The last action (Chat Message 297/298) shows the AI engineer attempting to address the theme issue, noting a potential discrepancy in the file structure for  and suggesting a rewrite or careful re-evaluation of the file content to ensure themes apply universally. This suggests the engineer is in the very initial stages of re-addressing the theme and header issues based on the *latest* user feedback, which contradicts the previous 100% complete claim.
 </current_work>
 
 <optional_next_step>
-Verify the  fix and restart frontend, then systematically address the remaining bugs listed in the last user message, starting with the theme system.
+My next step is to comprehensively fix the theme system and header reformatting in  and  as per the user's latest explicit feedback.
 </optional_next_step>
