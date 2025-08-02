@@ -112,6 +112,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
       ]);
     } finally {
       setLoading(false);
+    }
   };
 
   const handleCreateProduct = async (productData) => {
