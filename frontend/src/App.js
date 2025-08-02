@@ -24,16 +24,77 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
+// Available Themes - الثيمات المتاحة
+const AVAILABLE_THEMES = {
+  modern: {
+    name: { ar: 'عصري', en: 'Modern' },
+    colors: {
+      primary: 'from-blue-500 to-purple-600',
+      secondary: 'from-purple-500 to-pink-500',
+      background: 'from-gray-900 via-blue-900 to-indigo-900',
+      card: 'bg-white/10',
+      text: 'text-white'
+    }
+  },
+  minimal: {
+    name: { ar: 'بسيط', en: 'Minimal' },
+    colors: {
+      primary: 'from-gray-600 to-gray-800',
+      secondary: 'from-gray-500 to-gray-700',
+      background: 'from-gray-50 to-gray-200',
+      card: 'bg-white/90',
+      text: 'text-gray-900'
+    }
+  },
+  glassy: {
+    name: { ar: 'زجاجي', en: 'Glassy' },
+    colors: {
+      primary: 'from-cyan-400 to-blue-500',
+      secondary: 'from-teal-400 to-cyan-500',
+      background: 'from-slate-900 via-purple-900 to-slate-900',
+      card: 'bg-white/5 backdrop-blur-xl',
+      text: 'text-white'
+    }
+  },
+  dark: {
+    name: { ar: 'داكن', en: 'Dark' },
+    colors: {
+      primary: 'from-indigo-600 to-purple-600',
+      secondary: 'from-purple-600 to-pink-600',
+      background: 'from-gray-900 via-purple-900 to-indigo-900',
+      card: 'bg-gray-800/50',
+      text: 'text-white'
+    }
+  },
+  white: {
+    name: { ar: 'أبيض', en: 'White' },
+    colors: {
+      primary: 'from-blue-600 to-indigo-600',
+      secondary: 'from-indigo-600 to-purple-600',
+      background: 'from-white to-gray-100',
+      card: 'bg-white border border-gray-200',
+      text: 'text-gray-900'
+    }
+  }
+};
+
 // Theme Provider
 const ThemeProvider = ({ children }) => {
   const [language, setLanguage] = useState('ar');
   const [theme, setTheme] = useState('dark');
   const [isRTL, setIsRTL] = useState(true);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
-  }, [isRTL, language]);
+    
+    // Apply theme to body
+    const themeConfig = AVAILABLE_THEMES[theme];
+    if (themeConfig) {
+      document.body.className = `theme-${theme}`;
+    }
+  }, [isRTL, language, theme]);
 
   const toggleLanguage = () => {
     const newLanguage = language === 'ar' ? 'en' : 'ar';
@@ -41,9 +102,13 @@ const ThemeProvider = ({ children }) => {
     setIsRTL(newLanguage === 'ar');
   };
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const changeTheme = (newTheme) => {
+    if (AVAILABLE_THEMES[newTheme]) {
+      setTheme(newTheme);
+    }
   };
+
+  const getCurrentTheme = () => AVAILABLE_THEMES[theme];
 
   return (
     <ThemeContext.Provider value={{
