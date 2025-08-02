@@ -134,16 +134,26 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
         doctor_name: clinicData.doctor_name,
         classification: clinicData.classification,
         credit_status: clinicData.credit_status,
-        specialization: clinicData.specialization,
+        // إزالة specialization
         latitude: clinicData.latitude,
         longitude: clinicData.longitude,
+        // إضافة حقول المسؤول الجديدة
+        manager_name: clinicData.manager_name,
+        manager_phone: clinicData.manager_phone,
         status: 'approved',
         added_by: user?.id,
         registration_metadata: {
           registered_by: user?.id,
           registered_by_name: user?.full_name || user?.username,
+          registered_by_role: user?.role,
           registration_time: new Date().toISOString(),
-          rep_actual_location: currentLocation
+          registration_location: currentLocation,
+          rep_actual_location: currentLocation,
+          approval_status: 'auto_approved',
+          approved_by: user?.id,
+          approved_by_name: user?.full_name || user?.username,
+          approved_by_role: user?.role,
+          approved_at: new Date().toISOString()
         }
       };
 
