@@ -482,12 +482,12 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                     </button>
                   </div>
                   
-                  {/* Google Maps Integration */}
+                  {/* Google Maps Integration - Enhanced Version */}
                   <div className="relative">
-                    <div className="w-full h-80 bg-white/10 rounded-xl border border-white/20 overflow-hidden">
+                    <div className="w-full h-80 bg-gray-900 rounded-xl border-2 border-white/20 overflow-hidden shadow-lg">
                       {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
                         <div className="relative w-full h-full">
-                          {/* Primary: Google Maps */}
+                          {/* Google Maps Embed */}
                           <iframe
                             src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
                             width="100%"
@@ -496,46 +496,60 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                             allowFullScreen
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"
-                            className="rounded-xl"
-                            title="موقع العيادة"
+                            className="rounded-xl opacity-90"
+                            title="موقع العيادة على Google Maps"
+                            onLoad={() => console.log('✅ Google Maps loaded successfully')}
                             onError={(e) => {
-                              console.error('Google Maps failed to load', e);
+                              console.error('❌ Google Maps failed to load:', e);
                               e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'block';
+                              if (e.target.nextElementSibling) {
+                                e.target.nextElementSibling.style.display = 'block';
+                              }
                             }}
-                          ></iframe>
+                          />
                           
-                          {/* Fallback: OpenStreetMap */}
-                          <iframe
-                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${clinicData.longitude-0.01},${clinicData.latitude-0.01},${clinicData.longitude+0.01},${clinicData.latitude+0.01}&layer=mapnik&marker=${clinicData.latitude},${clinicData.longitude}`}
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0, display: 'none' }}
-                            className="rounded-xl"
-                            title="موقع العيادة - OpenStreetMap"
-                          ></iframe>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
-                          <div className="text-center">
-                            <div className="text-4xl mb-2">🗺️</div>
-                            <p className="text-white text-sm mb-2">عرض الخريطة</p>
-                            <p className="text-gray-400 text-xs">
-                              الإحداثيات: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
-                            </p>
-                            {/* Static Map Alternative */}
-                            <div className="mt-4">
+                          {/* Fallback: Static Map Link */}
+                          <div 
+                            className="w-full h-full bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center"
+                            style={{ display: 'none' }}
+                          >
+                            <div className="text-center">
+                              <div className="text-5xl mb-3">🗺️</div>
+                              <h4 className="text-lg font-bold text-white mb-2">خريطة موقع العيادة</h4>
+                              <p className="text-white/80 text-sm mb-4">
+                                العنوان: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
+                              </p>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}`;
+                                  const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}&zoom=16`;
                                   window.open(googleMapsUrl, '_blank');
                                 }}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                                className="bg-green-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-green-700 transition-colors font-medium"
                               >
                                 🔗 فتح في Google Maps
                               </button>
                             </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl">
+                          <div className="text-center">
+                            <div className="text-5xl mb-3">🗺️</div>
+                            <p className="text-white text-lg font-semibold mb-2">موقع العيادة</p>
+                            <p className="text-gray-300 text-sm mb-4">
+                              الإحداثيات: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}&zoom=16`;
+                                window.open(googleMapsUrl, '_blank');
+                              }}
+                              className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
+                            >
+                              🔗 فتح في Google Maps
+                            </button>
                           </div>
                         </div>
                       )}
