@@ -126,10 +126,11 @@ const ThemeProvider = ({ children }) => {
   const changeTheme = (newTheme) => {
     if (AVAILABLE_THEMES[newTheme]) {
       setTheme(newTheme);
+      console.log(`🎨 Changing theme to: ${newTheme}`);
       
-      // Force immediate theme application
+      // Force immediate theme application with all themes including neon
       setTimeout(() => {
-        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white');
+        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-neon');
         document.body.classList.add(`theme-${newTheme}`);
         
         const themeConfig = AVAILABLE_THEMES[newTheme];
