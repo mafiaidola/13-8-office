@@ -132,12 +132,61 @@ body.theme-neon, body.theme-neon * {
   box-sizing: border-box;
 }
 
+/* Body Global Theming */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background: var(--bg-primary) !important;
   transition: all var(--transition-normal);
+}
+
+/* Apply theme colors to all major elements */
+.theme-modern body, .theme-modern .dashboard-layout,
+.theme-minimal body, .theme-minimal .dashboard-layout,
+.theme-glassy body, .theme-glassy .dashboard-layout,
+.theme-dark body, .theme-dark .dashboard-layout,
+.theme-white body, .theme-white .dashboard-layout,
+.theme-neon body, .theme-neon .dashboard-layout {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Cards and Panels */
+.card, .panel, .tab-content, .bg-card {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Buttons and Interactive Elements */
+button, .btn {
+  transition: all 0.2s ease !important;
+}
+
+button:hover, .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Text Colors */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+
+/* Neon Theme Special Effects */
+.theme-neon button, .theme-neon .card, .theme-neon .panel {
+  border: 1px solid var(--border-color);
+}
+
+.theme-neon button:hover {
+  box-shadow: var(--neon-glow);
+  text-shadow: 0 0 5px currentColor;
+}
+
+.theme-neon .text-accent {
+  color: var(--accent-primary);
+  text-shadow: 0 0 3px currentColor;
 }
 
 /* Scrollbar Styling */
