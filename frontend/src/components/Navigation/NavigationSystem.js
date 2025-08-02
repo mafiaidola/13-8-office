@@ -4,8 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   SYSTEM_TABS, 
-  TAB_GROUPS, 
-  getAvailableTabGroups, 
+  getAvailableTabs, 
   hasPermission 
 } from '../../config/systemConfig.js';
 
