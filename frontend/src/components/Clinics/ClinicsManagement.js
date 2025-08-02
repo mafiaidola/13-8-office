@@ -124,6 +124,7 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
 
   const handleUpdateClinic = async (clinicId, clinicData) => {
     try {
+      const currentClinic = clinics.find(c => c.id === clinicId);
       const token = localStorage.getItem('access_token');
       console.log('🔧 Updating clinic:', clinicId, 'with data:', clinicData);
       
@@ -132,6 +133,26 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
       });
       
       console.log('✅ Clinic updated successfully:', response.data);
+      
+      // تسجيل النشاط
+      await activityLogger.logActivity(
+        'clinic_update',
+        'تحديث بيانات عيادة',
+        'clinic',
+        clinicId,
+        currentClinic?.name || clinicData.name,
+        {
+          doctor_name: clinicData.doctor_name,
+          specialty: clinicData.specialty,
+          old_classification: currentClinic?.classification,
+          new_classification: clinicData.classification,
+          old_credit_limit: currentClinic?.credit_limit,
+          new_credit_limit: clinicData.credit_limit,
+          updated_by_role: user?.role,
+          update_reason: 'تحديث يدوي من واجهة الإدارة'
+        }
+      );
+      
       fetchClinics();
       setShowClinicModal(false);
       alert('تم تحديث العيادة بنجاح');
