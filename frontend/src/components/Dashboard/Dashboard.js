@@ -237,19 +237,6 @@ const Dashboard = ({ user, language, isRTL }) => {
     }).format(amount);
   };
 
-  const getActivityIcon = (type) => {
-    const icons = {
-      'order_created': '🛒',
-      'clinic_registered': '🏥',
-      'visit_completed': '👨‍⚕️',
-      'debt_collection': '💰',
-      'user_created': '👤',
-      'product_added': '📦',
-      'clinic_follow_up': '📞'
-    };
-    return icons[type] || '📋';
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
