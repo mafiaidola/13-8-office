@@ -384,8 +384,8 @@ const OrdersManagement = ({ user, language, isRTL }) => {
   );
 };
 
-// Order Details Modal Component
-const OrderDetailsModal = ({ order, onClose, language }) => {
+// Enhanced Order Details Modal Component
+const OrderDetailsModal = ({ order, onClose, language, user }) => {
   const statusInfo = {
     'pending': { color: 'bg-yellow-500/20 text-yellow-300', text: 'معلق' },
     'pending_manager': { color: 'bg-blue-500/20 text-blue-300', text: 'في انتظار المدير' },
@@ -397,18 +397,44 @@ const OrderDetailsModal = ({ order, onClose, language }) => {
   };
 
   const currentStatus = statusInfo[order.status] || { color: 'bg-gray-500/20 text-gray-300', text: order.status };
+  
+  // Check if user can view prices (accounting role)
+  const canViewPrices = user?.role === 'accounting' || user?.role === 'admin' || user?.role === 'gm';
+  
+  // Mock clinic and rep data (would come from API in real implementation)
+  const clinicDetails = {
+    id: order.clinic_id || 'clinic-001',
+    name: order.clinic_name,
+    total_orders: 15,
+    total_debt: 2500.00,
+    remaining_debt: 1200.00,
+    region: order.clinic_region || 'القاهرة الكبرى',
+    line: order.clinic_line || 'خط وسط القاهرة'
+  };
+  
+  const repDetails = {
+    id: order.sales_rep_id || 'rep-001',
+    name: order.sales_rep_name,
+    total_orders: 45,
+    total_debt: 8500.00,
+    remaining_debt: 3200.00,
+    region: order.rep_region || 'القاهرة الكبرى',
+    line: order.rep_line || 'خط وسط القاهرة'
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">🛒</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                <span className="text-2xl text-white">🛒</span>
+              </div>
               <div>
-                <h3 className="text-2xl font-bold">تفاصيل الطلبية</h3>
-                <p className="text-lg font-medium text-blue-300">{order.id}</p>
+                <h3 className="text-2xl font-bold text-white">تفاصيل الطلبية</h3>
+                <p className="text-lg font-medium text-orange-300">{order.id}</p>
               </div>
             </div>
             <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">
@@ -416,84 +442,220 @@ const OrderDetailsModal = ({ order, onClose, language }) => {
             </button>
           </div>
 
-          {/* Order Info */}
+          {/* Top Section: Clinic and Rep Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Clinic Card */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-xl text-white">🏥</span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-white">كارت العيادة</h4>
+                  <p className="text-blue-300 font-medium">{clinicDetails.name}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                  <div className="text-lg font-bold text-green-300">{clinicDetails.total_orders}</div>
+                  <div className="text-xs text-green-200">الطلبيات</div>
+                </div>
+                <div className="text-center bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+                  <div className="text-lg font-bold text-red-300">{clinicDetails.total_debt.toFixed(2)}ج.م</div>
+                  <div className="text-xs text-red-200">المديونيات</div>
+                </div>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70">المنطقة:</span>
+                  <span className="text-white font-medium">{clinicDetails.region}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70">الخط:</span>
+                  <span className="text-white font-medium">{clinicDetails.line}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sales Rep Card */}
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-xl text-white">👤</span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-white">كارت المندوب</h4>
+                  <p className="text-purple-300 font-medium">{repDetails.name}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                  <div className="text-lg font-bold text-green-300">{repDetails.total_orders}</div>
+                  <div className="text-xs text-green-200">الطلبيات</div>
+                </div>
+                <div className="text-center bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+                  <div className="text-lg font-bold text-red-300">{repDetails.total_debt.toFixed(2)}ج.م</div>
+                  <div className="text-xs text-red-200">المديونيات</div>
+                </div>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70">المنطقة:</span>
+                  <span className="text-white font-medium">{repDetails.region}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70">الخط:</span>
+                  <span className="text-white font-medium">{repDetails.line}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white/5 rounded-lg p-4">
-              <h4 className="font-bold text-lg mb-3">معلومات الطلبية</h4>
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
+                <span>📋</span>
+                معلومات الطلبية
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>رقم الطلبية:</span>
-                  <span className="font-medium">{order.id}</span>
+                  <span className="text-white/70">رقم الطلبية:</span>
+                  <span className="font-medium text-white">{order.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>العيادة:</span>
-                  <span className="font-medium">{order.clinic_name}</span>
+                  <span className="text-white/70">العيادة:</span>
+                  <span className="font-medium text-white">{order.clinic_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>المندوب:</span>
-                  <span className="font-medium">{order.sales_rep_name || '-'}</span>
+                  <span className="text-white/70">المندوب:</span>
+                  <span className="font-medium text-white">{order.sales_rep_name || '-'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>المخزن:</span>
-                  <span className="font-medium">{order.warehouse_name || '-'}</span>
+                  <span className="text-white/70">المخزن:</span>
+                  <span className="font-medium text-white">{order.warehouse_name || '-'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>الحالة:</span>
-                  <span className={`px-2 py-1 rounded text-xs ${currentStatus.color}`}>
+                <div className="flex justify-between items-center">
+                  <span className="text-white/70">الحالة:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${currentStatus.color}`}>
                     {currentStatus.text}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/5 rounded-lg p-4">
-              <h4 className="font-bold text-lg mb-3">المعلومات المالية</h4>
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
+                <span>💰</span>
+                المعلومات المالية
+                {!canViewPrices && (
+                  <span className="text-xs text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full">
+                    🔒 محجوبة
+                  </span>
+                )}
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>عدد العناصر:</span>
-                  <span className="font-medium">{order.items_count}</span>
+                  <span className="text-white/70">عدد العناصر:</span>
+                  <span className="font-medium text-white">{order.items_count}</span>
+                </div>
+                {canViewPrices ? (
+                  <div className="flex justify-between">
+                    <span className="text-white/70">إجمالي المبلغ:</span>
+                    <span className="font-medium text-green-300">{order.total_amount} ج.م</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between">
+                    <span className="text-white/70">إجمالي المبلغ:</span>
+                    <span className="text-orange-300">🔒 متاح للحسابات فقط</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-white/70">تاريخ الإنشاء:</span>
+                  <span className="font-medium text-white">{new Date(order.created_at).toLocaleDateString('ar')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>إجمالي المبلغ:</span>
-                  <span className="font-medium text-green-300">{order.total_amount} ج.م</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>تاريخ الإنشاء:</span>
-                  <span className="font-medium">{new Date(order.created_at).toLocaleDateString('ar')}</span>
+                  <span className="text-white/70">وقت الإنشاء:</span>
+                  <span className="font-medium text-white">{new Date(order.created_at).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Order Items */}
-          <div className="bg-white/5 rounded-lg p-4">
-            <h4 className="font-bold text-lg mb-3">عناصر الطلبية</h4>
+          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+            <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
+              <span>📦</span>
+              عناصر الطلبية
+              {!canViewPrices && (
+                <span className="text-xs text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full">
+                  🔒 الأسعار محجوبة
+                </span>
+              )}
+            </h4>
             {order.items && order.items.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-right py-2">المنتج</th>
-                      <th className="text-right py-2">الكمية</th>
-                      <th className="text-right py-2">سعر الوحدة</th>
-                      <th className="text-right py-2">الإجمالي</th>
+                      <th className="text-right py-2 text-white/80">المنتج</th>
+                      <th className="text-right py-2 text-white/80">الكمية</th>
+                      {canViewPrices && (
+                        <>
+                          <th className="text-right py-2 text-white/80">سعر الوحدة</th>
+                          <th className="text-right py-2 text-white/80">الإجمالي</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {order.items.map((item, index) => (
-                      <tr key={index} className="border-b border-white/5">
-                        <td className="py-2 font-medium">{item.name}</td>
-                        <td className="py-2">{item.quantity}</td>
-                        <td className="py-2">{item.price} ج.م</td>
-                        <td className="py-2 font-medium">{item.total} ج.م</td>
+                      <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-3 font-medium text-white">{item.name}</td>
+                        <td className="py-3 text-white">
+                          <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs font-medium">
+                            {item.quantity}
+                          </span>
+                        </td>
+                        {canViewPrices && (
+                          <>
+                            <td className="py-3 text-green-300">{item.price} ج.م</td>
+                            <td className="py-3 font-medium text-green-300">{item.total} ج.م</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                
+                {canViewPrices && (
+                  <div className="mt-4 pt-4 border-t border-white/10 text-right">
+                    <div className="text-lg font-bold text-green-300">
+                      إجمالي الطلبية: {order.total_amount} ج.م
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <p className="text-gray-400 text-center py-4">لا توجد تفاصيل عناصر متاحة</p>
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">📦</div>
+                <p className="text-gray-400">لا توجد تفاصيل عناصر متاحة</p>
+              </div>
             )}
+          </div>
+          
+          {/* Close Button */}
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={onClose}
+              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+            >
+              إغلاق
+            </button>
           </div>
         </div>
       </div>
