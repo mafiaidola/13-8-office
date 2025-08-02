@@ -696,6 +696,7 @@ const LoginForm = () => {
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
   
   const { user, logout } = useAuth();
   const { 
