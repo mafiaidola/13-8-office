@@ -330,7 +330,9 @@ const UserPerformanceCard = ({
   getRoleColor, 
   getRoleTextColor,
   isSelected,
-  onToggleSelection 
+  onToggleSelection,
+  onEditUser,
+  onDeleteUser
 }) => {
   const stats = user.stats_last_30_days || {};
   
