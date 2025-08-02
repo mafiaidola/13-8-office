@@ -527,28 +527,32 @@ const UserPerformanceCard = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Enhanced Action Buttons with Edit/Delete */}
       <div className="flex gap-2">
         <button
           onClick={() => onViewPerformance()}
           className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2"
         >
           <span>👁️</span>
-          عرض التفاصيل
+          التفاصيل
         </button>
         
         <button
-          className="px-4 py-3 bg-green-600/50 text-white rounded-lg hover:bg-green-600/70 transition-colors text-sm flex items-center justify-center"
-          title="إرسال رسالة"
-        >
-          <span>💬</span>
-        </button>
-        
-        <button
-          className="px-4 py-3 bg-orange-600/50 text-white rounded-lg hover:bg-orange-600/70 transition-colors text-sm flex items-center justify-center"
-          title="تعديل البيانات"
+          onClick={() => handleEditUser(user.id)}
+          className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-1"
+          title="تعديل المستخدم"
         >
           <span>✏️</span>
+          تعديل
+        </button>
+        
+        <button
+          onClick={() => handleDeleteUser(user.id)}
+          className="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center gap-1"
+          title="حذف المستخدم"
+        >
+          <span>🗑️</span>
+          حذف
         </button>
       </div>
     </div>
