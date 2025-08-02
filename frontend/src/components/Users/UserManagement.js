@@ -528,4 +528,226 @@ const UserDetailedProfile = ({ user, onClose, getRoleLabel, language }) => {
   );
 };
 
+// Add User Modal Component
+const AddUserModal = ({ onClose, onSave, language, isRTL }) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    full_name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'medical_rep',
+    department: '',
+    line_id: '',
+    area_id: '',
+    status: 'active'
+  });
+
+  const roles = [
+    { value: 'admin', label: 'مدير النظام' },
+    { value: 'gm', label: 'مدير عام' },
+    { value: 'finance', label: 'المالية' },
+    { value: 'line_manager', label: 'مدير خط' },
+    { value: 'area_manager', label: 'مدير منطقة' },
+    { value: 'district_manager', label: 'مدير مقاطعة' },
+    { value: 'key_account', label: 'عملاء مميزين' },
+    { value: 'medical_rep', label: 'مندوب طبي' },
+    { value: 'warehouse_manager', label: 'مدير مخزن' },
+    { value: 'accounting', label: 'محاسبة' }
+  ];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.username || !formData.full_name || !formData.password) {
+      alert('يرجى ملء جميع الحقول المطلوبة');
+      return;
+    }
+
+    onSave(formData);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <span>👤</span>
+              إضافة مستخدم جديد
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  اسم المستخدم *
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="اسم المستخدم"
+                  required
+                />
+              </div>
+
+              {/* Full Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  الاسم الكامل *
+                </label>
+                <input
+                  type="text"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="الاسم الكامل"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  البريد الإلكتروني
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="البريد الإلكتروني"
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  رقم الهاتف
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="رقم الهاتف"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  كلمة المرور *
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="كلمة المرور"
+                  required
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  الدور *
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  required
+                >
+                  {roles.map(role => (
+                    <option key={role.value} value={role.value} className="bg-gray-800">
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  القسم
+                </label>
+                <input
+                  type="text"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  placeholder="القسم"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  الحالة
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                >
+                  <option value="active" className="bg-gray-800">نشط</option>
+                  <option value="inactive" className="bg-gray-800">غير نشط</option>
+                  <option value="suspended" className="bg-gray-800">معلق</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-4 pt-6 border-t border-white/20">
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
+              >
+                <span>✅</span>
+                إنشاء المستخدم
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-600/50 text-white px-6 py-3 rounded-lg hover:bg-gray-600/70 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <span>❌</span>
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default UserManagement;
