@@ -1747,51 +1747,225 @@ input:focus, select:focus, textarea:focus {
   transform: scale(1.1);
 }
 
+/* Modal Animations - Enhanced Professional */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0;
+  }
+  to { 
+    opacity: 1;
+  }
 }
 
 @keyframes modalSlideUp {
   from { 
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: scale(0.9) translateY(30px);
   }
   to { 
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
-/* Enhanced Header with Professional Design */
+/* Theme-specific Modal Styling */
+.theme-dark .modal-content {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+.theme-light .modal-content {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.9) 100%);
+  border-color: rgba(229, 231, 235, 0.6);
+  color: #1f2937;
+}
+
+.theme-neon .modal-content {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(38, 38, 38, 0.9) 100%);
+  border-color: rgba(255, 102, 0, 0.4);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(255, 102, 0, 0.2);
+}
+
+.theme-glassy .modal-content {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(88, 28, 135, 0.7) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+/* ========================================
+   PROFESSIONAL HEADER - PHASE 1 
+   ======================================== */
+
+/* Enhanced Dashboard Header */
 .dashboard-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
-  height: 80px;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%);
+  z-index: 1000;
+  height: 85px;
+  background: linear-gradient(135deg, 
+    rgba(30, 58, 138, 0.92) 0%, 
+    rgba(124, 58, 237, 0.92) 50%, 
+    rgba(79, 70, 229, 0.92) 100%
+  );
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Enhanced Scrolled State - Professional Glassy Effect */
 .dashboard-header.scrolled {
-  height: 70px;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.98) 0%, rgba(124, 58, 237, 0.98) 100%);
-  backdrop-filter: blur(25px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  height: 75px;
+  background: linear-gradient(135deg, 
+    rgba(30, 58, 138, 0.98) 0%, 
+    rgba(124, 58, 237, 0.98) 50%, 
+    rgba(79, 70, 229, 0.98) 100%
+  );
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.2), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 20px rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
+/* Header Content Professional Scaling */
 .header-content {
-  transition: transform 0.3s ease;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dashboard-header.scrolled .header-content {
-  transform: scale(0.95);
+  transform: scale(0.96);
+  padding: 0 1.8rem;
+}
+
+/* Enhanced Logo Section */
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-logo {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #6366f1);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.dashboard-header.scrolled .header-logo {
+  width: 3rem;
+  height: 3rem;
+}
+
+.header-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Enhanced Brand Text */
+.header-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-brand-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-brand-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.dashboard-header.scrolled .header-brand-title {
+  font-size: 1.35rem;
+}
+
+.dashboard-header.scrolled .header-brand-subtitle {
+  font-size: 0.7rem;
+}
+
+/* Enhanced Search Section */
+.header-search {
+  flex: 1;
+  max-width: 40rem;
+  margin: 0 2rem;
+}
+
+.header-search-btn {
+  width: 100%;
+  height: 3.25rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.header-search-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header.scrolled .header-search-btn {
+  height: 2.75rem;
+  font-size: 0.85rem;
+}
+
+/* Enhanced Controls Section */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 /* Theme Selector Dropdown - Enhanced positioning */
