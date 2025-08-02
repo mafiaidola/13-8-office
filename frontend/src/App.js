@@ -820,6 +820,7 @@ const DashboardLayout = () => {
           onClose={() => setShowGlobalSearch(false)}
           language={language}
           isRTL={isRTL}
+          setActiveTab={setActiveTab}
         />
       )}
 
