@@ -1,6 +1,7 @@
 // Enhanced Clinics Management Component - إدارة العيادات المحسنة
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
+import ClinicMiniProfile from './ClinicMiniProfile.js';
 import axios from 'axios';
 
 const ClinicsManagement = ({ user, language, isRTL }) => {
