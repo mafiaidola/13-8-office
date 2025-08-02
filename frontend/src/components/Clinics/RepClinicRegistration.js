@@ -481,17 +481,29 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                   {/* Google Maps Integration */}
                   <div className="relative">
                     <div className="w-full h-80 bg-white/10 rounded-xl border border-white/20 overflow-hidden">
-                      <iframe
-                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&q=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 0 }}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        className="rounded-xl"
-                        title="موقع العيادة"
-                      ></iframe>
+                      {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
+                        <iframe
+                          src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          className="rounded-xl"
+                          title="موقع العيادة"
+                        ></iframe>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">🗺️</div>
+                            <p className="text-white text-sm">Google Maps API key مطلوب</p>
+                            <p className="text-gray-400 text-xs mt-2">
+                              الإحداثيات: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Location Details Overlay */}
