@@ -23,6 +23,15 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
   useEffect(() => {
     fetchClinics();
     fetchAreas();
+    
+    // Log system access
+    activityLogger.logSystemAccess('إدارة العيادات', {
+      previousSection: sessionStorage.getItem('previousSection') || '',
+      accessMethod: 'navigation',
+      userRole: user?.role
+    });
+    
+    sessionStorage.setItem('previousSection', 'إدارة العيادات');
   }, []);
 
   const fetchClinics = async () => {
