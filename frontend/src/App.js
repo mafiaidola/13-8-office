@@ -708,6 +708,8 @@ const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showUserSettings, setShowUserSettings] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   
   const { user, logout } = useAuth();
