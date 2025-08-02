@@ -783,7 +783,7 @@ const DashboardLayout = () => {
           </div>
 
           {/* Left Side - User Controls */}
-          <div className="flex items-center gap-3">
+          <div className="header-controls">
             
             {/* Theme Selector */}
             <div className="theme-selector-enhanced">
@@ -831,7 +831,7 @@ const DashboardLayout = () => {
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 shadow-lg hover:shadow-xl"
+              className="p-3 rounded-xl bg-white/15 hover:bg-white/25 transition-all duration-200 border border-white/25 shadow-lg hover:shadow-xl backdrop-filter blur-10"
               title={language === 'ar' ? 'Switch to English' : 'التبديل للعربية'}
             >
               <span className="text-lg font-bold">
@@ -840,26 +840,26 @@ const DashboardLayout = () => {
             </button>
 
             {/* User Profile */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-white/20 rounded-xl border border-white/30 shadow-lg">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-sm font-bold text-white">
+            <div className="header-user-profile">
+              <div className="user-avatar-enhanced">
+                <span>
                   {(user?.full_name || user?.username || 'U')[0].toUpperCase()}
                 </span>
               </div>
-              <div className="hidden lg:block text-right">
-                <div className="text-sm font-semibold text-white">
+              <div className="user-info-enhanced hidden lg:block">
+                <div className="user-name-enhanced">
                   {user?.full_name || user?.username}
                 </div>
-                <div className="text-xs text-white/70 capitalize">
+                <div className="user-role-enhanced">
                   {language === 'ar' ? (user?.role === 'admin' ? 'مدير النظام' : user?.role) : user?.role}
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg hover:bg-white/20 transition-all duration-200"
+                className="logout-btn-enhanced"
                 title={language === 'ar' ? 'تسجيل الخروج' : 'Logout'}
               >
-                <span className="text-red-400 text-sm">🚪</span>
+                <span>🚪</span>
               </button>
             </div>
           </div>
