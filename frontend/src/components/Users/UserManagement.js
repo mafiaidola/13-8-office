@@ -322,7 +322,7 @@ const UserManagement = ({ user, language, isRTL }) => {
   );
 };
 
-// User Performance Card Component
+// Enhanced User Performance Card Component
 const UserPerformanceCard = ({ 
   user, 
   onViewPerformance, 
@@ -335,66 +335,170 @@ const UserPerformanceCard = ({
   const stats = user.stats_last_30_days || {};
   
   return (
-    <div className={`bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all ${
-      isSelected ? 'ring-2 ring-blue-500' : ''
+    <div className={`bg-white/10 backdrop-blur-lg rounded-xl p-6 border-2 border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+      isSelected ? 'ring-2 ring-blue-500 border-blue-400/50' : ''
     }`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+      
+      {/* Header with User Info */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={onToggleSelection}
-            className="w-4 h-4 text-blue-600 rounded"
+            className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
           />
-          {user.photo ? (
-            <img 
-              src={user.photo} 
-              alt={user.full_name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-              {user.full_name?.charAt(0) || '؟'}
-            </div>
-          )}
+          
+          {/* Enhanced Avatar */}
+          <div className="relative">
+            {user.photo ? (
+              <img 
+                src={user.photo} 
+                alt={user.full_name}
+                className="w-16 h-16 rounded-full object-cover border-3 border-white/30 shadow-lg"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg border-3 border-white/30">
+                {user.full_name?.charAt(0) || user.username?.charAt(0) || '؟'}
+              </div>
+            )}
+            
+            {/* Status Indicator */}
+            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
+              user.status === 'active' ? 'bg-green-500' : 
+              user.status === 'inactive' ? 'bg-gray-500' : 'bg-red-500'
+            }`}></div>
+          </div>
+          
           <div>
-            <h3 className="font-bold text-lg">{user.full_name}</h3>
-            <p className="text-sm opacity-75">@{user.username}</p>
+            <h3 className="font-bold text-xl text-white">{user.full_name}</h3>
+            <p className="text-sm text-white/70 mb-1">@{user.username}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/60">📧</span>
+              <span className="text-xs text-white/60">{user.email || 'غير محدد'}</span>
+            </div>
           </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)} text-white`}>
-          {getRoleLabel(user.role)}
-        </span>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-blue-500/20 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold text-blue-300">{stats.visits || 0}</div>
-          <div className="text-xs text-blue-200">زيارات (30 يوم)</div>
-        </div>
-        <div className="bg-green-500/20 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold text-green-300">{stats.orders || 0}</div>
-          <div className="text-xs text-green-200">طلبات (30 يوم)</div>
-        </div>
-        <div className="bg-purple-500/20 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold text-purple-300">{stats.order_value?.toFixed(0) || 0}</div>
-          <div className="text-xs text-purple-200">قيمة الطلبات</div>
-        </div>
-        <div className="bg-orange-500/20 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold text-orange-300">{stats.new_clinics || 0}</div>
-          <div className="text-xs text-orange-200">عيادات جديدة</div>
+        
+        <div className="text-right">
+          <span className={`px-3 py-2 rounded-full text-xs font-bold ${getRoleColor(user.role)} text-white shadow-lg border border-white/30`}>
+            {getRoleLabel(user.role)}
+          </span>
+          <div className="text-xs text-white/60 mt-2">
+            {user.department || 'لا يوجد قسم'}
+          </div>
         </div>
       </div>
 
-      {/* Action Button */}
-      <button
-        onClick={onViewPerformance}
-        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all text-sm flex items-center justify-center gap-2"
-      >
-        <span>📊</span>
-        عرض بطاقة الأداء التفصيلية
-      </button>
+      {/* Contact Information */}
+      <div className="bg-white/5 rounded-lg p-4 mb-4 border border-white/10">
+        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <span>📱</span>
+          معلومات الاتصال
+        </h4>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-white/60">📞</span>
+            <span className="text-white/80">{user.phone || 'غير محدد'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/60">🏢</span>
+            <span className="text-white/80">{user.department || 'غير محدد'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/60">📍</span>
+            <span className="text-white/80">{user.area || 'غير محدد'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/60">📅</span>
+            <span className="text-white/80">
+              {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG') : 'غير محدد'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+          <div className="text-2xl font-bold text-green-300">{stats.visits || 0}</div>
+          <div className="text-xs text-green-200">زيارات</div>
+        </div>
+        <div className="text-center bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+          <div className="text-2xl font-bold text-blue-300">{stats.orders || 0}</div>
+          <div className="text-xs text-blue-200">طلبات</div>
+        </div>
+        <div className="text-center bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
+          <div className="text-2xl font-bold text-purple-300">{stats.revenue || 0}</div>
+          <div className="text-xs text-purple-200">مبيعات</div>
+        </div>
+      </div>
+
+      {/* Status & Activity */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className={`w-3 h-3 rounded-full ${
+            user.status === 'active' ? 'bg-green-400' : 
+            user.status === 'inactive' ? 'bg-gray-400' : 'bg-red-400'
+          }`}></span>
+          <span className="text-sm text-white/70">
+            {user.status === 'active' ? 'نشط' : 
+             user.status === 'inactive' ? 'غير نشط' : 'معلق'}
+          </span>
+        </div>
+        
+        <div className="text-xs text-white/60">
+          آخر نشاط: {user.last_activity ? 
+            new Date(user.last_activity).toLocaleDateString('ar-EG') : 
+            'لا يوجد'
+          }
+        </div>
+      </div>
+
+      {/* Permissions & Access */}
+      <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/10">
+        <h5 className="text-xs font-semibold text-white mb-2 flex items-center gap-1">
+          <span>🔐</span>
+          الصلاحيات
+        </h5>
+        <div className="flex flex-wrap gap-1">
+          {user.permissions?.slice(0, 3).map((permission, index) => (
+            <span key={index} className="bg-indigo-500/20 text-indigo-300 text-xs px-2 py-1 rounded border border-indigo-500/30">
+              {permission}
+            </span>
+          )) || (
+            <span className="text-xs text-white/50">لا توجد صلاحيات محددة</span>
+          )}
+          {user.permissions?.length > 3 && (
+            <span className="text-xs text-white/60">+{user.permissions.length - 3} أخرى</span>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onViewPerformance()}
+          className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2"
+        >
+          <span>👁️</span>
+          عرض التفاصيل
+        </button>
+        
+        <button
+          className="px-4 py-3 bg-green-600/50 text-white rounded-lg hover:bg-green-600/70 transition-colors text-sm flex items-center justify-center"
+          title="إرسال رسالة"
+        >
+          <span>💬</span>
+        </button>
+        
+        <button
+          className="px-4 py-3 bg-orange-600/50 text-white rounded-lg hover:bg-orange-600/70 transition-colors text-sm flex items-center justify-center"
+          title="تعديل البيانات"
+        >
+          <span>✏️</span>
+        </button>
+      </div>
     </div>
   );
 };
