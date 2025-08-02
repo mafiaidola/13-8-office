@@ -727,7 +727,260 @@ const WarehouseDashboard = ({
   );
 };
 
-// Placeholder Components for other tabs
+// Enhanced Inventory Management Component
+const EnhancedInventoryManagement = ({ warehouses, products, onRefresh, language, user }) => {
+  return (
+    <div className="space-y-6">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+        <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          <span>📦</span>
+          إدارة المخزون المتقدمة
+        </h3>
+        
+        <p className="text-white/70 mb-6">
+          عرض شامل لجميع المنتجات في كل مخزن مع إمكانية تحديث الكميات
+        </p>
+
+        <div className="space-y-8">
+          {warehouses.map((warehouse) => (
+            <div key={warehouse.id} className="bg-white/5 rounded-lg p-6 border border-white/10">
+              <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <span>🏭</span>
+                {warehouse.name}
+              </h4>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">المنتج</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الفئة</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الكمية الحالية</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الحد الأدنى</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الحالة</th>
+                      <th className="text-right py-3 px-4 text-white/80 font-medium">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => {
+                      const inventory = warehouse.products_inventory[product.id];
+                      const status = inventory ? 
+                        (inventory.quantity <= inventory.min_quantity ? 'critical' : 
+                         inventory.quantity <= inventory.min_quantity * 1.5 ? 'low' : 'good') : 'none';
+                      
+                      return (
+                        <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-4 font-medium text-white">{product.name}</td>
+                          <td className="py-3 px-4 text-white/70">{product.category}</td>
+                          <td className="py-3 px-4">
+                            <span className="text-white font-medium">
+                              {inventory ? inventory.quantity : 0}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-white/70">
+                            {inventory ? inventory.min_quantity : '-'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              status === 'good' ? 'bg-green-500/20 text-green-300' :
+                              status === 'low' ? 'bg-yellow-500/20 text-yellow-300' :
+                              status === 'critical' ? 'bg-red-500/20 text-red-300' :
+                              'bg-gray-500/20 text-gray-300'
+                            }`}>
+                              {status === 'good' ? '✅ جيد' : 
+                               status === 'low' ? '⚠️ منخفض' : 
+                               status === 'critical' ? '🚨 حرج' : '❌ غير متوفر'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => {
+                                // Handle inventory update
+                                console.log(`Update inventory for ${product.name} in ${warehouse.name}`);
+                              }}
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                            >
+                              تحديث
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Edit Warehouse Modal
+const EnhancedEditWarehouseModal = ({ warehouse, onClose, onSave, regions, availableManagers, products, language }) => {
+  const [formData, setFormData] = useState({
+    name: warehouse.name || '',
+    city: warehouse.city || '',
+    selectedRegions: warehouse.regions || [],
+    selectedManagers: warehouse.managers || [],
+    productsInventory: warehouse.products_inventory || {}
+  });
+
+  const handleRegionToggle = (regionId) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedRegions: prev.selectedRegions.includes(regionId)
+        ? prev.selectedRegions.filter(id => id !== regionId)
+        : [...prev.selectedRegions, regionId]
+    }));
+  };
+
+  const handleManagerToggle = (managerId) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedManagers: prev.selectedManagers.includes(managerId)
+        ? prev.selectedManagers.filter(id => id !== managerId)
+        : [...prev.selectedManagers, managerId]
+    }));
+  };
+
+  const updateProductInventory = (productId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      productsInventory: {
+        ...prev.productsInventory,
+        [productId]: {
+          ...prev.productsInventory[productId],
+          [field]: parseInt(value) || 0
+        }
+      }
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ ...warehouse, ...formData });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-2xl text-white">✏️</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white">تعديل المخزن</h3>
+                <p className="text-white/70">{warehouse.name}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">✕</button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">اسم المخزن *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">المدينة *</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Multiple Regions Selection */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-3">
+                المناطق المخدومة * 
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {regions.map((region) => (
+                  <label key={region.id} className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedRegions.includes(region.id)}
+                      onChange={() => handleRegionToggle(region.id)}
+                      className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
+                    />
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{region.name}</div>
+                      <div className="text-white/60 text-xs">
+                        {region.cities.join('، ')}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Multiple Managers Selection */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-3">
+                المسؤولين عن المخزن *
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availableManagers.map((manager) => (
+                  <label key={manager.id} className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedManagers.includes(manager.id)}
+                      onChange={() => handleManagerToggle(manager.id)}
+                      className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
+                    />
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{manager.full_name}</div>
+                      <div className="text-white/60 text-xs flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          manager.role === 'accounting' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'
+                        }`}>
+                          {manager.role === 'accounting' ? '💰 محاسبة' : '📦 أمين مخزن'}
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-3 pt-6 border-t border-white/10">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                حفظ التغييرات
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
 const InventoryManagement = ({ inventory, warehouses, onRefresh, language, getStockStatusColor }) => (
   <div className="text-center py-12">
     <div className="text-6xl mb-4">📦</div>
