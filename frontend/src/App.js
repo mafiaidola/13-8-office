@@ -92,7 +92,18 @@ const ThemeProvider = ({ children }) => {
     // Apply theme to body
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
-      document.body.className = `theme-${theme}`;
+      // Remove all theme classes first
+      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white');
+      // Add current theme class
+      document.body.classList.add(`theme-${theme}`);
+      
+      // Apply CSS variables to root
+      const root = document.documentElement;
+      root.style.setProperty('--bg-primary', themeConfig.colors.background);
+      root.style.setProperty('--bg-card', themeConfig.colors.card);
+      root.style.setProperty('--text-primary', themeConfig.colors.text);
+      
+      console.log(`✅ Applied theme: ${theme}`);
     }
   }, [isRTL, language, theme]);
 
