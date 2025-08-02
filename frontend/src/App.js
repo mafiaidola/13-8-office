@@ -103,7 +103,7 @@ const ThemeProvider = ({ children }) => {
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
       // Remove all theme classes first
-      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white');
+      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-neon');
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
