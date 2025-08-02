@@ -235,43 +235,6 @@ const UserManagement = ({ user, language, isRTL }) => {
       alert('حدث خطأ أثناء إنشاء المستخدم');
     }
   };
-
-  const handleEditUser = (userId) => {
-    const userToEdit = users.find(u => u.id === userId);
-    if (userToEdit) {
-      setSelectedUser(userToEdit);
-      setShowAddModal(true); // Reuse the modal for editing
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    const userToDelete = users.find(u => u.id === userId);
-    if (!userToDelete) return;
-    
-    if (window.confirm(`هل أنت متأكد من حذف المستخدم "${userToDelete.full_name}"؟`)) {
-      try {
-        const token = localStorage.getItem('access_token');
-        await axios.delete(`${API}/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Log the delete activity
-        await activityLogger.logUserAction('حذف مستخدم', {
-          target_user_id: userId,
-          target_user_name: userToDelete.full_name,
-          target_user_role: userToDelete.role,
-          deleted_by: user.full_name,
-          deleted_by_role: user.role
-        });
-        
-        await loadUsers();
-        alert('تم حذف المستخدم بنجاح');
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('حدث خطأ أثناء حذف المستخدم');
-      }
-    }
-  };
     try {
       const token = localStorage.getItem('access_token');
       console.log('🔧 Creating user with data:', userData);
