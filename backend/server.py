@@ -2046,11 +2046,13 @@ from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
 from routes.settings_routes import router as settings_router
 from routes.activity_routes import router as activity_router
+from routes.debt_routes import router as debt_router
 
 api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(settings_router)
 api_router.include_router(activity_router)
+api_router.include_router(debt_router)
 
 app.include_router(api_router)
 
