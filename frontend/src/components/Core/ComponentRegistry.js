@@ -99,6 +99,17 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة المخازن...'
   ),
 
+  // User Profile Components
+  UserProfile: createLazyComponent(
+    () => import('../Profile/UserProfile'),
+    'جاري تحميل الملف الشخصي...'
+  ),
+
+  UserSettings: createLazyComponent(
+    () => import('../Profile/UserSettings'),
+    'جاري تحميل إعدادات المستخدم...'
+  ),
+
   // Accounting Management
   AccountingManagement: createLazyComponent(
     () => import('../Accounting/AccountingManagement'),
