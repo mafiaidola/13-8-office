@@ -1799,6 +1799,10 @@ input:focus, select:focus, textarea:focus {
    PROFESSIONAL HEADER - PHASE 1 
    ======================================== */
 
+/* ========================================
+   ENHANCED HEADER FIXES - Bug Fix
+   ======================================== */
+
 /* Enhanced Dashboard Header */
 .dashboard-header {
   position: fixed;
@@ -1808,13 +1812,13 @@ input:focus, select:focus, textarea:focus {
   z-index: 1000;
   height: 85px;
   background: linear-gradient(135deg, 
-    rgba(30, 58, 138, 0.92) 0%, 
-    rgba(124, 58, 237, 0.92) 50%, 
-    rgba(79, 70, 229, 0.92) 100%
+    rgba(30, 58, 138, 0.95) 0%, 
+    rgba(124, 58, 237, 0.95) 50%, 
+    rgba(79, 70, 229, 0.95) 100%
   );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1), 
@@ -1840,7 +1844,7 @@ input:focus, select:focus, textarea:focus {
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-/* Header Content Professional Scaling */
+/* Header Content Professional Layout */
 .header-content {
   height: 100%;
   display: flex;
@@ -1848,18 +1852,22 @@ input:focus, select:focus, textarea:focus {
   justify-content: space-between;
   padding: 0 2rem;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: none;
+  margin: 0;
 }
 
 .dashboard-header.scrolled .header-content {
-  transform: scale(0.96);
+  transform: scale(0.98);
   padding: 0 1.8rem;
 }
 
-/* Enhanced Logo Section */
+/* Fixed Logo Section */
 .header-brand {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
+  z-index: 1001;
 }
 
 .header-logo {
@@ -1873,8 +1881,9 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 
     0 4px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .dashboard-header.scrolled .header-logo {
@@ -1889,26 +1898,32 @@ input:focus, select:focus, textarea:focus {
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Enhanced Brand Text */
+/* Fixed Brand Text */
 .header-brand-text {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .header-brand-title {
   font-size: 1.5rem;
   font-weight: 800;
-  color: white;
+  color: white !important;
   letter-spacing: -0.025em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .header-brand-subtitle {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.85) !important;
   font-weight: 500;
   letter-spacing: 0.025em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .dashboard-header.scrolled .header-brand-title {
@@ -1919,11 +1934,12 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.7rem;
 }
 
-/* Enhanced Search Section */
+/* Fixed Search Section */
 .header-search {
   flex: 1;
-  max-width: 40rem;
+  max-width: 35rem;
   margin: 0 2rem;
+  min-width: 200px;
 }
 
 .header-search-btn {
@@ -1961,11 +1977,12 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.85rem;
 }
 
-/* Enhanced Controls Section */
+/* Fixed Controls Section */
 .header-controls {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 /* ========================================
