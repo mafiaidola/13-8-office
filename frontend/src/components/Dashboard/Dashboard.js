@@ -364,6 +364,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           color="red"
           trend="-8.3%"
           description={language === 'ar' ? 'دين نشط' : 'Active debts'}
+          onClick={() => {
+            console.log('Navigate to debt collection');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('debt_collection');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'المبلغ المستحق' : 'Outstanding Amount'}
@@ -373,6 +379,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           trend="-15.2%"
           description={language === 'ar' ? 'مبلغ غير مدفوع' : 'Unpaid amount'}
           isFinancial={true}
+          onClick={() => {
+            console.log('Navigate to debt collection');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('debt_collection');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'المبلغ المحصل' : 'Collected Amount'}
@@ -382,6 +394,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           trend="+28.6%"
           description={language === 'ar' ? 'مبلغ محصل' : 'Collected amount'}
           isFinancial={true}
+          onClick={() => {
+            console.log('Navigate to debt collection');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('debt_collection');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'المدراء' : 'Managers'}
@@ -390,6 +408,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           color="indigo"
           trend="+2.1%"
           description={language === 'ar' ? 'مدير نشط' : 'Active managers'}
+          onClick={() => {
+            console.log('Navigate to users - managers');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('users');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'المخازن' : 'Warehouses'}
@@ -398,6 +422,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           color="gray"
           trend="0%"
           description={language === 'ar' ? 'مخزن نشط' : 'Active warehouses'}
+          onClick={() => {
+            console.log('Navigate to warehouses');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('warehouses');
+            }
+          }}
         />
       </div>
 
