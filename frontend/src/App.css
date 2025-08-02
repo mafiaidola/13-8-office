@@ -134,12 +134,12 @@ body {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Enhanced Modals - Fixed positioning */
+/* Enhanced Modals - Fixed positioning with reduced transparency */
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,16 +149,32 @@ body {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--border-radius-lg);
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalSlideIn 0.3s ease-out;
   margin: auto;
   position: relative;
+  backdrop-filter: blur(20px);
+}
+
+/* Theme-specific modal backgrounds */
+.theme-dark .modal-content,
+.theme-modern .modal-content,
+.theme-glassy .modal-content {
+  background: rgba(15, 23, 42, 0.95);
+  color: white;
+}
+
+.theme-minimal .modal-content,
+.theme-white .modal-content {
+  background: rgba(255, 255, 255, 0.98);
+  color: #1f2937;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Fixed modal positioning for all modals */
@@ -168,6 +184,7 @@ div[class*="fixed inset-0"]:has(div[class*="backdrop-blur"]) {
   justify-content: center !important;
   padding: 1rem !important;
   overflow-y: auto !important;
+  background: rgba(0, 0, 0, 0.75) !important;
 }
 
 /* Modal content centering */
@@ -177,6 +194,8 @@ div[class*="fixed inset-0"] > div[class*="backdrop-blur"] {
   top: auto !important;
   left: auto !important;
   transform: none !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
 }
 
 /* Responsive Design */
