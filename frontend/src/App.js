@@ -845,8 +845,23 @@ const DashboardLayout = () => {
       </header>
 
       <div className="dashboard-content flex pt-20">
-        {/* Sidebar */}
-        <aside className={`dashboard-sidebar fixed left-0 top-20 bottom-0 bg-white/5 backdrop-blur-lg border-r border-white/20 transition-all duration-300 z-30 ${
+        {/* Main Content */}
+        <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
+          sidebarCollapsed ? 'mr-16' : 'mr-80'
+        }`}>
+          {/* Current Tab Component */}
+          <div className="tab-content">
+            <ComponentRenderer
+              componentName={Object.values(SYSTEM_TABS).find(tab => tab.id === activeTab)?.component}
+              user={user}
+              language={language}
+              isRTL={isRTL}
+            />
+          </div>
+        </main>
+
+        {/* Right Sidebar - Navigation System */}
+        <aside className={`dashboard-sidebar fixed right-0 top-20 bottom-0 bg-white/5 backdrop-blur-lg border-l border-white/20 transition-all duration-300 z-30 ${
           sidebarCollapsed ? 'w-16' : 'w-80'
         }`}>
           <div className="p-4">
@@ -880,21 +895,6 @@ const DashboardLayout = () => {
             )}
           </div>
         </aside>
-
-        {/* Main Content */}
-        <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-80'
-        }`}>
-          {/* Current Tab Component */}
-          <div className="tab-content">
-            <ComponentRenderer
-              componentName={Object.values(SYSTEM_TABS).find(tab => tab.id === activeTab)?.component}
-              user={user}
-              language={language}
-              isRTL={isRTL}
-            />
-          </div>
-        </main>
       </div>
 
       {/* Global Search Modal */}
