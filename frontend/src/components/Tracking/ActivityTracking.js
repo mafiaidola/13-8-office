@@ -296,12 +296,17 @@ const ActivityTracking = ({ user, language, isRTL }) => {
     const icons = {
       'visit_registration': '🏥',
       'clinic_registration': '➕',
+      'order_creation': '📋',
       'order_approval': '✅',
+      'order_rejection': '❌',
       'product_update': '📦',
+      'user_creation': '👤',
       'login': '🔐',
       'logout': '🚪',
-      'payment': '💰',
-      'invoice_creation': '🧾'
+      'payment_record': '💰',
+      'invoice_creation': '🧾',
+      'system_access': '🖥️',
+      'report_generation': '📊'
     };
     return icons[type] || '📋';
   };
@@ -310,23 +315,30 @@ const ActivityTracking = ({ user, language, isRTL }) => {
     const colors = {
       'visit_registration': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
       'clinic_registration': 'bg-green-500/20 text-green-300 border-green-500/30',
+      'order_creation': 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
       'order_approval': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      'order_rejection': 'bg-red-500/20 text-red-300 border-red-500/30',
       'product_update': 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+      'user_creation': 'bg-teal-500/20 text-teal-300 border-teal-500/30',
       'login': 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-      'logout': 'bg-red-500/20 text-red-300 border-red-500/30',
-      'payment': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      'invoice_creation': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+      'logout': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+      'payment_record': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      'invoice_creation': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'system_access': 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+      'report_generation': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
     };
     return colors[type] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
   };
 
   const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('ar-EG', {
+    const date = new Date(dateString);
+    return date.toLocaleString('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
@@ -338,13 +350,24 @@ const ActivityTracking = ({ user, language, isRTL }) => {
     }).format(amount);
   };
 
+  const getRelativeTime = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'منذ دقائق قليلة';
+    if (diffInSeconds < 3600) return `منذ ${Math.floor(diffInSeconds / 60)} دقيقة`;
+    if (diffInSeconds < 86400) return `منذ ${Math.floor(diffInSeconds / 3600)} ساعة`;
+    return `منذ ${Math.floor(diffInSeconds / 86400)} يوم`;
+  };
+
   // Filter activities
   const filteredActivities = activities.filter(activity => {
     const matchesType = filterType === 'all' || activity.type === filterType;
     const matchesSearch = 
       activity.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
       activity.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activity.target_name.toLowerCase().includes(searchTerm.toLowerCase());
+      (activity.target_name && activity.target_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Date filtering
     const activityDate = new Date(activity.timestamp);
@@ -365,6 +388,11 @@ const ActivityTracking = ({ user, language, isRTL }) => {
       case 'week':
         matchesDate = activityDate >= weekAgo;
         break;
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        matchesDate = activityDate >= monthAgo;
+        break;
       case 'all':
       default:
         matchesDate = true;
@@ -372,6 +400,75 @@ const ActivityTracking = ({ user, language, isRTL }) => {
     
     return matchesType && matchesSearch && matchesDate;
   });
+
+  const showActivityDetails = (activity) => {
+    setSelectedActivity(activity);
+    // يمكن إضافة modal أو drawer لعرض التفاصيل الكاملة
+  };
+
+  const exportData = async (format = 'json') => {
+    try {
+      const dataToExport = {
+        activities: filteredActivities,
+        stats: stats,
+        exported_at: new Date().toISOString(),
+        exported_by: user?.full_name || user?.username,
+        filters: { filterType, filterDate, searchTerm }
+      };
+
+      const fileName = `activity_report_${new Date().toISOString().split('T')[0]}.${format}`;
+      
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (format === 'csv') {
+        // Convert to CSV
+        const csvContent = [
+          'النوع,الإجراء,المستخدم,الدور,الهدف,الوقت,الموقع,الجهاز',
+          ...filteredActivities.map(act => [
+            act.type,
+            act.action,
+            act.user_name,
+            act.user_role,
+            act.target_name || '',
+            formatDateTime(act.timestamp),
+            act.location?.address || '',
+            act.device_info?.operating_system || ''
+          ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName.replace('.json', '.csv');
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // تسجيل عملية التصدير
+      await logCurrentActivity(
+        'report_generation',
+        `تصدير تقرير الأنشطة (${format.toUpperCase()})`,
+        'system',
+        'activity_report',
+        fileName,
+        { 
+          format: format,
+          activities_count: filteredActivities.length,
+          filters_applied: { filterType, filterDate, searchTerm }
+        }
+      );
+
+    } catch (error) {
+      console.error('خطأ في تصدير البيانات:', error);
+    }
+  };
 
   const renderOverview = () => {
     const totalActivities = activities.length;
