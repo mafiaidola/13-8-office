@@ -410,15 +410,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Activity Tracking and GPS System APIs Testing"
     - "Enhanced Theme System Implementation"
     - "Product Management Component Enhancement"  
     - "Clinics Management Component Development"
     - "Lines Areas Management Component Development"
     - "System Settings Enhancement"
     - "User Management Display Fix"
-  stuck_tasks: 
-    - "Activity Tracking and GPS System APIs Testing"
+  stuck_tasks: []
   test_all: true
   test_priority: "high_first"
 
