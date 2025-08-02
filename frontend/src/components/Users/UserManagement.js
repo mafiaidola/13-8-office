@@ -540,7 +540,7 @@ const UserPerformanceCard = ({
         </button>
         
         <button
-          onClick={() => handleEditUser(user.id)}
+          onClick={() => onEditUser(user.id)}
           className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-1"
           title="تعديل المستخدم"
         >
@@ -549,7 +549,7 @@ const UserPerformanceCard = ({
         </button>
         
         <button
-          onClick={() => handleDeleteUser(user.id)}
+          onClick={() => onDeleteUser(user.id)}
           className="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center gap-1"
           title="حذف المستخدم"
         >
