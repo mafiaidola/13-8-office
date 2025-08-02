@@ -160,6 +160,17 @@ export const SYSTEM_TABS = {
     component: 'ReportsManagement'
   },
 
+  visit_management: {
+    id: 'visit_management',
+    path: '/visit-management',
+    icon: '📋',
+    name: { ar: 'إدارة الزيارات وسجل الدخول', en: 'Visit & Login Management' },
+    component: 'VisitManagement',
+    description: { ar: 'تتبع الزيارات وسجلات الدخول مع نظام GPS', en: 'Track visits and login logs with GPS system' },
+    permissions: ['admin', 'gm', 'medical_rep'],
+    priority: 7
+  },
+
   // Administrative Functions
   ACCOUNTING: {
     id: 'accounting',
