@@ -96,6 +96,10 @@ body.theme-neon, .theme-neon {
   --neon-orange: #FF6600;
   --neon-brown: #8B4513;
   --neon-glow: 0 0 5px #FF6600, 0 0 10px #FF6600, 0 0 15px #FF6600, 0 0 20px #FF6600;
+  
+  /* Apply neon theme globally */
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Neon Theme Special Effects */
