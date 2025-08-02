@@ -482,25 +482,56 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                   <div className="relative">
                     <div className="w-full h-80 bg-white/10 rounded-xl border border-white/20 overflow-hidden">
                       {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
-                        <iframe
-                          src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0 }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          className="rounded-xl"
-                          title="موقع العيادة"
-                        ></iframe>
+                        <div className="relative w-full h-full">
+                          {/* Primary: Google Maps */}
+                          <iframe
+                            src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            className="rounded-xl"
+                            title="موقع العيادة"
+                            onError={(e) => {
+                              console.error('Google Maps failed to load', e);
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'block';
+                            }}
+                          ></iframe>
+                          
+                          {/* Fallback: OpenStreetMap */}
+                          <iframe
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${clinicData.longitude-0.01},${clinicData.latitude-0.01},${clinicData.longitude+0.01},${clinicData.latitude+0.01}&layer=mapnik&marker=${clinicData.latitude},${clinicData.longitude}`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0, display: 'none' }}
+                            className="rounded-xl"
+                            title="موقع العيادة - OpenStreetMap"
+                          ></iframe>
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-xl">
                           <div className="text-center">
                             <div className="text-4xl mb-2">🗺️</div>
-                            <p className="text-white text-sm">Google Maps API key مطلوب</p>
-                            <p className="text-gray-400 text-xs mt-2">
+                            <p className="text-white text-sm mb-2">عرض الخريطة</p>
+                            <p className="text-gray-400 text-xs">
                               الإحداثيات: {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
                             </p>
+                            {/* Static Map Alternative */}
+                            <div className="mt-4">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}`;
+                                  window.open(googleMapsUrl, '_blank');
+                                }}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                              >
+                                🔗 فتح في Google Maps
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
