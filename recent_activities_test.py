@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://d3d1a9df-70fc-435f-82af-b5d9d4d817e1.preview.emergentagent.com/api"
+BASE_URL = "https://b0f2f242-ec03-4c87-84c2-74073f21fca1.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 class RecentActivitiesTest:

@@ -16,7 +16,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://d3d1a9df-70fc-435f-82af-b5d9d4d817e1.preview.emergentagent.com/api"
+BACKEND_URL = "https://b0f2f242-ec03-4c87-84c2-74073f21fca1.preview.emergentagent.com/api"
 
 class ComprehensiveLinesAreasProductsTest:
     def __init__(self):
