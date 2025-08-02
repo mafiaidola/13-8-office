@@ -116,6 +116,27 @@ const ThemeProvider = ({ children }) => {
   const changeTheme = (newTheme) => {
     if (AVAILABLE_THEMES[newTheme]) {
       setTheme(newTheme);
+      
+      // Force immediate theme application
+      setTimeout(() => {
+        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white');
+        document.body.classList.add(`theme-${newTheme}`);
+        
+        const themeConfig = AVAILABLE_THEMES[newTheme];
+        const root = document.documentElement;
+        
+        // Apply CSS variables immediately
+        root.style.setProperty('--bg-primary', themeConfig.colors.background);
+        root.style.setProperty('--bg-card', themeConfig.colors.card);
+        root.style.setProperty('--text-primary', themeConfig.colors.text);
+        root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
+        
+        console.log(`🎨 Theme applied: ${newTheme}`);
+        
+        // Force a re-render
+        const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
+        window.dispatchEvent(event);
+      }, 10);
     }
   };
 
