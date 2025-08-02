@@ -942,10 +942,16 @@ const DashboardLayout = () => {
                   
                   {/* Quick Actions */}
                   <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
-                    <button className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
+                    <button 
+                      onClick={() => setShowUserProfile(true)}
+                      className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
+                    >
                       {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
                     </button>
-                    <button className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors">
+                    <button 
+                      onClick={() => setShowUserSettings(true)}
+                      className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
+                    >
                       {language === 'ar' ? 'الإعدادات' : 'Settings'}
                     </button>
                   </div>
