@@ -62,6 +62,7 @@ class ComprehensiveLinesAreasProductsTest:
                 response = requests.put(url, headers=headers, json=data)
             elif method == "DELETE":
                 response = requests.delete(url, headers=headers)
+            ث
             else:
                 raise ValueError(f"Unsupported method: {method}")
                 
