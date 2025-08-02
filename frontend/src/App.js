@@ -748,9 +748,9 @@ const DashboardLayout = () => {
 
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header - Enhanced Design */}
-      <header className="dashboard-header fixed top-0 left-0 right-0 bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-blue-600/30 backdrop-blur-xl border-b-2 border-white/20 px-6 py-3 z-40 shadow-2xl">
-        <div className="flex items-center justify-between max-w-full mx-auto">
+      {/* Header - Enhanced Design with Glassy Effect */}
+      <header className={`dashboard-header ${headerScrolled ? 'scrolled' : ''}`}>
+        <div className="header-content flex items-center justify-between max-w-full mx-auto">
           
           {/* Right Side - Logo & Brand */}
           <div className="flex items-center gap-4">
