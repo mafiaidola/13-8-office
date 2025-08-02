@@ -782,9 +782,9 @@ const DashboardLayout = () => {
         </div>
       </header>
 
-      <div className="dashboard-content flex">
+      <div className="dashboard-content flex pt-20">
         {/* Sidebar */}
-        <aside className={`dashboard-sidebar bg-white/5 backdrop-blur-lg border-r border-white/20 transition-all duration-300 ${
+        <aside className={`dashboard-sidebar fixed left-0 top-20 bottom-0 bg-white/5 backdrop-blur-lg border-r border-white/20 transition-all duration-300 z-30 ${
           sidebarCollapsed ? 'w-16' : 'w-80'
         }`}>
           <div className="p-4">
