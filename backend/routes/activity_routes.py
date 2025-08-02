@@ -11,7 +11,7 @@ import json
 import math
 import random
 
-from ..models.activity_models import (
+from models.activity_models import (
     ActivityCreate, ActivityResponse, ActivityFilter, 
     ActivityStats, GPSTrackingLog, LocationData, DeviceInfo, ActivityType
 )
