@@ -112,12 +112,9 @@ const ProductManagement = ({ user, language, isRTL }) => {
       ]);
     } finally {
       setLoading(false);
-    }
   };
 
   const handleCreateProduct = async (productData) => {
-    try {
-  const handleAddProduct = async (productData) => {
     try {
       const token = localStorage.getItem('access_token');
       console.log('🔧 Creating product with data:', productData);
