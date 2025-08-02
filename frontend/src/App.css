@@ -164,17 +164,6 @@ body {
     border: 1px solid #000;
   }
 }
-  --secondary-bg: #f8fafc;
-  --accent-bg: #e2e8f0;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --glass-bg: rgba(248, 250, 252, 0.8);
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --input-focus: #0ea5e9;
-}
 
 /* Input styling for all themes - Enhanced visibility */
 input, textarea, select {
