@@ -357,6 +357,8 @@ const UserManagement = ({ user, language, isRTL }) => {
               getRoleTextColor={getRoleTextColor}
               isSelected={selectedUsers.includes(u.id)}
               onToggleSelection={() => toggleUserSelection(u.id)}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
             />
           ))}
         </div>
