@@ -1,175 +1,147 @@
-// EP Group System - Central Configuration
-// إعدادات النظام المركزية
+// EP Group System Configuration - إعدادات نظام EP Group
+// Centralized configuration for system tabs, roles, and permissions
 
-export const SYSTEM_CONFIG = {
-  // Application Information
-  appName: 'EP Group System',
-  version: '2.0.0',
-  description: 'نظام إدارة شامل للمؤسسات الطبية',
-  
-  // API Configuration
-  apiEndpoints: {
-    auth: '/auth',
-    users: '/users',
-    clinics: '/clinics', 
-    products: '/products',
-    orders: '/orders',
-    warehouses: '/warehouses',
-    inventory: '/inventory',
-    visits: '/visits',
-    dashboard: '/dashboard',
-    reports: '/reports'
-  }
-};
-
-// User Roles Configuration
+// User Roles - أدوار المستخدمين
 export const USER_ROLES = {
   ADMIN: 'admin',
-  GM: 'gm', 
-  FINANCE: 'finance',
+  GM: 'gm',
   LINE_MANAGER: 'line_manager',
   AREA_MANAGER: 'area_manager',
-  DISTRICT_MANAGER: 'district_manager',
-  KEY_ACCOUNT: 'key_account',
   MEDICAL_REP: 'medical_rep',
-  SALES_REP: 'sales_rep',
-  WAREHOUSE_MANAGER: 'warehouse_manager',
-  WAREHOUSE_KEEPER: 'warehouse_keeper',
+  FINANCE: 'finance',
   ACCOUNTING: 'accounting'
 };
 
-// Role Normalization - تطبيع الأدوار
-export const normalizeRole = (role) => {
-  if (role === USER_ROLES.SALES_REP) return USER_ROLES.MEDICAL_REP;
-  return role;
-};
-
-// Role Display Names - أسماء الأدوار للعرض
-export const ROLE_DISPLAY_NAMES = {
-  [USER_ROLES.ADMIN]: { ar: 'مدير النظام', en: 'System Admin' },
-  [USER_ROLES.GM]: { ar: 'المدير العام', en: 'General Manager' },
-  [USER_ROLES.FINANCE]: { ar: 'المالية', en: 'Finance' },
-  [USER_ROLES.LINE_MANAGER]: { ar: 'مدير خط', en: 'Line Manager' },
-  [USER_ROLES.AREA_MANAGER]: { ar: 'مدير منطقة', en: 'Area Manager' },
-  [USER_ROLES.DISTRICT_MANAGER]: { ar: 'مدير مقاطعة', en: 'District Manager' },
-  [USER_ROLES.KEY_ACCOUNT]: { ar: 'حساب رئيسي', en: 'Key Account' },
-  [USER_ROLES.MEDICAL_REP]: { ar: 'مندوب طبي', en: 'Medical Rep' },
-  [USER_ROLES.SALES_REP]: { ar: 'مندوب مبيعات', en: 'Sales Rep' },
-  [USER_ROLES.WAREHOUSE_MANAGER]: { ar: 'مدير مخزن', en: 'Warehouse Manager' },
-  [USER_ROLES.WAREHOUSE_KEEPER]: { ar: 'أمين مخزن', en: 'Warehouse Keeper' },
-  [USER_ROLES.ACCOUNTING]: { ar: 'محاسبة', en: 'Accounting' }
+// Helper function to normalize role names
+const normalizeRole = (role) => {
+  if (!role) return null;
+  return role.toLowerCase().replace(/\s+/g, '_');
 };
 
 // System Tabs Configuration - إعدادات تبويبات النظام
 export const SYSTEM_TABS = {
-  // Core Management Tabs
-  DASHBOARD: {
+  dashboard: {
     id: 'dashboard',
+    path: '/dashboard',
+    icon: '🏠',
     name: { ar: 'لوحة التحكم', en: 'Dashboard' },
-    icon: '📊',
-    permissions: ['*'], // All roles
-    component: 'Dashboard'
+    component: 'Dashboard',
+    description: { ar: 'نظرة عامة على النظام والإحصائيات', en: 'System overview and statistics' },
+    permissions: ['*'], // Available to all users
+    priority: 1
   },
-  
-  // User Management
-  USER_MANAGEMENT: {
-    id: 'users', 
-    name: { ar: 'إدارة المستخدمين', en: 'User Management' },
+
+  users: {
+    id: 'users',
+    path: '/users',
     icon: '👥',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.LINE_MANAGER, USER_ROLES.AREA_MANAGER],
-    component: 'UserManagement'
+    name: { ar: 'إدارة المستخدمين', en: 'User Management' },
+    component: 'UserManagement',
+    description: { ar: 'إدارة المستخدمين والأدوار والصلاحيات', en: 'Manage users, roles and permissions' },
+    permissions: ['admin', 'gm'],
+    priority: 2
   },
 
-  // Clinic Management
-  CLINIC_REGISTRATION: {
-    id: 'register-clinic',
-    name: { ar: 'تسجيل عيادة', en: 'Register Clinic' },
-    icon: '🏥➕',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.KEY_ACCOUNT, USER_ROLES.MEDICAL_REP],
-    component: 'RepClinicRegistration'
-  },
-  
-  CLINIC_MANAGEMENT: {
-    id: 'clinics',
-    name: { ar: 'إدارة العيادات', en: 'Clinics Management' },
+  clinic_registration: {
+    id: 'clinic_registration',
+    path: '/clinic-registration',
     icon: '🏥',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.AREA_MANAGER, USER_ROLES.LINE_MANAGER],
-    component: 'ClinicsManagement'
+    name: { ar: 'تسجيل العيادات', en: 'Clinic Registration' },
+    component: 'RepClinicRegistration',
+    description: { ar: 'تسجيل عيادات جديدة مع GPS والتصنيفات', en: 'Register new clinics with GPS and classifications' },
+    permissions: ['admin', 'gm', 'medical_rep'],
+    priority: 3
   },
 
-  // Product Management  
-  PRODUCT_MANAGEMENT: {
+  products: {
     id: 'products',
-    name: { ar: 'إدارة المنتجات', en: 'Product Management' },
+    path: '/products',
     icon: '📦',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.LINE_MANAGER],
-    component: 'ProductManagement'
+    name: { ar: 'إدارة المنتجات', en: 'Product Management' },
+    component: 'ProductManagement',
+    description: { ar: 'إدارة المنتجات والأسعار والمخزون', en: 'Manage products, prices and inventory' },
+    permissions: ['admin', 'gm', 'line_manager'],
+    priority: 4
   },
 
-  // Warehouse Management
-  WAREHOUSE_MANAGEMENT: {
-    id: 'warehouse',
-    name: { ar: 'إدارة المخازن', en: 'Warehouse Management' },
-    icon: '🏭',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.WAREHOUSE_MANAGER],
-    component: 'WarehouseManagement'
-  },
-
-  // Visit Management
-  VISIT_REGISTRATION: {
-    id: 'visit',
-    name: { ar: 'تسجيل زيارة', en: 'Visit Registration' },
-    icon: '🚶‍♂️➕',
-    permissions: [USER_ROLES.MEDICAL_REP, USER_ROLES.KEY_ACCOUNT],
-    component: 'VisitRegistration'
-  },
-
-  // Orders Management
-  ORDERS_MANAGEMENT: {
+  orders: {
     id: 'orders',
+    path: '/orders',
+    icon: '📋',
     name: { ar: 'إدارة الطلبات', en: 'Orders Management' },
-    icon: '🛒',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.WAREHOUSE_MANAGER, USER_ROLES.ACCOUNTING],
-    component: 'OrdersManagement'
+    component: 'OrdersManagement',
+    description: { ar: 'إدارة الطلبات والموافقات والتسليم', en: 'Manage orders, approvals and delivery' },
+    permissions: ['admin', 'gm', 'line_manager', 'medical_rep'],
+    priority: 5
   },
 
-  // Geographic Management
-  LINES_AREAS: {
-    id: 'lines-areas',
-    name: { ar: 'إدارة الخطوط والمناطق', en: 'Lines & Areas Management' },
+  warehouses: {
+    id: 'warehouses',
+    path: '/warehouses',
+    icon: '🏪',
+    name: { ar: 'إدارة المخازن', en: 'Warehouse Management' },
+    component: 'WarehouseManagement',
+    description: { ar: 'إدارة المخازن والمخزون وحركة البضائع', en: 'Manage warehouses, inventory and goods movement' },
+    permissions: ['admin', 'gm', 'warehouse_manager'],
+    priority: 6
+  },
+
+  clinics_management: {
+    id: 'clinics_management',
+    path: '/clinics-management',
+    icon: '🏥',
+    name: { ar: 'إدارة العيادات', en: 'Clinics Management' },
+    component: 'ClinicsManagement',
+    description: { ar: 'إدارة شاملة للعيادات مع التصنيفات والحالة الائتمانية', en: 'Comprehensive clinic management with classifications and credit status' },
+    permissions: ['admin', 'gm', 'line_manager'],
+    priority: 7
+  },
+
+  lines_areas: {
+    id: 'lines_areas',
+    path: '/lines-areas',
     icon: '🗺️',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.LINE_MANAGER, USER_ROLES.AREA_MANAGER],
-    component: 'LinesAreasManagement'
-  },
-
-  // Planning
-  MONTHLY_PLANNING: {
-    id: 'my-plan',
-    name: { ar: 'التخطيط الشهري', en: 'Monthly Planning' },
-    icon: '📅',
-    permissions: [USER_ROLES.MEDICAL_REP, USER_ROLES.KEY_ACCOUNT, USER_ROLES.AREA_MANAGER, USER_ROLES.LINE_MANAGER],
-    component: 'SalesRepPlanManagement'
-  },
-
-  // Reports & Analytics
-  REPORTS: {
-    id: 'reports',
-    name: { ar: 'التقارير والتحليلات', en: 'Reports & Analytics' },
-    icon: '📈',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.FINANCE, USER_ROLES.ACCOUNTING],
-    component: 'ReportsManagement'
-  },
-
-  activity_tracking: {
-    id: 'activity_tracking',
-    path: '/activity-tracking',
-    icon: '📊',
-    name: { ar: 'تتبع الأنشطة والحركات', en: 'Activity Tracking' },
-    component: 'ActivityTracking',
-    description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
+    name: { ar: 'إدارة الخطوط والمناطق', en: 'Lines & Areas Management' },
+    component: 'LinesAreasManagement',
+    description: { ar: 'إدارة الخطوط الجغرافية والمناطق التابعة', en: 'Manage geographical lines and associated areas' },
     permissions: ['admin', 'gm'],
     priority: 8
   },
+
+  location_tracking: {
+    id: 'location_tracking',
+    path: '/location-tracking',
+    icon: '📍',  
+    name: { ar: 'تتبع المواقع', en: 'Location Tracking' },
+    component: 'LocationTracking',
+    description: { ar: 'تتبع مواقع المندوبين والزيارات', en: 'Track representative locations and visits' },
+    permissions: ['admin', 'gm', 'line_manager'],
+    priority: 9
+  },
+
+  system_management: {
+    id: 'system_management',
+    path: '/system-management',
+    icon: '⚙️',
+    name: { ar: 'إدارة النظام', en: 'System Management' },
+    component: 'Settings',
+    description: { ar: 'إعدادات النظام والأمان والنسخ الاحتياطي', en: 'System settings, security and backup configuration' },
+    permissions: ['admin'],
+    priority: 10
+  },
+
+  daily_login_records: {
+    id: 'daily_login_records',
+    path: '/daily-login-records',
+    icon: '📊',
+    name: { ar: 'سجلات الدخول اليومية', en: 'Daily Login Records' },
+    component: 'DailyLoginRecords',
+    description: { ar: 'تتبع سجلات دخول المستخدمين اليومية', en: 'Track daily user login records' },
+    permissions: ['admin', 'gm'],
+    priority: 11
+  },
+
+  visit_management: {
     id: 'visit_management',
     path: '/visit-management',
     icon: '📋',
@@ -177,7 +149,7 @@ export const SYSTEM_TABS = {
     component: 'VisitManagement',
     description: { ar: 'تتبع الزيارات وسجلات الدخول مع نظام GPS', en: 'Track visits and login logs with GPS system' },
     permissions: ['admin', 'gm', 'medical_rep'],
-    priority: 7
+    priority: 12
   },
 
   activity_tracking: {
@@ -188,10 +160,9 @@ export const SYSTEM_TABS = {
     component: 'ActivityTracking',
     description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
     permissions: ['admin', 'gm'],
-    priority: 8
+    priority: 13
   },
 
-  // Administrative Functions
   accounting: {
     id: 'accounting',
     path: '/accounting',
@@ -200,7 +171,7 @@ export const SYSTEM_TABS = {
     component: 'AccountingManagement',
     description: { ar: 'إدارة الفواتير والمدفوعات والتقارير المالية', en: 'Manage invoices, payments and financial reports' },
     permissions: ['admin', 'gm', 'accounting', 'finance'],
-    priority: 6
+    priority: 14
   },
 
   gamification: {
@@ -210,92 +181,7 @@ export const SYSTEM_TABS = {
     icon: '🎮',
     permissions: ['admin', 'gm', 'line_manager'],
     component: 'GamificationSystem',
-    priority: 9
-  },
-
-  gps_tracking: {
-    id: 'gps_tracking',
-    path: '/gps-tracking',
-    name: { ar: 'تتبع المواقع', en: 'GPS Tracking' },
-    icon: '🗺️',
-    permissions: ['admin', 'gm', 'area_manager'],
-    component: 'GPSTracking',
-    priority: 10
-  },
-
-  advanced_analytics: {
-    id: 'advanced_analytics',
-    path: '/advanced-analytics',
-    name: { ar: 'التحليلات المتقدمة', en: 'Advanced Analytics' },
-    icon: '📊',
-    permissions: ['admin', 'gm', 'finance'],
-    component: 'AdvancedAnalytics',
-    priority: 11
-  },
-
-  // Settings
-  settings: {
-    id: 'settings',
-    path: '/settings',
-    name: { ar: 'الإعدادات', en: 'Settings' },
-    icon: '⚙️',
-    permissions: ['admin'],
-    component: 'Settings',
-    priority: 12
-  }
-};
-
-// Tab Groups - مجموعات التبويبات
-export const TAB_GROUPS = {
-  CORE: {
-    name: { ar: 'الأساسيات', en: 'Core' },
-    tabs: [
-      SYSTEM_TABS.DASHBOARD,
-      SYSTEM_TABS.USER_MANAGEMENT
-    ]
-  },
-  
-  CLINICAL: {
-    name: { ar: 'الإدارة الطبية', en: 'Clinical Management' },
-    tabs: [
-      SYSTEM_TABS.CLINIC_REGISTRATION,
-      SYSTEM_TABS.CLINIC_MANAGEMENT,
-      SYSTEM_TABS.VISIT_REGISTRATION  
-    ]
-  },
-
-  BUSINESS: {
-    name: { ar: 'إدارة الأعمال', en: 'Business Management' },
-    tabs: [
-      SYSTEM_TABS.PRODUCT_MANAGEMENT,
-      SYSTEM_TABS.WAREHOUSE_MANAGEMENT,
-      SYSTEM_TABS.ORDERS_MANAGEMENT
-    ]
-  },
-
-  GEOGRAPHIC: {
-    name: { ar: 'الإدارة الجغرافية', en: 'Geographic Management' },
-    tabs: [
-      SYSTEM_TABS.LINES_AREAS,
-      SYSTEM_TABS.GPS_TRACKING
-    ]
-  },
-
-  PLANNING: {
-    name: { ar: 'التخطيط والتحليل', en: 'Planning & Analytics' },
-    tabs: [
-      SYSTEM_TABS.MONTHLY_PLANNING,
-      SYSTEM_TABS.REPORTS,
-      SYSTEM_TABS.ADVANCED_ANALYTICS
-    ]
-  },
-
-  SYSTEM: {
-    name: { ar: 'إدارة النظام', en: 'System Management' },
-    tabs: [
-      SYSTEM_TABS.GAMIFICATION,
-      SYSTEM_TABS.SETTINGS
-    ]
+    priority: 15
   }
 };
 
@@ -314,30 +200,12 @@ export const hasPermission = (userRole, tabId) => {
 export const getAvailableTabs = (userRole) => {
   const normalizedRole = normalizeRole(userRole);
   
-  return Object.values(SYSTEM_TABS).filter(tab => {
-    if (tab.permissions.includes('*')) return true;
-    return tab.permissions.includes(normalizedRole);
-  });
+  return Object.values(SYSTEM_TABS)
+    .filter(tab => {
+      if (tab.permissions.includes('*')) return true;
+      return tab.permissions.includes(normalizedRole);
+    })
+    .sort((a, b) => (a.priority || 999) - (b.priority || 999));
 };
 
-// Get tab groups for specific user role
-export const getAvailableTabGroups = (userRole) => {
-  const availableTabs = getAvailableTabs(userRole);
-  const availableTabIds = availableTabs.map(tab => tab.id);
-  
-  const filteredGroups = {};
-  
-  Object.entries(TAB_GROUPS).forEach(([groupKey, group]) => {
-    const visibleTabs = group.tabs.filter(tab => availableTabIds.includes(tab.id));
-    if (visibleTabs.length > 0) {
-      filteredGroups[groupKey] = {
-        ...group,
-        tabs: visibleTabs
-      };
-    }
-  });
-  
-  return filteredGroups;
-};
-
-export default SYSTEM_CONFIG;
+export default SYSTEM_TABS;
