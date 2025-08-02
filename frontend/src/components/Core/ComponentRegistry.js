@@ -111,6 +111,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة الزيارات وسجل الدخول...'
   ),
 
+  // Activity Tracking
+  ActivityTracking: createLazyComponent(
+    () => import('../Tracking/ActivityTracking'),
+    'جاري تحميل تتبع الأنشطة والحركات...'
+  ),
+
   // Visit Management
   VisitRegistration: createLazyComponent(
     () => import('../Visits/VisitRegistration'),
