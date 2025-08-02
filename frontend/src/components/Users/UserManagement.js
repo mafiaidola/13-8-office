@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
+import { activityLogger } from '../../utils/activityLogger.js';
 
 const UserManagement = ({ user, language, isRTL }) => {
   const [users, setUsers] = useState([]);
@@ -18,6 +19,15 @@ const UserManagement = ({ user, language, isRTL }) => {
 
   useEffect(() => {
     loadUsers();
+    
+    // Log system access
+    activityLogger.logSystemAccess('إدارة المستخدمين', {
+      previousSection: sessionStorage.getItem('previousSection') || '',
+      accessMethod: 'navigation',
+      userRole: user?.role
+    });
+    
+    sessionStorage.setItem('previousSection', 'إدارة المستخدمين');
   }, []);
 
   const loadUsers = async () => {
