@@ -820,7 +820,9 @@ const DashboardLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="dashboard-main flex-1 p-6 overflow-auto">
+        <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
+          sidebarCollapsed ? 'ml-16' : 'ml-80'
+        }`}>
           {/* Current Tab Component */}
           <div className="tab-content">
             <ComponentRenderer
