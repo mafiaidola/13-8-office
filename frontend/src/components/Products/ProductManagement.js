@@ -117,6 +117,8 @@ const ProductManagement = ({ user, language, isRTL }) => {
 
   const handleCreateProduct = async (productData) => {
     try {
+  const handleAddProduct = async (productData) => {
+    try {
       const token = localStorage.getItem('access_token');
       console.log('🔧 Creating product with data:', productData);
       
@@ -125,6 +127,24 @@ const ProductManagement = ({ user, language, isRTL }) => {
       });
       
       console.log('✅ Product created successfully:', response.data);
+      
+      // تسجيل النشاط
+      await activityLogger.logActivity(
+        'product_creation',
+        'إنشاء منتج جديد',
+        'product',
+        response.data.id,
+        productData.name,
+        {
+          price: productData.price,
+          unit: productData.unit,
+          line_id: productData.line_id,
+          category: productData.category,
+          stock_quantity: productData.stock_quantity || 0,
+          created_by_role: user?.role
+        }
+      );
+      
       fetchProducts();
       setShowProductModal(false);
       alert('تم إنشاء المنتج بنجاح');
@@ -137,6 +157,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
 
   const handleUpdateProduct = async (productId, productData) => {
     try {
+      const currentProduct = products.find(p => p.id === productId);
       const token = localStorage.getItem('access_token');
       console.log('🔧 Updating product:', productId, 'with data:', productData);
       
@@ -145,6 +166,23 @@ const ProductManagement = ({ user, language, isRTL }) => {
       });
       
       console.log('✅ Product updated successfully:', response.data);
+      
+      // تسجيل النشاط
+      await activityLogger.logProductUpdate(
+        productId,
+        currentProduct?.name || productData.name,
+        {
+          old_price: currentProduct?.price,
+          new_price: productData.price,
+          old_unit: currentProduct?.unit,
+          new_unit: productData.unit,
+          changeReason: 'تحديث يدوي من واجهة الإدارة',
+          updateType: 'manual_update',
+          updated_fields: Object.keys(productData),
+          updated_by_role: user?.role
+        }
+      );
+      
       fetchProducts();
       setShowProductModal(false);
       alert('تم تحديث المنتج بنجاح');
@@ -156,6 +194,8 @@ const ProductManagement = ({ user, language, isRTL }) => {
   };
 
   const handleDeleteProduct = async (productId) => {
+    const productToDelete = products.find(p => p.id === productId);
+    
     if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
       try {
         const token = localStorage.getItem('access_token');
@@ -166,6 +206,24 @@ const ProductManagement = ({ user, language, isRTL }) => {
         });
         
         console.log('✅ Product deleted successfully:', response.data);
+        
+        // تسجيل النشاط
+        await activityLogger.logActivity(
+          'product_deletion',
+          'حذف منتج',
+          'product',
+          productId,
+          productToDelete?.name || `منتج ${productId}`,
+          {
+            deleted_product_name: productToDelete?.name,
+            deleted_product_price: productToDelete?.price,
+            deleted_product_unit: productToDelete?.unit,
+            deletion_reason: 'حذف يدوي من واجهة الإدارة',
+            deleted_by_role: user?.role,
+            stock_at_deletion: productToDelete?.stock_quantity || 0
+          }
+        );
+        
         fetchProducts();
         alert('تم حذف المنتج بنجاح');
       } catch (error) {
@@ -174,6 +232,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
         alert(`خطأ في حذف المنتج: ${errorMessage}`);
       }
     }
+  };
   };
 
   // Filter products
