@@ -496,7 +496,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
 };
 
 // Enhanced Stat Card Component
-const EnhancedStatCard = ({ title, value, icon, color, trend, description, isFinancial = false }) => {
+const EnhancedStatCard = ({ title, value, icon, color, trend, description, isFinancial = false, onClick }) => {
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
     green: 'from-green-500 to-green-600',
@@ -513,7 +513,10 @@ const EnhancedStatCard = ({ title, value, icon, color, trend, description, isFin
   const trendColor = trend.startsWith('+') ? 'text-green-400' : trend.startsWith('-') ? 'text-red-400' : 'text-gray-400';
 
   return (
-    <div className="enhanced-stat-card bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+    <div 
+      className={`enhanced-stat-card bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:scale-105' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform duration-300`}>
           {icon}
