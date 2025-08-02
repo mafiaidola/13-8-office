@@ -104,6 +104,8 @@ const UserManagement = ({ user, language, isRTL }) => {
         alert('حدث خطأ أثناء حذف المستخدم');
       }
     }
+  };
+
   const handleEditUser = (userId) => {
     const userToEdit = users.find(u => u.id === userId);
     if (userToEdit) {
