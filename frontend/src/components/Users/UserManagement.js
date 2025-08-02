@@ -144,6 +144,7 @@ const UserManagement = ({ user, language, isRTL }) => {
   };
 
   const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
     
     if (window.confirm(`هل أنت متأكد من حذف ${selectedUsers.length} مستخدم؟`)) {
       try {
