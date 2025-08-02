@@ -970,19 +970,268 @@ const ActivityTracking = ({ user, language, isRTL }) => {
     </div>
   );
 
+  const renderGPSTracking = () => (
+    <div className="space-y-6">
+      {/* GPS Summary */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <span>🛰️</span>
+          ملخص تتبع GPS
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">📍</span>
+              <span className="text-sm font-medium">إجمالي النقاط</span>
+            </div>
+            <div className="text-2xl font-bold text-blue-400">{gpsLogs.length}</div>
+          </div>
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🚶</span>
+              <span className="text-sm font-medium">المسافة المقدرة</span>
+            </div>
+            <div className="text-2xl font-bold text-green-400">
+              {gpsLogs.reduce((total, log) => total + (log.distance_from_last || 0), 0).toFixed(1)} كم
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⏱️</span>
+              <span className="text-sm font-medium">متوسط الدقة</span>
+            </div>
+            <div className="text-2xl font-bold text-purple-400">
+              {gpsLogs.length > 0 
+                ? (gpsLogs.reduce((total, log) => total + (log.location?.accuracy || 0), 0) / gpsLogs.length).toFixed(1)
+                : 0
+              }م
+            </div>
+          </div>
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🔄</span>
+              <span className="text-sm font-medium">آخر تحديث</span>
+            </div>
+            <div className="text-sm font-bold text-orange-400">
+              {gpsLogs.length > 0 ? getRelativeTime(gpsLogs[0]?.created_at) : 'غير متوفر'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* GPS Logs Table */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
+        <div className="p-4 border-b border-white/10">
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            <span>📋</span>
+            سجلات تتبع GPS التفصيلية
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5">
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">المستخدم</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الموقع</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الإحداثيات</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الدقة</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">نوع الحركة</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الوقت</th>
+                <th className="px-6 py-4 text-right text-sm font-medium text-gray-200">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gpsLogs.slice(0, 50).map((log, index) => (
+                <tr key={log.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-blue-600/20 rounded-full flex items-center justify-center">
+                        <span className="text-sm">👤</span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">المستخدم {log.user_id}</div>
+                        <div className="text-xs opacity-60">ID: {log.user_id.slice(0, 8)}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 max-w-xs">
+                    <div className="text-sm text-white">
+                      {log.location?.address || 'غير محدد'}
+                    </div>
+                    <div className="text-xs opacity-60">
+                      {log.location?.city || ''}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="font-mono text-white">
+                      {log.location?.latitude?.toFixed(6)}, {log.location?.longitude?.toFixed(6)}
+                    </div>
+                    <div className="text-xs opacity-60">
+                      {log.location?.altitude ? `ارتفاع: ${log.location.altitude}م` : ''}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      log.location?.accuracy <= 10 
+                        ? 'bg-green-500/20 text-green-300' 
+                        : log.location?.accuracy <= 25 
+                        ? 'bg-yellow-500/20 text-yellow-300'
+                        : 'bg-red-500/20 text-red-300'
+                    }`}>
+                      {log.location?.accuracy?.toFixed(1) || 'غ.م'}م
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className="capitalize text-white">
+                      {log.movement_type || 'غير محدد'}
+                    </span>
+                    {log.distance_from_last > 0 && (
+                      <div className="text-xs opacity-60">
+                        مسافة: {log.distance_from_last.toFixed(1)}م
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="text-white">
+                      {formatDateTime(log.created_at || log.location?.timestamp)}
+                    </div>
+                    <div className="text-xs opacity-60">
+                      {getRelativeTime(log.created_at || log.location?.timestamp)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      {log.location?.latitude && log.location?.longitude && (
+                        <button
+                          onClick={() => {
+                            if (GOOGLE_MAPS_API_KEY) {
+                              const mapUrl = `https://www.google.com/maps?q=${log.location.latitude},${log.location.longitude}`;
+                              window.open(mapUrl, '_blank');
+                            } else {
+                              alert(`الموقع: ${log.location.latitude}, ${log.location.longitude}`);
+                            }
+                          }}
+                          className="px-3 py-1 bg-blue-600/50 text-white rounded hover:bg-blue-600/70 transition-colors text-xs"
+                          title="عرض على الخريطة"
+                        >
+                          خريطة
+                        </button>
+                      )}
+                      {log.activity_id && (
+                        <button
+                          onClick={() => {
+                            const activity = activities.find(act => act.id === log.activity_id);
+                            if (activity) showActivityDetails(activity);
+                          }}
+                          className="px-3 py-1 bg-green-600/50 text-white rounded hover:bg-green-600/70 transition-colors text-xs"
+                          title="عرض النشاط المرتبط"
+                        >
+                          نشاط
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {gpsLogs.length === 0 && (
+        <div className="text-center py-12 bg-white/5 rounded-xl">
+          <div className="text-6xl mb-4">🛰️</div>
+          <h3 className="text-xl font-bold mb-2 text-white">لا توجد سجلات GPS</h3>
+          <p className="text-gray-400 mb-4">لم يتم تسجيل أي بيانات GPS حتى الآن</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderMapView = () => (
+    <div className="space-y-6">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🗺️</div>
+          <h3 className="text-xl font-bold mb-2 text-white">خريطة الأنشطة التفاعلية</h3>
+          <p className="text-gray-400 mb-4">
+            عرض جميع الأنشطة والحركات على خريطة تفاعلية مع Google Maps
+          </p>
+          {GOOGLE_MAPS_API_KEY ? (
+            <div>
+              <p className="text-sm text-green-400 mb-4">
+                ✅ Google Maps API متاح - يمكن عرض الخريطة
+              </p>
+              <div className="bg-gray-800 rounded-lg p-8 mb-4">
+                <div className="text-gray-400">
+                  [هنا ستظهر الخريطة التفاعلية مع جميع النقاط والأنشطة]
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  // يمكن تطوير هذا لاحقاً لعرض خريطة حقيقية
+                  alert('سيتم تطوير الخريطة التفاعلية في الإصدار القادم');
+                }}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+              >
+                تفعيل الخريطة التفاعلية
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-orange-400 mb-4">
+                ⚠️ يتطلب Google Maps API Key لتفعيل هذه الميزة
+              </p>
+              <div className="bg-gray-800/50 rounded-lg p-8 mb-4">
+                <div className="text-gray-500">
+                  لعرض الخريطة التفاعلية، يرجى إضافة REACT_APP_GOOGLE_MAPS_API_KEY في ملف البيئة
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Activity Locations Preview */}
+          <div className="mt-8">
+            <h4 className="text-lg font-bold mb-4 text-white">المواقع المسجلة</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {activities.filter(act => act.location).slice(0, 6).map((activity) => (
+                <div key={activity.id} className="bg-white/5 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{getActivityIcon(activity.type)}</span>
+                    <span className="text-sm font-medium text-white truncate">{activity.action}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mb-1">
+                    📍 {activity.location.address}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    {activity.location.latitude?.toFixed(4)}, {activity.location.longitude?.toFixed(4)}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {getRelativeTime(activity.timestamp)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>جاري تحميل بيانات الأنشطة...</p>
+          <p className="text-white">جاري تحميل بيانات الأنشطة...</p>
+          <p className="text-sm text-gray-400 mt-2">يتم جلب البيانات من الخادم...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="activity-tracking-container">
+    <div className="activity-tracking-container min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
@@ -990,31 +1239,36 @@ const ActivityTracking = ({ user, language, isRTL }) => {
             <span className="text-2xl text-white">📊</span>
           </div>
           <div>
-            <h1 className="text-3xl font-bold">تتبع الأنشطة والحركات</h1>
-            <p className="text-lg opacity-75">مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت</p>
+            <h1 className="text-3xl font-bold text-white">تتبع الأنشطة والحركات</h1>
+            <p className="text-lg opacity-75">مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت - للأدمن فقط</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 mb-6">
-        <div className="flex border-b border-white/10">
+        <div className="flex border-b border-white/10 overflow-x-auto">
           {[
-            { id: 'overview', name: 'نظرة عامة', icon: '📊' },
-            { id: 'all_activities', name: 'جميع الأنشطة', icon: '📋' },
-            { id: 'map_view', name: 'عرض الخريطة', icon: '🗺️' }
+            { id: 'overview', name: 'نظرة عامة', icon: '📊', description: 'ملخص شامل للأنشطة' },
+            { id: 'all_activities', name: 'جميع الأنشطة', icon: '📋', description: 'قائمة تفصيلية بجميع الأنشطة' },
+            { id: 'gps_tracking', name: 'تتبع GPS', icon: '🛰️', description: 'سجلات المواقع والحركة' },
+            { id: 'map_view', name: 'عرض الخريطة', icon: '🗺️', description: 'خريطة تفاعلية للمواقع' }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition-all duration-300 whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'text-indigo-300 border-b-2 border-indigo-400'
+                  ? 'text-indigo-300 border-b-2 border-indigo-400 bg-white/5'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
+              title={tab.description}
             >
-              <span>{tab.icon}</span>
-              {tab.name}
+              <span className="text-lg">{tab.icon}</span>
+              <div>
+                <div>{tab.name}</div>
+                <div className="text-xs opacity-60">{tab.description}</div>
+              </div>
             </button>
           ))}
         </div>
@@ -1022,16 +1276,78 @@ const ActivityTracking = ({ user, language, isRTL }) => {
         <div className="p-6">
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'all_activities' && renderAllActivities()}
-          {activeTab === 'map_view' && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🗺️</div>
-              <h3 className="text-xl font-bold mb-2">عرض الخريطة التفاعلية</h3>
-              <p className="text-gray-600 mb-4">عرض جميع الأنشطة على خريطة تفاعلية مع Google Maps</p>
-              <p className="text-sm text-orange-400">يتطلب Google Maps API Key لتفعيل هذه الميزة</p>
-            </div>
-          )}
+          {activeTab === 'gps_tracking' && renderGPSTracking()}
+          {activeTab === 'map_view' && renderMapView()}
         </div>
       </div>
+
+      {/* Activity Details Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span>{getActivityIcon(selectedActivity.type)}</span>
+                  تفاصيل النشاط
+                </h3>
+                <button
+                  onClick={() => setSelectedActivity(null)}
+                  className="text-gray-400 hover:text-white transition-colors text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-1">نوع النشاط</div>
+                    <div className="text-white font-medium">{selectedActivity.action}</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-1">المستخدم</div>
+                    <div className="text-white font-medium">{selectedActivity.user_name}</div>
+                    <div className="text-xs text-gray-500">{selectedActivity.user_role}</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-1">الهدف</div>
+                    <div className="text-white font-medium">{selectedActivity.target_name || 'غير محدد'}</div>
+                    <div className="text-xs text-gray-500">{selectedActivity.target_type}</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-1">الوقت</div>
+                    <div className="text-white font-medium">{formatDateTime(selectedActivity.timestamp)}</div>
+                    <div className="text-xs text-gray-500">{getRelativeTime(selectedActivity.timestamp)}</div>
+                  </div>
+                </div>
+
+                {selectedActivity.location && (
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-2">معلومات الموقع</div>
+                    <div className="text-white mb-2">{selectedActivity.location.address}</div>
+                    <div className="text-sm text-gray-400">
+                      📍 {selectedActivity.location.latitude?.toFixed(6)}, {selectedActivity.location.longitude?.toFixed(6)}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      دقة: {selectedActivity.location.accuracy}م
+                    </div>
+                  </div>
+                )}
+
+                {selectedActivity.details && Object.keys(selectedActivity.details).length > 0 && (
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="text-sm text-gray-400 mb-2">التفاصيل الإضافية</div>
+                    <pre className="text-sm text-gray-300 whitespace-pre-wrap">
+                      {JSON.stringify(selectedActivity.details, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
