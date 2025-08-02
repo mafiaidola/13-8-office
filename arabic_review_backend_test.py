@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

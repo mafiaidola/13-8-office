@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BASE_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -582,7 +582,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -968,7 +968,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -1285,7 +1285,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 
 class ClinicAPITester:
     def __init__(self):
@@ -1598,7 +1598,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"username": "admin", "password": "admin123"}
 
 class BackendTester:
@@ -2046,7 +2046,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 
 class ProductManagementTester:
     def __init__(self):
@@ -2756,7 +2756,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BASE_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 TIMEOUT = 30
 
 class LinesAreasTestSuite:
@@ -3588,7 +3588,7 @@ from datetime import datetime
 import time
 
 # Configuration
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class BackendTester:
@@ -4163,7 +4163,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 
 class EnhancedUserManagementTester:
     def __init__(self):

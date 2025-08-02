@@ -6,7 +6,7 @@ Debug Enhanced User Management APIs
 import requests
 import json
 
-BASE_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BASE_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 
 def test_debug():
     # Login as admin

@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from environment
-BACKEND_URL = "https://4869bf48-2036-4988-bb40-179ff075cfa7.preview.emergentagent.com/api"
+BACKEND_URL = "https://d93a5b34-95b5-4194-ba18-3b54042a1d89.preview.emergentagent.com/api"
 
 class CurrentFocusBackendTester:
     def __init__(self):
