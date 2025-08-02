@@ -245,59 +245,235 @@ const Dashboard = ({ user, language, isRTL }) => {
   }
 
   return (
-    <div className="dashboard-container">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">
-          {t('dashboard', 'welcome')} {user?.full_name || user?.username}! 👋
-        </h1>
-        <p className="text-lg opacity-75">
-          {t('dashboard', 'title')} - {t('dashboard', 'overview')}
-        </p>
+    <div className="enhanced-dashboard-container p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Enhanced Header with Time Filters */}
+      <div className="dashboard-header mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            {language === 'ar' ? 'مرحباً' : 'Welcome'} {user?.full_name || user?.username}! 👋
+          </h1>
+          <p className="text-lg opacity-75">
+            {language === 'ar' ? 'لوحة التحكم الرئيسية - نظرة عامة شاملة' : 'Main Dashboard - Comprehensive Overview'}
+          </p>
+        </div>
+
+        {/* Time Filter Buttons */}
+        <div className="time-filters flex items-center gap-2 bg-white/10 backdrop-blur-lg rounded-xl p-2 border border-white/20">
+          {[
+            { key: 'today', label: language === 'ar' ? 'اليوم' : 'Today' },
+            { key: 'week', label: language === 'ar' ? 'الأسبوع' : 'Week' },
+            { key: 'month', label: language === 'ar' ? 'الشهر' : 'Month' },
+            { key: 'year', label: language === 'ar' ? 'السنة' : 'Year' }
+          ].map((filter) => (
+            <button
+              key={filter.key}
+              onClick={() => setTimeFilter(filter.key)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                timeFilter === filter.key
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title={t('users', 'totalUsers')}
-          value={stats.totalUsers}
-          icon="👥"
+      {/* Enhanced Comprehensive Metrics Grid */}
+      <div className="metrics-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+        {/* Core System Metrics */}
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي المندوبين' : 'Total Reps'}
+          value={stats.totalReps}
+          icon="👨‍💼"
           color="blue"
-          language={language}
+          trend="+5.2%"
+          description={language === 'ar' ? 'مندوب نشط' : 'Active reps'}
         />
-        <StatCard
-          title={t('clinics', 'totalClinics')}
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي العيادات' : 'Total Clinics'}
           value={stats.totalClinics}
           icon="🏥"
           color="green"
-          language={language}
+          trend="+12.3%"
+          description={language === 'ar' ? 'عيادة مسجلة' : 'Registered clinics'}
         />
-        <StatCard
-          title={t('products', 'totalProducts')}
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
           value={stats.totalProducts}
           icon="📦"
           color="purple"
-          language={language}
+          trend="+3.1%"
+          description={language === 'ar' ? 'منتج متاح' : 'Available products'}
         />
-        <StatCard
-          title={t('orders', 'totalOrders')}
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي الطلبات' : 'Total Orders'}
           value={stats.totalOrders}
           icon="🛒"
           color="orange"
-          language={language}
+          trend="+18.7%"
+          description={language === 'ar' ? 'طلبية مكتملة' : 'Completed orders'}
+        />
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي الزيارات' : 'Total Visits'}
+          value={stats.totalVisits}
+          icon="👨‍⚕️"
+          color="teal"
+          trend="+22.4%"
+          description={language === 'ar' ? 'زيارة مكتملة' : 'Completed visits'}
+        />
+
+        {/* Financial Metrics */}
+        <EnhancedStatCard
+          title={language === 'ar' ? 'إجمالي الديون' : 'Total Debts'}
+          value={stats.totalDebts}
+          icon="💳"
+          color="red"
+          trend="-8.3%"
+          description={language === 'ar' ? 'دين نشط' : 'Active debts'}
+        />
+        <EnhancedStatCard
+          title={language === 'ar' ? 'المبلغ المستحق' : 'Outstanding Amount'}
+          value={formatCurrency(stats.outstandingDebtAmount)}
+          icon="💰"
+          color="amber"
+          trend="-15.2%"
+          description={language === 'ar' ? 'مبلغ غير مدفوع' : 'Unpaid amount'}
+          isFinancial={true}
+        />
+        <EnhancedStatCard
+          title={language === 'ar' ? 'المبلغ المحصل' : 'Collected Amount'}
+          value={formatCurrency(stats.paidDebtAmount)}
+          icon="✅"
+          color="emerald"
+          trend="+28.6%"
+          description={language === 'ar' ? 'مبلغ محصل' : 'Collected amount'}
+          isFinancial={true}
+        />
+        <EnhancedStatCard
+          title={language === 'ar' ? 'المدراء' : 'Managers'}
+          value={stats.totalManagers}
+          icon="👔"
+          color="indigo"
+          trend="+2.1%"
+          description={language === 'ar' ? 'مدير نشط' : 'Active managers'}
+        />
+        <EnhancedStatCard
+          title={language === 'ar' ? 'المخازن' : 'Warehouses'}
+          value={stats.totalWarehouses}
+          icon="🏭"
+          color="gray"
+          trend="0%"
+          description={language === 'ar' ? 'مخزن نشط' : 'Active warehouses'}
         />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <QuickActions user={user} language={language} />
-        <RecentActivity language={language} />
+      {/* Performance Metrics Based on Time Filter */}
+      <div className="performance-section mb-8">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          📊 {language === 'ar' ? 'أداء' : 'Performance'} 
+          <span className="text-blue-500">
+            ({timeFilter === 'today' ? (language === 'ar' ? 'اليوم' : 'Today') :
+              timeFilter === 'week' ? (language === 'ar' ? 'هذا الأسبوع' : 'This Week') :
+              timeFilter === 'month' ? (language === 'ar' ? 'هذا الشهر' : 'This Month') :
+              (language === 'ar' ? 'هذا العام' : 'This Year')})
+          </span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <PerformanceCard
+            title={language === 'ar' ? 'طلبات جديدة' : 'New Orders'}
+            value={stats.performanceMetrics?.orders || 0}
+            icon="🎯"
+            color="blue"
+          />
+          <PerformanceCard
+            title={language === 'ar' ? 'زيارات مكتملة' : 'Completed Visits'}
+            value={stats.performanceMetrics?.visits || 0}
+            icon="✅"
+            color="green"
+          />
+          <PerformanceCard
+            title={language === 'ar' ? 'عيادات جديدة' : 'New Clinics'}
+            value={stats.performanceMetrics?.newClinics || 0}
+            icon="🏥"
+            color="purple"
+          />
+          <PerformanceCard
+            title={language === 'ar' ? 'مبالغ محصلة' : 'Collections'}
+            value={stats.performanceMetrics?.collections || 0}
+            icon="💰"
+            color="orange"
+          />
+        </div>
+      </div>
+
+      {/* Enhanced Main Content Grid */}
+      <div className="main-content-grid grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Enhanced Quick Actions */}
+        <EnhancedQuickActions user={user} language={language} onActionClick={handleQuickAction} />
+        
+        {/* Enhanced Recent Activity with Dynamic Data */}
+        <EnhancedRecentActivity 
+          language={language} 
+          activities={recentActivities}
+          onActivityClick={handleActivityClick}
+        />
+      </div>
+
+      {/* Quick Action Modal */}
+      {showQuickActionModal && (
+        <QuickActionModal
+          action={selectedAction}
+          language={language}
+          onClose={() => setShowQuickActionModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Enhanced Stat Card Component
+const EnhancedStatCard = ({ title, value, icon, color, trend, description, isFinancial = false }) => {
+  const colorClasses = {
+    blue: 'from-blue-500 to-blue-600',
+    green: 'from-green-500 to-green-600',
+    purple: 'from-purple-500 to-purple-600',
+    orange: 'from-orange-500 to-orange-600',
+    red: 'from-red-500 to-red-600',
+    teal: 'from-teal-500 to-teal-600',
+    amber: 'from-amber-500 to-amber-600',
+    emerald: 'from-emerald-500 to-emerald-600',
+    indigo: 'from-indigo-500 to-indigo-600',
+    gray: 'from-gray-500 to-gray-600'
+  };
+
+  const trendColor = trend.startsWith('+') ? 'text-green-400' : trend.startsWith('-') ? 'text-red-400' : 'text-gray-400';
+
+  return (
+    <div className="enhanced-stat-card bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        <div className={`text-sm font-medium ${trendColor}`}>
+          {trend}
+        </div>
+      </div>
+      
+      <div>
+        <p className="text-sm opacity-75 mb-1">{title}</p>
+        <p className={`${isFinancial ? 'text-2xl' : 'text-3xl'} font-bold mb-1`}>
+          {isFinancial ? value : (typeof value === 'number' ? value.toLocaleString() : value)}
+        </p>
+        <p className="text-xs opacity-60">{description}</p>
       </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon, color, language }) => {
+// Performance Card Component
+const PerformanceCard = ({ title, value, icon, color }) => {
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
     green: 'from-green-500 to-green-600',
@@ -306,13 +482,13 @@ const StatCard = ({ title, value, icon, color, language }) => {
   };
 
   return (
-    <div className="stat-card bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+    <div className="performance-card bg-white/5 backdrop-blur-lg rounded-lg p-4 border border-white/20">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm opacity-75 mb-1">{title}</p>
-          <p className="text-3xl font-bold">{value.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{value.toLocaleString()}</p>
         </div>
-        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-2xl`}>
+        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-lg`}>
           {icon}
         </div>
       </div>
