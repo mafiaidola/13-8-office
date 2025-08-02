@@ -194,6 +194,13 @@ async def log_activity(
         user_agent = request.headers.get("user-agent", "")
         ip_address = request.client.host if request.client else "Unknown"
         
+        # Create device info, avoiding duplicate parameters
+        device_info_dict = activity.device_info.dict() if activity.device_info else {}
+        device_info_dict.update({
+            "user_agent": user_agent,
+            "ip_address": ip_address
+        })
+        
         # Create activity response
         activity_response = ActivityResponse(
             type=activity.type,
@@ -205,11 +212,7 @@ async def log_activity(
             target_id=activity.target_id,
             target_name=activity.target_name,
             location=activity.location,
-            device_info=DeviceInfo(
-                user_agent=user_agent,
-                ip_address=ip_address,
-                **(activity.device_info.dict() if activity.device_info else {})
-            ),
+            device_info=DeviceInfo(**device_info_dict),
             details=activity.details,
             metadata=activity.metadata
         )
