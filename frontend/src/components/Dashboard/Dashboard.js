@@ -291,6 +291,13 @@ const Dashboard = ({ user, language, isRTL }) => {
           color="blue"
           trend="+5.2%"
           description={language === 'ar' ? 'مندوب نشط' : 'Active reps'}
+          onClick={() => {
+            // Navigate to users section with rep filter
+            console.log('Navigate to users - medical reps');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('users');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'إجمالي العيادات' : 'Total Clinics'}
@@ -299,6 +306,12 @@ const Dashboard = ({ user, language, isRTL }) => {
           color="green"
           trend="+12.3%"
           description={language === 'ar' ? 'عيادة مسجلة' : 'Registered clinics'}
+          onClick={() => {
+            console.log('Navigate to clinics');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('clinics');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}
@@ -307,6 +320,12 @@ const Dashboard = ({ user, language, isRTL }) => {
           color="purple"
           trend="+3.1%"
           description={language === 'ar' ? 'منتج متاح' : 'Available products'}
+          onClick={() => {
+            console.log('Navigate to products');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('products');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'إجمالي الطلبات' : 'Total Orders'}
@@ -315,6 +334,12 @@ const Dashboard = ({ user, language, isRTL }) => {
           color="orange"
           trend="+18.7%"
           description={language === 'ar' ? 'طلبية مكتملة' : 'Completed orders'}
+          onClick={() => {
+            console.log('Navigate to orders');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('orders');
+            }
+          }}
         />
         <EnhancedStatCard
           title={language === 'ar' ? 'إجمالي الزيارات' : 'Total Visits'}
@@ -323,6 +348,12 @@ const Dashboard = ({ user, language, isRTL }) => {
           color="teal"
           trend="+22.4%"
           description={language === 'ar' ? 'زيارة مكتملة' : 'Completed visits'}
+          onClick={() => {
+            console.log('Navigate to visits');
+            if (typeof setActiveTab === 'function') {
+              setActiveTab('visits');
+            }
+          }}
         />
 
         {/* Financial Metrics */}
