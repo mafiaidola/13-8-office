@@ -193,6 +193,54 @@ agent_communication:
 user_problem_statement: "المطلوب تحسين النظام بإضافة 5 ثيمات (modern, minimal, glassy, Dark, White) وتحسين الهيدر ليشمل البحث الشامل وتغيير اللغة، وإصلاح المكونات التي تظهر 'under development' في Product Management وClinic Management وGeographic Management وSystem Management، والتأكد من ظهور المستخدمين بشكل صحيح."
 
 frontend:
+  - task: "Pop-up/Modal Styling Enhancement - Phase 1"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.css"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "بدء المرحلة الأولى من تحسينات واجهة المستخدم. المطلوب إصلاح وتحسين جميع النوافذ المنبثقة (pop-ups/modals) لتكون مُنسقة بشكل احترافي ومتوسطة في الشاشة. التحديات: 1) ضمان التوسيط الكامل في جميع أحجام الشاشات 2) تحسين التصميم ليكون متسقاً مع نظام الثيمات 3) إضافة تأثيرات انتقالية سلسة 4) ضمان استجابة التصميم على الأجهزة المختلفة"
+
+  - task: "Header Professional Styling with Glassy Effect - Phase 1"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.css"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "إعادة تنسيق الرأس (header) ليكون احترافياً مع تأثير الشفافية (glassy effect) عند التمرير. المطلوب: 1) تحسين التأثير البصري للشفافية والتمويه 2) ضمان ظهور المحتوى بوضوح 3) تحسين المساحات والتنسيق 4) ضمان عمل التأثير على جميع الثيمات 5) تحسين تجربة المستخدم العامة"
+
+  - task: "Theme System Completion and Visibility - Phase 1"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "ضمان اكتمال نظام الثيمات وأن قائمة الثيمات ظاهرة دائماً 'على القمة' كما طلب المستخدم. المطلوب: 1) التأكد من عمل جميع الثيمات الستة (Modern, Minimal, Glassy, Dark, White, Neon) 2) ضمان ظهور قائمة الثيمات دائماً في مكان بارز 3) تحسين واجهة اختيار الثيم 4) اختبار التبديل بين الثيمات في جميع المكونات"
+
+  - task: "User Profile Sidebar Formatting - Phase 1"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "إصلاح تنسيق الشريط الجانبي لملف المستخدم وعرض معلومات المستخدم بشكل شامل ومنسق. المطلوب: 1) عرض تفاصيل شاملة للمستخدم 2) تحسين التصميم والمساحات 3) إضافة معلومات إضافية مفيدة 4) ضمان التناسق مع باقي التصميم"
+
   - task: "Enhanced Theme System Implementation"
     implemented: true
     working: true
