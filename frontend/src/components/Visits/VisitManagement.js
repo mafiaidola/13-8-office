@@ -264,20 +264,221 @@ const VisitManagement = ({ user, language, isRTL }) => {
           )}
         </div>
       </div>
-      
-      // Mock data for visits
-      setVisits([
-        {
-          id: 'visit-001',
-          visit_date: '2024-02-01T09:30:00Z',
-          clinic_id: 'clinic-001',
-          clinic_name: 'عيادة الدكتور أحمد محمد',
-          doctor_name: 'د. أحمد محمد',
-          rep_id: 'user-001',
-          rep_name: 'محمد علي أحمد',
-          visit_type: 'routine',
-          status: 'completed',
-          location: {
+
+      {/* Search and Filters */}
+      {activeTab === 'visits' && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="البحث في الزيارات..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 pl-12 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+            />
+            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
+          </div>
+          
+          {/* Status Filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+          >
+            <option value="all" className="text-black">جميع الحالات</option>
+            <option value="ordered" className="text-black">تم الطلب</option>
+            <option value="interested" className="text-black">مهتم</option>
+            <option value="considering" className="text-black">تحت الدراسة</option>
+            <option value="no_order" className="text-black">لا يوجد طلب</option>
+            <option value="follow_up" className="text-black">متابعة لاحقة</option>
+          </select>
+          
+          {/* Date Filter */}
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+          />
+        </div>
+      )}
+
+      {/* Content based on active tab */}
+      {activeTab === 'visits' && (
+        <VisitsList 
+          visits={filteredVisits}
+          loading={loading}
+          onVisitClick={handleVisitClick}
+          canViewGPS={canViewGPS}
+          getEffectivenessColor={getEffectivenessColor}
+          getOrderStatusColor={getOrderStatusColor}
+          getStatusLabel={getStatusLabel}
+          getEffectivenessLabel={getEffectivenessLabel}
+        />
+      )}
+
+      {activeTab === 'login-logs' && canViewAllVisits && (
+        <LoginLogsList 
+          loginLogs={loginLogs}
+          loading={loading}
+          canViewGPS={canViewGPS}
+        />
+      )}
+
+      {/* New Visit Modal */}
+      {showNewVisitModal && (
+        <NewVisitForm
+          user={user}
+          language={language}
+          isRTL={isRTL}
+          onClose={() => setShowNewVisitModal(false)}
+          onSave={handleVisitSaved}
+        />
+      )}
+
+      {/* Visit Details Modal */}
+      {showVisitDetails && selectedVisit && (
+        <VisitDetailsModal
+          visit={selectedVisit}
+          onClose={() => setShowVisitDetails(false)}
+          canViewGPS={canViewGPS}
+          getEffectivenessColor={getEffectivenessColor}
+          getOrderStatusColor={getOrderStatusColor}
+          getStatusLabel={getStatusLabel}
+          getEffectivenessLabel={getEffectivenessLabel}
+        />
+      )}
+    </div>
+  );
+};
+
+// Visits List Component
+const VisitsList = ({ 
+  visits, 
+  loading, 
+  onVisitClick, 
+  canViewGPS, 
+  getEffectivenessColor, 
+  getOrderStatusColor, 
+  getStatusLabel, 
+  getEffectivenessLabel 
+}) => {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>جاري تحميل الزيارات...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (visits.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">🏥</div>
+        <h3 className="text-xl font-bold mb-2">لا توجد زيارات</h3>
+        <p className="text-gray-600">لم يتم العثور على زيارات مطابقة للبحث</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {visits.map((visit) => (
+        <div
+          key={visit.id}
+          onClick={() => onVisitClick(visit)}
+          className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+        >
+          {/* Visit Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-white mb-1">{visit.clinic_name}</h3>
+              <p className="text-white/70 text-sm mb-2">{visit.doctor_name}</p>
+              <p className="text-white/60 text-xs">بواسطة: {visit.medical_rep_name}</p>
+            </div>
+            
+            {canViewGPS && visit.location && (
+              <div className="text-green-400 text-lg" title="الموقع متاح">
+                📍
+              </div>
+            )}
+          </div>
+
+          {/* Visit Info */}
+          <div className="space-y-3">
+            {/* Date and Time */}
+            <div className="flex items-center gap-2 text-white/80 text-sm">
+              <span>📅</span>
+              <span>
+                {new Date(visit.visit_date).toLocaleDateString('ar-EG')} - 
+                {new Date(visit.visit_date).toLocaleTimeString('ar-EG', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </span>
+            </div>
+
+            {/* Effectiveness */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/70 text-sm">الفعالية:</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getEffectivenessColor(visit.visit_effectiveness)}`}>
+                {getEffectivenessLabel(visit.visit_effectiveness)}
+              </span>
+            </div>
+
+            {/* Order Status */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/70 text-sm">حالة الطلب:</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(visit.order_status)}`}>
+                {getStatusLabel(visit.order_status)}
+              </span>
+            </div>
+
+            {/* Managers */}
+            {visit.managers_notified && visit.managers_notified.length > 0 && (
+              <div className="flex items-start gap-2">
+                <span className="text-white/70 text-sm">المدراء:</span>
+                <div className="flex-1">
+                  {visit.managers_notified.slice(0, 2).map((manager, index) => (
+                    <span key={index} className="text-blue-300 text-xs bg-blue-500/20 px-2 py-1 rounded mr-1">
+                      {manager}
+                    </span>
+                  ))}
+                  {visit.managers_notified.length > 2 && (
+                    <span className="text-white/60 text-xs">+{visit.managers_notified.length - 2}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Products Count */}
+            {visit.products_discussed && visit.products_discussed.length > 0 && (
+              <div className="flex items-center gap-2 text-white/70 text-sm">
+                <span>💊</span>
+                <span>{visit.products_discussed.length} منتج تم مناقشته</span>
+              </div>
+            )}
+          </div>
+
+          {/* Visit Notes Preview */}
+          {visit.visit_notes && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-white/60 text-sm line-clamp-2">
+                {visit.visit_notes}
+              </p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
             latitude: 30.0444,
             longitude: 31.2357,
             address: 'شارع النيل، المعادي، القاهرة'
