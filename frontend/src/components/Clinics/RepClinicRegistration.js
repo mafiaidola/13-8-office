@@ -555,27 +555,29 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       )}
                     </div>
                     
-                    {/* Location Details Overlay */}
-                    <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-3 text-white">
-                      <div className="text-sm font-medium flex items-center gap-2 mb-1">
+                    {/* Enhanced Control Overlay */}
+                    <div className="absolute top-4 left-4 bg-black/90 backdrop-blur-sm rounded-xl p-4 text-white shadow-2xl border border-white/20">
+                      <div className="text-sm font-bold flex items-center gap-2 mb-2">
                         <span>📍</span>
-                        إحداثيات العيادة
+                        موقع العيادة
                       </div>
-                      <div className="text-xs space-y-1">
-                        <div>العرض: {clinicData.latitude.toFixed(6)}</div>
-                        <div>الطول: {clinicData.longitude.toFixed(6)}</div>
+                      <div className="text-xs space-y-1 text-gray-200">
+                        <div><strong>العرض:</strong> {clinicData.latitude?.toFixed(6)}</div>
+                        <div><strong>الطول:</strong> {clinicData.longitude?.toFixed(6)}</div>
+                        <div className="text-green-300"><strong>الحالة:</strong> ✅ محدد</div>
                       </div>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="absolute bottom-4 right-4 flex gap-2">
+                    {/* Enhanced Control Buttons */}
+                    <div className="absolute bottom-4 right-4 flex gap-3">
                       <button
                         type="button"
                         onClick={() => {
-                          const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}`;
+                          const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}&zoom=16`;
                           window.open(googleMapsUrl, '_blank');
+                          console.log('🔗 فتح الخريطة في Google Maps');
                         }}
-                        className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-green-700 transition-colors flex items-center gap-1"
+                        className="bg-green-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-green-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-green-500/30"
                         title="فتح في Google Maps"
                       >
                         <span>🔗</span>
@@ -591,13 +593,26 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                               latitude: currentLocation.latitude,
                               longitude: currentLocation.longitude
                             }));
+                            console.log('📱 تم استخدام الموقع الحالي');
+                          } else {
+                            getCurrentLocation();
                           }
                         }}
-                        className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700 transition-colors flex items-center gap-1"
+                        className="bg-blue-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-blue-500/30"
                         title="استخدام موقعي الحالي"
                       >
                         <span>📱</span>
-                        موقعي
+                        استخدم موقعي
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={getCurrentLocation}
+                        className="bg-orange-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-orange-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-orange-500/30"
+                        title="تحديث الموقع"
+                      >
+                        <span>🔄</span>
+                        تحديث
                       </button>
                     </div>
                   </div>
