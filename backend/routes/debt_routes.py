@@ -11,7 +11,11 @@ from models.financial_models import (
     PaymentPlan, PaymentPlanCreate, DebtSummary, CollectionSummary,
     DebtStatus, CollectionStatus, PaymentMethod
 )
-from routes.auth_routes import get_current_user
+# Import get_current_user from main server
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from server import get_current_user
 
 router = APIRouter(prefix="/api/debts", tags=["Debt Management"])
 
