@@ -13,6 +13,7 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
   const [filterArea, setFilterArea] = useState('all');
   const [filterCreditStatus, setFilterCreditStatus] = useState('all');
   const [showClinicModal, setShowClinicModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState(null);
   
   const { t } = useTranslation(language);
