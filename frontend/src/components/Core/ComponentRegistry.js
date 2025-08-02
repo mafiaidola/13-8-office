@@ -105,6 +105,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة الحسابات والفواتير...'
   ),
 
+  // Debt and Collection Management - Phase 2
+  DebtCollectionManagement: createLazyComponent(
+    () => import('../DebtCollection/DebtCollectionManagement'),
+    'جاري تحميل إدارة الديون والتحصيل...'
+  ),
+
   // Visit Management
   VisitManagement: createLazyComponent(
     () => import('../Visits/VisitManagement'),
