@@ -235,38 +235,6 @@ const UserManagement = ({ user, language, isRTL }) => {
       alert('حدث خطأ أثناء إنشاء المستخدم');
     }
   };
-    try {
-      const token = localStorage.getItem('access_token');
-      console.log('🔧 Creating user with data:', userData);
-      
-      const response = await axios.post(`${API}/users`, userData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('✅ User created successfully:', response.data);
-      
-      // تسجيل النشاط
-      await activityLogger.logUserCreation(
-        response.data.id,
-        userData.full_name || userData.username,
-        {
-          role: userData.role,
-          department: userData.department || '',
-          email: userData.email || '',
-          phone: userData.phone || '',
-          created_by_role: user?.role
-        }
-      );
-      
-      await loadUsers(); // Reload users list
-      setShowAddModal(false);
-      alert('تم إنشاء المستخدم بنجاح');
-    } catch (error) {
-      console.error('❌ Error creating user:', error);
-      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إنشاء المستخدم';
-      alert(`خطأ في إنشاء المستخدم: ${errorMessage}`);
-    }
-  };
 
   return (
     <div className="user-management-container">
