@@ -657,39 +657,97 @@ const DashboardLayout = () => {
         </main>
       </div>
 
+      {/* Global Search Modal */}
+      {showGlobalSearch && (
+        <GlobalSearchModal
+          onClose={() => setShowGlobalSearch(false)}
+          language={language}
+          isRTL={isRTL}
+        />
+      )}
+
+      {/* Global Keyboard Shortcuts */}
+      <div style={{ display: 'none' }}>
+        {/* Keyboard shortcuts handler */}
+        {typeof window !== 'undefined' && (
+          <KeyboardShortcuts 
+            onSearchOpen={() => setShowGlobalSearch(true)} 
+          />
+        )}
+      </div>
+
       <style jsx>{`
         .dashboard-layout {
           min-height: 100vh;
+          background: linear-gradient(135deg, ${currentThemeConfig.colors.background});
+          color: ${currentThemeConfig.colors.text};
+          transition: all 0.3s ease;
+        }
+
+        .theme-modern .dashboard-layout {
           background: linear-gradient(135deg, 
             rgba(59, 130, 246, 0.1) 0%, 
             rgba(147, 51, 234, 0.1) 50%, 
             rgba(79, 70, 229, 0.1) 100%
           );
-          color: var(--text-primary);
+        }
+
+        .theme-minimal .dashboard-layout {
+          background: linear-gradient(135deg, 
+            rgba(249, 250, 251, 1) 0%, 
+            rgba(229, 231, 235, 1) 100%
+          );
+          color: #1f2937;
+        }
+
+        .theme-glassy .dashboard-layout {
+          background: linear-gradient(135deg, 
+            rgba(15, 23, 42, 0.9) 0%, 
+            rgba(88, 28, 135, 0.9) 50%, 
+            rgba(15, 23, 42, 0.9) 100%
+          );
+          backdrop-filter: blur(20px);
+        }
+
+        .theme-dark .dashboard-layout {
+          background: linear-gradient(135deg, 
+            rgba(17, 24, 39, 1) 0%, 
+            rgba(88, 28, 135, 0.3) 50%, 
+            rgba(67, 56, 202, 0.3) 100%
+          );
+        }
+
+        .theme-white .dashboard-layout {
+          background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 1) 0%, 
+            rgba(243, 244, 246, 1) 100%
+          );
+          color: #1f2937;
         }
 
         .dashboard-header {
           position: sticky;
           top: 0;
           z-index: 100;
+          height: 70px;
         }
 
         .dashboard-content {
-          min-height: calc(100vh - 80px);
+          min-height: calc(100vh - 70px);
         }
 
         .dashboard-sidebar {
-          min-height: calc(100vh - 80px);
+          min-height: calc(100vh - 70px);
           overflow-y: auto;
         }
 
         .dashboard-main {
-          background: rgba(255, 255, 255, 0.02);
+          background: ${currentThemeConfig.colors.card};
           backdrop-filter: blur(10px);
         }
 
         .tab-content {
-          background: rgba(255, 255, 255, 0.05);
+          background: ${currentThemeConfig.colors.card};
           border-radius: 16px;
           padding: 24px;
           backdrop-filter: blur(10px);
@@ -705,6 +763,19 @@ const DashboardLayout = () => {
         .rtl .dashboard-sidebar {
           border-right: none;
           border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Theme-specific adjustments */
+        .theme-minimal .tab-content,
+        .theme-white .tab-content {
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-glassy .tab-content {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
       `}</style>
     </div>
