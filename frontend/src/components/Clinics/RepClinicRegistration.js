@@ -11,10 +11,13 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
     doctor_name: '',
     clinic_class: 'Class A', // تصنيف العيادة
     credit_status: 'green', // الحالة الائتمانية: green, yellow, red
-    specialization: '',
+    // إزالة specialization كما طلب المستخدم
     latitude: null,
     longitude: null,
-    classification: 'class_c'
+    classification: 'class_c',
+    // إضافة حقول المسؤول الجديدة
+    manager_name: '',
+    manager_phone: ''
   });
   const [currentLocation, setCurrentLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
