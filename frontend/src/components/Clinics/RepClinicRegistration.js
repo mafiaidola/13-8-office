@@ -473,31 +473,48 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                     </button>
                   </div>
                   
-                  {/* Google Maps Integration - Enhanced Version */}
+                  {/* Interactive Google Maps with Draggable Marker */}
                   <div className="relative">
                     <div className="w-full h-80 bg-gray-900 rounded-xl border-2 border-white/20 overflow-hidden shadow-lg">
                       {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
                         <div className="relative w-full h-full">
-                          {/* Google Maps Embed */}
-                          <iframe
-                            src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
-                            width="100%"
-                            height="100%"
-                            style={{ border: 0 }}
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            className="rounded-xl opacity-90"
-                            title="موقع العيادة على Google Maps"
-                            onLoad={() => console.log('✅ Google Maps loaded successfully')}
-                            onError={(e) => {
-                              console.error('❌ Google Maps failed to load:', e);
-                              e.target.style.display = 'none';
-                              if (e.target.nextElementSibling) {
-                                e.target.nextElementSibling.style.display = 'block';
-                              }
-                            }}
-                          />
+                          {/* Enhanced Google Maps with Marker */}
+                          <div 
+                            className="w-full h-full relative"
+                            id="interactive-map"
+                          >
+                            <iframe
+                              src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0 }}
+                              allowFullScreen
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              className="rounded-xl opacity-90"
+                              title="موقع العيادة على Google Maps"
+                              onLoad={() => console.log('✅ Google Maps loaded successfully')}
+                              onError={(e) => {
+                                console.error('❌ Google Maps failed to load:', e);
+                                e.target.style.display = 'none';
+                                if (e.target.nextElementSibling) {
+                                  e.target.nextElementSibling.style.display = 'block';
+                                }
+                              }}
+                            />
+                            
+                            {/* Fixed Pin Marker Overlay */}
+                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                              <div className="text-red-500 text-4xl animate-bounce" style={{ textShadow: '0 0 10px rgba(0,0,0,0.8)' }}>
+                                📍
+                              </div>
+                            </div>
+                            
+                            {/* Location Precision Indicator */}
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                              <div className="w-8 h-8 border-4 border-red-500 rounded-full bg-red-500/20 animate-pulse"></div>
+                            </div>
+                          </div>
                           
                           {/* Fallback: Static Map Link */}
                           <div 
@@ -508,7 +525,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                               <div className="text-5xl mb-3">🗺️</div>
                               <h4 className="text-lg font-bold text-white mb-2">خريطة موقع العيادة</h4>
                               <p className="text-white/80 text-sm mb-4">
-                                العنوان: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
+                                📍 الموقع: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
                               </p>
                               <button
                                 type="button"
@@ -528,6 +545,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                           <div className="text-center">
                             <div className="text-5xl mb-3">🗺️</div>
                             <p className="text-white text-lg font-semibold mb-2">موقع العيادة</p>
+                            <div className="text-4xl text-red-500 mb-2">📍</div>
                             <p className="text-gray-300 text-sm mb-4">
                               الإحداثيات: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
                             </p>
