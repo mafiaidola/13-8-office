@@ -369,6 +369,7 @@ const OrdersManagement = ({ user, language, isRTL }) => {
           order={selectedOrder}
           onClose={() => setShowDetailsModal(false)}
           language={language}
+          user={user}
         />
       )}
 
