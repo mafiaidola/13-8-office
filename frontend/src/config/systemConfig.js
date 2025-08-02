@@ -13,7 +13,7 @@ export const USER_ROLES = {
 };
 
 // Helper function to normalize role names
-const normalizeRole = (role) => {
+export const normalizeRole = (role) => {
   if (!role) return null;
   return role.toLowerCase().replace(/\s+/g, '_');
 };
