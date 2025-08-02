@@ -1,4 +1,4 @@
-// Activity Tracking System - نظام تتبع الحركات والأنشطة
+// Activity Tracking System - نظام تتبع الحركات والأنشطة الشامل مع GPS
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
@@ -6,167 +6,290 @@ import axios from 'axios';
 const ActivityTracking = ({ user, language, isRTL }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [activities, setActivities] = useState([]);
-  const [visitActivities, setVisitActivities] = useState([]);
-  const [clinicRegistrations, setClinicRegistrations] = useState([]);
-  const [orderActivities, setOrderActivities] = useState([]);
+  const [gpsLogs, setGpsLogs] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
   const [filterDate, setFilterDate] = useState('today');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showMap, setShowMap] = useState(false);
   
   const { t } = useTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
-    fetchActivities();
+    fetchData();
   }, []);
 
-  const fetchActivities = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
+      const headers = { Authorization: `Bearer ${token}` };
       
-      // Mock comprehensive activity data
-      setActivities([
-        {
-          id: 'act-001',
-          type: 'visit_registration',
-          action: 'تسجيل زيارة',
-          user_id: 'user-001',
-          user_name: 'محمد علي أحمد',
-          user_role: 'medical_rep',
-          target_type: 'clinic',
-          target_id: 'clinic-001',
-          target_name: 'عيادة الدكتور أحمد محمد',
-          timestamp: '2024-02-05T09:30:00Z',
-          location: {
-            latitude: 30.0444,
-            longitude: 31.2357,
-            address: 'شارع النيل، المعادي، القاهرة',
-            accuracy: 15
-          },
-          details: {
-            visit_duration: 45,
-            order_created: true,
-            order_value: 1250.00,
-            notes: 'زيارة روتينية، تم عرض المنتجات الجديدة'
-          },
-          device_info: 'Android - Chrome 119',
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 'act-002',
-          type: 'clinic_registration',
-          action: 'تسجيل عيادة جديدة',
-          user_id: 'user-001',
-          user_name: 'محمد علي أحمد',
-          user_role: 'medical_rep',
-          target_type: 'clinic',
-          target_id: 'clinic-004',
-          target_name: 'عيادة الدكتور سامي حسن',
-          timestamp: '2024-02-05T11:15:00Z',
-          location: {
-            latitude: 30.0626,
-            longitude: 31.2497,
-            address: 'مدينة نصر، القاهرة',
-            accuracy: 12
-          },
-          details: {
-            doctor_name: 'د. سامي حسن',
-            specialty: 'أطفال',
-            classification: 'B',
-            phone: '01234567890'
-          },
-          device_info: 'Android - Chrome 119',
-          ip_address: '192.168.1.100'
-        },
-        {
-          id: 'act-003',
-          type: 'order_approval',
-          action: 'اعتماد طلب',
-          user_id: 'admin',
-          user_name: 'مدير النظام',
-          user_role: 'admin',
-          target_type: 'order',
-          target_id: 'order-001',
-          target_name: 'طلب رقم ORD-2024-001',
-          timestamp: '2024-02-05T12:00:00Z',
-          location: {
-            latitude: 30.0444,
-            longitude: 31.2357,
-            address: 'المكتب الرئيسي، القاهرة',
-            accuracy: 8
-          },
-          details: {
-            order_value: 1250.00,
-            items_count: 5,
-            clinic_name: 'عيادة الدكتور أحمد محمد',
-            approved_amount: 1250.00
-          },
-          device_info: 'Windows - Chrome 119',
-          ip_address: '192.168.1.101'
-        },
-        {
-          id: 'act-004',
-          type: 'product_update',
-          action: 'تحديث منتج',
-          user_id: 'admin',
-          user_name: 'مدير النظام',
-          user_role: 'admin',
-          target_type: 'product',
-          target_id: 'product-001',
-          target_name: 'أموكسيسيلين 500mg',
-          timestamp: '2024-02-05T14:30:00Z',
-          location: {
-            latitude: 30.0444,
-            longitude: 31.2357,
-            address: 'المكتب الرئيسي، القاهرة',
-            accuracy: 5
-          },
-          details: {
-            old_price: 85.00,
-            new_price: 90.00,
-            change_reason: 'زيادة سعر المورد'
-          },
-          device_info: 'Windows - Chrome 119',
-          ip_address: '192.168.1.101'
-        },
-        {
-          id: 'act-005',
-          type: 'login',
-          action: 'تسجيل دخول',
-          user_id: 'user-002',
-          user_name: 'سارة محمود',
-          user_role: 'medical_rep',
-          target_type: 'system',
-          target_id: 'system',
-          target_name: 'نظام EP Group',
-          timestamp: '2024-02-05T08:00:00Z',
-          location: {
-            latitude: 30.0131,
-            longitude: 31.2089,
-            address: 'الجيزة',
-            accuracy: 20
-          },
-          details: {
-            biometric_verified: true,
-            session_duration: 8.5
-          },
-          device_info: 'iPhone - Safari 17',
-          ip_address: '192.168.1.102'
-        }
+      // جلب جميع البيانات بشكل متوازي
+      const [activitiesRes, statsRes, gpsRes] = await Promise.allSettled([
+        axios.get(`${API}/admin/activities?limit=100`, { headers }),
+        axios.get(`${API}/admin/activities/stats`, { headers }),
+        axios.get(`${API}/admin/gps-tracking?limit=50`, { headers })
       ]);
 
-      // Separate activities by type for easier filtering
-      setVisitActivities(activities.filter(act => act.type === 'visit_registration'));
-      setClinicRegistrations(activities.filter(act => act.type === 'clinic_registration'));
-      setOrderActivities(activities.filter(act => act.type === 'order_approval'));
+      if (activitiesRes.status === 'fulfilled') {
+        setActivities(activitiesRes.value.data);
+      } else {
+        console.warn('فشل في جلب الأنشطة:', activitiesRes.reason);
+        setActivities([]);
+      }
+
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value.data);
+      } else {
+        console.warn('فشل في جلب الإحصائيات:', statsRes.reason);
+      }
+
+      if (gpsRes.status === 'fulfilled') {
+        setGpsLogs(gpsRes.value.data);
+      } else {
+        console.warn('فشل في جلب سجلات GPS:', gpsRes.reason);
+        setGpsLogs([]);
+      }
 
     } catch (error) {
       console.error('خطأ في جلب بيانات الأنشطة:', error);
+      // في حالة فشل الـ API، استخدم البيانات التجريبية
+      generateFallbackData();
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateFallbackData = () => {
+    // بيانات تجريبية في حالة فشل الـ API
+    const mockActivities = [
+      {
+        id: 'act-001',
+        type: 'visit_registration',
+        action: 'تسجيل زيارة عيادة',
+        user_id: 'user-001',
+        user_name: 'محمد علي أحمد',
+        user_role: 'medical_rep',
+        target_type: 'clinic',
+        target_id: 'clinic-001',
+        target_name: 'عيادة الدكتور أحمد محمد',
+        timestamp: new Date().toISOString(),
+        location: {
+          latitude: 30.0444,
+          longitude: 31.2357,
+          address: 'شارع النيل، المعادي، القاهرة',
+          accuracy: 15
+        },
+        details: {
+          visit_duration: 45,
+          order_created: true,
+          order_value: 1250.00,
+          notes: 'زيارة روتينية، تم عرض المنتجات الجديدة'
+        },
+        device_info: {
+          device_type: 'mobile',
+          operating_system: 'Android 12',
+          browser: 'Chrome',
+          ip_address: '192.168.1.100'
+        }
+      },
+      {
+        id: 'act-002',
+        type: 'clinic_registration',
+        action: 'تسجيل عيادة جديدة',
+        user_id: 'user-001',
+        user_name: 'محمد علي أحمد',
+        user_role: 'medical_rep',
+        target_type: 'clinic',
+        target_id: 'clinic-004',
+        target_name: 'عيادة الدكتور سامي حسن',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        location: {
+          latitude: 30.0626,
+          longitude: 31.2497,
+          address: 'مدينة نصر، القاهرة',
+          accuracy: 12
+        },
+        details: {
+          doctor_name: 'د. سامي حسن',
+          specialty: 'أطفال',
+          classification: 'B',
+          phone: '01234567890'
+        },
+        device_info: {
+          device_type: 'mobile',
+          operating_system: 'Android 12',
+          browser: 'Chrome',
+          ip_address: '192.168.1.100'
+        }
+      },
+      {
+        id: 'act-003',
+        type: 'order_creation',
+        action: 'إنشاء طلب جديد',
+        user_id: 'user-002',
+        user_name: 'سارة محمود علي',
+        user_role: 'medical_rep',
+        target_type: 'order',
+        target_id: 'order-001',
+        target_name: 'طلب رقم ORD-2024-001',
+        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+        location: {
+          latitude: 30.0131,
+          longitude: 31.2089,
+          address: 'الجيزة',
+          accuracy: 20
+        },
+        details: {
+          order_value: 2500.00,
+          items_count: 8,
+          clinic_name: 'عيادة الدكتور محمد حسن',
+          payment_method: 'credit'
+        },
+        device_info: {
+          device_type: 'mobile',
+          operating_system: 'iOS 16',
+          browser: 'Safari',
+          ip_address: '192.168.1.102'
+        }
+      }
+    ];
+
+    setActivities(mockActivities);
+    setStats({
+      total_activities: mockActivities.length,
+      today_activities: mockActivities.filter(act => 
+        new Date(act.timestamp).toDateString() === new Date().toDateString()
+      ).length,
+      week_activities: mockActivities.length,
+      month_activities: mockActivities.length,
+      activities_by_type: {
+        visit_registration: 1,
+        clinic_registration: 1,
+        order_creation: 1
+      },
+      activities_by_user: {
+        'محمد علي أحمد': 2,
+        'سارة محمود علي': 1
+      },
+      most_active_locations: [
+        { location: 'شارع النيل، المعادي، القاهرة', count: 1 },
+        { location: 'مدينة نصر، القاهرة', count: 1 }
+      ],
+      peak_hours: [
+        { hour: new Date().getHours(), count: 3 }
+      ]
+    });
+  };
+
+  const logCurrentActivity = async (activityType, action, targetType, targetId, targetName, details = {}) => {
+    try {
+      // الحصول على الموقع الحالي
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported');
+      }
+
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        });
+      });
+
+      const activityData = {
+        type: activityType,
+        action: action,
+        target_type: targetType,
+        target_id: targetId,
+        target_name: targetName,
+        location: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          address: await getAddressFromCoordinates(position.coords.latitude, position.coords.longitude)
+        },
+        device_info: {
+          device_type: getMobileDeviceType(),
+          operating_system: getOperatingSystem(),
+          browser: getBrowserInfo(),
+          screen_resolution: `${window.screen.width}x${window.screen.height}`
+        },
+        details: details
+      };
+
+      const token = localStorage.getItem('access_token');
+      await axios.post(`${API}/activities`, activityData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // تحديث البيانات بعد التسجيل
+      await fetchData();
+
+    } catch (error) {
+      console.error('خطأ في تسجيل النشاط:', error);
+    }
+  };
+
+  const getAddressFromCoordinates = async (lat, lng) => {
+    try {
+      if (!GOOGLE_MAPS_API_KEY) {
+        return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}&language=ar`
+      );
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        return data.results[0].formatted_address;
+      }
+      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    } catch (error) {
+      console.error('خطأ في الحصول على العنوان:', error);
+      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+  };
+
+  const getMobileDeviceType = () => {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return 'tablet';
+    } else if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+      return 'mobile';
+    }
+    return 'desktop';
+  };
+
+  const getOperatingSystem = () => {
+    const ua = navigator.userAgent;
+    if (ua.indexOf('Windows NT 10.0') !== -1) return 'Windows 10';
+    if (ua.indexOf('Windows NT 6.2') !== -1) return 'Windows 8';
+    if (ua.indexOf('Windows NT 6.1') !== -1) return 'Windows 7';
+    if (ua.indexOf('Windows NT 6.0') !== -1) return 'Windows Vista';
+    if (ua.indexOf('Windows NT 5.1') !== -1) return 'Windows XP';
+    if (ua.indexOf('Windows NT 5.0') !== -1) return 'Windows 2000';
+    if (ua.indexOf('Mac') !== -1) return 'Mac/iOS';
+    if (ua.indexOf('X11') !== -1) return 'UNIX';
+    if (ua.indexOf('Linux') !== -1) return 'Linux';
+    if (ua.indexOf('Android') !== -1) return 'Android';
+    return 'Unknown';
+  };
+
+  const getBrowserInfo = () => {
+    const ua = navigator.userAgent;
+    if (ua.indexOf('Chrome') > -1) return 'Chrome';
+    if (ua.indexOf('Firefox') > -1) return 'Firefox';
+    if (ua.indexOf('Safari') > -1) return 'Safari';
+    if (ua.indexOf('Edge') > -1) return 'Edge';
+    if (ua.indexOf('Opera') > -1) return 'Opera';
+    return 'Unknown';
   };
 
   const getActivityIcon = (type) => {
