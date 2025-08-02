@@ -501,11 +501,22 @@ const DashboardLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const { user, logout } = useAuth();
-  const { language, isRTL, toggleLanguage, toggleTheme, theme } = useTheme();
+  const { 
+    language, 
+    isRTL, 
+    toggleLanguage, 
+    theme, 
+    changeTheme, 
+    getCurrentTheme, 
+    availableThemes,
+    showGlobalSearch,
+    setShowGlobalSearch 
+  } = useTheme();
   const { t } = useTranslation(language);
 
   // Get available tabs for current user
   const availableTabs = getAvailableTabs(user?.role);
+  const currentThemeConfig = getCurrentTheme();
 
   // Set default tab if current tab is not available
   useEffect(() => {
@@ -515,51 +526,77 @@ const DashboardLayout = () => {
   }, [availableTabs, activeTab]);
 
   return (
-    <div className={`dashboard-layout ${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <header className="dashboard-header bg-white/10 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+      <header className="dashboard-header bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Logo & Title */}
+          {/* Left Side - Logo & Controls */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              title={language === 'ar' ? 'طي/فتح الشريط الجانبي' : 'Toggle Sidebar'}
             >
               ☰
             </button>
             <div className="flex items-center gap-2">
               <span className="text-2xl">🏥</span>
-              <span className="font-bold text-xl">EP Group</span>
+              <div className="hidden md:block">
+                <div className="font-bold text-lg">EP Group</div>
+                <div className="text-xs opacity-75">
+                  {language === 'ar' ? 'نظام إدارة طبي شامل' : 'Complete Medical System'}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* User Info & Controls */}
-          <div className="flex items-center gap-4">
+          {/* Center - Search */}
+          <div className="flex-1 max-w-md mx-4">
+            <button
+              onClick={() => setShowGlobalSearch(true)}
+              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors flex items-center gap-2 text-white/70 hover:text-white"
+            >
+              <span>🔍</span>
+              <span className="text-sm">
+                {language === 'ar' ? 'البحث في النظام...' : 'Search system...'}
+              </span>
+              <span className="ml-auto text-xs bg-white/20 px-2 py-1 rounded">
+                Ctrl+K
+              </span>
+            </button>
+          </div>
+
+          {/* Right Side - User Info & Controls */}
+          <div className="flex items-center gap-2">
+            {/* Theme Selector */}
+            <ThemeSelector
+              language={language}
+              availableThemes={availableThemes}
+              currentTheme={theme}
+              onThemeChange={changeTheme}
+            />
+
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm"
+              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-sm font-medium"
+              title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
             >
               {language === 'ar' ? 'EN' : 'عربي'}
             </button>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              {theme === 'light' ? '🌙' : '☀️'}
-            </button>
-
             {/* User Menu */}
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <div className="font-medium">{user?.full_name || user?.username}</div>
-                <div className="text-sm opacity-75">{user?.role}</div>
+            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+              <div className="text-right hidden md:block">
+                <div className="font-medium text-sm">{user?.full_name || user?.username}</div>
+                <div className="text-xs opacity-75">{user?.role}</div>
+              </div>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                {(user?.full_name || user?.username || 'U').charAt(0).toUpperCase()}
               </div>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors"
+                className="p-1 rounded hover:bg-red-500/20 text-red-300 transition-colors ml-1"
                 title={t('auth', 'logout')}
               >
                 🚪
