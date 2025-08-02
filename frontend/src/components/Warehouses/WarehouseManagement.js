@@ -168,10 +168,10 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
 
   const getWarehouseStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-300';
-      case 'maintenance': return 'bg-yellow-500/20 text-yellow-300';
-      case 'inactive': return 'bg-red-500/20 text-red-300';
-      default: return 'bg-gray-500/20 text-gray-300';
+      case 'active': return 'bg-green-500/20 text-green-300 border-green-500/30';
+      case 'maintenance': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+      case 'inactive': return 'bg-red-500/20 text-red-300 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
     }
   };
 
