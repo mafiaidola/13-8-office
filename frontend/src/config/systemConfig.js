@@ -203,37 +203,45 @@ export const SYSTEM_TABS = {
     priority: 6
   },
 
-  GAMIFICATION: {
+  gamification: {
     id: 'gamification',
+    path: '/gamification',
     name: { ar: 'نظام التحفيز', en: 'Gamification' },
     icon: '🎮',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.LINE_MANAGER],
-    component: 'GamificationSystem'
+    permissions: ['admin', 'gm', 'line_manager'],
+    component: 'GamificationSystem',
+    priority: 9
   },
 
-  GPS_TRACKING: {
-    id: 'gps-tracking',
+  gps_tracking: {
+    id: 'gps_tracking',
+    path: '/gps-tracking',
     name: { ar: 'تتبع المواقع', en: 'GPS Tracking' },
     icon: '🗺️',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.AREA_MANAGER],
-    component: 'GPSTracking'
+    permissions: ['admin', 'gm', 'area_manager'],
+    component: 'GPSTracking',
+    priority: 10
   },
 
-  ADVANCED_ANALYTICS: {
-    id: 'advanced-analytics',
+  advanced_analytics: {
+    id: 'advanced_analytics',
+    path: '/advanced-analytics',
     name: { ar: 'التحليلات المتقدمة', en: 'Advanced Analytics' },
     icon: '📊',
-    permissions: [USER_ROLES.ADMIN, USER_ROLES.GM, USER_ROLES.FINANCE],
-    component: 'AdvancedAnalytics'
+    permissions: ['admin', 'gm', 'finance'],
+    component: 'AdvancedAnalytics',
+    priority: 11
   },
 
   // Settings
-  SETTINGS: {
+  settings: {
     id: 'settings',
+    path: '/settings',
     name: { ar: 'الإعدادات', en: 'Settings' },
     icon: '⚙️',
-    permissions: [USER_ROLES.ADMIN],
-    component: 'Settings'
+    permissions: ['admin'],
+    component: 'Settings',
+    priority: 12
   }
 };
 
