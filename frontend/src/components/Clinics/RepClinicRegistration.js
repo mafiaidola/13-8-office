@@ -602,7 +602,8 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                               latitude: currentLocation.latitude,
                               longitude: currentLocation.longitude
                             }));
-                            console.log('📱 تم استخدام الموقع الحالي');
+                            console.log('📱 تم تحديث موقع العيادة لموقعك الحالي');
+                            setSuccess('تم تحديث موقع العيادة لموقعك الحالي ✅');
                           } else {
                             getCurrentLocation();
                           }
@@ -616,12 +617,40 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
 
                       <button
                         type="button"
-                        onClick={getCurrentLocation}
+                        onClick={() => {
+                          getCurrentLocation();
+                          console.log('🔄 جاري تحديث الموقع...');
+                        }}
                         className="bg-orange-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-orange-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-orange-500/30"
                         title="تحديث الموقع"
                       >
                         <span>🔄</span>
                         تحديث
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // مطالبة المستخدم بإدخال إحداثيات جديدة
+                          const newLat = prompt('أدخل خط العرض الجديد:', clinicData.latitude);
+                          if (newLat) {
+                            const newLng = prompt('أدخل خط الطول الجديد:', clinicData.longitude);
+                            if (newLng) {
+                              setClinicData(prev => ({
+                                ...prev,
+                                latitude: parseFloat(newLat),
+                                longitude: parseFloat(newLng)
+                              }));
+                              setSuccess('تم تحديث الإحداثيات بنجاح ✅');
+                              console.log('📍 تم تحديث إحداثيات العيادة يدوياً');
+                            }
+                          }
+                        }}
+                        className="bg-purple-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-purple-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-purple-500/30"
+                        title="تحديد موقع مخصص"
+                      >
+                        <span>🎯</span>
+                        موقع مخصص
                       </button>
                     </div>
                   </div>
