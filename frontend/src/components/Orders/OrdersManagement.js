@@ -28,45 +28,98 @@ const OrdersManagement = ({ user, language, isRTL }) => {
       setOrders(response.data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      // Mock data for development
+      // Enhanced mock data for development
       setOrders([
         {
           id: 'ORD-001',
-          clinic_name: 'عيادة الدكتور أحمد',
-          sales_rep_name: 'محمد أحمد',
-          warehouse_name: 'مخزن القاهرة',
+          clinic_id: 'clinic-001',
+          clinic_name: 'عيادة الدكتور أحمد محمد',
+          clinic_region: 'القاهرة الكبرى',
+          clinic_line: 'خط وسط القاهرة',
+          sales_rep_id: 'rep-001',
+          sales_rep_name: 'محمد أحمد المندوب',
+          rep_region: 'القاهرة الكبرى',
+          rep_line: 'خط وسط القاهرة',
+          warehouse_name: 'مخزن القاهرة الرئيسي',
           total_amount: 1500.00,
           items_count: 5,
           status: 'pending_manager',
           created_at: '2024-01-15T10:30:00Z',
           items: [
-            { name: 'أموكسيسيلين', quantity: 2, price: 25.50, total: 51.00 },
-            { name: 'فيتامين د3', quantity: 1, price: 120.00, total: 120.00 }
+            { name: 'أموكسيسيلين 500mg', quantity: 2, price: 25.50, total: 51.00 },
+            { name: 'فيتامين د3', quantity: 1, price: 120.00, total: 120.00 },
+            { name: 'أنسولين طويل المفعول', quantity: 3, price: 85.00, total: 255.00 },
+            { name: 'مسكن للألم', quantity: 5, price: 15.00, total: 75.00 },
+            { name: 'شراب السعال', quantity: 2, price: 45.50, total: 91.00 }
           ]
         },
         {
           id: 'ORD-002',
-          clinic_name: 'عيادة الدكتورة فاطمة',
-          sales_rep_name: 'أحمد محمد',
+          clinic_id: 'clinic-002',
+          clinic_name: 'عيادة الدكتورة فاطمة سعد',
+          clinic_region: 'الإسكندرية',
+          clinic_line: 'خط الإسكندرية الشرقي',
+          sales_rep_id: 'rep-002',
+          sales_rep_name: 'أحمد محمد السيد',
+          rep_region: 'الإسكندرية',
+          rep_line: 'خط الإسكندرية الشرقي',
           warehouse_name: 'مخزن الإسكندرية',
           total_amount: 890.00,
           items_count: 3,
           status: 'approved',
           created_at: '2024-01-14T14:20:00Z',
           items: [
-            { name: 'أنسولين', quantity: 1, price: 85.00, total: 85.00 }
+            { name: 'أنسولين قصير المفعول', quantity: 1, price: 85.00, total: 85.00 },
+            { name: 'مضاد حيوي', quantity: 2, price: 120.00, total: 240.00 },
+            { name: 'فيتامين ب12', quantity: 1, price: 565.00, total: 565.00 }
           ]
         },
         {
           id: 'ORD-003',
-          clinic_name: 'عيادة الدكتور علي',
-          sales_rep_name: 'سارة أحمد',
+          clinic_id: 'clinic-003',
+          clinic_name: 'عيادة الدكتور علي حسن',
+          clinic_region: 'الجيزة',
+          clinic_line: 'خط الجيزة الشمالي',
+          sales_rep_id: 'rep-003',
+          sales_rep_name: 'سارة أحمد محمود',
+          rep_region: 'الجيزة',
+          rep_line: 'خط الجيزة الشمالي',
           warehouse_name: 'مخزن الجيزة',
           total_amount: 2100.00,
           items_count: 7,
           status: 'pending_accounting',
           created_at: '2024-01-13T09:15:00Z',
-          items: []
+          items: [
+            { name: 'مضاد التهاب', quantity: 3, price: 200.00, total: 600.00 },
+            { name: 'مسكن قوي', quantity: 2, price: 150.00, total: 300.00 },
+            { name: 'شراب للأطفال', quantity: 4, price: 80.00, total: 320.00 },
+            { name: 'كريم موضعي', quantity: 5, price: 60.00, total: 300.00 },
+            { name: 'قطرة للعين', quantity: 2, price: 90.00, total: 180.00 },
+            { name: 'أقراص فيتامين', quantity: 3, price: 120.00, total: 360.00 },
+            { name: 'مرهم طبي', quantity: 1, price: 40.00, total: 40.00 }
+          ]
+        },
+        {
+          id: 'ORD-004',
+          clinic_id: 'clinic-004',  
+          clinic_name: 'مركز الطب الحديث',
+          clinic_region: 'المنصورة',
+          clinic_line: 'خط الدقهلية',
+          sales_rep_id: 'rep-001',
+          sales_rep_name: 'محمد أحمد المندوب',
+          rep_region: 'المنصورة',
+          rep_line: 'خط الدقهلية',
+          warehouse_name: 'مخزن المنصورة',
+          total_amount: 750.50,
+          items_count: 4,
+          status: 'completed',
+          created_at: '2024-01-12T16:45:00Z',
+          items: [
+            { name: 'مضاد حساسية', quantity: 2, price: 95.00, total: 190.00 },
+            { name: 'شراب مهدئ', quantity: 1, price: 120.50, total: 120.50 },
+            { name: 'كبسولات طبيعية', quantity: 3, price: 80.00, total: 240.00 },
+            { name: 'مكمل غذائي', quantity: 1, price: 200.00, total: 200.00 }
+          ]
         }
       ]);
     } finally {
