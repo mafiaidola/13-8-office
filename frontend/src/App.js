@@ -799,50 +799,44 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-3">
             
             {/* Theme Selector */}
-            <div className="relative">
+            <div className="theme-selector-enhanced">
               <button
                 onClick={() => setShowThemes(!showThemes)}
-                className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                className="theme-selector-btn"
                 title={language === 'ar' ? 'تغيير المظهر' : 'Change Theme'}
               >
                 <span className="text-lg">🎨</span>
-                <span className="text-sm font-medium hidden xl:inline text-white">
+                <span className="hidden xl:inline">
                   {language === 'ar' ? availableThemes[theme]?.name.ar : availableThemes[theme]?.name.en}
                 </span>
+                <span className="text-xs opacity-75">▼</span>
               </button>
 
               {showThemes && (
-                <div className="absolute top-full left-0 mt-2 bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 py-2 min-w-[240px] z-50 shadow-2xl">
-                  <div className="px-3 py-2 text-xs font-semibold text-white/70 border-b border-white/20">
-                    {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
+                <div className="theme-dropdown-enhanced">
+                  <div className="theme-dropdown-header">
+                    <h4 className="theme-dropdown-title">
+                      {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
+                    </h4>
                   </div>
-                  {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
-                    <button
-                      key={themeKey}
-                      onClick={() => {
-                        changeTheme(themeKey);
-                        setShowThemes(false);
-                      }}
-                      className={`w-full px-4 py-3 text-right hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
-                        theme === themeKey ? 'bg-white/25 border-r-2 border-blue-400' : ''
-                      }`}
-                    >
-                      <div className="w-4 h-4 rounded-full" style={{
-                        background: themeKey === 'neon' ? 'linear-gradient(45deg, #FF6600, #8B4513)' :
-                                   themeKey === 'modern' ? 'linear-gradient(45deg, #3B82F6, #8B5CF6)' :
-                                   themeKey === 'dark' ? 'linear-gradient(45deg, #1F2937, #374151)' :
-                                   themeKey === 'glassy' ? 'linear-gradient(45deg, #0F172A, #581C87)' :
-                                   themeKey === 'minimal' ? 'linear-gradient(45deg, #F9FAFB, #E5E7EB)' :
-                                   'linear-gradient(45deg, #FFFFFF, #F3F4F6)'
-                      }}></div>
-                      <span className="text-sm font-medium text-white flex-1">
-                        {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
-                      </span>
-                      {theme === themeKey && (
-                        <span className="text-blue-400 text-sm">✓</span>
-                      )}
-                    </button>
-                  ))}
+                  <div className="theme-options-grid">
+                    {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
+                      <button
+                        key={themeKey}
+                        onClick={() => {
+                          changeTheme(themeKey);
+                          setShowThemes(false);
+                        }}
+                        className={`theme-option-enhanced ${theme === themeKey ? 'active' : ''}`}
+                      >
+                        <div className={`theme-color-preview theme-preview-${themeKey}`}></div>
+                        <span className="flex-1 text-left">
+                          {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
+                        </span>
+                        {theme === themeKey && <span className="text-blue-500 text-sm">✓</span>}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
