@@ -15,7 +15,7 @@ from models.financial_models import (
     DebtStatus, CollectionStatus, PaymentMethod
 )
 
-router = APIRouter(prefix="/api/debts", tags=["Debt Management"])
+router = APIRouter(prefix="/debts", tags=["Debt Management"])
 security = HTTPBearer()
 
 # JWT Configuration
