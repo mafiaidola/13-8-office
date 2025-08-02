@@ -439,14 +439,22 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           <div className="space-y-2">
             <h4 className="font-medium text-white/80 mb-3">نتائج البحث ({searchResults.length})</h4>
             {searchResults.map(result => (
-              <div key={result.id} className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer">
+              <div 
+                key={result.id} 
+                className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (result.action) {
+                    result.action();
+                    onClose();
+                  }
+                }}
+              >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">
-                    {result.type === 'user' ? '👤' : result.type === 'clinic' ? '🏥' : '📦'}
-                  </span>
+                  <span className="text-2xl">{result.icon}</span>
                   <div className="flex-1">
-                    <div className="font-medium">{result.description}</div>
-                    <div className="text-sm text-white/60">{result.module}</div>
+                    <div className="font-medium">{result.title}</div>
+                    <div className="text-sm text-white/60">{result.description}</div>
+                    <div className="text-xs text-white/40 mt-1">{result.module}</div>
                   </div>
                 </div>
               </div>
