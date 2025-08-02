@@ -160,7 +160,16 @@ export const SYSTEM_TABS = {
     component: 'ReportsManagement'
   },
 
-  visit_management: {
+  activity_tracking: {
+    id: 'activity_tracking',
+    path: '/activity-tracking',
+    icon: '📊',
+    name: { ar: 'تتبع الأنشطة والحركات', en: 'Activity Tracking' },
+    component: 'ActivityTracking',
+    description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
+    permissions: ['admin', 'gm'],
+    priority: 8
+  },
     id: 'visit_management',
     path: '/visit-management',
     icon: '📋',
