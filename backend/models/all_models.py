@@ -35,7 +35,10 @@ __all__ = [
     # Warehouse Models
     'Warehouse', 'WarehouseCreate', 'Product', 'ProductCreate', 'ProductStock', 'StockMovement', 'StockMovementCreate',
     
-    # Financial Models
+    # Financial Models (Enhanced Phase 2)
+    'DebtStatus', 'CollectionStatus', 'PaymentMethod', 
+    'DebtRecord', 'CollectionRecord', 'PaymentPlan', 'DebtSummary', 'CollectionSummary',
+    'DebtRecordCreate', 'CollectionRecordCreate', 'PaymentPlanCreate',
     'Invoice', 'PaymentRecord', 'InvoiceItem', 'ClinicDebt',
     
     # Support Models
