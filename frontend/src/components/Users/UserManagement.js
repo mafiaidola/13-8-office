@@ -418,19 +418,71 @@ const UserPerformanceCard = ({
         </div>
       </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      {/* Enhanced Performance Metrics with More Details */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* Orders Approved */}
         <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
-          <div className="text-2xl font-bold text-green-300">{stats.visits || 0}</div>
-          <div className="text-xs text-green-200">زيارات</div>
+          <div className="text-lg font-bold text-green-300">{stats.approved_orders || 0}</div>
+          <div className="text-xs text-green-200">طلبات معتمدة</div>
         </div>
+        {/* Total Debts */}
+        <div className="text-center bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+          <div className="text-lg font-bold text-red-300">{stats.total_debts ? `${stats.total_debts}ج.م` : '0ج.م'}</div>
+          <div className="text-xs text-red-200">إجمالي الديون</div>
+        </div>
+        {/* Remaining Debts */}
+        <div className="text-center bg-orange-500/10 rounded-lg p-3 border border-orange-500/20">
+          <div className="text-lg font-bold text-orange-300">{stats.remaining_debts ? `${stats.remaining_debts}ج.م` : '0ج.م'}</div>
+          <div className="text-xs text-orange-200">ديون متبقية</div>
+        </div>
+        {/* Approved Clinics */}
         <div className="text-center bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
-          <div className="text-2xl font-bold text-blue-300">{stats.orders || 0}</div>
-          <div className="text-xs text-blue-200">طلبات</div>
+          <div className="text-lg font-bold text-blue-300">{stats.approved_clinics || 0}</div>
+          <div className="text-xs text-blue-200">عيادات معتمدة</div>
         </div>
-        <div className="text-center bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
-          <div className="text-2xl font-bold text-purple-300">{stats.revenue || 0}</div>
-          <div className="text-xs text-purple-200">مبيعات</div>
+      </div>
+
+      {/* Visit Statistics (Weekly/Monthly/Yearly) */}
+      <div className="bg-white/5 rounded-lg p-4 mb-4 border border-white/10">
+        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <span>📊</span>
+          إحصائيات الزيارات
+        </h4>
+        <div className="grid grid-cols-3 gap-3 text-xs">
+          <div className="text-center">
+            <div className="text-lg font-bold text-purple-300">{stats.visits_weekly || 0}</div>
+            <div className="text-purple-200">أسبوعياً</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-indigo-300">{stats.visits_monthly || 0}</div>
+            <div className="text-indigo-200">شهرياً</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-cyan-300">{stats.visits_yearly || 0}</div>
+            <div className="text-cyan-200">سنوياً</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Manager and Location Info */}
+      <div className="bg-white/5 rounded-lg p-4 mb-4 border border-white/10">
+        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <span>🏢</span>
+          معلومات إدارية
+        </h4>
+        <div className="grid grid-cols-1 gap-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-white/60">المدير المباشر:</span>
+            <span className="text-white/80">{user.direct_manager || 'غير محدد'}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-white/60">الخط:</span>
+            <span className="text-white/80">{user.line_name || user.line || 'غير محدد'}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-white/60">المنطقة:</span>
+            <span className="text-white/80">{user.region || user.area || 'غير محدد'}</span>
+          </div>
         </div>
       </div>
 
