@@ -428,6 +428,16 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
           language={language}
         />
       )}
+
+      {/* Clinic Mini Profile */}
+      {showProfileModal && selectedClinic && (
+        <ClinicMiniProfile
+          clinic={selectedClinic}
+          onClose={() => setShowProfileModal(false)}
+          language={language}
+          isRTL={isRTL}
+        />
+      )}
     </div>
   );
 };
