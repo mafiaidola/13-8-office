@@ -1,52 +1,269 @@
-// Visit Management System - نظام إدارة الزيارات
+// Visit Management System - نظام إدارة الزيارات المحسن
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
+import { activityLogger } from '../../utils/activityLogger.js';
+import NewVisitForm from './NewVisitForm.js';
 import axios from 'axios';
 
 const VisitManagement = ({ user, language, isRTL }) => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('visits');
   const [visits, setVisits] = useState([]);
   const [loginLogs, setLoginLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [showNewVisitModal, setShowNewVisitModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [currentLocation, setCurrentLocation] = useState(null);
-  const [clinics, setClinics] = useState([]);
+  const [showVisitDetails, setShowVisitDetails] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDate, setFilterDate] = useState('');
   
   const { t } = useTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  
+  // Check user permissions for GPS viewing
+  const canViewGPS = ['admin', 'gm'].includes(user?.role);
+  const canViewAllVisits = ['admin', 'gm', 'district_manager', 'manager'].includes(user?.role);
 
   useEffect(() => {
     fetchVisitData();
-    getCurrentLocation();
-  }, []);
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          });
-          console.log('✅ Current location obtained:', position.coords);
-        },
-        (error) => {
-          console.error('❌ Location error:', error);
-          alert('لا يمكن الحصول على الموقع الحالي. يرجى السماح بالوصول للموقع.');
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
-    } else {
-      alert('المتصفح لا يدعم خدمات الموقع');
+    if (canViewAllVisits) {
+      fetchLoginLogs();
     }
-  };
+    
+    // Log section access
+    activityLogger.logSystemAccess('إدارة الزيارات', {
+      previousSection: sessionStorage.getItem('previousSection') || '',
+      accessMethod: 'navigation',
+      userRole: user?.role,
+      canViewGPS: canViewGPS
+    });
+    
+    sessionStorage.setItem('previousSection', 'إدارة الزيارات');
+  }, []);
 
   const fetchVisitData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
+      
+      // Fetch visits based on user role
+      let visitsUrl = `${API}/visits`;
+      if (!canViewAllVisits) {
+        // Medical reps only see their own visits
+        visitsUrl += `?rep_id=${user.id}`;
+      }
+      
+      const response = await axios.get(visitsUrl, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setVisits(response.data || []);
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+      // Mock data for development
+      setVisits([
+        {
+          id: 'visit-001',
+          clinic_name: 'عيادة الدكتور أحمد محمد',
+          doctor_name: 'د. أحمد محمد علي',
+          medical_rep_name: 'محمد المندوب',
+          visit_date: '2024-01-15T10:30:00Z',
+          visit_effectiveness: 'excellent',
+          order_status: 'ordered',
+          location: {
+            latitude: 30.0444,
+            longitude: 31.2357,
+            address: 'المنصورة، مصر'
+          },
+          managers_notified: ['أحمد المدير', 'سارة مديرة المبيعات'],
+          products_discussed: ['أموكسيسيلين 500mg', 'فيتامين د3'],
+          visit_notes: 'زيارة ناجحة مع طلب منتجات جديدة',
+          status: 'completed'
+        },
+        {
+          id: 'visit-002',
+          clinic_name: 'مركز النيل الطبي',
+          doctor_name: 'د. فاطمة سعد',
+          medical_rep_name: 'أحمد المندوب',
+          visit_date: '2024-01-14T14:15:00Z',
+          visit_effectiveness: 'good',
+          order_status: 'interested',
+          location: {
+            latitude: 30.0626,
+            longitude: 31.2497,
+            address: 'القاهرة، مصر'
+          },
+          managers_notified: ['أحمد المدير'],
+          products_discussed: ['أنسولين طويل المفعول'],
+          visit_notes: 'الطبيب مهتم ولكن يحتاج وقت للقرار',
+          status: 'completed'
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLoginLogs = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/login-logs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setLoginLogs(response.data || []);
+    } catch (error) {
+      console.error('Error fetching login logs:', error);
+      // Mock data
+      setLoginLogs([
+        {
+          id: 'log-001',
+          user_name: 'محمد المندوب',
+          user_role: 'medical_rep',
+          login_time: '2024-01-15T08:30:00Z',
+          ip_address: '192.168.1.100',
+          device_type: 'Mobile - Android',
+          location: {
+            latitude: 30.0444,
+            longitude: 31.2357,
+            address: 'المنصورة، مصر'
+          },
+          biometric_status: 'verified',
+          selfie_status: 'captured'
+        }
+      ]);
+    }
+  };
+
+  const handleNewVisit = () => {
+    setShowNewVisitModal(true);
+  };
+
+  const handleVisitSaved = (newVisit) => {
+    setVisits(prev => [newVisit, ...prev]);
+    fetchVisitData(); // Refresh the list
+  };
+
+  const handleVisitClick = (visit) => {
+    setSelectedVisit(visit);
+    setShowVisitDetails(true);
+  };
+
+  const getEffectivenessColor = (effectiveness) => {
+    const colors = {
+      'excellent': 'bg-green-500/20 text-green-300 border-green-500/30',
+      'very_good': 'bg-lime-500/20 text-lime-300 border-lime-500/30',
+      'good': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      'average': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+      'poor': 'bg-red-500/20 text-red-300 border-red-500/30'
+    };
+    return colors[effectiveness] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+  };
+
+  const getOrderStatusColor = (status) => {
+    const colors = {
+      'ordered': 'bg-green-500/20 text-green-300',
+      'interested': 'bg-blue-500/20 text-blue-300',
+      'considering': 'bg-yellow-500/20 text-yellow-300',
+      'no_order': 'bg-red-500/20 text-red-300',
+      'follow_up': 'bg-purple-500/20 text-purple-300'
+    };
+    return colors[status] || 'bg-gray-500/20 text-gray-300';
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      'ordered': 'تم الطلب',
+      'interested': 'مهتم',
+      'considering': 'تحت الدراسة',
+      'no_order': 'لا يوجد طلب',
+      'follow_up': 'متابعة لاحقة'
+    };
+    return labels[status] || status;
+  };
+
+  const getEffectivenessLabel = (effectiveness) => {
+    const labels = {
+      'excellent': 'ممتازة',
+      'very_good': 'جيدة جداً',
+      'good': 'جيدة',
+      'average': 'متوسطة',
+      'poor': 'ضعيفة'
+    };
+    return labels[effectiveness] || effectiveness;
+  };
+
+  // Filter visits based on search and filters
+  const filteredVisits = visits.filter(visit => {
+    const matchesSearch = visit.clinic_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         visit.doctor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         visit.medical_rep_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || visit.order_status === filterStatus;
+    
+    const matchesDate = !filterDate || visit.visit_date?.split('T')[0] === filterDate;
+    
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  return (
+    <div className="visit-management-container">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+              <span className="text-2xl text-white">🏥</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">إدارة الزيارات</h1>
+              <p className="text-lg opacity-75">متابعة زيارات المندوبين الطبيين للعيادات</p>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {user?.role === 'medical_rep' && (
+              <button
+                onClick={handleNewVisit}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <span>➕</span>
+                زيارة جديدة
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="flex gap-1 bg-white/10 backdrop-blur-lg rounded-lg p-1 border border-white/20">
+          <button
+            onClick={() => setActiveTab('visits')}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              activeTab === 'visits' 
+                ? 'bg-green-600 text-white' 
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            📋 سجل الزيارات
+          </button>
+          
+          {canViewAllVisits && (
+            <button
+              onClick={() => setActiveTab('login-logs')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'login-logs' 
+                  ? 'bg-green-600 text-white' 
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              🔐 سجل تسجيل الدخول
+            </button>
+          )}
+        </div>
+      </div>
       
       // Mock data for visits
       setVisits([
