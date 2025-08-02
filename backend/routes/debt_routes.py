@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional
 from datetime import datetime, date
 import os
 import json
 import uuid
+import jwt
+from motor.motor_asyncio import AsyncIOMotorClient
 
 # Import models
 from models.financial_models import (
@@ -11,13 +14,40 @@ from models.financial_models import (
     PaymentPlan, PaymentPlanCreate, DebtSummary, CollectionSummary,
     DebtStatus, CollectionStatus, PaymentMethod
 )
-# Import get_current_user from main server
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from server import get_current_user
 
 router = APIRouter(prefix="/api/debts", tags=["Debt Management"])
+security = HTTPBearer()
+
+# JWT Configuration
+JWT_SECRET_KEY = "your-secret-key-change-in-production"
+JWT_ALGORITHM = "HS256"
+
+def decode_jwt_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token"""
+    token = credentials.credentials
+    payload = decode_jwt_token(token)
+    
+    # Connect to MongoDB
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ.get('DB_NAME', 'test_database')]
+    
+    try:
+        user = await db.users.find_one({"id": payload["user_id"]})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    finally:
+        client.close()
 
 # MongoDB-like file storage (can be replaced with actual MongoDB)
 DEBT_DATA_FILE = "/app/debt_data.json"
