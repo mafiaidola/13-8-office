@@ -14,7 +14,7 @@ const UserManagement = ({ user, language, isRTL }) => {
   const [showBulkActions, setShowBulkActions] = useState(false);
   
   const { t } = useTranslation(language);
-  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
   useEffect(() => {
     loadUsers();
