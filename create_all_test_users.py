@@ -252,7 +252,7 @@ async def create_all_test_users():
         print(f"👤 {user_info['username']:<20} | 🔑 {user_info['password']:<12} | 🎯 {user_info['role']:<18} | 👥 {user_info['full_name']}")
     
     print("\n💡 يمكنك الآن استخدام أي من هذه البيانات لتسجيل الدخول!")
-    print("🔗 رابط تسجيل الدخول: https://8d14235e-0f6d-48c0-b48d-17cc8b061c29.preview.emergentagent.com")
+    print("🔗 رابط تسجيل الدخول: https://d3d1a9df-70fc-435f-82af-b5d9d4d817e1.preview.emergentagent.com")
 
 if __name__ == "__main__":
     asyncio.run(create_all_test_users())

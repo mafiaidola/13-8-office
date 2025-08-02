@@ -18,7 +18,7 @@ import time
 import math
 
 # Configuration
-BACKEND_URL = "https://8d14235e-0f6d-48c0-b48d-17cc8b061c29.preview.emergentagent.com/api"
+BACKEND_URL = "https://d3d1a9df-70fc-435f-82af-b5d9d4d817e1.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class FinalGoogleMapsTest:
