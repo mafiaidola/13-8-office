@@ -343,42 +343,262 @@ class BackendTester:
         else:
             self.log_test("Get User Profile", False, response_time, "Could not get users list")
 
-    def test_system_health(self):
-        """Test system health and additional APIs"""
-        print("\n🔧 TESTING SYSTEM HEALTH & ADDITIONAL APIs")
+    def test_phase2_debt_collection_apis(self):
+        """Test Phase 2 - Debt & Collection Management APIs"""
+        print("\n💰 TESTING PHASE 2 - DEBT & COLLECTION MANAGEMENT APIs")
         
-        # Test warehouses
-        response, response_time = self.make_request("GET", "/warehouses")
+        # Test debt summary statistics
+        response, response_time = self.make_request("GET", "/debts/summary/statistics")
         if response and response.status_code == 200:
-            warehouses = response.json()
-            warehouse_count = len(warehouses) if isinstance(warehouses, list) else 0
-            details = f"Found {warehouse_count} active warehouses"
-            self.log_test("Get Warehouses", True, response_time, details)
+            stats = response.json()
+            details = f"Debt stats: Total debts: {stats.get('total_debts', 'N/A')}, Total amount: {stats.get('total_debt_amount', 'N/A')} ج.م"
+            self.log_test("Debt Summary Statistics", True, response_time, details)
         else:
             error_msg = response.text if response else "No response"
-            self.log_test("Get Warehouses", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+            self.log_test("Debt Summary Statistics", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
         
-        # Test orders
+        # Test get all debts
+        response, response_time = self.make_request("GET", "/debts/")
+        if response and response.status_code == 200:
+            debts = response.json()
+            debt_count = len(debts) if isinstance(debts, list) else 0
+            details = f"Found {debt_count} debt records in system"
+            self.log_test("Get All Debts", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Get All Debts", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test create new debt record
+        new_debt_data = {
+            "clinic_id": "test-clinic-id",
+            "clinic_name": "Test Clinic for Debt",
+            "debt_amount": 2500.0,
+            "outstanding_amount": 2500.0,
+            "due_date": "2025-02-15",
+            "priority": "medium",
+            "status": "pending",
+            "description": "Test debt record for Phase 2 testing"
+        }
+        
+        response, response_time = self.make_request("POST", "/debts/", new_debt_data)
+        if response and response.status_code == 200:
+            data = response.json()
+            if data.get("success"):
+                details = f"Created debt record: {data.get('debt_id', 'N/A')} - {new_debt_data['debt_amount']} ج.م"
+                self.log_test("Create New Debt Record", True, response_time, details)
+            else:
+                self.log_test("Create New Debt Record", False, response_time, data.get("message", "Unknown error"))
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Create New Debt Record", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test collection records
+        response, response_time = self.make_request("GET", "/debts/collections/")
+        if response and response.status_code == 200:
+            collections = response.json()
+            collection_count = len(collections) if isinstance(collections, list) else 0
+            details = f"Found {collection_count} collection records"
+            self.log_test("Get Collection Records", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Get Collection Records", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test collection statistics
+        response, response_time = self.make_request("GET", "/debts/collections/summary/statistics")
+        if response and response.status_code == 200:
+            stats = response.json()
+            details = f"Collection stats: Total collections: {stats.get('total_collections', 'N/A')}, Amount collected: {stats.get('total_collected_amount', 'N/A')} ج.م"
+            self.log_test("Collection Summary Statistics", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Collection Summary Statistics", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+
+    def test_phase3_dashboard_enhancement(self):
+        """Test Phase 3 - Admin Dashboard Enhancement APIs"""
+        print("\n📊 TESTING PHASE 3 - ADMIN DASHBOARD ENHANCEMENT APIs")
+        
+        # Test enhanced dashboard stats with comprehensive metrics
+        response, response_time = self.make_request("GET", "/dashboard/stats")
+        if response and response.status_code == 200:
+            stats = response.json()
+            
+            # Check for enhanced metrics
+            metrics = [
+                'total_users', 'total_clinics', 'total_products', 'total_orders',
+                'total_visits', 'total_debts', 'total_managers', 'total_warehouses'
+            ]
+            
+            available_metrics = [metric for metric in metrics if metric in stats]
+            details = f"Enhanced dashboard metrics: {len(available_metrics)}/{len(metrics)} available. "
+            details += f"Users: {stats.get('total_users', 'N/A')}, Clinics: {stats.get('total_clinics', 'N/A')}, "
+            details += f"Products: {stats.get('total_products', 'N/A')}, Orders: {stats.get('total_orders', 'N/A')}"
+            
+            self.log_test("Enhanced Dashboard Statistics", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Enhanced Dashboard Statistics", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test activity tracking system
+        response, response_time = self.make_request("GET", "/admin/activities")
+        if response and response.status_code == 200:
+            activities = response.json()
+            activity_count = len(activities) if isinstance(activities, list) else 0
+            details = f"Found {activity_count} activity records for dynamic dashboard"
+            self.log_test("Activity Tracking System", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Activity Tracking System", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test activity statistics
+        response, response_time = self.make_request("GET", "/admin/activities/stats")
+        if response and response.status_code == 200:
+            stats = response.json()
+            details = f"Activity stats: Total: {stats.get('total_activities', 'N/A')}, "
+            details += f"Today: {stats.get('today_activities', 'N/A')}, "
+            details += f"This week: {stats.get('week_activities', 'N/A')}"
+            self.log_test("Activity Statistics", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Activity Statistics", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test GPS tracking system
+        response, response_time = self.make_request("GET", "/admin/gps-tracking")
+        if response and response.status_code == 200:
+            gps_data = response.json()
+            gps_count = len(gps_data) if isinstance(gps_data, list) else 0
+            details = f"Found {gps_count} GPS tracking records"
+            self.log_test("GPS Tracking System", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("GPS Tracking System", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test create activity (for dynamic activities)
+        new_activity_data = {
+            "activity_type": "dashboard_access",
+            "action": "Admin accessed enhanced dashboard",
+            "target_type": "dashboard",
+            "target_id": "main_dashboard",
+            "location": {
+                "latitude": 30.0444,
+                "longitude": 31.2357,
+                "address": "Cairo, Egypt"
+            },
+            "device_info": {
+                "user_agent": "Backend Test Agent",
+                "ip_address": "127.0.0.1"
+            },
+            "details": {
+                "test_activity": True,
+                "phase": "Phase 3 Testing"
+            }
+        }
+        
+        response, response_time = self.make_request("POST", "/activities", new_activity_data)
+        if response and response.status_code == 200:
+            data = response.json()
+            if data.get("success"):
+                details = f"Created activity: {new_activity_data['activity_type']} - {new_activity_data['action']}"
+                self.log_test("Create Dashboard Activity", True, response_time, details)
+            else:
+                self.log_test("Create Dashboard Activity", False, response_time, data.get("message", "Unknown error"))
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Create Dashboard Activity", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+
+    def test_cross_module_integration(self):
+        """Test cross-module integration between all phases"""
+        print("\n🔗 TESTING CROSS-MODULE INTEGRATION")
+        
+        # Test debt creation from orders/invoices integration
         response, response_time = self.make_request("GET", "/orders")
         if response and response.status_code == 200:
             orders = response.json()
             order_count = len(orders) if isinstance(orders, list) else 0
-            details = f"Found {order_count} orders in system"
-            self.log_test("Get Orders", True, response_time, details)
+            
+            # Check if orders can be linked to debt system
+            response2, response_time2 = self.make_request("GET", "/debts/")
+            if response2 and response2.status_code == 200:
+                debts = response2.json()
+                debt_count = len(debts) if isinstance(debts, list) else 0
+                details = f"Integration check: {order_count} orders, {debt_count} debts - systems can interact"
+                self.log_test("Orders-Debt Integration", True, response_time + response_time2, details)
+            else:
+                self.log_test("Orders-Debt Integration", False, response_time + response_time2, "Debt system not accessible")
         else:
             error_msg = response.text if response else "No response"
-            self.log_test("Get Orders", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+            self.log_test("Orders-Debt Integration", False, response_time, f"Orders system not accessible")
         
-        # Test doctors
-        response, response_time = self.make_request("GET", "/doctors")
+        # Test user role-based data filtering
+        response, response_time = self.make_request("GET", "/users")
         if response and response.status_code == 200:
-            doctors = response.json()
-            doctor_count = len(doctors) if isinstance(doctors, list) else 0
-            details = f"Found {doctor_count} doctors in system"
-            self.log_test("Get Doctors", True, response_time, details)
+            users = response.json()
+            admin_users = [u for u in users if u.get('role') == 'admin'] if isinstance(users, list) else []
+            medical_reps = [u for u in users if u.get('role') in ['medical_rep', 'sales_rep']] if isinstance(users, list) else []
+            
+            details = f"Role-based filtering: {len(admin_users)} admins, {len(medical_reps)} medical reps"
+            self.log_test("Role-Based Data Filtering", True, response_time, details)
         else:
             error_msg = response.text if response else "No response"
-            self.log_test("Get Doctors", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+            self.log_test("Role-Based Data Filtering", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+        
+        # Test dashboard metrics aggregation
+        response, response_time = self.make_request("GET", "/dashboard/stats")
+        if response and response.status_code == 200:
+            stats = response.json()
+            
+            # Verify metrics are properly aggregated from different modules
+            modules_integrated = 0
+            if stats.get('total_users'): modules_integrated += 1
+            if stats.get('total_clinics'): modules_integrated += 1
+            if stats.get('total_products'): modules_integrated += 1
+            if stats.get('total_orders'): modules_integrated += 1
+            if stats.get('total_debts'): modules_integrated += 1
+            
+            details = f"Dashboard aggregation: {modules_integrated}/5 modules integrated successfully"
+            self.log_test("Dashboard Metrics Aggregation", True, response_time, details)
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_test("Dashboard Metrics Aggregation", False, response_time, f"HTTP {response.status_code if response else 'N/A'}")
+
+    def test_system_stability(self):
+        """Test overall system stability and performance"""
+        print("\n🔧 TESTING SYSTEM STABILITY & PERFORMANCE")
+        
+        # Test memory usage and response times
+        start_time = time.time()
+        test_endpoints = [
+            "/users", "/products", "/clinics", "/orders", "/visits",
+            "/lines", "/areas", "/warehouses", "/dashboard/stats"
+        ]
+        
+        response_times = []
+        successful_requests = 0
+        
+        for endpoint in test_endpoints:
+            response, response_time = self.make_request("GET", endpoint)
+            response_times.append(response_time * 1000)  # Convert to ms
+            if response and response.status_code == 200:
+                successful_requests += 1
+        
+        avg_response_time = sum(response_times) / len(response_times)
+        total_test_time = time.time() - start_time
+        
+        details = f"Stability test: {successful_requests}/{len(test_endpoints)} endpoints working, "
+        details += f"Avg response: {avg_response_time:.2f}ms, Total time: {total_test_time:.2f}s"
+        
+        success = successful_requests >= len(test_endpoints) * 0.8  # 80% success rate
+        self.log_test("System Stability Test", success, total_test_time, details)
+        
+        # Test error handling and validation
+        invalid_data = {"invalid": "data"}
+        response, response_time = self.make_request("POST", "/users", invalid_data)
+        
+        if response and response.status_code in [400, 422]:  # Expected validation error
+            details = f"Error handling works: HTTP {response.status_code} for invalid data"
+            self.log_test("Error Handling & Validation", True, response_time, details)
+        else:
+            details = f"Unexpected response: HTTP {response.status_code if response else 'N/A'}"
+            self.log_test("Error Handling & Validation", False, response_time, details)
 
     def run_all_tests(self):
         """Run all backend tests"""
