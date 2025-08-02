@@ -67,7 +67,7 @@ class DetailedUserTester:
             return False
 
         # GEt user details
-        status_code, Regions = self.make_request ("post", "/")
+        status_code, Regions = self.make_request ("post", "/users/admins", token=default, .admin_token)
         
         # Get valid managers
         status_code, managers = self.make_request("GET", "/users/managers", token=self.admin_token)
