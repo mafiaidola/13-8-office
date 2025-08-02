@@ -496,6 +496,239 @@ const PerformanceCard = ({ title, value, icon, color }) => {
   );
 };
 
+// Enhanced Quick Actions Component
+const EnhancedQuickActions = ({ user, language, onActionClick }) => {
+  const { t } = useTranslation(language);
+  
+  // Comprehensive quick actions based on user role
+  const getAllActions = () => {
+    const baseActions = [
+      { id: 'add-user', title: language === 'ar' ? 'إضافة مستخدم' : 'Add User', icon: '👤➕', color: 'blue', roles: ['admin', 'gm'] },
+      { id: 'register-clinic', title: language === 'ar' ? 'تسجيل عيادة' : 'Register Clinic', icon: '🏥➕', color: 'green', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
+      { id: 'add-product', title: language === 'ar' ? 'إضافة منتج' : 'Add Product', icon: '📦➕', color: 'purple', roles: ['admin', 'gm', 'product_manager'] },
+      { id: 'create-order', title: language === 'ar' ? 'إنشاء طلبية' : 'Create Order', icon: '🛒➕', color: 'orange', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
+      { id: 'record-visit', title: language === 'ar' ? 'تسجيل زيارة' : 'Record Visit', icon: '👨‍⚕️➕', color: 'teal', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
+      { id: 'add-debt', title: language === 'ar' ? 'تسجيل دين' : 'Record Debt', icon: '💳➕', color: 'red', roles: ['admin', 'gm', 'accounting', 'finance'] },
+      { id: 'record-collection', title: language === 'ar' ? 'تسجيل تحصيل' : 'Record Collection', icon: '💰➕', color: 'emerald', roles: ['admin', 'gm', 'medical_rep', 'accounting'] },
+      { id: 'manage-warehouse', title: language === 'ar' ? 'إدارة المخزن' : 'Manage Warehouse', icon: '🏭➕', color: 'gray', roles: ['admin', 'gm', 'warehouse_manager'] },
+      { id: 'generate-report', title: language === 'ar' ? 'إنشاء تقرير' : 'Generate Report', icon: '📊➕', color: 'indigo', roles: ['admin', 'gm', 'line_manager', 'accounting'] },
+      { id: 'system-settings', title: language === 'ar' ? 'إعدادات النظام' : 'System Settings', icon: '⚙️', color: 'amber', roles: ['admin', 'gm'] }
+    ];
+
+    // Filter actions based on user role
+    return baseActions.filter(action => 
+      action.roles.includes(user?.role) || user?.role === 'admin'
+    );
+  };
+
+  const actions = getAllActions();
+
+  return (
+    <div className="enhanced-quick-actions bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          ⚡ {language === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'}
+        </h3>
+        <span className="text-sm opacity-60">
+          {actions.length} {language === 'ar' ? 'إجراء متاح' : 'actions available'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            onClick={() => onActionClick(action.id)}
+            className="enhanced-action-btn group p-4 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 text-center border border-white/10 hover:border-white/20 hover:scale-105 hover:shadow-lg"
+          >
+            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">
+              {action.icon}
+            </div>
+            <div className="text-sm font-medium leading-tight">{action.title}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Action Tips */}
+      <div className="mt-6 p-4 bg-blue-600/20 rounded-lg border border-blue-500/30">
+        <p className="text-sm text-blue-200">
+          💡 {language === 'ar' 
+            ? 'نصيحة: يمكنك الضغط على أي إجراء للبدء مباشرة'
+            : 'Tip: Click any action to get started immediately'
+          }
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Recent Activity Component
+const EnhancedRecentActivity = ({ language, activities, onActivityClick }) => {
+  const { t } = useTranslation(language);
+
+  return (
+    <div className="enhanced-recent-activity bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          📋 {language === 'ar' ? 'الأنشطة الحديثة' : 'Recent Activities'}
+        </h3>
+        <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+          {language === 'ar' ? 'عرض الكل' : 'View All'}
+        </button>
+      </div>
+
+      <div className="activity-list space-y-4 max-h-96 overflow-y-auto">
+        {activities.map((activity) => (
+          <div
+            key={activity.id}
+            onClick={() => activity.clickable && onActivityClick(activity)}
+            className={`activity-item group p-4 rounded-lg bg-white/5 border border-white/10 transition-all duration-300 ${
+              activity.clickable 
+                ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer hover:scale-[1.02]' 
+                : ''
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              {/* Activity Icon */}
+              <div className="activity-icon w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform duration-300">
+                {getActivityIcon(activity.type)}
+              </div>
+
+              {/* Activity Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="font-semibold text-white mb-1 group-hover:text-blue-200 transition-colors">
+                      {activity.action}
+                    </p>
+                    <div className="text-sm text-white/70 space-y-1">
+                      <p>👤 {activity.user_name} ({activity.user_role})</p>
+                      {activity.clinic_name && <p>🏥 {activity.clinic_name}</p>}
+                      {activity.doctor_name && <p>👨‍⚕️ {activity.doctor_name}</p>}
+                      {activity.amount && (
+                        <p>💰 {new Intl.NumberFormat('ar-EG', {
+                          style: 'currency',
+                          currency: 'EGP',
+                          minimumFractionDigits: 0
+                        }).format(activity.amount)}</p>
+                      )}
+                      {activity.visit_effectiveness && <p>📊 الفعالية: {activity.visit_effectiveness}</p>}
+                      {activity.payment_method && <p>💳 {activity.payment_method}</p>}
+                      {activity.new_user_name && <p>👤 المستخدم الجديد: {activity.new_user_name}</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="text-xs text-white/60 mb-1">{activity.time}</p>
+                    {activity.location && (
+                      <p className="text-xs text-white/50">📍 {activity.location}</p>
+                    )}
+                    {activity.hasDetails && (
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-600/30 text-blue-200 border border-blue-500/30">
+                          {language === 'ar' ? 'اضغط للتفاصيل' : 'Click for details'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {activities.length === 0 && (
+        <div className="text-center py-8 text-white/50">
+          <div className="text-4xl mb-2">📊</div>
+          <p>{language === 'ar' ? 'لا توجد أنشطة حديثة' : 'No recent activities'}</p>
+        </div>
+      )}
+
+      {/* Activity Summary */}
+      <div className="mt-6 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-500/30">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-green-200">
+            🎯 {language === 'ar' ? 'أنشطة اليوم:' : 'Today\'s Activities:'}
+          </span>
+          <span className="font-semibold text-white">{activities.length}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Quick Action Modal Component
+const QuickActionModal = ({ action, language, onClose }) => {
+  const getActionDetails = (actionId) => {
+    const details = {
+      'add-user': {
+        title: language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User',
+        description: language === 'ar' ? 'إنشاء حساب مستخدم جديد في النظام' : 'Create a new user account in the system'
+      },
+      'register-clinic': {
+        title: language === 'ar' ? 'تسجيل عيادة جديدة' : 'Register New Clinic',
+        description: language === 'ar' ? 'تسجيل عيادة أو مركز طبي جديد' : 'Register a new clinic or medical center'
+      },
+      'add-product': {
+        title: language === 'ar' ? 'إضافة منتج جديد' : 'Add New Product',
+        description: language === 'ar' ? 'إضافة منتج طبي جديد للنظام' : 'Add a new medical product to the system'
+      },
+      'record-visit': {
+        title: language === 'ar' ? 'تسجيل زيارة طبية' : 'Record Medical Visit',
+        description: language === 'ar' ? 'تسجيل زيارة طبية جديدة' : 'Record a new medical visit'
+      },
+      'add-debt': {
+        title: language === 'ar' ? 'تسجيل دين جديد' : 'Record New Debt',
+        description: language === 'ar' ? 'تسجيل دين جديد في النظام المالي' : 'Record a new debt in the financial system'
+      }
+    };
+    return details[actionId] || { title: actionId, description: 'Action description' };
+  };
+
+  const actionDetails = getActionDetails(action);
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content max-w-md">
+        <div className="modal-header">
+          <h3>{actionDetails.title}</h3>
+          <button onClick={onClose} className="modal-close">×</button>
+        </div>
+        <div className="modal-body">
+          <p className="text-gray-600 mb-4">{actionDetails.description}</p>
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-700">
+              💡 {language === 'ar' 
+                ? 'هذا الإجراء سيتم تنفيذه قريباً. سيتم توجيهك إلى الصفحة المناسبة.'
+                : 'This action will be implemented soon. You will be redirected to the appropriate page.'
+              }
+            </p>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+          >
+            {language === 'ar' ? 'إغلاق' : 'Close'}
+          </button>
+          <button
+            onClick={() => {
+              // TODO: Implement actual action navigation
+              alert(`Action: ${action} - Will be implemented in next phase`);
+              onClose();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            {language === 'ar' ? 'متابعة' : 'Continue'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuickActions = ({ user, language }) => {
   const { t } = useTranslation(language);
   
