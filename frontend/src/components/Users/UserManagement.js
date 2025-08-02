@@ -159,6 +159,84 @@ const UserManagement = ({ user, language, isRTL }) => {
     return roleLabels[role] || role;
   };
 
+  // Create new user function
+  const handleCreateUser = async (userData) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      console.log('🔧 Creating user with data:', userData);
+      
+      const response = await axios.post(`${API}/users`, userData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('✅ User created successfully:', response.data);
+      
+      // تسجيل النشاط
+      await activityLogger.logUserCreation(
+        response.data.id,
+        userData.full_name || userData.username,
+        {
+          role: userData.role,
+          department: userData.department || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          created_by_role: user?.role
+        }
+      );
+      
+      await loadUsers(); // Reload users list
+      setShowAddModal(false);
+      alert('تم إنشاء المستخدم بنجاح');
+    } catch (error) {
+      console.error('❌ Error creating user:', error);
+      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إنشاء المستخدم';
+      alert(`خطأ في إنشاء المستخدم: ${errorMessage}`);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    
+    if (window.confirm(`هل أنت متأكد من حذف ${selectedUsers.length} مستخدم؟`)) {
+      try {
+        const token = localStorage.getItem('access_token');
+        
+        // Delete users one by one and log activities
+        for (const userId of selectedUsers) {
+          const userToDelete = users.find(u => u.id === userId);
+          
+          await axios.delete(`${API}/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // تسجيل النشاط
+          await activityLogger.logActivity(
+            'user_deletion',
+            'حذف مستخدم',
+            'user',
+            userId,
+            userToDelete?.full_name || userToDelete?.username || `مستخدم ${userId}`,
+            {
+              deleted_user_name: userToDelete?.full_name,
+              deleted_user_role: userToDelete?.role,
+              deletion_reason: 'حذف جماعي من واجهة الإدارة',
+              deleted_by_role: user?.role,
+              bulk_operation: true
+            }
+          );
+        }
+        
+        await loadUsers();
+        setSelectedUsers([]);
+        setShowBulkActions(false);
+        alert(`تم حذف ${selectedUsers.length} مستخدم بنجاح`);
+      } catch (error) {
+        console.error('❌ Error deleting users:', error);
+        alert('حدث خطأ أثناء حذف المستخدمين');
+      }
+    }
+  };
+
   return (
     <div className="user-management-container">
       {/* Header */}
