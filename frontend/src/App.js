@@ -1031,6 +1031,36 @@ const DashboardLayout = () => {
         )}
       </div>
 
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <ComponentRegistry.UserProfile
+          user={user}
+          language={language}
+          isRTL={isRTL}
+          onClose={() => setShowUserProfile(false)}
+          onSave={(updatedUser) => {
+            // Update user context if available
+            console.log('User updated:', updatedUser);
+            setShowUserProfile(false);
+          }}
+        />
+      )}
+
+      {/* User Settings Modal */}
+      {showUserSettings && (
+        <ComponentRegistry.UserSettings
+          user={user}
+          language={language}
+          isRTL={isRTL}
+          onClose={() => setShowUserSettings(false)}
+          onSave={(settings) => {
+            // Apply settings changes
+            console.log('Settings updated:', settings);
+            setShowUserSettings(false);
+          }}
+        />
+      )}
+
       <style jsx>{`
         .dashboard-layout {
           min-height: 100vh;
