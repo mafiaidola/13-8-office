@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
+import { activityLogger } from '../../utils/activityLogger.js';
 
 const ProductManagement = ({ user, language, isRTL }) => {
   const [products, setProducts] = useState([]);
@@ -28,6 +29,15 @@ const ProductManagement = ({ user, language, isRTL }) => {
   useEffect(() => {
     fetchProducts();
     fetchLines();
+    
+    // Log system access
+    activityLogger.logSystemAccess('إدارة المنتجات', {
+      previousSection: sessionStorage.getItem('previousSection') || '',
+      accessMethod: 'navigation',
+      canSeePrices: canSeePrices
+    });
+    
+    sessionStorage.setItem('previousSection', 'إدارة المنتجات');
   }, []);
 
   const fetchLines = async () => {
