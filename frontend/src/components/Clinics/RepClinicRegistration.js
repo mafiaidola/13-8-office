@@ -447,60 +447,161 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
               معلومات الموقع
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  خط العرض (Latitude)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  name="latitude"
-                  value={clinicData.latitude || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="30.0444"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  خط الطول (Longitude)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  name="longitude"
-                  value={clinicData.longitude || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="31.2357"
-                />
-              </div>
-            </div>
-
-            {/* Location Status */}
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Current Location Status */}
               {currentLocation && (
                 <div className="p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-                  <p className="text-green-300 text-sm flex items-center gap-2">
+                  <p className="text-green-300 text-sm flex items-center gap-2 mb-2">
                     <span>✅</span>
                     تم تحديد موقعك الحالي بنجاح
                   </p>
-                  <p className="text-xs text-green-200 mt-1">
+                  <p className="text-xs text-green-200">
                     دقة التحديد: {currentLocation.accuracy?.toFixed(0)} متر
                   </p>
                 </div>
               )}
-              
-              {clinicData.latitude && clinicData.longitude && (
-                <div className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                  <p className="text-blue-300 text-sm flex items-center gap-2">
-                    <span>📍</span>
-                    تم تحديد موقع العيادة
+
+              {/* Interactive Google Maps */}
+              {clinicData.latitude && clinicData.longitude ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <span>🗺️</span>
+                      موقع العيادة على الخريطة
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      📍 تحديث الموقع
+                    </button>
+                  </div>
+                  
+                  {/* Google Maps Integration */}
+                  <div className="relative">
+                    <div className="w-full h-80 bg-white/10 rounded-xl border border-white/20 overflow-hidden">
+                      <iframe
+                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&q=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        className="rounded-xl"
+                        title="موقع العيادة"
+                      ></iframe>
+                    </div>
+                    
+                    {/* Location Details Overlay */}
+                    <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-3 text-white">
+                      <div className="text-sm font-medium flex items-center gap-2 mb-1">
+                        <span>📍</span>
+                        إحداثيات العيادة
+                      </div>
+                      <div className="text-xs space-y-1">
+                        <div>العرض: {clinicData.latitude.toFixed(6)}</div>
+                        <div>الطول: {clinicData.longitude.toFixed(6)}</div>
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="absolute bottom-4 right-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}`;
+                          window.open(googleMapsUrl, '_blank');
+                        }}
+                        className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-green-700 transition-colors flex items-center gap-1"
+                        title="فتح في Google Maps"
+                      >
+                        <span>🔗</span>
+                        فتح الخريطة
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentLocation) {
+                            setClinicData(prev => ({
+                              ...prev,
+                              latitude: currentLocation.latitude,
+                              longitude: currentLocation.longitude
+                            }));
+                          }
+                        }}
+                        className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs hover:bg-blue-700 transition-colors flex items-center gap-1"
+                        title="استخدام موقعي الحالي"
+                      >
+                        <span>📱</span>
+                        موقعي
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Manual Location Input */}
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                      <span>⚙️</span>
+                      تعديل الإحداثيات يدوياً
+                    </h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          خط العرض (Latitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          name="latitude"
+                          value={clinicData.latitude || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                          placeholder="30.0444"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          خط الطول (Longitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          name="longitude"
+                          value={clinicData.longitude || ''}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                          placeholder="31.2357"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
+                  <div className="text-4xl mb-2">🗺️</div>
+                  <h4 className="text-lg font-semibold text-white mb-2">لم يتم تحديد الموقع بعد</h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    يرجى السماح بالوصول للموقع لتحديد موقع العيادة تلقائياً
                   </p>
-                  <p className="text-xs text-blue-200 mt-1">
-                    {clinicData.latitude.toFixed(6)}, {clinicData.longitude.toFixed(6)}
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    📍 تحديد الموقع الحالي
+                  </button>
+                </div>
+              )}
+
+              {locationError && (
+                <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <p className="text-red-300 text-sm flex items-center gap-2">
+                    <span>⚠️</span>
+                    {locationError}
                   </p>
                 </div>
               )}
