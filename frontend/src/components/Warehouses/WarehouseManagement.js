@@ -264,12 +264,12 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
       )}
 
       {activeTab === 'inventory' && (
-        <InventoryManagement 
-          inventory={inventory}
+        <EnhancedInventoryManagement 
           warehouses={warehouses}
+          products={products}
           onRefresh={fetchWarehouseData}
           language={language}
-          getStockStatusColor={getStockStatusColor}
+          user={user}
         />
       )}
 
