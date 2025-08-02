@@ -287,30 +287,36 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
         />
       )}
 
-      {/* Modals */}
+      {/* Enhanced Modals */}
       {showAddWarehouseModal && (
-        <AddWarehouseModal
+        <EnhancedAddWarehouseModal
           onClose={() => setShowAddWarehouseModal(false)}
           onSave={(data) => {
-            console.log('Adding warehouse:', data);
-            setSuccess('تم إضافة المخزن بنجاح');
+            console.log('Adding enhanced warehouse:', data);
+            setSuccess('تم إضافة المخزن بنجاح مع جميع التفاصيل');
             setShowAddWarehouseModal(false);
             fetchWarehouseData();
           }}
+          regions={regions}
+          availableManagers={availableManagers}
+          products={products}
           language={language}
         />
       )}
 
       {showEditWarehouseModal && selectedWarehouse && (
-        <EditWarehouseModal
+        <EnhancedEditWarehouseModal
           warehouse={selectedWarehouse}
           onClose={() => setShowEditWarehouseModal(false)}
           onSave={(data) => {
-            console.log('Editing warehouse:', data);
+            console.log('Editing enhanced warehouse:', data);
             setSuccess('تم تحديث المخزن بنجاح');
             setShowEditWarehouseModal(false);
             fetchWarehouseData();
           }}
+          regions={regions}
+          availableManagers={availableManagers}
+          products={products}
           language={language}
         />
       )}
