@@ -231,7 +231,6 @@ const ProductManagement = ({ user, language, isRTL }) => {
       }
     }
   };
-  };
 
   // Filter products
   const filteredProducts = products.filter(product => {
