@@ -233,7 +233,7 @@ const AuthProvider = ({ children }) => {
 };
 
 // Global Search Component
-const GlobalSearchModal = ({ onClose, language, isRTL }) => {
+const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
