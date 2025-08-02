@@ -161,6 +161,17 @@ export const SYSTEM_TABS = {
   },
 
   // Administrative Functions
+  ACCOUNTING: {
+    id: 'accounting',
+    path: '/accounting',
+    icon: '💰',
+    name: { ar: 'الحسابات والفواتير', en: 'Accounting & Invoices' },
+    component: 'AccountingManagement',
+    description: { ar: 'إدارة الفواتير والمدفوعات والتقارير المالية', en: 'Manage invoices, payments and financial reports' },
+    permissions: ['admin', 'gm', 'accounting', 'finance'],
+    priority: 6
+  },
+
   GAMIFICATION: {
     id: 'gamification',
     name: { ar: 'نظام التحفيز', en: 'Gamification' },
