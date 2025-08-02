@@ -353,24 +353,41 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-3">
                   تصنيف العيادة
                 </label>
-                <select
-                  name="classification"
-                  value={clinicData.classification}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="class_a">الفئة أ - ممتاز</option>
-                  <option value="class_b">الفئة ب - جيد جداً</option>
-                  <option value="class_c">الفئة ج - جيد</option>
-                  <option value="class_d">الفئة د - مقبول</option>
-                </select>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full ${getClassificationColor(clinicData.classification)}`}></div>
-                  <span className="text-sm opacity-75">{getClassificationLabel(clinicData.classification)}</span>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'class_a', label: 'الفئة أ', desc: 'ممتاز', icon: '🥇', color: 'gold' },
+                    { value: 'class_b', label: 'الفئة ب', desc: 'جيد جداً', icon: '🥈', color: 'silver' },
+                    { value: 'class_c', label: 'الفئة ج', desc: 'جيد', icon: '🥉', color: 'bronze' },
+                    { value: 'class_d', label: 'الفئة د', desc: 'مقبول', icon: '🎖️', color: 'gray' }
+                  ].map((classification) => (
+                    <button
+                      key={classification.value}
+                      type="button"
+                      onClick={() => setClinicData(prev => ({ ...prev, classification: classification.value }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-3 hover:scale-105 ${
+                        clinicData.classification === classification.value
+                          ? 'border-blue-400 bg-blue-500/20 text-blue-300 shadow-lg shadow-blue-500/20'
+                          : 'border-white/20 bg-white/10 hover:bg-white/20 hover:border-blue-300/50'
+                      }`}
+                    >
+                      <span className="text-2xl">{classification.icon}</span>
+                      <div className="text-right flex-1">
+                        <div className="font-medium">{classification.label}</div>
+                        <div className="text-xs opacity-75">{classification.desc}</div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
+                {clinicData.classification && (
+                  <div className="mt-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <span className="text-sm text-blue-300">
+                      ✅ تم اختيار: {getClassificationLabel(clinicData.classification)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
