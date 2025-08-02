@@ -16,7 +16,7 @@ const getActivityIcon = (type) => {
   return icons[type] || '📋';
 };
 
-const Dashboard = ({ user, language, isRTL }) => {
+const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const [stats, setStats] = useState({});
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
