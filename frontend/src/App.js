@@ -708,6 +708,7 @@ const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
   
   const { user, logout } = useAuth();
   const { 
@@ -733,6 +734,17 @@ const DashboardLayout = () => {
       setActiveTab(availableTabs[0].id);
     }
   }, [availableTabs, activeTab]);
+
+  // Add scroll listener for glassy header effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setHeaderScrolled(scrollTop > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
