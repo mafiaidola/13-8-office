@@ -164,6 +164,8 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
   };
 
   const handleDeleteClinic = async (clinicId) => {
+    const clinicToDelete = clinics.find(c => c.id === clinicId);
+    
     if (window.confirm('هل أنت متأكد من حذف هذه العيادة؟')) {
       try {
         const token = localStorage.getItem('access_token');
@@ -174,6 +176,26 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
         });
         
         console.log('✅ Clinic deleted successfully:', response.data);
+        
+        // تسجيل النشاط
+        await activityLogger.logActivity(
+          'clinic_deletion',
+          'حذف عيادة',
+          'clinic',
+          clinicId,
+          clinicToDelete?.name || `عيادة ${clinicId}`,
+          {
+            deleted_clinic_name: clinicToDelete?.name,
+            doctor_name: clinicToDelete?.doctor_name,
+            specialty: clinicToDelete?.specialty,
+            classification: clinicToDelete?.classification,
+            credit_limit: clinicToDelete?.credit_limit,
+            area: clinicToDelete?.area,
+            deletion_reason: 'حذف يدوي من واجهة الإدارة',
+            deleted_by_role: user?.role
+          }
+        );
+        
         fetchClinics();
         alert('تم حذف العيادة بنجاح');
       } catch (error) {
