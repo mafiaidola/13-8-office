@@ -194,49 +194,6 @@ const UserManagement = ({ user, language, isRTL }) => {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedUsers.length === 0) return;
-    
-    if (window.confirm(`هل أنت متأكد من حذف ${selectedUsers.length} مستخدم؟`)) {
-      try {
-        const token = localStorage.getItem('access_token');
-        
-        // Delete users one by one and log activities
-        for (const userId of selectedUsers) {
-          const userToDelete = users.find(u => u.id === userId);
-          
-          await axios.delete(`${API}/users/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          // تسجيل النشاط
-          await activityLogger.logActivity(
-            'user_deletion',
-            'حذف مستخدم',
-            'user',
-            userId,
-            userToDelete?.full_name || userToDelete?.username || `مستخدم ${userId}`,
-            {
-              deleted_user_name: userToDelete?.full_name,
-              deleted_user_role: userToDelete?.role,
-              deletion_reason: 'حذف جماعي من واجهة الإدارة',
-              deleted_by_role: user?.role,
-              bulk_operation: true
-            }
-          );
-        }
-        
-        await loadUsers();
-        setSelectedUsers([]);
-        setShowBulkActions(false);
-        alert(`تم حذف ${selectedUsers.length} مستخدم بنجاح`);
-      } catch (error) {
-        console.error('❌ Error deleting users:', error);
-        alert('حدث خطأ أثناء حذف المستخدمين');
-      }
-    }
-  };
-
   return (
     <div className="user-management-container">
       {/* Header */}
