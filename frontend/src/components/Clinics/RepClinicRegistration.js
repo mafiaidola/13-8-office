@@ -391,23 +391,51 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-3">
                   الحالة الائتمانية
                 </label>
-                <select
-                  name="credit_status"
-                  value={clinicData.credit_status}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="green">أخضر - ائتمان ممتاز</option>
-                  <option value="yellow">أصفر - ائتمان متوسط</option>
-                  <option value="red">أحمر - ائتمان ضعيف</option>
-                </select>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full ${getCreditStatusColor(clinicData.credit_status)}`}></div>
-                  <span className="text-sm opacity-75">{getCreditStatusLabel(clinicData.credit_status)}</span>
+                <div className="space-y-3">
+                  {[
+                    { value: 'green', label: 'أخضر', desc: 'ائتمان ممتاز', icon: '🟢', bgColor: 'green' },
+                    { value: 'yellow', label: 'أصفر', desc: 'ائتمان متوسط', icon: '🟡', bgColor: 'yellow' },
+                    { value: 'red', label: 'أحمر', desc: 'ائتمان ضعيف', icon: '🔴', bgColor: 'red' }
+                  ].map((creditStatus) => (
+                    <button
+                      key={creditStatus.value}
+                      type="button"
+                      onClick={() => setClinicData(prev => ({ ...prev, credit_status: creditStatus.value }))}
+                      className={`w-full p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-3 hover:scale-105 ${
+                        clinicData.credit_status === creditStatus.value
+                          ? `border-${creditStatus.bgColor}-400 bg-${creditStatus.bgColor}-500/20 text-${creditStatus.bgColor}-300 shadow-lg shadow-${creditStatus.bgColor}-500/20`
+                          : 'border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/40'
+                      }`}
+                    >
+                      <span className="text-2xl">{creditStatus.icon}</span>
+                      <div className="text-right flex-1">
+                        <div className="font-medium">{creditStatus.label}</div>
+                        <div className="text-xs opacity-75">{creditStatus.desc}</div>
+                      </div>
+                      {clinicData.credit_status === creditStatus.value && (
+                        <span className="text-lg">✅</span>
+                      )}
+                    </button>
+                  ))}
                 </div>
+                {clinicData.credit_status && (
+                  <div className={`mt-3 p-3 rounded-lg border ${
+                    clinicData.credit_status === 'green' ? 'bg-green-500/10 border-green-500/20' :
+                    clinicData.credit_status === 'yellow' ? 'bg-yellow-500/10 border-yellow-500/20' :
+                    'bg-red-500/10 border-red-500/20'
+                  }`}>
+                    <span className={`text-sm ${
+                      clinicData.credit_status === 'green' ? 'text-green-300' :
+                      clinicData.credit_status === 'yellow' ? 'text-yellow-300' :
+                      'text-red-300'
+                    }`}>
+                      ✅ تم اختيار: {getCreditStatusLabel(clinicData.credit_status)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
