@@ -24,6 +24,8 @@ class ComprehensiveLinesAreasProductsTest:
         self.line_manager_token = None
         self.medical_rep_token = None
         self.test_results = []
+        self.admin_token = "db5a9c90"
+        self.user_token = "5d8a0907"
         self.created_line_id = None
         self.created_area_id = None
         self.created_product_id = None

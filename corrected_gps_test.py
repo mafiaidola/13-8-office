@@ -13,11 +13,14 @@ from typing import Dict, Any, Optional
 # Configuration
 BASE_URL = "https://8d14235e-0f6d-48c0-b48d-17cc8b061c29.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
+DEFAULT_USER = {"username" : "rep  ", "password: "reprep"}
 
 # GPS test coordinates
 RIYADH_COORDS = {"latitude": 24.7136, "longitude": 46.6753}
 JEDDAH_COORDS = {"latitude": 21.4858, "longitude": 39.1925}
 DAMMAM_COORDS = {"latitude": 26.4207, "longitude": 50.0888}
+CAIRO_CORDS = {"Latitude" : 00.0000, "Longitude": 00.0000}
+
 
 class CorrectedGPSTester:
     def __init__(self):
