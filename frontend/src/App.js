@@ -736,64 +736,74 @@ const DashboardLayout = () => {
 
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header */}
-      <header className="dashboard-header fixed top-0 left-0 right-0 bg-white/20 backdrop-blur-xl border-b border-white/30 px-6 py-4 z-40 shadow-lg">
+      {/* Header - Enhanced Design */}
+      <header className="dashboard-header fixed top-0 left-0 right-0 bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-blue-600/30 backdrop-blur-xl border-b-2 border-white/20 px-6 py-3 z-40 shadow-2xl">
         <div className="flex items-center justify-between max-w-full mx-auto">
-          {/* Left Side - Logo & Controls */}
+          
+          {/* Right Side - Logo & Brand */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/20"
-              title={language === 'ar' ? 'طي/فتح الشريط الجانبي' : 'Toggle Sidebar'}
-            >
-              <span className="text-lg">☰</span>
-            </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-xl text-white">🏥</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-xl border border-white/20">
+                <span className="text-2xl text-white">🏥</span>
               </div>
               <div>
-                <div className="font-bold text-xl text-white">EP Group</div>
-                <div className="text-xs text-white/70">
-                  {language === 'ar' ? 'نظام إدارة طبي شامل' : 'Complete Medical System'}
+                <div className="font-bold text-xl text-white tracking-wide">EP Group</div>
+                <div className="text-xs text-white/80 font-medium">
+                  {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Center - Search */}
-          <div className="flex-1 max-w-lg mx-6">
+          {/* Center - Search & Quick Actions */}
+          <div className="flex-1 max-w-2xl mx-8 flex items-center gap-4">
+            {/* Global Search */}
+            <div className="flex-1">
+              <button
+                onClick={() => setShowGlobalSearch(true)}
+                className="w-full px-6 py-3 bg-white/15 border border-white/30 rounded-xl hover:bg-white/25 transition-all duration-200 flex items-center gap-3 text-white/80 hover:text-white shadow-lg backdrop-blur-lg hover:shadow-xl"
+              >
+                <span className="text-lg">🔍</span>
+                <span className="flex-1 text-right text-sm font-medium">
+                  {language === 'ar' ? 'البحث الشامل (فواتير، أطباء، عيادات، مستخدمين)...' : 'Global Search (invoices, doctors, clinics, users)...'}
+                </span>
+                <span className="text-xs bg-white/25 px-3 py-1.5 rounded-lg border border-white/30 font-mono">
+                  Ctrl+K
+                </span>
+              </button>
+            </div>
+            
+            {/* Quick Action Button */}
             <button
-              onClick={() => setShowGlobalSearch(true)}
-              className="w-full px-5 py-3 bg-white/15 border border-white/25 rounded-xl hover:bg-white/25 transition-all duration-200 flex items-center gap-3 text-white/80 hover:text-white shadow-lg backdrop-blur-lg"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 shadow-lg hover:shadow-xl"
+              title={language === 'ar' ? (sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة') : (sidebarCollapsed ? 'Expand Menu' : 'Collapse Menu')}
             >
-              <span className="text-lg">🔍</span>
-              <span className="flex-1 text-right text-sm font-medium">
-                {language === 'ar' ? 'البحث في النظام (فواتير، أطباء، عيادات، مستخدمين)...' : 'Search system...'}
-              </span>
-              <span className="text-xs bg-white/20 px-3 py-1 rounded-lg border border-white/20">
-                Ctrl+K
-              </span>
+              <span className="text-lg">{sidebarCollapsed ? '📋' : '📌'}</span>
             </button>
           </div>
 
-          {/* Right Side - User Info & Controls */}
+          {/* Left Side - User Controls */}
           <div className="flex items-center gap-3">
+            
             {/* Theme Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowThemes(!showThemes)}
-                className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/20 flex items-center gap-2"
-                title={language === 'ar' ? 'تغيير الثيم' : 'Change Theme'}
+                className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                title={language === 'ar' ? 'تغيير المظهر' : 'Change Theme'}
               >
                 <span className="text-lg">🎨</span>
-                <span className="text-sm font-medium hidden lg:inline text-white">
+                <span className="text-sm font-medium hidden xl:inline text-white">
                   {language === 'ar' ? availableThemes[theme]?.name.ar : availableThemes[theme]?.name.en}
                 </span>
               </button>
 
               {showThemes && (
-                <div className="absolute top-full right-0 mt-2 bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 py-2 min-w-[220px] z-50 shadow-2xl">
+                <div className="absolute top-full left-0 mt-2 bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 py-2 min-w-[240px] z-50 shadow-2xl">
+                  <div className="px-3 py-2 text-xs font-semibold text-white/70 border-b border-white/20">
+                    {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
+                  </div>
                   {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
                     <button
                       key={themeKey}
@@ -802,12 +812,23 @@ const DashboardLayout = () => {
                         setShowThemes(false);
                       }}
                       className={`w-full px-4 py-3 text-right hover:bg-white/20 transition-all duration-200 flex items-center gap-3 ${
-                        theme === themeKey ? 'bg-white/25 border-l-4 border-blue-400' : ''
+                        theme === themeKey ? 'bg-white/25 border-r-2 border-blue-400' : ''
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${themeConfig.colors.primary} shadow-lg`}></div>
-                      <span className="font-medium text-white">{language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}</span>
-                      {theme === themeKey && <span className="ml-auto text-blue-400 text-lg">✓</span>}
+                      <div className="w-4 h-4 rounded-full" style={{
+                        background: themeKey === 'neon' ? 'linear-gradient(45deg, #FF6600, #8B4513)' :
+                                   themeKey === 'modern' ? 'linear-gradient(45deg, #3B82F6, #8B5CF6)' :
+                                   themeKey === 'dark' ? 'linear-gradient(45deg, #1F2937, #374151)' :
+                                   themeKey === 'glassy' ? 'linear-gradient(45deg, #0F172A, #581C87)' :
+                                   themeKey === 'minimal' ? 'linear-gradient(45deg, #F9FAFB, #E5E7EB)' :
+                                   'linear-gradient(45deg, #FFFFFF, #F3F4F6)'
+                      }}></div>
+                      <span className="text-sm font-medium text-white flex-1">
+                        {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
+                      </span>
+                      {theme === themeKey && (
+                        <span className="text-blue-400 text-sm">✓</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -817,27 +838,35 @@ const DashboardLayout = () => {
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="px-4 py-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 text-sm font-bold text-white border border-white/20"
-              title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
+              className="p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 shadow-lg hover:shadow-xl"
+              title={language === 'ar' ? 'Switch to English' : 'التبديل للعربية'}
             >
-              {language === 'ar' ? 'EN' : 'عربي'}
+              <span className="text-lg font-bold">
+                {language === 'ar' ? 'EN' : 'ع'}
+              </span>
             </button>
 
-            {/* User Menu */}
-            <div className="flex items-center gap-3 bg-white/20 rounded-xl px-4 py-3 border border-white/20 shadow-lg">
-              <div className="text-right">
-                <div className="font-bold text-sm text-white">{user?.full_name || user?.username}</div>
-                <div className="text-xs text-white/70">{user?.role}</div>
+            {/* User Profile */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-white/20 rounded-xl border border-white/30 shadow-lg">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-sm font-bold text-white">
+                  {(user?.full_name || user?.username || 'U')[0].toUpperCase()}
+                </span>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                {(user?.full_name || user?.username || 'U').charAt(0).toUpperCase()}
+              <div className="hidden lg:block text-right">
+                <div className="text-sm font-semibold text-white">
+                  {user?.full_name || user?.username}
+                </div>
+                <div className="text-xs text-white/70 capitalize">
+                  {language === 'ar' ? (user?.role === 'admin' ? 'مدير النظام' : user?.role) : user?.role}
+                </div>
               </div>
               <button
                 onClick={logout}
-                className="p-2 rounded-lg hover:bg-red-500/30 text-red-300 hover:text-red-200 transition-all duration-200"
-                title={t('auth', 'logout')}
+                className="p-2 rounded-lg hover:bg-white/20 transition-all duration-200"
+                title={language === 'ar' ? 'تسجيل الخروج' : 'Logout'}
               >
-                <span className="text-lg">🚪</span>
+                <span className="text-red-400 text-sm">🚪</span>
               </button>
             </div>
           </div>
