@@ -351,6 +351,16 @@ const UserManagement = ({ user, language, isRTL }) => {
           language={language}
         />
       )}
+
+      {/* Add User Modal */}
+      {showAddModal && (
+        <AddUserModal
+          onClose={() => setShowAddModal(false)}
+          onSave={handleCreateUser}
+          language={language}
+          isRTL={isRTL}
+        />
+      )}
     </div>
   );
 };
