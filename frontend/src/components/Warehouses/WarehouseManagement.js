@@ -793,7 +793,244 @@ const MovementsLog = ({ movements, language }) => (
   </div>
 );
 
-// Add Warehouse Modal
+// Enhanced Add Warehouse Modal with Multiple Regions and Managers
+const EnhancedAddWarehouseModal = ({ onClose, onSave, regions, availableManagers, products, language }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    city: '',
+    selectedRegions: [],
+    selectedManagers: [],
+    productsInventory: {}
+  });
+
+  // Initialize products inventory with default values
+  useEffect(() => {
+    const initialInventory = {};
+    products.forEach(product => {
+      initialInventory[product.id] = {
+        quantity: 0,
+        min_quantity: 10,
+        max_quantity: 500
+      };
+    });
+    setFormData(prev => ({ ...prev, productsInventory: initialInventory }));
+  }, [products]);
+
+  const handleRegionToggle = (regionId) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedRegions: prev.selectedRegions.includes(regionId)
+        ? prev.selectedRegions.filter(id => id !== regionId)
+        : [...prev.selectedRegions, regionId]
+    }));
+  };
+
+  const handleManagerToggle = (managerId) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedManagers: prev.selectedManagers.includes(managerId)
+        ? prev.selectedManagers.filter(id => id !== managerId)
+        : [...prev.selectedManagers, managerId]
+    }));
+  };
+
+  const updateProductInventory = (productId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      productsInventory: {
+        ...prev.productsInventory,
+        [productId]: {
+          ...prev.productsInventory[productId],
+          [field]: parseInt(value) || 0
+        }
+      }
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                <span className="text-2xl text-white">🏭</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white">إضافة مخزن جديد</h3>
+                <p className="text-white/70">إنشاء مخزن جديد مع تحديد المناطق والمسؤولين</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">✕</button>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">اسم المخزن *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+                  placeholder="مثال: مخزن القاهرة الجديد"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">المدينة *</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white"
+                  placeholder="مثال: القاهرة"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Multiple Regions Selection */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-3">
+                المناطق المخدومة * (يمكن اختيار أكثر من منطقة)
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {regions.map((region) => (
+                  <label key={region.id} className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedRegions.includes(region.id)}
+                      onChange={() => handleRegionToggle(region.id)}
+                      className="w-5 h-5 text-green-600 rounded border-2 border-white/30"
+                    />
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{region.name}</div>
+                      <div className="text-white/60 text-xs">
+                        {region.cities.join('، ')}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {formData.selectedRegions.length === 0 && (
+                <p className="text-orange-300 text-xs mt-2">يرجى اختيار منطقة واحدة على الأقل</p>
+              )}
+            </div>
+
+            {/* Multiple Managers Selection */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-3">
+                المسؤولين عن المخزن * (الحسابات وأمناء المخازن فقط)
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availableManagers.map((manager) => (
+                  <label key={manager.id} className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.selectedManagers.includes(manager.id)}
+                      onChange={() => handleManagerToggle(manager.id)}
+                      className="w-5 h-5 text-green-600 rounded border-2 border-white/30"
+                    />
+                    <div className="flex-1">
+                      <div className="text-white font-medium">{manager.full_name}</div>
+                      <div className="text-white/60 text-xs flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          manager.role === 'accounting' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'
+                        }`}>
+                          {manager.role === 'accounting' ? '💰 محاسبة' : '📦 أمين مخزن'}
+                        </span>
+                        <span>{manager.department}</span>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {formData.selectedManagers.length === 0 && (
+                <p className="text-orange-300 text-xs mt-2">يرجى اختيار مسؤول واحد على الأقل</p>
+              )}
+            </div>
+
+            {/* Products Inventory Table */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-3">
+                جدول المنتجات مع الكميات الأولية
+              </label>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10 max-h-80 overflow-y-auto">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-right py-2 px-3 text-white/80">المنتج</th>
+                        <th className="text-right py-2 px-3 text-white/80">الفئة</th>
+                        <th className="text-right py-2 px-3 text-white/80">الوحدة</th>
+                        <th className="text-right py-2 px-3 text-white/80">الكمية الأولية</th>
+                        <th className="text-right py-2 px-3 text-white/80">الحد الأدنى</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id} className="border-b border-white/5">
+                          <td className="py-2 px-3 font-medium text-white">{product.name}</td>
+                          <td className="py-2 px-3 text-white/70">{product.category}</td>
+                          <td className="py-2 px-3 text-white/70">{product.unit}</td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.productsInventory[product.id]?.quantity || 0}
+                              onChange={(e) => updateProductInventory(product.id, 'quantity', e.target.value)}
+                              className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-center focus:outline-none focus:ring-1 focus:ring-green-500"
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              min="1"
+                              value={formData.productsInventory[product.id]?.min_quantity || 10}
+                              onChange={(e) => updateProductInventory(product.id, 'min_quantity', e.target.value)}
+                              className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-center focus:outline-none focus:ring-1 focus:ring-green-500"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-6 border-t border-white/10">
+              <button
+                type="submit"
+                disabled={formData.selectedRegions.length === 0 || formData.selectedManagers.length === 0}
+                className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <span>💾</span>
+                إضافة المخزن
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
 const AddWarehouseModal = ({ onClose, onSave, language }) => {
   const [formData, setFormData] = useState({
     name: '',
