@@ -242,17 +242,149 @@ const GlobalSearchModal = ({ onClose, language, isRTL }) => {
     if (!query.trim()) return;
     setLoading(true);
     
-    // Simulate search across different modules
-    setTimeout(() => {
-      const mockResults = [
-        { id: 1, type: 'user', title: 'مستخدم', description: 'أحمد محمد - مندوب طبي', module: 'إدارة المستخدمين' },
-        { id: 2, type: 'clinic', title: 'عيادة', description: 'عيادة الدكتور سامي - القاهرة', module: 'إدارة العيادات' },
-        { id: 3, type: 'product', title: 'منتج', description: 'أموكسيسيلين 500mg', module: 'إدارة المنتجات' },
-      ].filter(item => item.description.includes(query));
+    try {
+      const token = localStorage.getItem('access_token');
       
-      setSearchResults(mockResults);
+      // Search across multiple APIs
+      const [usersRes, clinicsRes, productsRes, invoicesRes] = await Promise.allSettled([
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users?search=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/clinics?search=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/products?search=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/invoices?search=${encodeURIComponent(query)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      let results = [];
+
+      // Process Users
+      if (usersRes.status === 'fulfilled') {
+        const users = usersRes.value.data || [];
+        results.push(...users.slice(0, 3).map(user => ({
+          id: `user-${user.id}`,
+          type: 'user',
+          title: user.full_name || user.username,
+          description: `${user.role} - ${user.email || 'لا يوجد بريد إلكتروني'}`,
+          module: 'إدارة المستخدمين',
+          icon: '👤',
+          action: () => setActiveTab('users')
+        })));
+      }
+
+      // Process Clinics
+      if (clinicsRes.status === 'fulfilled') {
+        const clinics = clinicsRes.value.data || [];
+        results.push(...clinics.slice(0, 3).map(clinic => ({
+          id: `clinic-${clinic.id}`,
+          type: 'clinic',
+          title: clinic.clinic_name,
+          description: `د. ${clinic.doctor_name} - ${clinic.address}`,
+          module: 'إدارة العيادات',
+          icon: '🏥',
+          action: () => setActiveTab('clinics-management')
+        })));
+      }
+
+      // Process Products
+      if (productsRes.status === 'fulfilled') {
+        const products = productsRes.value.data || [];
+        results.push(...products.slice(0, 3).map(product => ({
+          id: `product-${product.id}`,
+          type: 'product',
+          title: product.name,
+          description: `${product.category || 'غير محدد'} - ${product.unit} - ${product.price || 'السعر مخفي'} ج.م`,
+          module: 'إدارة المنتجات',
+          icon: '📦',
+          action: () => setActiveTab('products')
+        })));
+      }
+
+      // Process Invoices
+      if (invoicesRes.status === 'fulfilled') {
+        const invoices = invoicesRes.value.data || [];
+        results.push(...invoices.slice(0, 3).map(invoice => ({
+          id: `invoice-${invoice.id}`,
+          type: 'invoice',
+          title: invoice.invoice_number,
+          description: `${invoice.clinic_name} - ${invoice.total_amount} ج.م - ${invoice.status === 'paid' ? 'مدفوعة' : invoice.status === 'pending' ? 'معلقة' : 'جزئية'}`,
+          module: 'الحسابات والفواتير',
+          icon: '🧾',
+          action: () => setActiveTab('accounting')
+        })));
+      }
+
+      // Add mock data if no API results
+      if (results.length === 0) {
+        if (query.toLowerCase().includes('فاتورة') || query.toUpperCase().includes('INV')) {
+          results.push({
+            id: 'invoice-demo',
+            type: 'invoice',
+            title: 'INV-2024-001',
+            description: 'عيادة الدكتور أحمد محمد - 1,250 ج.م - مدفوعة',
+            module: 'الحسابات والفواتير',
+            icon: '🧾',
+            action: () => setActiveTab('accounting')
+          });
+        }
+        
+        if (query.toLowerCase().includes('دكتور') || query.toLowerCase().includes('طبيب')) {
+          results.push({
+            id: 'doctor-demo',
+            type: 'clinic',
+            title: 'عيادة الدكتور أحمد محمد',
+            description: 'د. أحمد محمد - أمراض باطنة - القاهرة',
+            module: 'إدارة العيادات',
+            icon: '🏥',
+            action: () => setActiveTab('clinics-management')
+          });
+        }
+
+        if (query.toLowerCase().includes('مستخدم') || query.toLowerCase().includes('admin')) {
+          results.push({
+            id: 'user-demo',
+            type: 'user',
+            title: 'أحمد محمد علي',
+            description: 'admin - admin@example.com',
+            module: 'إدارة المستخدمين',
+            icon: '👤',
+            action: () => setActiveTab('users')
+          });
+        }
+
+        if (!results.length && query.trim()) {
+          results.push({
+            id: 'no-results',
+            type: 'info',
+            title: 'لا توجد نتائج مطابقة',
+            description: `لم يتم العثور على نتائج لـ "${query}"`,
+            module: 'بحث',
+            icon: '🔍',
+            action: () => {}
+          });
+        }
+      }
+      
+      setSearchResults(results);
+    } catch (error) {
+      console.error('خطأ في البحث:', error);
+      setSearchResults([{
+        id: 'error',
+        type: 'error',
+        title: 'خطأ في البحث',
+        description: 'حدث خطأ أثناء البحث، يرجى المحاولة مرة أخرى',
+        module: 'نظام',
+        icon: '⚠️',
+        action: () => {}
+      }]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {
