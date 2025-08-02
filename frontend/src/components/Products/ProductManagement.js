@@ -468,9 +468,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-bold mb-2">لا توجد منتجات</h3>
-          <p className="text-gray-600">لم يتم العثور على منتجات مطابقة للبح
-
-</p>
+          <p className="text-gray-600">لم يتم العثور على منتجات مطابقة للبحث</p>
         </div>
       )}
 
