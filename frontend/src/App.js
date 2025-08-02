@@ -1011,8 +1011,8 @@ const DashboardLayout = () => {
         }
 
         .rtl .dashboard-sidebar {
-          border-right: none;
-          border-left: 1px solid rgba(255, 255, 255, 0.2);
+          border-left: none;
+          border-right: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         /* Theme-specific adjustments */
