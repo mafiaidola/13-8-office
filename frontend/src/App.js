@@ -75,6 +75,16 @@ const AVAILABLE_THEMES = {
       card: 'bg-white border border-gray-200',
       text: 'text-gray-900'
     }
+  },
+  neon: {
+    name: { ar: 'نيون', en: 'Neon' },
+    colors: {
+      primary: 'from-orange-500 to-orange-600',
+      secondary: 'from-amber-600 to-orange-700',
+      background: 'from-gray-900 via-orange-900 to-amber-900',
+      card: 'bg-gray-900/80 border border-orange-500/30',
+      text: 'text-orange-400'
+    }
   }
 };
 
