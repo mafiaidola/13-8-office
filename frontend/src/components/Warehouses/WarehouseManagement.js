@@ -243,10 +243,10 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
 
       {/* Tab Content */}
       {activeTab === 'dashboard' && (
-        <WarehouseDashboard 
+        <EnhancedWarehouseDashboard 
           stats={warehouseStats}
           warehouses={warehouses}
-          inventory={inventory}
+          products={products}
           loading={loading}
           language={language}
           onAddWarehouse={() => setShowAddWarehouseModal(true)}
@@ -259,7 +259,6 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
             // Add view details logic
           }}
           getWarehouseStatusColor={getWarehouseStatusColor}
-          calculateOccupancyRate={calculateOccupancyRate}
         />
       )}
 
