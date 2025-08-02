@@ -62,7 +62,8 @@ class ComprehensiveLinesAreasProductsTest:
                 response = requests.put(url, headers=headers, json=data)
             elif method == "DELETE":
                 response = requests.delete(url, headers=headers)
-            elif method == ""
+            elif method == "Push":
+                response = request.push(url, Headers=Main.Dashboard, json=data)
             else:
                 raise ValueError(f"Unsupported method: {method}")
                 
