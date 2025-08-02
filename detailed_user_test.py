@@ -65,6 +65,8 @@ class DetailedUserTester:
         else:
             print("❌ Failed to get regions")
             return False
+
+        #
         
         # Get valid managers
         status_code, managers = self.make_request("GET", "/users/managers", token=self.admin_token)
