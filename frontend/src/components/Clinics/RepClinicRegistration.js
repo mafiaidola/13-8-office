@@ -655,13 +655,13 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                     </div>
                   </div>
 
-                  {/* Manual Location Input */}
+                  {/* Manual Location Input - Enhanced */}
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
                       <span>⚙️</span>
-                      تعديل الإحداثيات يدوياً
+                      تعديل الإحداثيات يدوياً (دقة عالية)
                     </h5>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
                         <label className="block text-xs font-medium text-gray-300 mb-1">
                           خط العرض (Latitude)
@@ -671,7 +671,12 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                           step="any"
                           name="latitude"
                           value={clinicData.latitude || ''}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (e.target.value) {
+                              console.log('🔄 تم تحديث خط العرض:', e.target.value);
+                            }
+                          }}
                           className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                           placeholder="30.0444"
                         />
@@ -686,11 +691,74 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                           step="any"
                           name="longitude"
                           value={clinicData.longitude || ''}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (e.target.value) {
+                              console.log('🔄 تم تحديث خط الطول:', e.target.value);
+                            }
+                          }}
                           className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                           placeholder="31.2357"
                         />
                       </div>
+                    </div>
+                    
+                    {/* Quick Coordinate Actions */}
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (navigator.clipboard) {
+                            navigator.clipboard.writeText(`${clinicData.latitude},${clinicData.longitude}`);
+                            setSuccess('تم نسخ الإحداثيات ✅');
+                          }
+                        }}
+                        className="px-3 py-2 bg-blue-500/20 text-blue-300 text-xs rounded-lg hover:bg-blue-500/30 transition-colors border border-blue-500/30"
+                      >
+                        📋 نسخ الإحداثيات
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (navigator.clipboard) {
+                            try {
+                              const clipboardText = await navigator.clipboard.readText();
+                              const coords = clipboardText.split(',');
+                              if (coords.length === 2) {
+                                const lat = parseFloat(coords[0].trim());
+                                const lng = parseFloat(coords[1].trim());
+                                if (!isNaN(lat) && !isNaN(lng)) {
+                                  setClinicData(prev => ({
+                                    ...prev,
+                                    latitude: lat,
+                                    longitude: lng
+                                  }));
+                                  setSuccess('تم لصق الإحداثيات بنجاح ✅');
+                                } else {
+                                  setError('تنسيق الإحداثيات غير صحيح');
+                                }
+                              }
+                            } catch (error) {
+                              console.error('خطأ في قراءة الحافظة:', error);
+                            }
+                          }
+                        }}
+                        className="px-3 py-2 bg-green-500/20 text-green-300 text-xs rounded-lg hover:bg-green-500/30 transition-colors border border-green-500/30"
+                      >
+                        📥 لصق من الحافظة
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const googleMapsShareUrl = `https://www.google.com/maps/@${clinicData.latitude},${clinicData.longitude},16z`;
+                          window.open(googleMapsShareUrl, '_blank');
+                        }}
+                        className="px-3 py-2 bg-purple-500/20 text-purple-300 text-xs rounded-lg hover:bg-purple-500/30 transition-colors border border-purple-500/30"
+                      >
+                        🗺️ عرض في خرائط جوجل
+                      </button>
                     </div>
                   </div>
                 </div>
