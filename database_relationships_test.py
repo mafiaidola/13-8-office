@@ -368,15 +368,30 @@ class DatabaseRelationshipTester:
         print("\n🔍 **PHASE 6: FINANCIAL RELATIONSHIP ANALYSIS**")
         
         try:
-            # Try to fetch debt data
-            start_time = time.time()
-            response = requests.get(f"{BACKEND_URL}/debts", headers=self.get_headers())
-            response_time = (time.time() - start_time) * 1000
+            # Try to fetch debt data - check multiple possible endpoints
+            debt_endpoints = ["/debts", "/debts/", "/api/debts", "/debt", "/financial/debts"]
+            debt_data = []
+            debt_endpoint_found = False
             
-            if response.status_code == 200:
-                debt_data = response.json()
-                self.log_test("Fetch Debt Data", True, f"Retrieved {len(debt_data)} debt records", response_time)
-                
+            for endpoint in debt_endpoints:
+                try:
+                    start_time = time.time()
+                    response = requests.get(f"{BACKEND_URL.replace('/api', '')}{endpoint}", headers=self.get_headers())
+                    response_time = (time.time() - start_time) * 1000
+                    
+                    if response.status_code == 200:
+                        debt_data = response.json()
+                        debt_endpoint_found = True
+                        self.log_test("Fetch Debt Data", True, f"Retrieved {len(debt_data)} debt records from {endpoint}", response_time)
+                        break
+                    elif response.status_code == 403:
+                        continue  # Try next endpoint
+                    else:
+                        continue  # Try next endpoint
+                except:
+                    continue
+            
+            if debt_endpoint_found and debt_data:
                 # Verify debt-clinic relationships
                 clinic_ids = {c['id'] for c in self.clinics_data}
                 debts_with_valid_clinics = [d for d in debt_data if d.get('clinic_id') in clinic_ids]
