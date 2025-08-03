@@ -225,92 +225,162 @@ const UserManagement = ({ user, language, isRTL }) => {
           {filteredUsers.map(userData => (
             <div
               key={userData.id}
-              className="user-card bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              className="user-card-original bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              style={{ minHeight: '500px' }}
             >
-              {/* User Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(userData.id)}
-                    onChange={() => handleToggleSelection(userData.id)}
-                    className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
-                  />
-                  
-                  <div className="relative">
-                    {userData.photo ? (
-                      <img 
-                        src={userData.photo} 
-                        alt={userData.full_name}
-                        className="w-16 h-16 rounded-full object-cover border-3 border-white/30 shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg border-3 border-white/30">
-                        {userData.full_name?.charAt(0) || userData.username?.charAt(0) || '؟'}
-                      </div>
-                    )}
-                    
-                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
-                      userData.status === 'active' ? 'bg-green-500' : 
-                      userData.status === 'inactive' ? 'bg-gray-500' : 'bg-red-500'
-                    } shadow-lg`}></div>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white">{userData.full_name}</h3>
-                    <p className="text-sm text-white/70">@{userData.username}</p>
-                    
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleColor(userData.role)} ${getRoleTextColor(userData.role)}`}>
-                        {getRoleLabel(userData.role)}
-                      </span>
+              {/* Header with checkbox and profile */}
+              <div className="flex items-start justify-between mb-6">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.includes(userData.id)}
+                  onChange={() => handleToggleSelection(userData.id)}
+                  className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
+                />
+                
+                <div className="relative">
+                  {userData.photo ? (
+                    <img 
+                      src={userData.photo} 
+                      alt={userData.full_name}
+                      className="w-20 h-20 rounded-full object-cover border-3 border-white/30 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg border-3 border-white/30">
+                      {userData.full_name?.charAt(0) || userData.username?.charAt(0) || '؟'}
                     </div>
+                  )}
+                  
+                  <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-3 border-white ${
+                    userData.status === 'active' ? 'bg-green-500' : 
+                    userData.status === 'inactive' ? 'bg-gray-500' : 'bg-red-500'
+                  } shadow-lg`}></div>
+                </div>
+              </div>
+
+              {/* User Details */}
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">{userData.full_name || 'غير محدد'}</h3>
+                <p className="text-sm text-white/70 mb-3">@{userData.username}</p>
+                
+                <div className="flex justify-center mb-4">
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${getRoleColor(userData.role)} ${getRoleTextColor(userData.role)}`}>
+                    {getRoleLabel(userData.role)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Contact Information - RESTORED AS ORIGINAL */}
+              <div className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="text-blue-400 text-lg">📧</span>
+                    <span className="text-white/80 flex-1">{userData.email || 'غير محدد'}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-400 text-lg">📱</span>
+                    <span className="text-white/80 flex-1">{userData.phone || 'غير محدد'}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-yellow-400 text-lg">📍</span>
+                    <span className="text-white/80 flex-1">{userData.area || 'غير محدد'}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-purple-400 text-lg">🏢</span>
+                    <span className="text-white/80 flex-1">{userData.department || 'عام'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Performance Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20">
-                  <div className="text-2xl font-bold text-green-400">{userData.stats_last_30_days?.visits || 0}</div>
-                  <div className="text-xs text-green-200/80">زيارة شهرياً</div>
+              {/* Performance Stats Grid - Enhanced with new metrics */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* Original stats */}
+                <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/20 text-center">
+                  <div className="text-xl font-bold text-green-400">{userData.stats_last_30_days?.visits || 0}</div>
+                  <div className="text-xs text-green-200/80">الزيارات</div>
                 </div>
                 
-                <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
-                  <div className="text-2xl font-bold text-blue-400">{userData.stats_last_30_days?.orders || 0}</div>
-                  <div className="text-xs text-blue-200/80">طلب شهرياً</div>
+                <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
+                  <div className="text-xl font-bold text-blue-400">{userData.stats_last_30_days?.orders || 0}</div>
+                  <div className="text-xs text-blue-200/80">الطلبات</div>
+                </div>
+
+                {/* NEW METRICS REQUESTED */}
+                <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/20 text-center">
+                  <div className="text-xl font-bold text-red-400">{userData.stats_last_30_days?.total_debts || 0}</div>
+                  <div className="text-xs text-red-200/80">المديونيات</div>
+                </div>
+
+                <div className="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20 text-center">
+                  <div className="text-xl font-bold text-emerald-400">{userData.stats_last_30_days?.total_collections || 0}</div>
+                  <div className="text-xs text-emerald-200/80">التحصيلات</div>
+                </div>
+
+                <div className="bg-orange-500/10 rounded-xl p-3 border border-orange-500/20 text-center">
+                  <div className="text-xl font-bold text-orange-400">{userData.stats_last_30_days?.total_visits || userData.stats_last_30_days?.visits || 0}</div>
+                  <div className="text-xs text-orange-200/80">إجمالي الزيارات</div>
+                </div>
+
+                <div className="bg-cyan-500/10 rounded-xl p-3 border border-cyan-500/20 text-center">
+                  <div className="text-xl font-bold text-cyan-400">{userData.stats_last_30_days?.added_clinics || 0}</div>
+                  <div className="text-xs text-cyan-200/80">العيادات المضافة</div>
                 </div>
               </div>
 
-              {/* Contact Information */}
-              <div className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10">
-                <div className="space-y-2 text-sm">
-                  {userData.email && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-blue-400">📧</span>
-                      <span className="text-white/80">{userData.email}</span>
-                    </div>
-                  )}
-                  {userData.phone && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-green-400">📱</span>
-                      <span className="text-white/80">{userData.phone}</span>
-                    </div>
-                  )}
-                  {userData.area && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-yellow-400">📍</span>
-                      <span className="text-white/80">{userData.area}</span>
-                    </div>
-                  )}
+              {/* Performance Bar - RESTORED */}
+              <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-white/80">الأداء العام</span>
+                  <span className="text-sm font-bold text-white">{userData.stats_last_30_days?.performance_percentage || 0}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-1000"
+                    style={{ width: `${userData.stats_last_30_days?.performance_percentage || 0}%` }}
+                  ></div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Revenue Display - RESTORED */}
+              {userData.role === 'medical_rep' && (
+                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 mb-4 border border-yellow-500/20">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-yellow-400">
+                      {userData.stats_last_30_days?.revenue?.toLocaleString('ar-EG') || '0'} ج.م
+                    </div>
+                    <div className="text-xs text-yellow-200/80">إجمالي المبيعات الشهرية</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Rating Display - RESTORED */}
+              <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/80">التقييم</span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span 
+                        key={star}
+                        className={`text-lg ${
+                          star <= (userData.stats_last_30_days?.rating || 0) 
+                            ? 'text-yellow-400' 
+                            : 'text-white/20'
+                        }`}
+                      >
+                        ⭐
+                      </span>
+                    ))}
+                    <span className="text-sm text-white ml-2">
+                      {userData.stats_last_30_days?.rating || 0}/5
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons - RESTORED */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => handleViewPerformance(userData)}
-                  className="bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>📊</span>
                   التفاصيل
@@ -318,7 +388,7 @@ const UserManagement = ({ user, language, isRTL }) => {
                 
                 <button
                   onClick={() => handleEditUser(userData.id)}
-                  className="bg-green-600 text-white py-2 px-3 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+                  className="bg-green-600 hover:bg-green-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>✏️</span>
                   تعديل
@@ -326,7 +396,7 @@ const UserManagement = ({ user, language, isRTL }) => {
                 
                 <button
                   onClick={() => handleDeleteUser(userData.id)}
-                  className="bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center gap-1"
+                  className="bg-red-600 hover:bg-red-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>🗑️</span>
                   حذف
