@@ -1,5 +1,6 @@
 // Professional Header Component - هيدر احترافي متقدم
 import React, { useState, useEffect, useRef } from 'react';
+import NotificationCenter from './NotificationCenter';
 
 const ProfessionalHeader = ({ 
   user, 
