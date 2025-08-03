@@ -736,6 +736,27 @@ const DashboardLayout = () => {
   const availableTabs = getAvailableTabs(user?.role);
   const currentThemeConfig = getCurrentTheme();
 
+  // Load system settings
+  const loadSystemSettings = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API}/admin/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const settings = await response.json();
+        setSystemSettings(settings);
+      }
+    } catch (error) {
+      console.error('Error loading system settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSystemSettings();
+  }, []);
+
   // Set default tab if current tab is not available
   useEffect(() => {
     if (availableTabs.length > 0 && !availableTabs.find(tab => tab.id === activeTab)) {
