@@ -18,6 +18,9 @@ from passlib.context import CryptContext
 from models.all_models import *
 from models.notification_models import *
 
+# Import service
+from services.notification_service import NotificationService
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
