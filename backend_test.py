@@ -214,6 +214,7 @@ class BackendTester:
         try:
             clinic_data = {
                 "name": "عيادة اختبار الحقول الجديدة",  # Fixed field name
+                "doctor_name": "د. أحمد محمد الطبيب",  # Required field
                 "address": "شارع التحرير، القاهرة",
                 "phone": "01234567890",
                 "email": "test@clinic.com",
