@@ -69,8 +69,9 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_areas = await db.areas.count_documents({})  # Added
         
         # Financial statistics
-        total_debt_records = await db.debt_records.count_documents({}) if await db.list_collection_names().__contains__("debt_records") else 0
-        total_invoices = await db.invoices.count_documents({}) if await db.list_collection_names().__contains__("invoices") else 0
+        collection_names = await db.list_collection_names()
+        total_debt_records = await db.debt_records.count_documents({}) if "debt_records" in collection_names else 0
+        total_invoices = await db.invoices.count_documents({}) if "invoices" in collection_names else 0
         
         # Today's statistics
         today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
