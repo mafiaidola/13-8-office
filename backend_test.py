@@ -73,7 +73,7 @@ class BackendTester:
             # Test creating activity with correct type 'visit_registration'
             start_time = time.time()
             activity_data = {
-                "activity_type": "visit_registration",  # Correct type as specified
+                "type": "visit_registration",  # Correct field name as per ActivityCreate model
                 "action": "تسجيل زيارة عيادة اختبار",
                 "target_type": "clinic",
                 "target_id": "test-clinic-id",
