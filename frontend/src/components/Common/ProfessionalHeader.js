@@ -25,42 +25,42 @@ const ProfessionalHeader = ({
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
 
-  // 7 Professional Themes Configuration
+  // 7 Enhanced Professional Themes - محسن لراحة العين
   const themes = {
     glassy: {
       name: { ar: 'زجاجي', en: 'Glassy' },
       icon: '🔮',
       colors: {
-        primary: 'rgba(59, 130, 246, 0.1)',
-        secondary: 'rgba(139, 92, 246, 0.1)',
-        accent: '#3b82f6'
+        primary: 'rgba(71, 85, 105, 0.15)',
+        secondary: 'rgba(59, 130, 246, 0.15)',
+        accent: '#475569'
       }
     },
     dark: {
       name: { ar: 'داكن', en: 'Dark' },
       icon: '🌙',
       colors: {
-        primary: 'rgba(31, 41, 55, 0.95)',
-        secondary: 'rgba(67, 56, 202, 0.1)',
-        accent: '#4338ca'
+        primary: 'rgba(30, 41, 59, 0.95)',
+        secondary: 'rgba(51, 65, 85, 0.15)',
+        accent: '#334155'
       }
     },
     golden: {
       name: { ar: 'ذهبي', en: 'Golden' },
       icon: '✨',
       colors: {
-        primary: 'rgba(245, 158, 11, 0.1)',
-        secondary: 'rgba(251, 191, 36, 0.1)',
-        accent: '#f59e0b'
+        primary: 'rgba(217, 119, 6, 0.12)',
+        secondary: 'rgba(234, 88, 12, 0.12)',
+        accent: '#d97706'
       }
     },
     modern: {
       name: { ar: 'حديث', en: 'Modern' },
       icon: '🚀',
       colors: {
-        primary: 'rgba(59, 130, 246, 0.1)',
-        secondary: 'rgba(139, 92, 246, 0.1)',
-        accent: '#3b82f6'
+        primary: 'rgba(79, 70, 229, 0.15)',
+        secondary: 'rgba(147, 51, 234, 0.15)',
+        accent: '#4f46e5'
       }
     },
     minimal: {
@@ -68,7 +68,7 @@ const ProfessionalHeader = ({
       icon: '⚪',
       colors: {
         primary: 'rgba(243, 244, 246, 0.95)',
-        secondary: 'rgba(156, 163, 175, 0.1)',
+        secondary: 'rgba(156, 163, 175, 0.15)',
         accent: '#6b7280'
       }
     },
@@ -76,18 +76,18 @@ const ProfessionalHeader = ({
       name: { ar: 'مهني', en: 'Professional' },
       icon: '💼',
       colors: {
-        primary: 'rgba(15, 23, 42, 0.95)',
-        secondary: 'rgba(30, 41, 59, 0.1)',
-        accent: '#1e293b'
+        primary: 'rgba(71, 85, 105, 0.95)',
+        secondary: 'rgba(55, 65, 81, 0.15)',
+        accent: '#475569'
       }
     },
-    neon: {
-      name: { ar: 'نيون', en: 'Neon' },
-      icon: '⚡',
+    cosmic: {
+      name: { ar: 'كوني', en: 'Cosmic' },
+      icon: '🌌',
       colors: {
-        primary: 'rgba(255, 102, 0, 0.1)',
-        secondary: 'rgba(255, 153, 0, 0.1)',
-        accent: '#ff6600'
+        primary: 'rgba(124, 58, 237, 0.15)',
+        secondary: 'rgba(192, 38, 211, 0.15)',
+        accent: '#7c3aed'
       }
     }
   };
