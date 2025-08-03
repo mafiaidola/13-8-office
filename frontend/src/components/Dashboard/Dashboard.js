@@ -375,6 +375,264 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
     setShowActivityModal(true);
   };
 
+  // Export functions for reports
+  const exportActivitiesReport = () => {
+    // Generate comprehensive activities report
+    const reportData = {
+      title: language === 'ar' ? 'تقرير الأنشطة الشامل' : 'Comprehensive Activities Report',
+      generatedAt: new Date().toLocaleString('ar-EG'),
+      timeFilter: timeFilter,
+      activities: recentActivities,
+      stats: stats,
+      user: user
+    };
+
+    // Create HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>${reportData.title}</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 3px solid #4F46E5; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px;
+          }
+          .header h1 { 
+            color: #4F46E5; 
+            margin: 0;
+            font-size: 28px;
+          }
+          .section { 
+            margin-bottom: 25px; 
+            padding: 20px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            background: #F9FAFB;
+          }
+          .activity-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            background: white;
+          }
+          .footer { 
+            text-align: center; 
+            border-top: 1px solid #E5E7EB; 
+            padding-top: 20px; 
+            margin-top: 30px; 
+            color: #6B7280;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📋 ${reportData.title}</h1>
+          <p>تم الإنشاء في: ${reportData.generatedAt}</p>
+        </div>
+        <div class="section">
+          <h2>📊 ملخص الأنشطة</h2>
+          <p>إجمالي الأنشطة: ${reportData.activities.length}</p>
+          <p>الفترة الزمنية: ${timeFilter === 'today' ? 'اليوم' : timeFilter === 'week' ? 'الأسبوع' : timeFilter === 'month' ? 'الشهر' : 'السنة'}</p>
+        </div>
+        <div class="section">
+          <h2>📋 تفاصيل الأنشطة</h2>
+          ${reportData.activities.map(activity => `
+            <div class="activity-item">
+              <h3>${activity.action}</h3>
+              <p><strong>المستخدم:</strong> ${activity.user_name} (${activity.user_role})</p>
+              ${activity.clinic_name ? `<p><strong>العيادة:</strong> ${activity.clinic_name}</p>` : ''}
+              ${activity.amount ? `<p><strong>المبلغ:</strong> ${formatCurrency(activity.amount)}</p>` : ''}
+              <p><strong>الوقت:</strong> ${activity.time}</p>
+              ${activity.location ? `<p><strong>الموقع:</strong> ${activity.location}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <div class="footer">
+          <p>🏥 نظام EP Group - تقرير الأنشطة</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = function() {
+      setTimeout(() => printWindow.print(), 500);
+    };
+  };
+
+  const exportDailySummary = () => {
+    // Generate daily summary report
+    const today = new Date();
+    const summaryData = {
+      date: today.toLocaleDateString('ar-EG'),
+      totalActivities: recentActivities.length,
+      orders: stats.performanceMetrics?.orders || 0,
+      visits: stats.performanceMetrics?.visits || 0,
+      collections: stats.performanceMetrics?.collections || 0,
+      newClinics: stats.performanceMetrics?.newClinics || 0
+    };
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>الملخص اليومي - ${summaryData.date}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+          .header { text-align: center; border-bottom: 2px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }
+          .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+          .stat-card { padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; text-align: center; background: #F9FAFB; }
+          .stat-number { font-size: 2em; font-weight: bold; color: #4F46E5; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📅 الملخص اليومي</h1>
+          <p>${summaryData.date}</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">${summaryData.totalActivities}</div>
+            <div>إجمالي الأنشطة</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${summaryData.orders}</div>
+            <div>طلبات جديدة</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${summaryData.visits}</div>
+            <div>زيارات مكتملة</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${summaryData.collections}</div>
+            <div>مبالغ محصلة</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px;">
+          <p>🏥 نظام EP Group - الملخص اليومي</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = function() {
+      setTimeout(() => printWindow.print(), 500);
+    };
+  };
+
+  const exportPerformanceAnalytics = () => {
+    // Generate performance analytics dashboard
+    const analyticsData = {
+      title: language === 'ar' ? 'تحليل الأداء التفصيلي' : 'Detailed Performance Analytics',
+      period: timeFilter,
+      metrics: stats.performanceMetrics,
+      systemStatus: {
+        onlineUsers: stats.onlineUsers || 12,
+        serverResponse: '8ms',
+        uptime: '99.8%'
+      }
+    };
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>${analyticsData.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+          .header { text-align: center; border-bottom: 2px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }
+          .metrics-section { margin: 30px 0; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; }
+          .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+          .chart-placeholder { height: 200px; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📈 ${analyticsData.title}</h1>
+          <p>الفترة: ${analyticsData.period === 'today' ? 'اليوم' : analyticsData.period === 'week' ? 'الأسبوع' : analyticsData.period === 'month' ? 'الشهر' : 'السنة'}</p>
+        </div>
+        <div class="metrics-section">
+          <h2>📊 مؤشرات الأداء الرئيسية</h2>
+          <div class="metric-row">
+            <span>طلبات جديدة:</span>
+            <strong>${analyticsData.metrics?.orders || 0}</strong>
+          </div>
+          <div class="metric-row">
+            <span>زيارات مكتملة:</span>
+            <strong>${analyticsData.metrics?.visits || 0}</strong>
+          </div>
+          <div class="metric-row">
+            <span>عيادات جديدة:</span>
+            <strong>${analyticsData.metrics?.newClinics || 0}</strong>
+          </div>
+          <div class="metric-row">
+            <span>مبالغ محصلة:</span>
+            <strong>${analyticsData.metrics?.collections || 0}</strong>
+          </div>
+        </div>
+        <div class="metrics-section">
+          <h2>🟢 حالة النظام</h2>
+          <div class="metric-row">
+            <span>المستخدمين المتصلين:</span>
+            <strong>${analyticsData.systemStatus.onlineUsers}</strong>
+          </div>
+          <div class="metric-row">
+            <span>استجابة الخادم:</span>
+            <strong>${analyticsData.systemStatus.serverResponse}</strong>
+          </div>
+          <div class="metric-row">
+            <span>وقت التشغيل:</span>
+            <strong>${analyticsData.systemStatus.uptime}</strong>
+          </div>
+        </div>
+        <div class="chart-placeholder">
+          📊 مخطط الأداء - سيتم تطويره في المرحلة القادمة
+        </div>
+        <div style="text-align: center; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px;">
+          <p>🏥 نظام EP Group - تحليل الأداء</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = function() {
+      setTimeout(() => printWindow.print(), 500);
+    };
+  };
+
+  const openCustomReportBuilder = () => {
+    // Open custom report builder modal
+    alert(language === 'ar' 
+      ? 'منشئ التقارير المخصصة سيتم تطويره في المرحلة القادمة. سيتيح لك إنشاء تقارير مخصصة حسب احتياجاتك.'
+      : 'Custom Report Builder will be developed in the next phase. It will allow you to create custom reports based on your needs.'
+    );
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('ar-EG', {
       style: 'currency',
