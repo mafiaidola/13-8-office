@@ -784,10 +784,20 @@ const DashboardLayout = () => {
           {/* Right Side - Logo & Brand */}
           <div className="header-brand">
             <div className="header-logo">
-              <span className="text-2xl text-white">🏥</span>
+              {systemSettings.system.company_logo ? (
+                <img 
+                  src={systemSettings.system.company_logo} 
+                  alt="شعار الشركة" 
+                  className="w-8 h-8 object-contain"
+                />
+              ) : (
+                <span className="text-2xl text-white">🏥</span>
+              )}
             </div>
             <div className="header-brand-text">
-              <div className="header-brand-title">EP Group</div>
+              <div className="header-brand-title">
+                {systemSettings.system.app_name || 'EP Group System'}
+              </div>
               <div className="header-brand-subtitle">
                 {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
               </div>
