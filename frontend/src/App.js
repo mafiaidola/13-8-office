@@ -123,7 +123,7 @@ const ThemeProvider = ({ children }) => {
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
       // Remove all theme classes first
-      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-neon');
+      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-cosmic', 'theme-golden', 'theme-professional');
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
@@ -133,7 +133,7 @@ const ThemeProvider = ({ children }) => {
       root.style.setProperty('--bg-card', themeConfig.colors.card);
       root.style.setProperty('--text-primary', themeConfig.colors.text);
       
-      console.log(`✅ Applied theme: ${theme}`);
+      console.log(`✅ Applied enhanced theme: ${theme}`);
     }
   }, [isRTL, language, theme]);
 
