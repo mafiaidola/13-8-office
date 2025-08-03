@@ -317,6 +317,27 @@ const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
 
   const renderOrders = () => (
     <div className="space-y-4">
+      {/* Orders Header with Export Options */}
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-bold">طلبات العيادة ({profileData.orders.length})</h4>
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportToPDF('orders')}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>📄</span>
+            تصدير PDF
+          </button>
+          <button
+            onClick={() => printSection('orders')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>🖨️</span>
+            طباعة
+          </button>
+        </div>
+      </div>
+      
       {profileData.orders.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">📦</div>
@@ -324,7 +345,11 @@ const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
         </div>
       ) : (
         profileData.orders.map(order => (
-          <div key={order.id} className="bg-white/5 rounded-lg p-4">
+          <div 
+            key={order.id} 
+            className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
+            onClick={() => showOrderDetails(order)}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="font-medium text-blue-400">{order.order_number}</div>
               <span className={`px-2 py-1 rounded text-xs ${getOrderStatusColor(order.status)}`}>
@@ -348,6 +373,10 @@ const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
                 <div className="opacity-75">المندوب:</div>
                 <div>{order.rep_name}</div>
               </div>
+            </div>
+            <div className="mt-2 text-xs text-blue-300 flex items-center gap-1">
+              <span>👆</span>
+              اضغط لعرض التفاصيل الكاملة
             </div>
           </div>
         ))
