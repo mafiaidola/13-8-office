@@ -221,7 +221,17 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   };
 
   const getFilteredMetrics = (filter, data = {}) => {
-    // Simulate different metrics based on time filter
+    // Use real data if available, otherwise fall back to simulated metrics
+    if (data.orders || data.visits || data.clinics || data.collections) {
+      return {
+        orders: data.orders || 0,
+        visits: data.visits || 0,
+        newClinics: data.clinics || 0,
+        collections: data.collections || 0
+      };
+    }
+    
+    // Fallback: Simulate different metrics based on time filter
     const baseMetrics = {
       today: { orders: 8, visits: 12, newClinics: 2, collections: 3 },
       week: { orders: 45, visits: 78, newClinics: 8, collections: 15 },
