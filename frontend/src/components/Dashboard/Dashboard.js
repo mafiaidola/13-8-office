@@ -116,7 +116,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
 
   const loadRecentActivities = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await fetch(`${API_URL}/api/activity/recent?limit=10`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
