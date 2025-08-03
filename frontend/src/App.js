@@ -27,76 +27,83 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Themes - الثيمات المتاحة (Updated with 7 Professional Themes)
+// Available Themes - ثيمات احترافية محسنة لراحة العين
 const AVAILABLE_THEMES = {
+  // ثيم زجاجي محسن - ألوان هادئة
   glassy: {
     name: { ar: 'زجاجي', en: 'Glassy' },
     colors: {
-      primary: 'from-blue-500 to-cyan-500',
-      secondary: 'from-cyan-500 to-teal-500',
-      background: 'from-blue-900/20 via-cyan-900/10 to-teal-900/20',
-      card: 'bg-white/10 backdrop-blur-lg border border-white/20',
-      text: 'text-white'
+      primary: 'from-slate-600 to-blue-600',
+      secondary: 'from-blue-600 to-indigo-600',
+      background: 'from-slate-900/95 via-blue-900/90 to-indigo-900/85',
+      card: 'bg-white/8 backdrop-blur-xl border border-white/15',
+      text: 'text-slate-100'
     }
   },
+  // ثيم داكن كلاسيكي
   dark: {
     name: { ar: 'داكن', en: 'Dark' },
     colors: {
-      primary: 'from-gray-800 to-gray-900',
-      secondary: 'from-gray-900 to-black',
-      background: 'from-gray-900 via-gray-800 to-black',
-      card: 'bg-gray-800/80 border border-gray-600/30',
-      text: 'text-gray-100'
+      primary: 'from-slate-700 to-slate-800',
+      secondary: 'from-slate-800 to-slate-900',
+      background: 'from-slate-900 via-slate-800 to-slate-900',
+      card: 'bg-slate-800/90 border border-slate-600/40',
+      text: 'text-slate-100'
     }
   },
+  // ثيم ذهبي أنيق - ألوان دافئة مريحة
   golden: {
     name: { ar: 'ذهبي', en: 'Golden' },
     colors: {
-      primary: 'from-yellow-500 to-orange-500',
-      secondary: 'from-orange-500 to-red-500',
-      background: 'from-yellow-50 via-orange-50 to-red-50',
-      card: 'bg-yellow-50/80 border border-yellow-200/50',
-      text: 'text-yellow-900'
+      primary: 'from-amber-600 to-orange-600',
+      secondary: 'from-orange-600 to-red-600',
+      background: 'from-amber-50 via-orange-50/80 to-red-50/60',
+      card: 'bg-white/95 border border-amber-200/60 shadow-amber-100/50',
+      text: 'text-amber-900'
     }
   },
+  // ثيم حديث متطور
   modern: {
     name: { ar: 'حديث', en: 'Modern' },
     colors: {
-      primary: 'from-blue-600 to-indigo-600',
-      secondary: 'from-indigo-600 to-purple-600',
-      background: 'from-slate-900 via-blue-900 to-indigo-900',
-      card: 'bg-slate-800/60 border border-blue-500/20',
-      text: 'text-blue-100'
+      primary: 'from-indigo-600 to-purple-600',
+      secondary: 'from-purple-600 to-pink-600',
+      background: 'from-slate-900 via-indigo-900/80 to-purple-900/70',
+      card: 'bg-slate-800/85 border border-indigo-500/25',
+      text: 'text-indigo-100'
     }
   },
+  // ثيم بسيط نظيف
   minimal: {
     name: { ar: 'بسيط', en: 'Minimal' },
     colors: {
-      primary: 'from-gray-600 to-slate-700',
-      secondary: 'from-slate-700 to-gray-800',
-      background: 'from-gray-50 to-slate-100',
-      card: 'bg-white border border-gray-200/50',
+      primary: 'from-gray-500 to-slate-600',
+      secondary: 'from-slate-600 to-gray-700',
+      background: 'from-gray-50 to-slate-50',
+      card: 'bg-white border border-gray-200/80 shadow-gray-100/40',
       text: 'text-gray-800'
     }
   },
+  // ثيم مهني أنيق
   professional: {
     name: { ar: 'مهني', en: 'Professional' },
     colors: {
-      primary: 'from-slate-800 to-slate-900',
-      secondary: 'from-slate-900 to-gray-900',
+      primary: 'from-slate-600 to-gray-700',
+      secondary: 'from-gray-700 to-slate-800',
       background: 'from-slate-50 via-gray-50 to-slate-100',
-      card: 'bg-white border border-slate-200/60',
+      card: 'bg-white border border-slate-200/70 shadow-slate-100/50',
       text: 'text-slate-800'
     }
   },
-  neon: {
-    name: { ar: 'نيون', en: 'Neon' },
+  // ثيم نيون محسن - ألوان حيوية لكن مريحة
+  cosmic: {
+    name: { ar: 'كوني', en: 'Cosmic' },
     colors: {
-      primary: 'from-orange-500 to-red-500',
-      secondary: 'from-red-500 to-pink-500',
-      background: 'from-orange-900/20 via-red-900/10 to-pink-900/20',
-      card: 'bg-orange-500/10 backdrop-blur-lg border border-orange-500/30',
-      text: 'text-orange-100'
+      primary: 'from-violet-600 to-purple-600',
+      secondary: 'from-purple-600 to-fuchsia-600',
+      background: 'from-violet-900/90 via-purple-900/85 to-fuchsia-900/80',
+      card: 'bg-violet-500/10 backdrop-blur-lg border border-violet-400/25',
+      text: 'text-violet-100'
     }
   }
 };
