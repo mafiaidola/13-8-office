@@ -33,7 +33,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-@router.get("/api/notifications/unread-count")
+@router.get("/notifications/unread-count")
 async def get_unread_count(current_user: dict = Depends(get_current_user)):
     """الحصول على عدد الإشعارات غير المقروءة"""
     try:
