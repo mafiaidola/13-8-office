@@ -91,7 +91,7 @@ async def get_my_notifications(
             "error": str(e)
         }
 
-@router.post("/api/notifications/")
+@router.post("/notifications/")
 async def create_notification(
     notification_data: dict,
     current_user: dict = Depends(get_current_user)
