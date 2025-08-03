@@ -166,19 +166,10 @@ const ProfessionalHeader = ({
   const currentTheme = themes[theme] || themes.modern;
 
   return (
-    <header className="professional-header fixed top-0 left-0 right-0 z-[9998] h-20">
-      {/* Header Background with Glassmorphism */}
-      <div 
-        className="absolute inset-0 backdrop-blur-xl border-b border-white/10"
-        style={{
-          background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-        }}
-      />
-
-      {/* Header Content */}
-      <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-full">
+    <header className="professional-header fixed top-0 left-0 right-0 z-[9998] h-16 bg-gradient-to-r from-slate-800 via-blue-800 to-purple-800 backdrop-blur-lg border-b border-white/20">
+      {/* Header Content - Simplified Layout */}
+      <div className="h-full max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between h-full gap-4">
           
           {/* 1. Logo & Site Name (Right Side in RTL) */}
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
