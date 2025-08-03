@@ -408,6 +408,15 @@ class ActivityLogger {
     this.isEnabled = false;
   }
 
+  // Log quick action - for Dashboard quick actions functionality
+  logQuickAction(actionId, additionalData = {}) {
+    return this.logActivity('quick_action_clicked', {
+      action_id: actionId,
+      action_type: 'dashboard_quick_action',
+      ...additionalData
+    });
+  }
+
   // مسح queue إعادة المحاولة
   clearRetryQueue() {
     this.retryQueue = [];
