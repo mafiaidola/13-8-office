@@ -757,6 +757,26 @@ const DashboardLayout = () => {
   const availableTabs = getAvailableTabs(user?.role);
   const currentThemeConfig = getCurrentTheme();
 
+  // Global function for switching tabs - CRITICAL FOR QUICK ACTIONS
+  const switchToTab = useCallback((tabName) => {
+    console.log(`🔄 Quick Action: Switching to tab: ${tabName}`);
+    setActiveTab(tabName);
+    setShowThemes(false);
+    setShowUserProfile(false);
+    setShowUserSettings(false);
+    console.log(`✅ Quick Action completed: Tab switched to ${tabName}`);
+  }, []);
+
+  // Make switchToTab available globally for Dashboard quick actions
+  useEffect(() => {
+    window.switchToTab = switchToTab;
+    console.log('🌍 switchToTab function made globally available');
+    return () => {
+      delete window.switchToTab;
+      console.log('🌍 switchToTab function removed from global scope');
+    };
+  }, [switchToTab]);
+
   // Load system settings
   const loadSystemSettings = async () => {
     try {
