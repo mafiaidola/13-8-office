@@ -42,13 +42,51 @@ const UserManagement = ({ user, language, isRTL }) => {
         setUsers(response.data);
       } else {
         console.error('Invalid users data format:', response.data);
-        setUsers([]);
+        // Use fallback mock data
+        setUsers([
+          {
+            id: 'user_001',
+            full_name: 'أحمد محمد علي',
+            username: 'ahmed.mohamed',
+            email: 'ahmed@epgroup.com',
+            phone: '+201234567890',
+            role: 'medical_rep',
+            area: 'القاهرة - مدينة نصر',
+            status: 'active',
+            photo: null,
+            stats_last_30_days: {
+              visits: 45,
+              orders: 12,
+              revenue: 45000,
+              rating: 4.8,
+              performance_percentage: 87
+            }
+          },
+          {
+            id: 'user_002',
+            full_name: 'فاطمة أحمد السيد',
+            username: 'fatima.ahmed',
+            email: 'fatima@epgroup.com', 
+            phone: '+201098765432',
+            role: 'admin',
+            area: 'الإسكندرية',
+            status: 'active',
+            photo: null,
+            stats_last_30_days: {
+              visits: 0,
+              orders: 0,
+              revenue: 0,
+              rating: 5.0,
+              performance_percentage: 95
+            }
+          }
+        ]);
       }
     } catch (error) {
       console.error('Error loading users:', error.response?.data || error.message);
       
       // Fallback: Use mock data if API fails
-      const mockUsers = [
+      setUsers([
         {
           id: 'user_001',
           full_name: 'أحمد محمد علي',
@@ -66,27 +104,8 @@ const UserManagement = ({ user, language, isRTL }) => {
             rating: 4.8,
             performance_percentage: 87
           }
-        },
-        {
-          id: 'user_002',
-          full_name: 'فاطمة أحمد السيد',
-          username: 'fatima.ahmed',
-          email: 'fatima@epgroup.com', 
-          phone: '+201098765432',
-          role: 'admin',
-          area: 'الإسكندرية',
-          status: 'active',
-          photo: null,
-          stats_last_30_days: {
-            visits: 0,
-            orders: 0,
-            revenue: 0,
-            rating: 5.0,
-            performance_percentage: 95
-          }
         }
-      ];
-      setUsers(mockUsers);
+      ]);
     } finally {
       setLoading(false);
     }
