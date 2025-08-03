@@ -10,6 +10,7 @@ const Settings = ({ user, language, isRTL }) => {
     system: {
       app_name: 'EP Group System',
       app_version: '2.0.0',
+      company_logo: '', // Logo base64 or URL
       max_login_attempts: 3,
       session_timeout: 30,
       enable_two_factor: false,
