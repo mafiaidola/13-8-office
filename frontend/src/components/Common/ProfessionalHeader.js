@@ -240,6 +240,9 @@ const ProfessionalHeader = ({
           {/* 3. Actions Section (Left Side) */}
           <div className="flex items-center gap-2">
             
+            {/* Notification Center */}
+            <NotificationCenter user={user} language={language} />
+            
             {/* Theme Selector */}
             <div className="relative" ref={themeMenuRef}>
               <button
