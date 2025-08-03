@@ -5,6 +5,9 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import './App.css';
 import axios from 'axios';
 
+// Professional Header Import
+import ProfessionalHeader from './components/Common/ProfessionalHeader.js';
+
 // Central System Imports
 import { 
   SYSTEM_TABS, 
