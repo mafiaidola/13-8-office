@@ -64,6 +64,31 @@ const Settings = ({ user, language, isRTL }) => {
     }
   };
 
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('يرجى اختيار ملف صورة صحيح (JPG, PNG, GIF, SVG)');
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('حجم الملف كبير جداً. يرجى اختيار صورة أصغر من 5 ميجابايت');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result;
+        handleSettingChange('system', 'company_logo', base64);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSettingChange = (category, key, value) => {
     setSettings(prev => ({
       ...prev,
