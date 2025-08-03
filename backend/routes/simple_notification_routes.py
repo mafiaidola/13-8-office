@@ -155,7 +155,7 @@ async def mark_notification_as_read(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في تحديث الإشعار: {str(e)}")
 
-@router.post("/api/notifications/test")
+@router.post("/notifications/test")
 async def create_test_notification(
     current_user: dict = Depends(get_current_user)
 ):
