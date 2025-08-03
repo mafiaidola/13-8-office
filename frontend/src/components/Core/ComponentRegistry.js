@@ -117,9 +117,9 @@ export const COMPONENT_REGISTRY = {
   ),
 
   // Debt and Collection Management - Phase 2
-  DebtCollectionManagement: createLazyComponent(
-    () => import('../DebtCollection/DebtCollectionManagement'),
-    'جاري تحميل إدارة الديون والتحصيل...'
+  CRMManagement: createLazyComponent(
+    () => import('../CRM/CRMManagement'),
+    'جاري تحميل إدارة علاقات العملاء...'
   ),
 
   // Visit Management
