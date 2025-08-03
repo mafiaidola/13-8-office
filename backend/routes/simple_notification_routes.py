@@ -53,7 +53,7 @@ async def get_unread_count(current_user: dict = Depends(get_current_user)):
             "error": str(e)
         }
 
-@router.get("/api/notifications/")
+@router.get("/notifications/")
 async def get_my_notifications(
     limit: int = 50,
     current_user: dict = Depends(get_current_user)
