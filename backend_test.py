@@ -213,7 +213,7 @@ class BackendTester:
         """Test POST /api/clinics with manager_name and manager_phone fields"""
         try:
             clinic_data = {
-                "name": "عيادة اختبار الحقول الجديدة",
+                "name": "عيادة اختبار الحقول الجديدة",  # Fixed field name
                 "address": "شارع التحرير، القاهرة",
                 "phone": "01234567890",
                 "email": "test@clinic.com",
