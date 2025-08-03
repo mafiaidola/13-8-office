@@ -7716,3 +7716,286 @@ input:checked + .slider:before {
     padding: 0.75rem;
   }
 }
+
+/* Professional Header Styles - تصميم الهيدر الاحترافي */
+.professional-header {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo Container */
+.logo-container {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Advanced Search Enhancements */
+.advanced-search-dropdown {
+  animation: searchDropdownSlide 0.3s ease-out;
+  transform-origin: top center;
+}
+
+@keyframes searchDropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Theme Menu Enhancements */
+.theme-menu-dropdown {
+  animation: themeMenuSlide 0.3s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes themeMenuSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* User Menu Enhancements */
+.user-menu-dropdown {
+  animation: userMenuSlide 0.3s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes userMenuSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Button Hover Effects */
+.professional-header button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.professional-header button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.professional-header button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Search Input Focus Animation */
+.professional-header input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+/* Theme Color Previews */
+.theme-color-preview {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.theme-color-preview::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-color-preview:hover::after {
+  opacity: 1;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* User Avatar Online Indicator */
+.user-avatar-container {
+  position: relative;
+}
+
+.online-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Responsive Header Adjustments */
+@media (max-width: 1024px) {
+  .professional-header .hidden-lg {
+    display: none;
+  }
+  
+  .professional-header .max-w-xl {
+    max-width: 20rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .professional-header {
+    height: 4rem;
+  }
+  
+  .professional-header .logo-container h1 {
+    font-size: 1rem;
+  }
+  
+  .professional-header .logo-container p {
+    display: none;
+  }
+  
+  .professional-header .mx-8 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+  
+  .professional-header .space-x-4 > * + * {
+    margin-left: 0.5rem;
+  }
+  
+  .rtl .professional-header .space-x-4 > * + * {
+    margin-right: 0.5rem;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .professional-header .px-4 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .professional-header .space-x-2 > * + * {
+    margin-left: 0.25rem;
+  }
+  
+  .rtl .professional-header .space-x-2 > * + * {
+    margin-right: 0.25rem;
+    margin-left: 0;
+  }
+  
+  /* Hide text in buttons on mobile */
+  .professional-header .hidden-sm {
+    display: none;
+  }
+  
+  /* Adjust dropdown widths on mobile */
+  .professional-header .w-80 {
+    width: calc(100vw - 2rem);
+    max-width: 20rem;
+  }
+}
+
+/* Dark Theme Specific Styles */
+.theme-dark .professional-header {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(67, 56, 202, 0.1));
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Golden Theme Specific Styles */
+.theme-golden .professional-header {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+  border-bottom-color: rgba(245, 158, 11, 0.2);
+}
+
+.theme-golden .professional-header button {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.theme-golden .professional-header button:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* Professional Theme Specific Styles */
+.theme-professional .professional-header {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.1));
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+.theme-professional .professional-header button {
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+/* Glassy Theme Specific Styles */
+.theme-glassy .professional-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+/* Minimal Theme Specific Styles */
+.theme-minimal .professional-header {
+  background: linear-gradient(135deg, rgba(243, 244, 246, 0.95), rgba(156, 163, 175, 0.1));
+  border-bottom-color: rgba(156, 163, 175, 0.3);
+}
+
+.theme-minimal .professional-header .text-white {
+  color: #374151 !important;
+}
+
+.theme-minimal .professional-header .text-white\/60 {
+  color: #6b7280 !important;
+}
+
+.theme-minimal .professional-header .text-white\/70 {
+  color: #4b5563 !important;
+}
+
+/* Neon Theme Specific Styles */
+.theme-neon .professional-header {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(255, 153, 0, 0.1));
+  border-bottom-color: rgba(255, 102, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 102, 0, 0.1);
+}
+
+.theme-neon .professional-header button {
+  border-color: rgba(255, 102, 0, 0.3);
+}
+
+.theme-neon .professional-header button:hover {
+  background: rgba(255, 102, 0, 0.2);
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+}
