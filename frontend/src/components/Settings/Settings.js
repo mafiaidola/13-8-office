@@ -119,6 +119,74 @@ const Settings = ({ user, language, isRTL }) => {
 
   const renderSystemSettings = () => (
     <div className="space-y-6">
+      {/* Company Logo Section */}
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <span>🏢</span>
+          شعار الشركة
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-3">الشعار الحالي</label>
+            <div className="w-full h-32 bg-white/5 border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center">
+              {settings.system.company_logo ? (
+                <img 
+                  src={settings.system.company_logo} 
+                  alt="شعار الشركة" 
+                  className="max-h-28 max-w-full object-contain rounded"
+                />
+              ) : (
+                <div className="text-center">
+                  <div className="text-4xl mb-2">🏢</div>
+                  <p className="text-white/70 text-sm">لم يتم رفع شعار بعد</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-3">رفع شعار جديد</label>
+            <div className="space-y-4">
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/svg+xml"
+                onChange={handleLogoUpload}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              />
+              <div className="text-xs text-white/60 space-y-1">
+                <p>• الأنواع المدعومة: JPG, PNG, GIF, SVG</p>
+                <p>• الحد الأقصى للحجم: 5 ميجابايت</p>
+                <p>• الأبعاد المفضلة: 200x60 بيكسل</p>
+              </div>
+              
+              {settings.system.company_logo && (
+                <button
+                  type="button"
+                  onClick={() => handleSettingChange('system', 'company_logo', '')}
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  🗑️ حذف الشعار
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <span>💡</span>
+            <span className="font-medium text-blue-300">نصائح للشعار</span>
+          </div>
+          <ul className="text-sm text-blue-200 space-y-1">
+            <li>• سيظهر الشعار في صفحة تسجيل الدخول</li>
+            <li>• سيظهر في الشريط العلوي للنظام</li>
+            <li>• سيظهر في شاشة التحميل (Preloader)</li>
+            <li>• استخدم خلفية شفافة للحصول على أفضل النتائج</li>
+          </ul>
+        </div>
+      </div>
+
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <span>🖥️</span>
