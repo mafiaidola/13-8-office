@@ -765,6 +765,113 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           activities={recentActivities}
           onActivityClick={handleActivityClick}
         />
+
+        {/* Keyboard Shortcuts Guide */}
+        <div className="shortcuts-guide-card bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            ⌨️ {language === 'ar' ? 'دليل اختصارات لوحة المفاتيح' : 'Keyboard Shortcuts Guide'}
+          </h3>
+          
+          <div className="shortcuts-grid space-y-4">
+            {/* Search Shortcuts */}
+            <div className="shortcut-category">
+              <h4 className="text-sm font-semibold text-blue-400 mb-2">
+                {language === 'ar' ? 'البحث والتنقل' : 'Search & Navigation'}
+              </h4>
+              <div className="shortcuts-list space-y-2">
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'البحث الشامل' : 'Global Search'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">K</kbd>
+                  </div>
+                </div>
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'تحديث البيانات' : 'Refresh Data'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">R</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Shortcuts */}
+            <div className="shortcut-category">
+              <h4 className="text-sm font-semibold text-green-400 mb-2">
+                {language === 'ar' ? 'التنقل السريع' : 'Quick Navigation'}
+              </h4>
+              <div className="shortcuts-list space-y-2">
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'لوحة التحكم' : 'Dashboard'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">1</kbd>
+                  </div>
+                </div>
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'المستخدمين' : 'Users'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">2</kbd>
+                  </div>
+                </div>
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'العيادات' : 'Clinics'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Alt</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">3</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions Shortcuts */}
+            <div className="shortcut-category">
+              <h4 className="text-sm font-semibold text-orange-400 mb-2">
+                {language === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'}
+              </h4>
+              <div className="shortcuts-list space-y-2">
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'إضافة مستخدم' : 'Add User'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">Shift</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">U</kbd>
+                  </div>
+                </div>
+                <div className="shortcut-item flex items-center justify-between">
+                  <span className="text-sm">{language === 'ar' ? 'تسجيل عيادة' : 'Register Clinic'}</span>
+                  <div className="shortcut-keys flex items-center gap-1">
+                    <kbd className="kbd">Ctrl</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">Shift</kbd>
+                    <span>+</span>
+                    <kbd className="kbd">C</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pro Tip */}
+            <div className="pro-tip mt-4 p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30">
+              <p className="text-xs text-purple-200 flex items-center gap-2">
+                <span>💡</span>
+                {language === 'ar' 
+                  ? 'نصيحة: استخدم هذه الاختصارات لتوفير الوقت وزيادة كفاءة العمل'
+                  : 'Pro Tip: Use these shortcuts to save time and increase work efficiency'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Action Modal */}
