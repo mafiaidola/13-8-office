@@ -2095,6 +2095,7 @@ from routes.dashboard_routes import router as dashboard_router
 from routes.settings_routes import router as settings_router
 from routes.activity_routes import router as activity_router
 from routes.debt_routes import router as debt_router
+from routes.notification_routes import router as notification_router
 
 api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
