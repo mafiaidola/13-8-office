@@ -23,6 +23,8 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const [timeFilter, setTimeFilter] = useState('today'); // today, week, month, year
   const [showQuickActionModal, setShowQuickActionModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
   
   const { t } = useTranslation(language);
 
