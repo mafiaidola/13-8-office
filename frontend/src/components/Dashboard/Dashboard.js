@@ -226,8 +226,9 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   };
 
   const handleActivityClick = (activity) => {
-    // Show detailed information about the activity
-    alert(`تفاصيل النشاط:\n\nالنوع: ${activity.action}\nالمستخدم: ${activity.user_name}\nالوقت: ${activity.time}\nالموقع: ${activity.location || 'غير محدد'}`);
+    // Show detailed modal for activity information
+    setSelectedActivity(activity);
+    setShowActivityModal(true);
   };
 
   const formatCurrency = (amount) => {
