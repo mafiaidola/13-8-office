@@ -1,7 +1,7 @@
 // EP Group System - Main Application (Reorganized & Centralized)
 // النظام الرئيسي لمجموعة EP - منظم ومركزي
 
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import './App.css';
 import axios from 'axios';
 
