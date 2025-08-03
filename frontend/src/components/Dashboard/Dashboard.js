@@ -25,6 +25,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   
   const { t } = useTranslation(language);
 
