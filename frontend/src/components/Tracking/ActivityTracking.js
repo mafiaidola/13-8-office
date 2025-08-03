@@ -402,8 +402,12 @@ const ActivityTracking = ({ user, language, isRTL }) => {
   });
 
   const showActivityDetails = (activity) => {
+    console.log('🔍 Showing activity details:', activity);
     setSelectedActivity(activity);
-    // يمكن إضافة modal أو drawer لعرض التفاصيل الكاملة
+  };
+
+  const closeActivityDetails = () => {
+    setSelectedActivity(null);
   };
 
   const exportData = async (format = 'json') => {
