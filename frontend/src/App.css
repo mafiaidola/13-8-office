@@ -2984,10 +2984,12 @@ input:focus, select:focus, textarea:focus {
 /* Enhanced Theme Selector - Fixed z-index */
 .theme-selector-enhanced {
   position: relative;
-  z-index: 15000;
+  z-index: 99999 !important;
 }
 
 .theme-selector-btn {
+  position: relative;
+  z-index: 99998 !important;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
