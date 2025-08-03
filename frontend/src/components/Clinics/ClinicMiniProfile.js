@@ -342,6 +342,28 @@ ${debt.status === 'overdue' ?
     alert(details);
   };
 
+  const showVisitDetails = (visit) => {
+    const visitTypeText = visit.visit_type === 'routine' ? 'روتينية' :
+                         visit.visit_type === 'follow_up' ? 'متابعة' :
+                         visit.visit_type === 'presentation' ? 'عرض منتجات' : visit.visit_type;
+    
+    const details = `
+تفاصيل الزيارة: ${formatDateTime(visit.visit_date)}
+
+المندوب: ${visit.rep_name}
+نوع الزيارة: ${visitTypeText}
+مدة الزيارة: ${visit.duration_minutes} دقيقة
+
+إنشاء طلب: ${visit.order_created ? `تم - ${formatCurrency(visit.order_value)}` : 'لم يتم'}
+
+العيادة: ${clinic.clinic_name}
+الطبيب: ${clinic.doctor_name}
+
+${visit.notes ? `الملاحظات:\n${visit.notes}` : 'لا توجد ملاحظات'}
+    `;
+    alert(details);
+  };
+
   const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('ar-EG', {
       year: 'numeric',
