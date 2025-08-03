@@ -1745,11 +1745,6 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
         # Create new clinic with unique ID
         new_clinic = {
             "id": str(uuid.uuid4()),
-            "name": clinic_data["clinic_name"],
-            "doctor_name": clinic_data["doctor_name"],
-            "phone": clinic_data["phone"],
-            "address": clinic_data["address"],
-            
             "name": clinic_data["name"],
             "doctor_name": clinic_data["doctor_name"],
             "phone": clinic_data["phone"],
@@ -1771,7 +1766,8 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "created_by": current_user.id,
             "created_by_name": current_user.full_name or "",
             # Fix: Set assigned_rep_id for medical reps so they can see their clinics
-            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None}
+            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None
+        }
 
         # Insert into database
         result = await db.clinics.insert_one(new_clinic)
