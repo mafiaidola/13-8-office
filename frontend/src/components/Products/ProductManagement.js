@@ -300,11 +300,12 @@ const ProductManagement = ({ user, language, isRTL }) => {
             onClick={() => {
               setSelectedProduct(null);
               setShowProductModal(true);
+              console.log('🔧 Opening product modal for new product');
             }}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
           >
             <span>➕</span>
-            {t('products', 'addProduct')}
+            إضافة منتج جديد
           </button>
         </div>
       </div>
