@@ -23,7 +23,7 @@ const UserProfile = ({ user, language = 'ar', isRTL = true, onClose, onSave }) =
   const handleSave = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       const response = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: 'PUT',
