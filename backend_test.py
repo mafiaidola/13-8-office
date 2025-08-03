@@ -674,7 +674,38 @@ class BackendTester:
             except Exception as e:
                 self.log_test(test_name, False, f"Error: {str(e)}")
         
-        return successful_error_handling >= len(error_tests) * 0.8
+    def test_core_apis(self):
+        """Test core APIs that should be working"""
+        core_tests = [
+            ("GET /api/users", f"{API_BASE}/users"),
+            ("GET /api/clinics", f"{API_BASE}/clinics"),
+            ("GET /api/products", f"{API_BASE}/products"),
+            ("GET /api/orders", f"{API_BASE}/orders"),
+            ("GET /api/lines", f"{API_BASE}/lines"),
+            ("GET /api/areas", f"{API_BASE}/areas"),
+            ("GET /api/warehouses", f"{API_BASE}/warehouses"),
+            ("GET /api/visits", f"{API_BASE}/visits")
+        ]
+        
+        success_count = 0
+        for test_name, url in core_tests:
+            try:
+                start_time = time.time()
+                response = self.session.get(url)
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    count = len(data) if isinstance(data, list) else "N/A"
+                    self.log_test(test_name, True, f"Retrieved {count} records", response_time)
+                    success_count += 1
+                else:
+                    self.log_test(test_name, False, f"Failed: {response.status_code} - {response.text}", response_time)
+                    
+            except Exception as e:
+                self.log_test(test_name, False, f"Error: {str(e)}")
+        
+        return success_count
         """Test core APIs that should be working"""
         core_tests = [
             ("GET /api/users", f"{API_BASE}/users"),
