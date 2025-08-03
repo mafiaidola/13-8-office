@@ -796,7 +796,7 @@ const DashboardLayout = () => {
             </div>
             <div className="header-brand-text">
               <div className="header-brand-title">
-                {systemSettings.system.app_name || 'EP Group System'}
+                {systemSettings?.system?.app_name || 'EP Group System'}
               </div>
               <div className="header-brand-subtitle">
                 {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
