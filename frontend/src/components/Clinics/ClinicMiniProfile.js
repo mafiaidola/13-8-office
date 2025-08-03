@@ -155,16 +155,6 @@ const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
     });
   };
 
-  const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const exportToPDF = (section) => {
     let content = '';
     const clinicName = clinic.clinic_name || 'عيادة غير محددة';
