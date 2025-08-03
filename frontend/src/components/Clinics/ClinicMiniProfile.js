@@ -642,6 +642,27 @@ ${debt.status === 'overdue' ?
 
   const renderVisits = () => (
     <div className="space-y-4">
+      {/* Visits Header with Export Options */}
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-bold">سجل زيارات العيادة ({profileData.visits.length})</h4>
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportToPDF('visits')}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>📄</span>
+            تصدير PDF
+          </button>
+          <button
+            onClick={() => printSection('visits')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>🖨️</span>
+            طباعة
+          </button>
+        </div>
+      </div>
+      
       {profileData.visits.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">🏥</div>
@@ -649,13 +670,17 @@ ${debt.status === 'overdue' ?
         </div>
       ) : (
         profileData.visits.map(visit => (
-          <div key={visit.id} className="bg-white/5 rounded-lg p-4">
+          <div 
+            key={visit.id} 
+            className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
+            onClick={() => showVisitDetails(visit)}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="font-medium">{formatDateTime(visit.visit_date)}</div>
               <div className="text-sm">
-                {visit.visit_type === 'routine' ? 'روتينية' :
-                 visit.visit_type === 'follow_up' ? 'متابعة' :
-                 visit.visit_type === 'presentation' ? 'عرض منتجات' : visit.visit_type}
+                {visit.visit_type === 'routine' ? '📋 روتينية' :
+                 visit.visit_type === 'follow_up' ? '🔄 متابعة' :
+                 visit.visit_type === 'presentation' ? '📊 عرض منتجات' : visit.visit_type}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm mb-3">
@@ -671,18 +696,22 @@ ${debt.status === 'overdue' ?
                 <div className="opacity-75">طلب:</div>
                 <div className={visit.order_created ? 'text-green-400' : 'text-gray-400'}>
                   {visit.order_created 
-                    ? `تم - ${formatCurrency(visit.order_value)}`
-                    : 'لم يتم'
+                    ? `✅ تم - ${formatCurrency(visit.order_value)}`
+                    : '❌ لم يتم'
                   }
                 </div>
               </div>
             </div>
             {visit.notes && (
-              <div className="text-sm opacity-75 bg-white/5 rounded p-2">
+              <div className="text-sm opacity-75 bg-white/5 rounded p-2 mb-2">
                 <div className="opacity-75 mb-1">ملاحظات:</div>
                 <div>{visit.notes}</div>
               </div>
             )}
+            <div className="mt-2 text-xs text-blue-300 flex items-center gap-1">
+              <span>👆</span>
+              اضغط لعرض التفاصيل الكاملة للزيارة
+            </div>
           </div>
         ))
       )}
