@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.all_models import SystemSettings
 import os
@@ -102,48 +102,12 @@ async def get_system_settings(current_user: dict = Depends(get_current_user)):
         if 'client' in locals():
             client.close()
 
-@router.post("/settings")
-async def update_system_settings(settings_data: dict, authorization: str = None):
-    """تحديث إعدادات النظام - Update System Settings"""
-    user = await get_current_user(authorization)
-    
-    if not user or user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ.get('DB_NAME', 'test_database')]
-    
-    try:
-        # Update settings
-        settings_data["updated_at"] = datetime.utcnow()
-        
-        result = await db.system_settings.update_one(
-            {},
-            {"$set": settings_data},
-            upsert=True
-        )
-        
-        return {
-            "success": True,
-            "message": "تم تحديث الإعدادات بنجاح",
-            "updated": result.modified_count > 0 or result.upserted_id is not None
-        }
-        
-    except Exception as e:
-        print(f"Error updating system settings: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error updating settings: {str(e)}")
-    finally:
-        if 'client' in locals():
-            client.close()
-
 @router.put("/admin/settings")
-async def update_system_settings(settings_data: dict, authorization: str = None):
+async def update_system_settings(settings_data: dict, current_user: dict = Depends(get_current_user)):
     """تحديث إعدادات النظام - Update System Settings"""
     
     # Verify admin user
-    user = await get_current_user(authorization)
-    if not user or user.get("role") != "admin":
+    if not current_user or current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -153,7 +117,7 @@ async def update_system_settings(settings_data: dict, authorization: str = None)
     try:
         # Update or create settings
         settings_data["updated_at"] = datetime.utcnow()
-        settings_data["updated_by"] = user.get("id")
+        settings_data["updated_by"] = current_user.get("id")
         
         result = await db.system_settings.update_one(
             {"_id": "main_settings"},
