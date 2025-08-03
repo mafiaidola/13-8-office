@@ -745,6 +745,18 @@ const DashboardLayout = () => {
   } = useTheme();
   const { t } = useTranslation(language);
 
+  // Handle global search
+  const handleGlobalSearch = async (query, type) => {
+    console.log(`🔍 Global search: ${query} (type: ${type})`);
+    // Implement search logic here
+    // Return mock results for now
+    return [
+      { id: 1, type: 'clinic', title: 'عيادة الدكتور أحمد', subtitle: 'القاهرة', icon: '🏥' },
+      { id: 2, type: 'user', title: 'محمد علي', subtitle: 'مندوب طبي', icon: '👤' },
+      { id: 3, type: 'invoice', title: 'فاتورة #12345', subtitle: '1500 ج.م', icon: '📄' }
+    ];
+  };
+
   // Get available tabs for current user
   const availableTabs = getAvailableTabs(user?.role);
   const currentThemeConfig = getCurrentTheme();
