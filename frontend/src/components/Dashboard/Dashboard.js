@@ -423,8 +423,6 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
       userRole: user?.role
     });
   };
-    }
-  };
 
   const handleActivityClick = (activity) => {
     // Show detailed modal for activity information
