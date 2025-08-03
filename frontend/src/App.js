@@ -27,10 +27,40 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Themes - الثيمات المتاحة
+// Available Themes - الثيمات المتاحة (Updated with 7 Professional Themes)
 const AVAILABLE_THEMES = {
+  glassy: {
+    name: { ar: 'زجاجي', en: 'Glassy' },
+    colors: {
+      primary: 'from-blue-500 to-cyan-500',
+      secondary: 'from-cyan-500 to-teal-500',
+      background: 'from-blue-900/20 via-cyan-900/10 to-teal-900/20',
+      card: 'bg-white/10 backdrop-blur-lg border border-white/20',
+      text: 'text-white'
+    }
+  },
+  dark: {
+    name: { ar: 'داكن', en: 'Dark' },
+    colors: {
+      primary: 'from-gray-800 to-gray-900',
+      secondary: 'from-gray-900 to-black',
+      background: 'from-gray-900 via-gray-800 to-black',
+      card: 'bg-gray-800/80 border border-gray-600/30',
+      text: 'text-gray-100'
+    }
+  },
+  golden: {
+    name: { ar: 'ذهبي', en: 'Golden' },
+    colors: {
+      primary: 'from-yellow-500 to-orange-500',
+      secondary: 'from-orange-500 to-red-500',
+      background: 'from-yellow-50 via-orange-50 to-red-50',
+      card: 'bg-yellow-50/80 border border-yellow-200/50',
+      text: 'text-yellow-900'
+    }
+  },
   modern: {
-    name: { ar: 'عصري', en: 'Modern' },
+    name: { ar: 'حديث', en: 'Modern' },
     colors: {
       primary: 'from-blue-600 to-indigo-600',
       secondary: 'from-indigo-600 to-purple-600',
@@ -49,7 +79,27 @@ const AVAILABLE_THEMES = {
       text: 'text-gray-800'
     }
   },
-  glassy: {
+  professional: {
+    name: { ar: 'مهني', en: 'Professional' },
+    colors: {
+      primary: 'from-slate-800 to-slate-900',
+      secondary: 'from-slate-900 to-gray-900',
+      background: 'from-slate-50 via-gray-50 to-slate-100',
+      card: 'bg-white border border-slate-200/60',
+      text: 'text-slate-800'
+    }
+  },
+  neon: {
+    name: { ar: 'نيون', en: 'Neon' },
+    colors: {
+      primary: 'from-orange-500 to-red-500',
+      secondary: 'from-red-500 to-pink-500',
+      background: 'from-orange-900/20 via-red-900/10 to-pink-900/20',
+      card: 'bg-orange-500/10 backdrop-blur-lg border border-orange-500/30',
+      text: 'text-orange-100'
+    }
+  }
+};
     name: { ar: 'زجاجي', en: 'Glassy' },
     colors: {
       primary: 'from-cyan-500 to-teal-600',
