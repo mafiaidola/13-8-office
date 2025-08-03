@@ -34,6 +34,9 @@ db = client[os.environ['DB_NAME']]
 # Initialize notification service
 notification_service = NotificationService(db)
 
+# Initialize CRM service  
+crm_service = CRMService(db)
+
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
