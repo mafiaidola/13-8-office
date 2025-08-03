@@ -174,14 +174,14 @@ export const SYSTEM_TABS = {
     priority: 14
   },
 
-  debt_collection: {
-    id: 'debt_collection',
-    path: '/debt-collection',
-    icon: '💳',
-    name: { ar: 'الديون والتحصيل', en: 'Debt & Collection' },
-    component: 'DebtCollectionManagement',
-    description: { ar: 'إدارة متقدمة للديون والتحصيل مع إمكانية الطباعة والتصدير', en: 'Advanced debt and collection management with print and export capabilities' },
-    permissions: ['admin', 'gm', 'accounting', 'finance', 'medical_rep', 'line_manager', 'area_manager'],
+  crm: {
+    id: 'crm',
+    path: '/crm',
+    icon: '🤝',
+    name: { ar: 'إدارة العلاقات', en: 'CRM' },
+    component: 'CRMManagement',
+    description: { ar: 'إدارة علاقات العملاء والمتابعة والتواصل', en: 'Customer relationship management, follow-up and communication' },
+    permissions: ['admin', 'gm', 'manager', 'medical_rep', 'key_account'],
     priority: 15
   },
 
