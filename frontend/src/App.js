@@ -826,7 +826,10 @@ const DashboardLayout = () => {
       <ProfessionalHeader 
         user={user}
         language={language}
-        setLanguage={setLanguage}
+        setLanguage={(newLang) => {
+          setLanguage(newLang);
+          setIsRTL(newLang === 'ar');
+        }}
         theme={theme}
         setTheme={changeTheme}
         isRTL={isRTL}
