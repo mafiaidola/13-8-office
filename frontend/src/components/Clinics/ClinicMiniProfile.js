@@ -322,6 +322,26 @@ ${index + 1}. ${formatDateTime(visit.visit_date)}
     alert(details);
   };
 
+  const showDebtDetails = (debt) => {
+    const details = `
+تفاصيل المديونية: ${debt.invoice_number}
+
+تاريخ الاستحقاق: ${formatDate(debt.due_date)}
+المبلغ الأصلي: ${formatCurrency(debt.original_amount)}
+المبلغ المدفوع: ${formatCurrency(debt.paid_amount)}
+المبلغ المتبقي: ${formatCurrency(debt.remaining_amount)}
+الحالة: ${debt.status === 'overdue' ? `متأخر ${debt.days_overdue} يوم` : debt.status}
+
+العيادة: ${clinic.clinic_name}
+الطبيب: ${clinic.doctor_name}
+
+${debt.status === 'overdue' ? 
+  `⚠️ تنبيه: هذه المديونية متأخرة ${debt.days_overdue} يوم!` : 
+  '✅ المديونية ضمن المدة المسموحة'}
+    `;
+    alert(details);
+  };
+
   const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('ar-EG', {
       year: 'numeric',
