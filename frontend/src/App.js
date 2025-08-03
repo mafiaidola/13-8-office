@@ -29,31 +29,31 @@ const AVAILABLE_THEMES = {
   modern: {
     name: { ar: 'عصري', en: 'Modern' },
     colors: {
-      primary: 'from-blue-500 to-purple-600',
-      secondary: 'from-purple-500 to-pink-500',
-      background: 'from-gray-900 via-blue-900 to-indigo-900',
-      card: 'bg-white/10',
-      text: 'text-white'
+      primary: 'from-blue-600 to-indigo-600',
+      secondary: 'from-indigo-600 to-purple-600',
+      background: 'from-slate-900 via-blue-900 to-indigo-900',
+      card: 'bg-slate-800/60 border border-blue-500/20',
+      text: 'text-blue-100'
     }
   },
   minimal: {
     name: { ar: 'بسيط', en: 'Minimal' },
     colors: {
-      primary: 'from-gray-600 to-gray-800',
-      secondary: 'from-gray-500 to-gray-700',
-      background: 'from-gray-50 to-gray-200',
-      card: 'bg-white/90',
-      text: 'text-gray-900'
+      primary: 'from-gray-600 to-slate-700',
+      secondary: 'from-slate-700 to-gray-800',
+      background: 'from-gray-50 to-slate-100',
+      card: 'bg-white border border-gray-200/50',
+      text: 'text-gray-800'
     }
   },
   glassy: {
     name: { ar: 'زجاجي', en: 'Glassy' },
     colors: {
-      primary: 'from-cyan-400 to-blue-500',
-      secondary: 'from-teal-400 to-cyan-500',
-      background: 'from-slate-900 via-purple-900 to-slate-900',
-      card: 'bg-white/5 backdrop-blur-xl',
-      text: 'text-white'
+      primary: 'from-cyan-500 to-teal-600',
+      secondary: 'from-teal-600 to-emerald-700',
+      background: 'from-slate-900 via-cyan-900/50 to-teal-900',
+      card: 'bg-white/10 border border-cyan-400/30 backdrop-blur-lg',
+      text: 'text-cyan-100'
     }
   },
   dark: {
