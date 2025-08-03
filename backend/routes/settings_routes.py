@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.all_models import SystemSettings
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,6 +7,7 @@ from datetime import datetime
 import jwt
 
 router = APIRouter()
+security = HTTPBearer()
 
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
@@ -21,25 +23,22 @@ def verify_jwt_token(token: str):
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-async def get_current_user(authorization: str = None):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """الحصول على المستخدم الحالي من JWT token"""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-        payload = verify_jwt_token(token)
-        
-        # Get user from database
-        mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-        client = AsyncIOMotorClient(mongo_url)
-        db = client[os.environ.get('DB_NAME', 'test_database')]
-        
-        user = await db.users.find_one({"id": payload["user_id"]})
-        client.close()
-        return user
+    token = credentials.credentials
+    payload = verify_jwt_token(token)
     
-    return None
+    # Get user from database
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ.get('DB_NAME', 'test_database')]
+    
+    user = await db.users.find_one({"id": payload["user_id"]})
+    client.close()
+    return user
 
 @router.get("/admin/settings")
-async def get_system_settings(authorization: str = None):
+async def get_system_settings(current_user: dict = Depends(get_current_user)):
     """إعدادات النظام - System Settings"""
     
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
