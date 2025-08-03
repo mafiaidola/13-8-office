@@ -14,7 +14,7 @@ import {
   normalizeRole 
 } from './config/systemConfig.js';
 import NavigationSystem from './components/Navigation/NavigationSystem.js';
-import { ComponentRenderer } from './components/Core/ComponentRegistry.js';
+import { ComponentRenderer, ComponentRegistry } from './components/Core/ComponentRegistry.js';
 import { useTranslation } from './localization/translations.js';
 
 // API Configuration
