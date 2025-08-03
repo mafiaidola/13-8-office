@@ -126,7 +126,7 @@ async def create_notification(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في إنشاء الإشعار: {str(e)}")
 
-@router.patch("/api/notifications/{notification_id}/read")
+@router.patch("/notifications/{notification_id}/read")
 async def mark_notification_as_read(
     notification_id: str,
     current_user: dict = Depends(get_current_user)
