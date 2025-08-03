@@ -732,11 +732,14 @@ const DashboardLayout = () => {
   });
   
   const { user, logout } = useAuth();
-  const { 
-    language, 
-    isRTL, 
-    toggleLanguage, 
-    theme, 
+  const {
+    language,
+    setLanguage,
+    theme,
+    setTheme,
+    isRTL,
+    setIsRTL,
+    toggleLanguage,
     changeTheme, 
     getCurrentTheme, 
     availableThemes,
