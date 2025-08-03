@@ -1130,19 +1130,19 @@ const DashboardLayout = () => {
           left: 0;
           right: 0;
           z-index: 40;
-          height: 80px;
+          height: 64px;
           backdrop-filter: blur(20px);
         }
 
         .dashboard-content {
-          padding-top: 80px;
+          padding-top: 64px;
           min-height: 100vh;
         }
 
         .dashboard-sidebar {
           position: fixed;
           right: 0;
-          top: 80px;
+          top: 64px;
           bottom: 0;
           z-index: 30;
           overflow-y: auto;
