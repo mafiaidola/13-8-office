@@ -332,42 +332,97 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   };
 
   const handleQuickAction = (actionId) => {
-    // Navigate directly to appropriate tab instead of showing modal
+    console.log(`🎯 Quick Action clicked: ${actionId}`); // Debug logging
+    
+    // Use window navigation for proper tab switching
     switch (actionId) {
       case 'add-user':
-        setActiveTab && setActiveTab('users');
-        // Optional: set a flag to open add user modal
+        if (window.switchToTab) {
+          window.switchToTab('users');
+          console.log('✅ Switched to Users tab');
+        } else if (setActiveTab) {
+          setActiveTab('users');
+          console.log('✅ Switched to Users tab via prop');
+        }
         break;
       case 'register-clinic':
-        setActiveTab && setActiveTab('clinics');
+        if (window.switchToTab) {
+          window.switchToTab('clinics');
+          console.log('✅ Switched to Clinics tab');
+        } else if (setActiveTab) {
+          setActiveTab('clinics');
+        }
         break;
       case 'add-product':
-        setActiveTab && setActiveTab('products');
+        if (window.switchToTab) {
+          window.switchToTab('products');
+          console.log('✅ Switched to Products tab');
+        } else if (setActiveTab) {
+          setActiveTab('products');
+        }
         break;
       case 'create-order':
-        setActiveTab && setActiveTab('orders');
+        if (window.switchToTab) {
+          window.switchToTab('orders');
+          console.log('✅ Switched to Orders tab');
+        } else if (setActiveTab) {
+          setActiveTab('orders');
+        }
         break;
       case 'record-visit':
-        setActiveTab && setActiveTab('visits');
+        if (window.switchToTab) {
+          window.switchToTab('visits');
+          console.log('✅ Switched to Visits tab');
+        } else if (setActiveTab) {
+          setActiveTab('visits');
+        }
         break;
       case 'add-debt':
       case 'record-collection':
-        setActiveTab && setActiveTab('debtCollection');
+        if (window.switchToTab) {
+          window.switchToTab('debtCollection');
+          console.log('✅ Switched to Debt Collection tab');
+        } else if (setActiveTab) {
+          setActiveTab('debtCollection');
+        }
         break;
       case 'manage-warehouse':
-        setActiveTab && setActiveTab('warehouses');
+        if (window.switchToTab) {
+          window.switchToTab('warehouses');
+          console.log('✅ Switched to Warehouses tab');
+        } else if (setActiveTab) {
+          setActiveTab('warehouses');
+        }
         break;
       case 'generate-report':
-        setActiveTab && setActiveTab('reports');
+        // Generate PDF report directly
+        exportActivitiesReport();
+        console.log('📊 Generated activities report');
         break;
       case 'system-settings':
-        setActiveTab && setActiveTab('settings');
+        if (window.switchToTab) {
+          window.switchToTab('settings');
+          console.log('✅ Switched to Settings tab');
+        } else if (setActiveTab) {
+          setActiveTab('settings');
+        }
         break;
       default:
-        // For unimplemented actions, show the modal
-        setSelectedAction(actionId);
-        setShowQuickActionModal(true);
+        console.log(`⚠️ Unhandled quick action: ${actionId}`);
+        // For unimplemented actions, show alert
+        alert(language === 'ar' ? 
+          `تم النقر على: ${actionId}` : 
+          `Clicked: ${actionId}`);
         break;
+    }
+    
+    // Log activity
+    activityLogger.logQuickAction(actionId, {
+      timestamp: new Date().toISOString(),
+      fromDashboard: true,
+      userRole: user?.role
+    });
+  };
     }
   };
 
