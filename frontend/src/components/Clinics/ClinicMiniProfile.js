@@ -553,6 +553,27 @@ ${index + 1}. ${formatDateTime(visit.visit_date)}
 
   const renderDebts = () => (
     <div className="space-y-4">
+      {/* Debts Header with Export Options */}
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-bold">مديونيات العيادة ({profileData.debts.length})</h4>
+        <div className="flex gap-2">
+          <button
+            onClick={() => exportToPDF('debts')}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>📄</span>
+            تصدير PDF
+          </button>
+          <button
+            onClick={() => printSection('debts')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
+          >
+            <span>🖨️</span>
+            طباعة
+          </button>
+        </div>
+      </div>
+      
       {profileData.debts.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">💳</div>
@@ -560,7 +581,11 @@ ${index + 1}. ${formatDateTime(visit.visit_date)}
         </div>
       ) : (
         profileData.debts.map(debt => (
-          <div key={debt.id} className="bg-white/5 rounded-lg p-4">
+          <div 
+            key={debt.id} 
+            className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
+            onClick={() => showDebtDetails(debt)}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="font-medium text-orange-400">{debt.invoice_number}</div>
               <span className={`px-2 py-1 rounded text-xs ${getDebtStatusColor(debt.status)}`}>
@@ -584,6 +609,10 @@ ${index + 1}. ${formatDateTime(visit.visit_date)}
                 <div className="opacity-75">المبلغ المتبقي:</div>
                 <div className="text-red-400 font-medium">{formatCurrency(debt.remaining_amount)}</div>
               </div>
+            </div>
+            <div className="mt-2 text-xs text-orange-300 flex items-center gap-1">
+              <span>👆</span>
+              اضغط لعرض التفاصيل الكاملة والمحاسبة
             </div>
           </div>
         ))
