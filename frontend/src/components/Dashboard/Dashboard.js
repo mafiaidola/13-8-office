@@ -39,7 +39,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const loadEnhancedDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       
       // Load dashboard stats from multiple endpoints
       const [usersRes, clinicsRes, productsRes, debtsRes] = await Promise.allSettled([
