@@ -1024,6 +1024,88 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           onActivityClick={handleActivityClick}
         />
 
+        {/* Export & Reports Center */}
+        <div className="export-reports-center bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            📊 {language === 'ar' ? 'مركز التصدير والتقارير' : 'Export & Reports Center'}
+          </h3>
+          
+          <div className="export-actions-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Activities Export */}
+            <button
+              onClick={() => exportActivitiesReport()}
+              className="export-btn bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex flex-col items-center gap-2 hover:scale-105"
+            >
+              <span className="text-2xl">📋</span>
+              <span className="text-sm font-medium">{language === 'ar' ? 'تقرير الأنشطة' : 'Activities Report'}</span>
+              <span className="text-xs opacity-80">{language === 'ar' ? 'PDF شامل' : 'Comprehensive PDF'}</span>
+            </button>
+
+            {/* Daily Summary Export */}
+            <button
+              onClick={() => exportDailySummary()}
+              className="export-btn bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 flex flex-col items-center gap-2 hover:scale-105"
+            >
+              <span className="text-2xl">📅</span>
+              <span className="text-sm font-medium">{language === 'ar' ? 'ملخص يومي' : 'Daily Summary'}</span>
+              <span className="text-xs opacity-80">{language === 'ar' ? 'PDF + Excel' : 'PDF + Excel'}</span>
+            </button>
+
+            {/* Performance Analytics */}
+            <button
+              onClick={() => exportPerformanceAnalytics()}
+              className="export-btn bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all duration-300 flex flex-col items-center gap-2 hover:scale-105"
+            >
+              <span className="text-2xl">📈</span>
+              <span className="text-sm font-medium">{language === 'ar' ? 'تحليل الأداء' : 'Performance Analytics'}</span>
+              <span className="text-xs opacity-80">{language === 'ar' ? 'Dashboard PDF' : 'Dashboard PDF'}</span>
+            </button>
+
+            {/* Custom Reports */}
+            <button
+              onClick={() => openCustomReportBuilder()}
+              className="export-btn bg-gradient-to-r from-orange-600 to-orange-700 text-white p-4 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-300 flex flex-col items-center gap-2 hover:scale-105"
+            >
+              <span className="text-2xl">🔧</span>
+              <span className="text-sm font-medium">{language === 'ar' ? 'تقارير مخصصة' : 'Custom Reports'}</span>
+              <span className="text-xs opacity-80">{language === 'ar' ? 'منشئ تقارير' : 'Report Builder'}</span>
+            </button>
+          </div>
+
+          {/* Export History */}
+          <div className="export-history mt-6 pt-4 border-t border-white/10">
+            <h4 className="text-sm font-semibold text-white/80 mb-3">
+              {language === 'ar' ? 'آخر التصديرات' : 'Recent Exports'}
+            </h4>
+            <div className="export-history-list space-y-2">
+              <div className="export-history-item flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-blue-400">📋</span>
+                  <div>
+                    <div className="text-sm">{language === 'ar' ? 'تقرير الأنشطة اليومية' : 'Daily Activities Report'}</div>
+                    <div className="text-xs text-white/60">{new Date().toLocaleDateString('ar-EG')} - 2.3 MB</div>
+                  </div>
+                </div>
+                <button className="text-xs text-blue-400 hover:text-blue-300">
+                  {language === 'ar' ? 'تحميل مجدداً' : 'Download Again'}
+                </button>
+              </div>
+              <div className="export-history-item flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400">📈</span>
+                  <div>
+                    <div className="text-sm">{language === 'ar' ? 'تحليل الأداء الشهري' : 'Monthly Performance Analysis'}</div>
+                    <div className="text-xs text-white/60">{new Date(Date.now() - 86400000).toLocaleDateString('ar-EG')} - 1.8 MB</div>
+                  </div>
+                </div>
+                <button className="text-xs text-green-400 hover:text-green-300">
+                  {language === 'ar' ? 'تحميل مجدداً' : 'Download Again'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Keyboard Shortcuts Guide */}
         <div className="shortcuts-guide-card bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
           <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
