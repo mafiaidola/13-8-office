@@ -123,27 +123,6 @@ const ThemeProvider = ({ children }) => {
     setIsRTL(newLanguage === 'ar');
   };
 
-  // Global function for switching tabs - CRITICAL FOR QUICK ACTIONS
-  const switchToTab = (tabName) => {
-    console.log(`🔄 Switching to tab: ${tabName}`);
-    setActiveTab(tabName);
-    setShowUserCard(false);
-    setShowThemes(false);
-    setShowProfile(false);
-    setShowSettings(false);
-    
-    // Log tab switch activity
-    console.log(`✅ Tab switched successfully: ${tabName}`);
-  };
-
-  // Make switchToTab available globally for Dashboard quick actions
-  useEffect(() => {
-    window.switchToTab = switchToTab;
-    return () => {
-      delete window.switchToTab;
-    };
-  }, [activeTab]);
-
   const changeTheme = (newTheme) => {
     if (AVAILABLE_THEMES[newTheme]) {
       setTheme(newTheme);
