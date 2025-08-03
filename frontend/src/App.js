@@ -1070,32 +1070,72 @@ const DashboardLayout = () => {
 
       {/* User Profile Modal */}
       {showUserProfile && (
-        <ComponentRegistry.UserProfile
-          user={user}
-          language={language}
-          isRTL={isRTL}
-          onClose={() => setShowUserProfile(false)}
-          onSave={(updatedUser) => {
-            // Update user context if available
-            console.log('User updated:', updatedUser);
-            setShowUserProfile(false);
-          }}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md mx-4 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">الملف الشخصي</h3>
+              <button
+                onClick={() => setShowUserProfile(false)}
+                className="text-white/70 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">الاسم الكامل</label>
+                <input 
+                  type="text" 
+                  value={user?.full_name || user?.username || ''} 
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">الدور</label>
+                <input 
+                  type="text" 
+                  value={user?.role || ''} 
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg"
+                  readOnly
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* User Settings Modal */}
       {showUserSettings && (
-        <ComponentRegistry.UserSettings
-          user={user}
-          language={language}
-          isRTL={isRTL}
-          onClose={() => setShowUserSettings(false)}
-          onSave={(settings) => {
-            // Apply settings changes
-            console.log('Settings updated:', settings);
-            setShowUserSettings(false);
-          }}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md mx-4 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">الإعدادات</h3>
+              <button
+                onClick={() => setShowUserSettings(false)}
+                className="text-white/70 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">اللغة</label>
+                <select className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg">
+                  <option value="ar">العربية</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">الثيم</label>
+                <select className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg">
+                  <option value="dark">داكن</option>
+                  <option value="light">فاتح</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <style jsx>{`
