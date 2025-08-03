@@ -905,54 +905,273 @@ const ActivityDetailsModal = ({ activity, language, onClose }) => {
   };
 
   const exportToPDF = () => {
-    // Create printable content
-    const printContent = `
-      تفاصيل النشاط
-      ============
-      
-      النوع: ${activity.action}
-      الحالة: ${getStatusText(activity.status || 'completed')}
-      
-      المستخدم:
-      - الاسم: ${activity.user_name}
-      - الدور: ${activity.user_role}
-      
-      ${activity.clinic_name ? `العيادة: ${activity.clinic_name}` : ''}
-      ${activity.doctor_name ? `الطبيب: ${activity.doctor_name}` : ''}
-      ${activity.amount ? `المبلغ: ${formatCurrency(activity.amount)}` : ''}
-      ${activity.payment_method ? `طريقة الدفع: ${activity.payment_method}` : ''}
-      ${activity.visit_effectiveness ? `فعالية الزيارة: ${activity.visit_effectiveness}` : ''}
-      ${activity.new_user_name ? `المستخدم الجديد: ${activity.new_user_name} (${activity.new_user_role})` : ''}
-      
-      التوقيت والموقع:
-      - الوقت: ${activity.time}
-      - التاريخ والوقت: ${activity.timestamp ? new Date(activity.timestamp).toLocaleString('ar-EG') : 'غير محدد'}
-      - الموقع: ${activity.location || 'غير محدد'}
-      ${activity.gps_coordinates ? `- إحداثيات GPS: ${activity.gps_coordinates}` : ''}
-      
-      معلومات إضافية:
-      ${activity.notes ? `- الملاحظات: ${activity.notes}` : ''}
-      ${activity.device_info ? `- معلومات الجهاز: ${activity.device_info}` : ''}
-      ${activity.ip_address ? `- عنوان IP: ${activity.ip_address}` : ''}
-      
-      ============
-      تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}
-      نظام EP Group - إدارة الأنشطة
+    // Create a proper PDF using HTML content and browser's print functionality
+    const activityData = {
+      title: 'تفاصيل النشاط',
+      type: activity.action,
+      status: getStatusText(activity.status || 'completed'),
+      user: {
+        name: activity.user_name,
+        role: activity.user_role
+      },
+      clinic: activity.clinic_name,
+      doctor: activity.doctor_name,
+      amount: activity.amount ? formatCurrency(activity.amount) : null,
+      paymentMethod: activity.payment_method,
+      visitEffectiveness: activity.visit_effectiveness,
+      newUser: activity.new_user_name ? `${activity.new_user_name} (${activity.new_user_role})` : null,
+      time: activity.time,
+      timestamp: activity.timestamp ? new Date(activity.timestamp).toLocaleString('ar-EG') : 'غير محدد',
+      location: activity.location || 'غير محدد',
+      gps: activity.gps_coordinates,
+      notes: activity.notes,
+      deviceInfo: activity.device_info,
+      ipAddress: activity.ip_address
+    };
+
+    // Create HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>تقرير النشاط - ${activityData.type}</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 3px solid #4F46E5; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px;
+          }
+          .header h1 { 
+            color: #4F46E5; 
+            margin: 0;
+            font-size: 28px;
+          }
+          .header p { 
+            color: #666; 
+            margin: 5px 0 0 0;
+            font-size: 14px;
+          }
+          .section { 
+            margin-bottom: 25px; 
+            padding: 20px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            background: #F9FAFB;
+          }
+          .section h2 { 
+            color: #374151; 
+            border-bottom: 2px solid #E5E7EB; 
+            padding-bottom: 10px; 
+            margin-top: 0;
+            font-size: 18px;
+          }
+          .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 15px; 
+            margin-top: 15px;
+          }
+          .info-item { 
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #4F46E5;
+          }
+          .info-label { 
+            font-weight: bold; 
+            color: #4F46E5; 
+            font-size: 14px;
+          }
+          .info-value { 
+            margin-top: 5px; 
+            color: #374151;
+            font-size: 14px;
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            background: #10B981;
+            font-size: 12px;
+          }
+          .footer { 
+            text-align: center; 
+            border-top: 1px solid #E5E7EB; 
+            padding-top: 20px; 
+            margin-top: 30px; 
+            color: #6B7280;
+            font-size: 12px;
+          }
+          @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📋 ${activityData.title}</h1>
+          <p>تقرير مفصل - نظام EP Group</p>
+        </div>
+
+        <div class="section">
+          <h2>📊 معلومات النشاط الأساسية</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">نوع النشاط</div>
+              <div class="info-value">${activityData.type}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">الحالة</div>
+              <div class="info-value"><span class="status-badge">${activityData.status}</span></div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">الوقت المنقضي</div>
+              <div class="info-value">${activityData.time}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">التاريخ والوقت</div>
+              <div class="info-value">${activityData.timestamp}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>👤 معلومات المستخدم</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">اسم المستخدم</div>
+              <div class="info-value">${activityData.user.name}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">الدور الوظيفي</div>
+              <div class="info-value">${activityData.user.role}</div>
+            </div>
+            ${activityData.newUser ? `
+            <div class="info-item">
+              <div class="info-label">المستخدم الجديد</div>
+              <div class="info-value">${activityData.newUser}</div>
+            </div>` : ''}
+          </div>
+        </div>
+
+        ${activityData.clinic || activityData.doctor ? `
+        <div class="section">
+          <h2>🏥 المعلومات الطبية</h2>
+          <div class="info-grid">
+            ${activityData.clinic ? `
+            <div class="info-item">
+              <div class="info-label">اسم العيادة</div>
+              <div class="info-value">${activityData.clinic}</div>
+            </div>` : ''}
+            ${activityData.doctor ? `
+            <div class="info-item">
+              <div class="info-label">اسم الطبيب</div>
+              <div class="info-value">${activityData.doctor}</div>
+            </div>` : ''}
+            ${activityData.visitEffectiveness ? `
+            <div class="info-item">
+              <div class="info-label">فعالية الزيارة</div>
+              <div class="info-value">${activityData.visitEffectiveness}</div>
+            </div>` : ''}
+          </div>
+        </div>` : ''}
+
+        ${activityData.amount || activityData.paymentMethod ? `
+        <div class="section">
+          <h2>💰 المعلومات المالية</h2>
+          <div class="info-grid">
+            ${activityData.amount ? `
+            <div class="info-item">
+              <div class="info-label">المبلغ</div>
+              <div class="info-value">${activityData.amount}</div>
+            </div>` : ''}
+            ${activityData.paymentMethod ? `
+            <div class="info-item">
+              <div class="info-label">طريقة الدفع</div>
+              <div class="info-value">${activityData.paymentMethod}</div>
+            </div>` : ''}
+          </div>
+        </div>` : ''}
+
+        <div class="section">
+          <h2>📍 معلومات الموقع والتوقيت</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">الموقع</div>
+              <div class="info-value">${activityData.location}</div>
+            </div>
+            ${activityData.gps ? `
+            <div class="info-item">
+              <div class="info-label">إحداثيات GPS</div>
+              <div class="info-value">${activityData.gps}</div>
+            </div>` : ''}
+          </div>
+        </div>
+
+        ${activityData.notes || activityData.deviceInfo || activityData.ipAddress ? `
+        <div class="section">
+          <h2>📋 معلومات إضافية</h2>
+          <div class="info-grid">
+            ${activityData.notes ? `
+            <div class="info-item">
+              <div class="info-label">الملاحظات</div>
+              <div class="info-value">${activityData.notes}</div>
+            </div>` : ''}
+            ${activityData.deviceInfo ? `
+            <div class="info-item">
+              <div class="info-label">معلومات الجهاز</div>
+              <div class="info-value">${activityData.deviceInfo}</div>
+            </div>` : ''}
+            ${activityData.ipAddress ? `
+            <div class="info-item">
+              <div class="info-label">عنوان IP</div>
+              <div class="info-value">${activityData.ipAddress}</div>
+            </div>` : ''}
+          </div>
+        </div>` : ''}
+
+        <div class="footer">
+          <p>📄 تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}</p>
+          <p>🏥 نظام EP Group - إدارة الأنشطة الطبية المتقدم</p>
+        </div>
+      </body>
+      </html>
     `;
+
+    // Create a new window for PDF generation
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
     
-    // Create a blob and download
-    const blob = new Blob([printContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `activity_${activity.id}_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Wait for content to load, then print
+    printWindow.onload = function() {
+      setTimeout(function() {
+        printWindow.print();
+        // Close window after printing (optional)
+        setTimeout(function() {
+          printWindow.close();
+        }, 1000);
+      }, 500);
+    };
     
     // Show success message
-    alert(language === 'ar' ? 'تم تصدير تفاصيل النشاط بنجاح!' : 'Activity details exported successfully!');
+    setTimeout(() => {
+      alert(language === 'ar' ? 'تم فتح نافذة طباعة PDF! يرجى اختيار "حفظ كـ PDF" من خيارات الطابعة.' : 'PDF print window opened! Please choose "Save as PDF" from printer options.');
+    }, 1000);
   };
 
   return (
