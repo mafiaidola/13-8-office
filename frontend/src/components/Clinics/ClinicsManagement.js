@@ -43,61 +43,112 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
       setClinics(response.data || []);
     } catch (error) {
       console.error('Error fetching clinics:', error);
-      // Mock data for development
+      // Mock data for development - Enhanced with approval information
       setClinics([
         {
           id: 'clinic-001',
           clinic_name: 'عيادة الدكتور أحمد محمد',
-          doctor_name: 'د. أحمد محمد',
-          specialty: 'أمراض باطنة',
-          phone: '01234567890',
-          address: 'شارع النيل، المعادي، القاهرة',
-          area_id: 'area-001',
+          doctor_name: 'د. أحمد محمد السيد',
+          specialty: 'باطنة عامة',
+          phone: '+201234567890',
+          address: 'شارع النيل، مدينة نصر، القاهرة',
           area_name: 'القاهرة الكبرى',
           classification: 'A',
           credit_status: 'good',
-          monthly_target: 50000,
-          monthly_achieved: 42000,
-          latitude: 30.0444,
-          longitude: 31.2357,
+          monthly_target: 15000,
+          monthly_achieved: 12500,
           is_active: true,
-          created_at: '2024-01-01T10:00:00Z'
+          created_at: '2024-01-15T10:30:00Z',
+          updated_at: '2024-02-01T08:15:00Z',
+          // Approval Information - معلومات الموافقة
+          approval_info: {
+            approved_by: 'أحمد محمد المدير',
+            approved_by_role: 'مدير النظام',
+            approved_by_id: 'user-admin-001',
+            approval_date: '2024-01-15T14:30:00Z',
+            approval_location: 'المكتب الرئيسي - القاهرة',
+            approval_ip: '192.168.1.100',
+            approval_device: 'Chrome - Windows 10',
+            status: 'approved'
+          }
         },
         {
-          id: 'clinic-002',
-          clinic_name: 'مركز الشفاء الطبي',
-          doctor_name: 'د. فاطمة علي',
-          specialty: 'أطفال',
-          phone: '01098765432',
-          address: 'شارع الجامعة، الجيزة',
-          area_id: 'area-002',
-          area_name: 'الجيزة',
+          id: 'clinic-002', 
+          clinic_name: 'عيادة الدكتورة فاطمة علي',
+          doctor_name: 'د. فاطمة علي حسن',
+          specialty: 'نساء وتوليد',
+          phone: '+201098765432',
+          address: 'ميدان التحرير، وسط البلد، القاهرة',
+          area_name: 'القاهرة الكبرى',
           classification: 'B',
           credit_status: 'average',
-          monthly_target: 35000,
-          monthly_achieved: 30000,
-          latitude: 30.0131,
-          longitude: 31.2089,
+          monthly_target: 12000,
+          monthly_achieved: 8500,
           is_active: true,
-          created_at: '2024-01-02T10:00:00Z'
+          created_at: '2024-01-20T11:45:00Z',
+          updated_at: '2024-01-25T16:20:00Z',
+          approval_info: {
+            approved_by: 'سارة أحمد المشرف',
+            approved_by_role: 'مشرف المنطقة',
+            approved_by_id: 'user-supervisor-002',
+            approval_date: '2024-01-20T15:45:00Z',
+            approval_location: 'فرع القاهرة - المعادي',
+            approval_ip: '192.168.1.105',
+            approval_device: 'Firefox - Mac OS',
+            status: 'approved'
+          }
         },
         {
           id: 'clinic-003',
-          clinic_name: 'عيادة النور',
-          doctor_name: 'د. محمود سالم',
-          specialty: 'عيون',
-          phone: '01555444333',
-          address: 'شارع الثورة، الإسكندرية',
-          area_id: 'area-003',
+          clinic_name: 'عيادة الدكتور محمد حسن',
+          doctor_name: 'د. محمد حسن عبدالله',
+          specialty: 'أطفال',
+          phone: '+201555123456',
+          address: 'شارع فيصل، الجيزة',
+          area_name: 'الجيزة',
+          classification: 'A',
+          credit_status: 'good',
+          monthly_target: 18000,
+          monthly_achieved: 19200,
+          is_active: true,
+          created_at: '2024-02-01T09:15:00Z',
+          updated_at: '2024-02-05T10:30:00Z',
+          approval_info: {
+            approved_by: 'خالد محمود المدير التنفيذي',
+            approved_by_role: 'المدير التنفيذي',
+            approved_by_id: 'user-exec-003',
+            approval_date: '2024-02-01T12:15:00Z',
+            approval_location: 'المقر الرئيسي - مكتب الإدارة',
+            approval_ip: '192.168.1.110',
+            approval_device: 'Edge - Windows 11',
+            status: 'approved'
+          }
+        },
+        {
+          id: 'clinic-004',
+          clinic_name: 'عيادة الدكتورة ميرا سمير',
+          doctor_name: 'د. ميرا سمير فؤاد',
+          specialty: 'جلدية وتناسلية',
+          phone: '+201777654321',
+          address: 'كورنيش النيل، الإسكندرية',
           area_name: 'الإسكندرية',
-          classification: 'C',
+          classification: 'B',
           credit_status: 'poor',
-          monthly_target: 25000,
-          monthly_achieved: 15000,
-          latitude: 31.2001,
-          longitude: 29.9187,
+          monthly_target: 10000,
+          monthly_achieved: 4500,
           is_active: false,
-          created_at: '2024-01-03T10:00:00Z'
+          created_at: '2024-01-10T13:20:00Z',
+          updated_at: '2024-01-15T09:45:00Z',
+          approval_info: {
+            approved_by: 'محمد علي مدير الفرع',
+            approved_by_role: 'مدير فرع الإسكندرية',
+            approved_by_id: 'user-branch-004',
+            approval_date: '2024-01-10T16:20:00Z',
+            approval_location: 'فرع الإسكندرية - سموحة',
+            approval_ip: '192.168.2.50',
+            approval_device: 'Safari - iPad',
+            status: 'approved'
+          }
         }
       ]);
     } finally {
