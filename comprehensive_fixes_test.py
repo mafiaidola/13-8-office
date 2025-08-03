@@ -27,7 +27,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://6fc37004-de78-473a-b926-f0438820a235.preview.emergentagent.com/api"
+BACKEND_URL = "https://5db9ed6f-0d1e-4bc3-a516-f11b0fa0e21d.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"username": "admin", "password": "admin123"}
 
 class ComprehensiveFixesTester:
