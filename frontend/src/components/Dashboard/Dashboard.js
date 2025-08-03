@@ -249,8 +249,43 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   };
 
   const handleQuickAction = (actionId) => {
-    setSelectedAction(actionId);
-    setShowQuickActionModal(true);
+    // Navigate directly to appropriate tab instead of showing modal
+    switch (actionId) {
+      case 'add-user':
+        setActiveTab && setActiveTab('users');
+        // Optional: set a flag to open add user modal
+        break;
+      case 'register-clinic':
+        setActiveTab && setActiveTab('clinics');
+        break;
+      case 'add-product':
+        setActiveTab && setActiveTab('products');
+        break;
+      case 'create-order':
+        setActiveTab && setActiveTab('orders');
+        break;
+      case 'record-visit':
+        setActiveTab && setActiveTab('visits');
+        break;
+      case 'add-debt':
+      case 'record-collection':
+        setActiveTab && setActiveTab('debtCollection');
+        break;
+      case 'manage-warehouse':
+        setActiveTab && setActiveTab('warehouses');
+        break;
+      case 'generate-report':
+        setActiveTab && setActiveTab('reports');
+        break;
+      case 'system-settings':
+        setActiveTab && setActiveTab('settings');
+        break;
+      default:
+        // For unimplemented actions, show the modal
+        setSelectedAction(actionId);
+        setShowQuickActionModal(true);
+        break;
+    }
   };
 
   const handleActivityClick = (activity) => {
