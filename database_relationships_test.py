@@ -428,7 +428,8 @@ class DatabaseRelationshipTester:
             response_time = (time.time() - start_time) * 1000
             
             if response.status_code == 200:
-                dashboard_stats = response.json()
+                dashboard_response = response.json()
+                dashboard_stats = dashboard_response.get('data', dashboard_response)  # Handle nested data
                 
                 # Compare dashboard counts with actual data counts
                 comparisons = [
