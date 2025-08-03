@@ -252,11 +252,15 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
     <div className="enhanced-dashboard-container p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Enhanced Header with Time Filters */}
       <div className="dashboard-header mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            {language === 'ar' ? 'مرحباً' : 'Welcome'} {user?.full_name || user?.username}! 👋
+        <div className="welcome-section">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-relaxed">
+            {language === 'ar' ? 'مرحباً، ' : 'Welcome, '}
+            <span className="text-white font-extrabold">
+              {user?.full_name || user?.username || 'المستخدم'}
+            </span>
+            <span className="ml-2">👋</span>
           </h1>
-          <p className="text-lg opacity-75">
+          <p className="text-lg opacity-75 text-white/80">
             {language === 'ar' ? 'لوحة التحكم الرئيسية - نظرة عامة شاملة' : 'Main Dashboard - Comprehensive Overview'}
           </p>
         </div>
