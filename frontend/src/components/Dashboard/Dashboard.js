@@ -31,6 +31,86 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   // Backend URL from environment
   const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
+  // Enhanced keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Global search - Ctrl+K or Cmd+K
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setShowGlobalSearch(true);
+      }
+      
+      // Quick navigation shortcuts
+      if (event.altKey) {
+        switch (event.key) {
+          case '1':
+            event.preventDefault();
+            setActiveTab && setActiveTab('dashboard');
+            break;
+          case '2':
+            event.preventDefault();
+            setActiveTab && setActiveTab('users');
+            break;
+          case '3':
+            event.preventDefault();
+            setActiveTab && setActiveTab('clinics');
+            break;
+          case '4':
+            event.preventDefault();
+            setActiveTab && setActiveTab('products');
+            break;
+          case '5':
+            event.preventDefault();
+            setActiveTab && setActiveTab('orders');
+            break;
+          case '6':
+            event.preventDefault();
+            setActiveTab && setActiveTab('visits');
+            break;
+          case 'r':
+            event.preventDefault();
+            // Refresh current data
+            loadEnhancedDashboardData();
+            loadRecentActivities();
+            break;
+          default:
+            break;
+        }
+      }
+      
+      // Quick actions shortcuts - Ctrl+Shift+{key}
+      if (event.ctrlKey && event.shiftKey) {
+        switch (event.key) {
+          case 'U':
+            event.preventDefault();
+            handleQuickAction('add-user');
+            break;
+          case 'C':
+            event.preventDefault();
+            handleQuickAction('register-clinic');
+            break;
+          case 'P':
+            event.preventDefault();
+            handleQuickAction('add-product');
+            break;
+          case 'O':
+            event.preventDefault();
+            handleQuickAction('create-order');
+            break;
+          case 'V':
+            event.preventDefault();
+            handleQuickAction('record-visit');
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => document.removeEventListener('keydown', handleKeyboardShortcuts);
+  }, [setActiveTab]);
+
   useEffect(() => {
     loadEnhancedDashboardData();
     loadRecentActivities();
