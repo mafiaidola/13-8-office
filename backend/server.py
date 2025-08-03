@@ -29,6 +29,9 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Initialize notification service
+notification_service = NotificationService(db)
+
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
