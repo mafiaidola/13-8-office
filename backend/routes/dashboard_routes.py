@@ -57,11 +57,20 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     db = client[os.environ.get('DB_NAME', 'test_database')]
     
     try:
-        # Basic statistics
+        # Basic statistics - Enhanced with all system entities
         total_users = await db.users.count_documents({})
         total_clinics = await db.clinics.count_documents({})
         total_visits = await db.visits.count_documents({})
         total_orders = await db.orders.count_documents({})
+        total_products = await db.products.count_documents({})  # Added
+        total_warehouses = await db.warehouses.count_documents({})  # Added
+        total_doctors = await db.doctors.count_documents({})  # Added
+        total_lines = await db.lines.count_documents({})  # Added
+        total_areas = await db.areas.count_documents({})  # Added
+        
+        # Financial statistics
+        total_debt_records = await db.debt_records.count_documents({}) if await db.list_collection_names().__contains__("debt_records") else 0
+        total_invoices = await db.invoices.count_documents({}) if await db.list_collection_names().__contains__("invoices") else 0
         
         # Today's statistics
         today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
