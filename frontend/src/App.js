@@ -784,7 +784,7 @@ const DashboardLayout = () => {
           {/* Right Side - Logo & Brand */}
           <div className="header-brand">
             <div className="header-logo">
-              {systemSettings.system.company_logo ? (
+              {systemSettings?.system?.company_logo ? (
                 <img 
                   src={systemSettings.system.company_logo} 
                   alt="شعار الشركة" 
