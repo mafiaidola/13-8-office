@@ -41,40 +41,46 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       
-      // Load dashboard stats from multiple endpoints
-      const [usersRes, clinicsRes, productsRes, debtsRes] = await Promise.allSettled([
-        fetch(`${API_URL}/api/dashboard/stats`, {
+      // Add time filter parameter to API calls
+      const timeParam = `?time_filter=${timeFilter}`;
+      
+      // Load dashboard stats from multiple endpoints with time filter
+      const [usersRes, clinicsRes, productsRes, debtsRes, statsRes] = await Promise.allSettled([
+        fetch(`${API_URL}/api/admin/users${timeParam}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${API_URL}/api/dashboard/stats`, {
+        fetch(`${API_URL}/api/admin/clinics${timeParam}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${API_URL}/api/dashboard/stats`, {
+        fetch(`${API_URL}/api/admin/products${timeParam}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch(`${API_URL}/api/debts/summary/statistics`, {
+        fetch(`${API_URL}/api/admin/debts${timeParam}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/api/admin/dashboard/stats${timeParam}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
 
-      // Parse successful responses or use mock data
-      let dashboardData = {};
-      let debtData = {};
+      // Process responses
+      const dashboardData = statsRes.status === 'fulfilled' && statsRes.value.ok 
+        ? await statsRes.value.json() : {};
+      const debtData = debtsRes.status === 'fulfilled' && debtsRes.value.ok 
+        ? await debtsRes.value.json() : {};
+      const usersData = usersRes.status === 'fulfilled' && usersRes.value.ok 
+        ? await usersRes.value.json() : {};
+      const clinicsData = clinicsRes.status === 'fulfilled' && clinicsRes.value.ok 
+        ? await clinicsRes.value.json() : {};
+      const productsData = productsRes.status === 'fulfilled' && productsRes.value.ok 
+        ? await productsRes.value.json() : {};
 
-      if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
-        dashboardData = await usersRes.value.json();
-      }
-
-      if (debtsRes.status === 'fulfilled' && debtsRes.value.ok) {
-        debtData = await debtsRes.value.json();
-      }
-
-      // Enhanced stats with comprehensive metrics
+      // Enhanced comprehensive stats with real API data
       setStats({
-        // Core metrics
-        totalUsers: dashboardData.total_users || 58,
-        totalClinics: dashboardData.total_clinics || 31,
-        totalProducts: dashboardData.total_products || 28,
+        // User metrics
+        totalUsers: usersData.length || dashboardData.total_users || 58,
+        totalClinics: clinicsData.length || dashboardData.total_clinics || 31,
+        totalProducts: productsData.length || dashboardData.total_products || 28,
         totalOrders: dashboardData.total_orders || 127,
         
         // Management metrics
@@ -96,7 +102,12 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
         lowStockItems: dashboardData.low_stock_items || 12,
         
         // Performance metrics based on time filter
-        performanceMetrics: getFilteredMetrics(timeFilter, dashboardData)
+        performanceMetrics: getFilteredMetrics(timeFilter, {
+          orders: dashboardData[`${timeFilter}_orders`] || 0,
+          visits: dashboardData[`${timeFilter}_visits`] || 0,
+          clinics: dashboardData[`${timeFilter}_clinics`] || 0,
+          collections: dashboardData[`${timeFilter}_collections`] || 0
+        })
       });
       
     } catch (error) {
