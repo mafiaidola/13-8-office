@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 
 # Backend URL from environment
-BACKEND_URL = "https://b0f2f242-ec03-4c87-84c2-74073f21fca1.preview.emergentagent.com/api"
+BACKEND_URL = "https://6fc37004-de78-473a-b926-f0438820a235.preview.emergentagent.com/api"
 
 class ApprovalsHierarchyTester:
     def __init__(self):

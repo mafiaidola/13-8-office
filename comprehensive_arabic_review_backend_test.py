@@ -80,7 +80,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BASE_URL = "https://b0f2f242-ec03-4c87-84c2-74073f21fca1.preview.emergentagent.com/api"
+BASE_URL = "https://6fc37004-de78-473a-b926-f0438820a235.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
