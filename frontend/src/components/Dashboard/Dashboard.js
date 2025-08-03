@@ -628,8 +628,8 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const openCustomReportBuilder = () => {
     // Open custom report builder modal
     alert(language === 'ar' 
-      ? 'منشئ التقارير المخصصة سيتم تطويره في المرحلة القادمة. سيتيح لك إنشاء تقارير مخصصة حسب احتياجاتك.'
-      : 'Custom Report Builder will be developed in the next phase. It will allow you to create custom reports based on your needs.'
+      ? 'منشئ التقارير المخصصة سيتم تطويره قريباً! 🔧\n\nالمميزات القادمة:\n• اختيار البيانات المخصصة\n• تصميم التقرير\n• جدولة التقارير التلقائية'
+      : 'Custom Report Builder coming soon! 🔧\n\nUpcoming features:\n• Custom data selection\n• Report design\n• Automated report scheduling'
     );
   };
 
