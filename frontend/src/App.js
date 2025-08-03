@@ -148,9 +148,9 @@ const ThemeProvider = ({ children }) => {
       setTheme(newTheme);
       console.log(`🎨 Changing theme to: ${newTheme}`);
       
-      // Force immediate theme application with all themes including neon
+      // Force immediate theme application with all enhanced themes
       setTimeout(() => {
-        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-neon');
+        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-golden', 'theme-professional', 'theme-cosmic');
         document.body.classList.add(`theme-${newTheme}`);
         
         const themeConfig = AVAILABLE_THEMES[newTheme];
@@ -162,7 +162,7 @@ const ThemeProvider = ({ children }) => {
         root.style.setProperty('--text-primary', themeConfig.colors.text);
         root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
         
-        console.log(`🎨 Theme applied: ${newTheme}`);
+        console.log(`🎨 Enhanced theme applied: ${newTheme}`);
         
         // Force a re-render
         const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
