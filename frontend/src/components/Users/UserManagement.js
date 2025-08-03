@@ -366,7 +366,7 @@ const UserManagement = ({ user, language, isRTL }) => {
   );
 };
 
-// Enhanced User Performance Card Component
+// Enhanced User Performance Card Component - كارت أداء المستخدم المحسن
 const UserPerformanceCard = ({ 
   user, 
   onViewPerformance, 
@@ -381,23 +381,188 @@ const UserPerformanceCard = ({
   const stats = user.stats_last_30_days || {};
   
   return (
-    <div className={`bg-white/10 backdrop-blur-lg rounded-xl p-6 border-2 border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-      isSelected ? 'ring-2 ring-blue-500 border-blue-400/50' : ''
+    <div className={`group bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-lg rounded-2xl p-6 border-2 border-white/10 hover:border-white/30 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:from-white/10 hover:to-white/15 ${
+      isSelected ? 'ring-2 ring-blue-400 border-blue-300/50 bg-blue-500/10' : ''
     }`}>
       
-      {/* Header with User Info */}
+      {/* Header with Enhanced User Info */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onToggleSelection}
-            className="w-5 h-5 text-blue-600 rounded border-2 border-white/30"
-          />
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelection}
+              className="w-5 h-5 text-blue-500 bg-white/10 border-2 border-white/30 rounded-md focus:ring-blue-400 focus:ring-2 cursor-pointer transition-all duration-200"
+            />
+            {isSelected && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+            )}
+          </div>
           
-          {/* Enhanced Avatar */}
+          {/* Enhanced Professional Avatar */}
           <div className="relative">
             {user.photo ? (
+              <img 
+                src={user.photo} 
+                alt={`${user.full_name} Avatar`}
+                className="w-16 h-16 rounded-full object-cover ring-4 ring-white/20 group-hover:ring-white/40 transition-all duration-300"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white/20 group-hover:ring-white/40 transition-all duration-300 group-hover:scale-110">
+                {user.full_name?.charAt(0)?.toUpperCase() || '👤'}
+              </div>
+            )}
+            
+            {/* Status Indicator */}
+            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-3 border-white/30 ${
+              user.status === 'active' ? 'bg-green-400' : 
+              user.status === 'inactive' ? 'bg-red-400' : 'bg-yellow-400'
+            } shadow-lg`}></div>
+            
+            {/* Online Status */}
+            {user.is_online && (
+              <div className="absolute -top-1 -left-1 w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg border-2 border-white/50"></div>
+            )}
+          </div>
+          
+          {/* Enhanced User Details */}
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-white group-hover:text-blue-100 transition-colors duration-300">
+              {user.full_name}
+            </h3>
+            <p className="text-sm text-white/70 group-hover:text-white/90 transition-colors duration-300">
+              @{user.username}
+            </p>
+            
+            {/* Professional Role Badge */}
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-300 ${getRoleColor(user.role)} ${getRoleTextColor(user.role)} group-hover:scale-105 group-hover:shadow-lg`}>
+                {getRoleLabel(user.role)}
+              </span>
+              
+              {user.department && (
+                <span className="px-2 py-1 bg-white/10 text-white/80 rounded-md text-xs group-hover:bg-white/20 transition-colors duration-300">
+                  {user.department}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Performance Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 rounded-xl p-4 border border-green-500/20 group-hover:border-green-400/40 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-green-400 text-lg">📊</span>
+            <span className="text-xs text-green-300 font-medium">الأداء</span>
+          </div>
+          <div className="text-2xl font-bold text-green-400">{stats.visits || 0}</div>
+          <div className="text-xs text-green-200/80">زيارة شهرياً</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-xl p-4 border border-blue-500/20 group-hover:border-blue-400/40 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-blue-400 text-lg">🛒</span>
+            <span className="text-xs text-blue-300 font-medium">الطلبات</span>
+          </div>
+          <div className="text-2xl font-bold text-blue-400">{stats.orders || 0}</div>
+          <div className="text-xs text-blue-200/80">طلب شهرياً</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-xl p-4 border border-purple-500/20 group-hover:border-purple-400/40 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-purple-400 text-lg">💰</span>
+            <span className="text-xs text-purple-300 font-medium">المبيعات</span>
+          </div>
+          <div className="text-lg font-bold text-purple-400">{stats.revenue?.toLocaleString() || 0}</div>
+          <div className="text-xs text-purple-200/80">ج.م شهرياً</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 rounded-xl p-4 border border-orange-500/20 group-hover:border-orange-400/40 transition-all duration-300">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-orange-400 text-lg">⭐</span>
+            <span className="text-xs text-orange-300 font-medium">التقييم</span>
+          </div>
+          <div className="text-2xl font-bold text-orange-400">{stats.rating || '4.8'}</div>
+          <div className="text-xs text-orange-200/80">من 5.0</div>
+        </div>
+      </div>
+
+      {/* Contact Information */}
+      <div className="bg-white/5 rounded-xl p-4 mb-4 border border-white/10 group-hover:border-white/20 transition-all duration-300">
+        <div className="grid grid-cols-1 gap-3 text-sm">
+          {user.email && (
+            <div className="flex items-center gap-3">
+              <span className="text-blue-400">📧</span>
+              <span className="text-white/80">{user.email}</span>
+            </div>
+          )}
+          {user.phone && (
+            <div className="flex items-center gap-3">
+              <span className="text-green-400">📱</span>
+              <span className="text-white/80" dir="ltr">{user.phone}</span>
+            </div>
+          )}
+          {user.area && (
+            <div className="flex items-center gap-3">
+              <span className="text-yellow-400">📍</span>
+              <span className="text-white/80">{user.area}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Enhanced Action Buttons */}
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          onClick={onViewPerformance}
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg"
+        >
+          <span>📊</span>
+          التفاصيل
+        </button>
+        
+        <button
+          onClick={() => onEditUser(user.id)}
+          className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg"
+        >
+          <span>✏️</span>
+          تعديل
+        </button>
+        
+        <button
+          onClick={() => onDeleteUser(user.id)}
+          className="bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg"
+        >
+          <span>🗑️</span>
+          حذف
+        </button>
+      </div>
+      
+      {/* Performance Indicator Bar */}
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-white/60">مستوى الأداء</span>
+          <span className="text-xs text-white/80 font-medium">
+            {stats.performance_percentage || 85}%
+          </span>
+        </div>
+        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+          <div 
+            className={`h-full rounded-full transition-all duration-1000 ${
+              (stats.performance_percentage || 85) >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
+              (stats.performance_percentage || 85) >= 60 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
+              'bg-gradient-to-r from-red-500 to-red-400'
+            }`}
+            style={{ width: `${stats.performance_percentage || 85}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
+  );
+};
               <img 
                 src={user.photo} 
                 alt={user.full_name}
