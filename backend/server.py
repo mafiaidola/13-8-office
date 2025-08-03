@@ -2102,6 +2102,7 @@ api_router.include_router(dashboard_router)
 api_router.include_router(settings_router)
 api_router.include_router(activity_router)
 api_router.include_router(debt_router)
+api_router.include_router(notification_router)
 
 app.include_router(api_router)
 
