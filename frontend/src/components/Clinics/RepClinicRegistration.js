@@ -481,7 +481,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                     <div className="w-full h-80 bg-gray-900 rounded-xl border-2 border-white/20 overflow-hidden shadow-lg">
                       {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
                         <div className="relative w-full h-full">
-                          {/* Enhanced Google Maps with Marker */}
+                          {/* Enhanced Google Maps with Draggable Marker */}
                           <div 
                             className="w-full h-full relative"
                             id="interactive-map"
@@ -506,16 +506,34 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                               }}
                             />
                             
-                            {/* Fixed Pin Marker Overlay */}
+                            {/* Fixed Pin Marker Overlay - Center Pin for Reference */}
                             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                              <div className="text-red-500 text-4xl animate-bounce" style={{ textShadow: '0 0 10px rgba(0,0,0,0.8)' }}>
-                                📍
+                              <div className="relative">
+                                <div className="text-red-500 text-4xl animate-bounce" style={{ textShadow: '0 0 10px rgba(0,0,0,0.8)' }}>
+                                  📍
+                                </div>
+                                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                  موقع العيادة
+                                </div>
                               </div>
                             </div>
                             
                             {/* Location Precision Indicator */}
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                               <div className="w-8 h-8 border-4 border-red-500 rounded-full bg-red-500/20 animate-pulse"></div>
+                            </div>
+
+                            {/* Interactive Map Instructions */}
+                            <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-sm rounded-xl p-3 text-white shadow-2xl border border-white/20 max-w-xs">
+                              <div className="text-xs space-y-1">
+                                <div className="font-bold text-green-300 flex items-center gap-1">
+                                  <span>💡</span>
+                                  تعليمات الخريطة
+                                </div>
+                                <div>• انقر على "موقع مخصص" أسفل لتغيير الموقع</div>
+                                <div>• استخدم الحقول أسفل للتعديل الدقيق</div>
+                                <div>• أو اضغط "استخدم موقعي" للموقع الحالي</div>
+                              </div>
                             </div>
                           </div>
                           
