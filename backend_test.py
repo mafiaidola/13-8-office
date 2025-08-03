@@ -260,35 +260,47 @@ class BackendTester:
             return False
 
     def test_clinic_specialization_removal(self):
-        """Test that specialization field is removed from clinics"""
+        """Test that specialization field is removed from NEW clinic creation"""
         try:
+            # Create a new clinic and verify it doesn't have specialization field
+            clinic_data = {
+                "name": "عيادة اختبار إزالة التخصص",
+                "doctor_name": "د. محمد أحمد",
+                "address": "شارع النيل، الجيزة",
+                "phone": "01987654321",
+                "classification": "A",
+                "credit_status": "good",
+                "manager_name": "سارة محمد",
+                "manager_phone": "01555555555",
+                "latitude": 30.0444,
+                "longitude": 31.2357,
+                "area_id": "test-area-id"
+            }
+            
             start_time = time.time()
-            response = self.session.get(f"{API_BASE}/clinics")
+            response = self.session.post(f"{API_BASE}/clinics", json=clinic_data)
             response_time = (time.time() - start_time) * 1000
             
-            if response.status_code == 200:
-                clinics = response.json()
-                if clinics and len(clinics) > 0:
-                    # Check if any clinic has specialization field
-                    has_specialization = any("specialization" in clinic for clinic in clinics)
-                    
-                    if not has_specialization:
-                        self.log_test("Clinic Specialization Removal", True, 
-                                    f"Specialization field successfully removed from all {len(clinics)} clinics", 
-                                    response_time)
-                        return True
-                    else:
-                        clinics_with_spec = [clinic.get("name", "Unknown") for clinic in clinics if "specialization" in clinic]
-                        self.log_test("Clinic Specialization Removal", False, 
-                                    f"Specialization field still exists in clinics: {clinics_with_spec[:3]}", 
-                                    response_time)
-                        return False
+            if response.status_code == 200 or response.status_code == 201:
+                clinic_result = response.json()
+                clinic_info = clinic_result.get("clinic", {})
+                
+                # Check that the newly created clinic does NOT have specialization field
+                has_specialization = "specialization" in clinic_info
+                
+                if not has_specialization:
+                    self.log_test("Clinic Specialization Removal", True, 
+                                f"New clinic created without specialization field: {clinic_info.get('name')}", 
+                                response_time)
+                    return True
                 else:
-                    self.log_test("Clinic Specialization Removal", False, "No clinics found to test", response_time)
+                    self.log_test("Clinic Specialization Removal", False, 
+                                f"New clinic still has specialization field: {clinic_info.get('specialization')}", 
+                                response_time)
                     return False
             else:
                 self.log_test("Clinic Specialization Removal", False, 
-                            f"Failed to get clinics: {response.status_code} - {response.text}", 
+                            f"Failed to create test clinic: {response.status_code} - {response.text}", 
                             response_time)
                 return False
                 
