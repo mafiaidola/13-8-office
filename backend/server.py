@@ -908,6 +908,50 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/orders/{order_id}")
+async def get_order_detail(order_id: str, current_user: User = Depends(get_current_user)):
+    """الحصول على تفاصيل طلب محدد - Get specific order details"""
+    try:
+        # Check permissions
+        if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            query = {"id": order_id, "medical_rep_id": current_user.id}
+        elif current_user.role in [UserRole.ADMIN, "gm", UserRole.LINE_MANAGER, UserRole.AREA_MANAGER, UserRole.ACCOUNTING, UserRole.WAREHOUSE_KEEPER]:
+            query = {"id": order_id}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        order = await db.orders.find_one(query, {"_id": 0})
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        # Get order items
+        order_items = await db.order_items.find({"order_id": order_id}, {"_id": 0}).to_list(100)
+        order["items"] = order_items
+        
+        # Get clinic details
+        if order.get("clinic_id"):
+            clinic = await db.clinics.find_one({"id": order["clinic_id"]}, {"_id": 0})
+            order["clinic_details"] = clinic
+        
+        # Get medical rep details
+        if order.get("medical_rep_id"):
+            rep = await db.users.find_one({"id": order["medical_rep_id"]}, {"_id": 0, "password_hash": 0})
+            order["medical_rep_details"] = rep
+        
+        # Fix datetime serialization
+        for field in ["created_at", "updated_at", "delivery_date"]:
+            if field in order and isinstance(order[field], datetime):
+                order[field] = order[field].isoformat()
+        
+        return order
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching order detail: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ============================================================================
 # LINES AND AREAS MANAGEMENT APIs
 # ============================================================================
@@ -1693,7 +1737,7 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
     """إنشاء عيادة جديدة - Create new clinic"""
     try:
         # Validate required fields
-        required_fields = ["clinic_name", "doctor_name", "phone", "address"]
+        required_fields = ["name", "doctor_name", "phone", "address"]
         for field in required_fields:
             if field not in clinic_data or not clinic_data[field]:
                 raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
@@ -1705,11 +1749,19 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "doctor_name": clinic_data["doctor_name"],
             "phone": clinic_data["phone"],
             "address": clinic_data["address"],
-            "specialization": clinic_data.get("specialization", ""),
+            
+            "name": clinic_data["name"],
+            "doctor_name": clinic_data["doctor_name"],
+            "phone": clinic_data["phone"],
+            "address": clinic_data["address"],
+            "manager_name": clinic_data.get("manager_name", ""),  # New field
+            "manager_phone": clinic_data.get("manager_phone", ""),  # New field
             "latitude": clinic_data.get("latitude", 0.0),
             "longitude": clinic_data.get("longitude", 0.0),
             "area_id": clinic_data.get("area_id", ""),
             "area_name": clinic_data.get("area_name", ""),
+            "classification": clinic_data.get("classification", "B"),
+            "credit_status": clinic_data.get("credit_status", "good"),
             "status": "active",
             "total_visits": 0,
             "debt_amount": 0.0,
@@ -1719,8 +1771,7 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "created_by": current_user.id,
             "created_by_name": current_user.full_name or "",
             # Fix: Set assigned_rep_id for medical reps so they can see their clinics
-            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None
-        }
+            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None}
 
         # Insert into database
         result = await db.clinics.insert_one(new_clinic)

@@ -38,7 +38,7 @@ async def get_current_user(authorization: str = None):
     
     return None
 
-@router.get("/settings")
+@router.get("/admin/settings")
 async def get_system_settings(authorization: str = None):
     """إعدادات النظام - System Settings"""
     
@@ -137,3 +137,39 @@ async def update_system_settings(settings_data: dict, authorization: str = None)
     finally:
         if 'client' in locals():
             client.close()
+
+@router.put("/admin/settings")
+async def update_system_settings(settings_data: dict, authorization: str = None):
+    """تحديث إعدادات النظام - Update System Settings"""
+    
+    # Verify admin user
+    user = await get_current_user(authorization)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ.get('DB_NAME', 'test_database')]
+    
+    try:
+        # Update or create settings
+        settings_data["updated_at"] = datetime.utcnow()
+        settings_data["updated_by"] = user.get("id")
+        
+        result = await db.system_settings.update_one(
+            {"_id": "main_settings"},
+            {"$set": settings_data},
+            upsert=True
+        )
+        
+        client.close()
+        
+        return {
+            "success": True,
+            "message": "تم تحديث الإعدادات بنجاح",
+            "settings": settings_data
+        }
+        
+    except Exception as e:
+        client.close()
+        raise HTTPException(status_code=500, detail=f"خطأ في تحديث الإعدادات: {str(e)}")
