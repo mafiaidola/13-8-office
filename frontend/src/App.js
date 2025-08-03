@@ -777,39 +777,39 @@ const DashboardLayout = () => {
 
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header - Enhanced Design with Glassy Effect */}
-      <header className={`dashboard-header ${headerScrolled ? 'scrolled' : ''}`}>
-        <div className="header-content flex items-center justify-between max-w-full mx-auto">
+      {/* Header - Enhanced Design with Fixed Issues */}
+      <header className={`dashboard-header fixed top-0 left-0 right-0 z-[9999] ${headerScrolled ? 'scrolled' : ''}`}>
+        <div className="header-content flex items-center justify-between max-w-full mx-auto px-6 py-4">
           
-          {/* Right Side - Logo & Brand */}
-          <div className="header-brand">
-            <div className="header-logo">
+          {/* Right Side - Logo & Brand - Enhanced */}
+          <div className="header-brand flex items-center gap-4 flex-1">
+            <div className="header-logo bg-white/10 rounded-xl p-2 border border-white/20">
               {systemSettings?.system?.company_logo ? (
                 <img 
                   src={systemSettings.system.company_logo} 
                   alt="شعار الشركة" 
-                  className="w-8 h-8 object-contain"
+                  className="w-10 h-10 object-contain"
                 />
               ) : (
-                <span className="text-2xl text-white">🏥</span>
+                <span className="text-3xl">🏥</span>
               )}
             </div>
             <div className="header-brand-text">
-              <div className="header-brand-title">
+              <div className="header-brand-title text-xl font-bold text-white">
                 {systemSettings?.system?.app_name || 'EP Group System'}
               </div>
-              <div className="header-brand-subtitle">
+              <div className="header-brand-subtitle text-sm text-white/70">
                 {language === 'ar' ? 'نظام إدارة طبي متطور' : 'Advanced Medical Management System'}
               </div>
             </div>
           </div>
 
           {/* Center - Search & Quick Actions */}
-          <div className="header-search">
+          <div className="header-search flex-1 max-w-2xl mx-6">
             {/* Global Search */}
             <button
               onClick={() => setShowGlobalSearch(true)}
-              className="header-search-btn"
+              className="header-search-btn w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl px-4 py-3 flex items-center gap-3 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
             >
               <span className="text-lg">🔍</span>
               <span className="flex-1 text-right">
@@ -822,30 +822,30 @@ const DashboardLayout = () => {
           </div>
 
           {/* Left Side - User Controls */}
-          <div className="header-controls">
+          <div className="header-controls flex items-center gap-4">
             
-            {/* Theme Selector */}
-            <div className="theme-selector-enhanced">
+            {/* Theme Selector - Fixed z-index */}
+            <div className="theme-selector-enhanced relative z-[15000]">
               <button
                 onClick={() => setShowThemes(!showThemes)}
-                className="theme-selector-btn"
+                className="theme-selector-btn bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl px-4 py-3 flex items-center gap-2 text-white hover:bg-white/20 transition-all duration-300"
                 title={language === 'ar' ? 'تغيير المظهر' : 'Change Theme'}
               >
                 <span className="text-lg">🎨</span>
-                <span className="hidden xl:inline">
+                <span className="hidden xl:inline font-medium">
                   {language === 'ar' ? availableThemes[theme]?.name.ar : availableThemes[theme]?.name.en}
                 </span>
                 <span className="text-xs opacity-75">▼</span>
               </button>
 
               {showThemes && (
-                <div className="theme-dropdown-enhanced">
-                  <div className="theme-dropdown-header">
-                    <h4 className="theme-dropdown-title">
+                <div className="theme-dropdown-enhanced absolute top-full mt-2 right-0 z-[20000] min-w-80 bg-white/95 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl p-4">
+                  <div className="theme-dropdown-header mb-4">
+                    <h4 className="theme-dropdown-title text-lg font-bold text-gray-800">
                       {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
                     </h4>
                   </div>
-                  <div className="theme-options-grid">
+                  <div className="theme-options-grid grid grid-cols-2 gap-3">
                     {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
                       <button
                         key={themeKey}
