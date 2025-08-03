@@ -116,7 +116,7 @@ class AdminControlTester:
             if status_code == 200:
                 self.manager_token = login_response["token"]
                 print(f"✅ Manager created and logged in")
-        status_code, response 
+        status_code, response = f"manager"_{timestamp('post',"/auth/register")}
         
         return True
     

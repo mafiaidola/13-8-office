@@ -3010,22 +3010,22 @@ input:focus, select:focus, textarea:focus {
 }
 
 .theme-dropdown-enhanced {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 20000;
+  position: fixed !important;
+  top: 80px !important;
+  right: 20px !important;
+  z-index: 999999 !important;
   min-width: 20rem;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: white !important;
+  border: 2px solid #3b82f6 !important;
   border-radius: 16px;
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 25px 50px -12px rgba(0, 0, 0, 0.8) !important,
+    0 0 0 1px rgba(59, 130, 246, 0.5) !important;
   padding: 1rem;
   animation: themeDropdownSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .theme-dropdown-header {
