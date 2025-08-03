@@ -840,85 +840,118 @@ const DashboardLayout = () => {
 
               {showThemes && (
                 <>
-                  {/* Overlay to close dropdown when clicking outside */}
+                  {/* Critical overlay for z-index priority */}
                   <div 
-                    className="fixed inset-0 z-[99999]"
+                    className="fixed inset-0"
+                    style={{
+                      zIndex: 99998,
+                      backgroundColor: 'rgba(0,0,0,0.3)'
+                    }}
                     onClick={() => setShowThemes(false)}
                   />
+                  
+                  {/* CRITICAL FIX: Theme dropdown with maximum z-index */}
                   <div 
-                    className="theme-dropdown-critical-fix"
+                    className="theme-dropdown-CRITICAL-OVERLAY"
                     style={{
                       position: 'fixed',
-                      top: '90px',
+                      top: '80px',
                       right: '20px',
-                      zIndex: 999999,
-                      minWidth: '22rem',
-                      background: 'white',
-                      border: '3px solid #3b82f6',
-                      borderRadius: '20px',
-                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4)',
-                      padding: '1.5rem',
-                      maxHeight: '500px',
+                      zIndex: 99999,
+                      minWidth: '24rem',
+                      maxWidth: '28rem',
+                      background: '#ffffff',
+                      border: '4px solid #2563eb',
+                      borderRadius: '24px',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 2px rgba(37, 99, 235, 0.8), 0 0 40px rgba(37, 99, 235, 0.6)',
+                      padding: '2rem',
+                      maxHeight: '600px',
                       overflowY: 'auto',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)'
+                      backdropFilter: 'blur(30px)',
+                      WebkitBackdropFilter: 'blur(30px)',
+                      animation: 'fadeIn 0.3s ease-out'
                     }}
                   >
-                    <div className="theme-dropdown-header mb-6 pb-4 border-b-2 border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                          🎨 {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
-                        </h4>
-                        <button
-                          onClick={() => setShowThemes(false)}
-                          className="text-gray-500 hover:text-red-500 text-2xl font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition-all"
-                        >
-                          ✕
-                        </button>
+                    {/* Header with close button */}
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b-3 border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">🎨</span>
+                        <div>
+                          <h4 className="text-2xl font-bold text-gray-800">
+                            {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {language === 'ar' ? 'اختر ثيم لتغيير مظهر النظام' : 'Choose a theme to change appearance'}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        {language === 'ar' ? 'اختر ثيم من الأسفل لتغيير مظهر النظام' : 'Choose a theme below to change the system appearance'}
-                      </p>
+                      <button
+                        onClick={() => setShowThemes(false)}
+                        className="text-gray-500 hover:text-red-600 text-3xl font-bold p-2 rounded-full hover:bg-red-50 transition-all duration-200 flex items-center justify-center w-12 h-12"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <div className="theme-options-grid grid grid-cols-2 gap-4">
+                    
+                    {/* Theme options grid */}
+                    <div className="grid grid-cols-2 gap-4">
                       {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
                         <button
                           key={themeKey}
                           onClick={() => {
                             changeTheme(themeKey);
                             setShowThemes(false);
-                            console.log(`🎨 Theme changed to: ${themeKey}`);
+                            console.log(`🎨 Theme changed successfully to: ${themeKey}`);
+                            
+                            // Show success notification
+                            const notification = document.createElement('div');
+                            notification.innerHTML = `✅ ${language === 'ar' ? 'تم تغيير المظهر إلى' : 'Theme changed to'} ${language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}`;
+                            notification.style.cssText = `
+                              position: fixed; top: 20px; right: 20px; z-index: 100000;
+                              background: #10b981; color: white; padding: 1rem 2rem;
+                              border-radius: 12px; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                            `;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
                           }}
-                          className={`theme-option-critical-fix ${theme === themeKey ? 'active' : ''} flex items-center gap-3 p-4 bg-gray-50 hover:bg-blue-50 border-2 ${theme === themeKey ? 'border-blue-500 bg-blue-100' : 'border-gray-200'} rounded-xl transition-all transform hover:scale-105 hover:shadow-lg`}
+                          className={`theme-option-CRITICAL-BUTTON group p-5 rounded-2xl border-3 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl ${
+                            theme === themeKey 
+                              ? 'border-blue-500 bg-blue-100 shadow-lg' 
+                              : 'border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-300'
+                          }`}
                         >
-                          <div 
-                            className={`theme-color-preview w-5 h-5 rounded-full shadow-lg theme-preview-${themeKey} border-2 border-white`}
-                            style={{
-                              background: themeKey === 'neon' ? 'linear-gradient(45deg, #ff6600, #ff9900)' :
-                                         themeKey === 'dark' ? 'linear-gradient(45deg, #1f2937, #4338ca)' :
-                                         themeKey === 'modern' ? 'linear-gradient(45deg, #3b82f6, #8b5cf6)' :
-                                         themeKey === 'glassy' ? 'linear-gradient(45deg, #06b6d4, #10b981)' :
-                                         themeKey === 'minimal' ? 'linear-gradient(45deg, #6b7280, #374151)' :
-                                         themeKey === 'white' ? 'linear-gradient(45deg, #f3f4f6, #3b82f6)' :
-                                         'linear-gradient(45deg, #3b82f6, #8b5cf6)'
-                            }}
-                          />
-                          <div className="flex-1 text-left">
-                            <div className="font-bold text-gray-800">
-                              {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
+                          <div className="flex items-center gap-4">
+                            <div 
+                              className="w-8 h-8 rounded-full shadow-lg border-2 border-white"
+                              style={{
+                                background: themeKey === 'neon' ? 'linear-gradient(135deg, #ff6600, #ff9900)' :
+                                           themeKey === 'dark' ? 'linear-gradient(135deg, #1f2937, #4338ca)' :
+                                           themeKey === 'modern' ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' :
+                                           themeKey === 'glassy' ? 'linear-gradient(135deg, #06b6d4, #10b981)' :
+                                           themeKey === 'minimal' ? 'linear-gradient(135deg, #6b7280, #374151)' :
+                                           themeKey === 'white' ? 'linear-gradient(135deg, #f3f4f6, #3b82f6)' :
+                                           'linear-gradient(135deg, #3b82f6, #8b5cf6)'
+                              }}
+                            />
+                            <div className="flex-1 text-left">
+                              <div className="font-bold text-lg text-gray-800 group-hover:text-blue-600">
+                                {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
+                              </div>
+                              <div className="text-xs text-gray-500 capitalize">
+                                {themeKey} theme
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500 capitalize">
-                              {themeKey} theme
-                            </div>
+                            {theme === themeKey && (
+                              <div className="text-blue-600 text-2xl font-bold">
+                                ✓
+                              </div>
+                            )}
                           </div>
-                          {theme === themeKey && (
-                            <div className="text-blue-500 text-xl font-bold">
-                              ✓
-                            </div>
-                          )}
                         </button>
                       ))}
                     </div>
+                    
+                    {/* Footer info */}
                     <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                       <p className="text-xs text-gray-500">
                         {language === 'ar' ? 'سيتم تطبيق الثيم فوراً على كامل النظام' : 'Theme will be applied instantly to the entire system'}
