@@ -1212,6 +1212,113 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
             </div>
           </div>
         </div>
+
+        {/* Advanced Notifications Center */}
+        <div className="notifications-center bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              🔔 {language === 'ar' ? 'مركز الإشعارات المتقدم' : 'Advanced Notifications Center'}
+            </h3>
+            <div className="notification-settings flex items-center gap-2">
+              <div className="notification-indicator w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+              <span className="text-xs text-red-400">3 جديد</span>
+            </div>
+          </div>
+          
+          <div className="notifications-list space-y-3 max-h-64 overflow-y-auto">
+            {/* High Priority Notification */}
+            <div className="notification-item p-4 bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="notification-icon w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-red-400 text-sm">⚠️</span>
+                </div>
+                <div className="flex-1">
+                  <div className="notification-header flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-semibold text-red-400">
+                      {language === 'ar' ? 'تنبيه: مخزون منخفض' : 'Alert: Low Stock'}
+                    </h4>
+                    <span className="text-xs text-red-300">منذ 5 دقائق</span>
+                  </div>
+                  <p className="text-xs text-white/80">
+                    {language === 'ar' 
+                      ? '12 منتج يحتاج إعادة تجديد في المخزن الرئيسي'
+                      : '12 products need restocking in main warehouse'
+                    }
+                  </p>
+                  <div className="notification-actions mt-2 flex gap-2">
+                    <button className="text-xs text-red-400 hover:text-red-300">
+                      {language === 'ar' ? 'اتخاذ إجراء' : 'Take Action'}
+                    </button>
+                    <button className="text-xs text-white/60 hover:text-white/80">
+                      {language === 'ar' ? 'إغلاق' : 'Dismiss'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Success Notification */}
+            <div className="notification-item p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="notification-icon w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-green-400 text-sm">✅</span>
+                </div>
+                <div className="flex-1">
+                  <div className="notification-header flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-semibold text-green-400">
+                      {language === 'ar' ? 'تم بنجاح: طلبية جديدة' : 'Success: New Order'}
+                    </h4>
+                    <span className="text-xs text-green-300">منذ 15 دقيقة</span>
+                  </div>
+                  <p className="text-xs text-white/80">
+                    {language === 'ar' 
+                      ? 'تم إنشاء طلبية بقيمة 2,500 ج.م من عيادة د. أحمد محمد'
+                      : 'New order worth 2,500 EGP created from Dr. Ahmed Mohamed Clinic'
+                    }
+                  </p>
+                  <div className="notification-actions mt-2 flex gap-2">
+                    <button className="text-xs text-green-400 hover:text-green-300">
+                      {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Notification */}
+            <div className="notification-item p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="notification-icon w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-blue-400 text-sm">ℹ️</span>
+                </div>
+                <div className="flex-1">
+                  <div className="notification-header flex items-center justify-between mb-1">
+                    <h4 className="text-sm font-semibold text-blue-400">
+                      {language === 'ar' ? 'تحديث النظام' : 'System Update'}
+                    </h4>
+                    <span className="text-xs text-blue-300">منذ ساعة</span>
+                  </div>
+                  <p className="text-xs text-white/80">
+                    {language === 'ar' 
+                      ? 'تم تطبيق تحديثات الأمان الجديدة بنجاح'
+                      : 'New security updates have been successfully applied'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notification Footer */}
+          <div className="notification-footer mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+            <button className="text-xs text-white/60 hover:text-white/80">
+              {language === 'ar' ? 'عرض جميع الإشعارات' : 'View All Notifications'}
+            </button>
+            <button className="text-xs text-white/60 hover:text-white/80">
+              {language === 'ar' ? 'إعدادات الإشعارات' : 'Notification Settings'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Quick Action Modal */}
