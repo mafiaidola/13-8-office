@@ -170,369 +170,212 @@ const ProfessionalHeader = ({
       {/* Header Content - Simplified Layout */}
       <div className="h-full max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-full gap-4">
-          
-          {/* 1. Logo & Site Name (Right Side in RTL) */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="logo-container flex items-center">
-              {systemSettings.company_logo ? (
-                <img 
-                  src={systemSettings.company_logo} 
-                  alt="Company Logo" 
-                  className="h-12 w-12 object-contain rounded-lg bg-white/10 p-1 border border-white/20"
-                />
-              ) : (
-                <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl border border-white/20">
-                  EP
-                </div>
-              )}
-              
-              <div className="ml-3 rtl:ml-0 rtl:mr-3">
-                <h1 className="text-xl font-bold text-white">
-                  {systemSettings.site_name || (language === 'ar' ? 'نظام EP Group' : 'EP Group System')}
-                </h1>
-                <p className="text-xs text-white/70">
-                  {language === 'ar' ? 'نظام إدارة متقدم' : 'Advanced Management System'}
-                </p>
-              </div>
+          {/* 1. Company Logo & Name (Right Side) */}
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-white/20">
+              <span className="text-white font-bold text-lg">EP</span>
             </div>
-          </div>
-
-          {/* Center Section - Advanced Search */}
-          <div className="flex-1 max-w-xl mx-8" ref={searchRef}>
-            <div className="relative">
-              {/* Search Input */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pl-0 rtl:pr-3 flex items-center pointer-events-none">
-                  <span className="text-white/60 text-lg">🔍</span>
-                </div>
-                
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setShowAdvancedSearch(true)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearch(searchQuery, searchType);
-                    }
-                  }}
-                  className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white/15 transition-all duration-200"
-                  placeholder={language === 'ar' ? 'بحث متقدم في النظام...' : 'Advanced search in system...'}
-                />
-                
-                <button
-                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-                  className="absolute inset-y-0 right-0 rtl:right-auto rtl:left-0 pr-3 rtl:pr-0 rtl:pl-3 flex items-center text-white/60 hover:text-white transition-colors"
-                >
-                  <span className="text-lg">⚙️</span>
-                </button>
-              </div>
-
-              {/* Advanced Search Dropdown */}
-              {showAdvancedSearch && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden z-50">
-                  
-                  {/* Search Types */}
-                  <div className="p-4 border-b border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-3">
-                      {language === 'ar' ? 'نوع البحث' : 'Search Type'}
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {searchTypes.map((type) => (
-                        <button
-                          key={type.id}
-                          onClick={() => setSearchType(type.id)}
-                          className={`flex items-center space-x-2 rtl:space-x-reverse px-3 py-2 rounded-lg text-sm transition-all ${
-                            searchType === type.id
-                              ? 'bg-blue-500 text-white shadow-md'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <span>{type.icon}</span>
-                          <span>{type.label[language]}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quick Search Actions */}
-                  <div className="p-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleSearch(searchQuery, searchType)}
-                        className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                      >
-                        <span>🔍</span>
-                        <span>{language === 'ar' ? 'بحث' : 'Search'}</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                        className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                      >
-                        <span>🗑️</span>
-                        <span>{language === 'ar' ? 'مسح' : 'Clear'}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Search Results Preview */}
-                  {searchResults.length > 0 && (
-                    <div className="border-t border-gray-200 max-h-64 overflow-y-auto">
-                      <div className="p-2">
-                        <h4 className="text-xs font-semibold text-gray-600 mb-2 px-2">
-                          {language === 'ar' ? 'نتائج البحث' : 'Search Results'}
-                        </h4>
-                        {searchResults.map((result, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                          >
-                            <span className="text-lg">{result.icon}</span>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900">{result.title}</div>
-                              <div className="text-xs text-gray-500">{result.subtitle}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Left Section - Theme, Language, User */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
             
-            {/* 3. Theme Selector */}
+            {/* Company Name */}
+            <div className="hidden md:block">
+              <h1 className="text-white font-bold text-lg leading-tight">
+                {systemSettings.site_name || 'نظام EP Group'}
+              </h1>
+              <p className="text-white/70 text-xs">
+                {language === 'ar' ? 'نظام إدارة متقدم' : 'Advanced Management'}
+              </p>
+            </div>
+          </div>
+
+          {/* 2. Search Bar (Center) */}
+          <div className="flex-1 max-w-md mx-4" ref={searchRef}>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowAdvancedSearch(true)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery, searchType)}
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white/15"
+                placeholder={language === 'ar' ? 'بحث في النظام...' : 'Search system...'}
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60">
+                🔍
+              </div>
+            </div>
+
+            {/* Search Results Dropdown */}
+            {showAdvancedSearch && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg rounded-lg border border-white/20 shadow-xl overflow-hidden z-[9999]">
+                <div className="p-3">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {searchTypes.slice(0, 4).map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => setSearchType(type.id)}
+                        className={`flex items-center gap-2 px-2 py-1 rounded text-sm ${
+                          searchType === type.id
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <span>{type.icon}</span>
+                        <span>{type.label[language]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => handleSearch(searchQuery, searchType)}
+                    className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    {language === 'ar' ? 'بحث' : 'Search'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Actions Section (Left Side) */}
+          <div className="flex items-center gap-2">
+            
+            {/* Theme Selector */}
             <div className="relative" ref={themeMenuRef}>
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 transition-all duration-200 group"
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-colors"
+                title={language === 'ar' ? 'تغيير المظهر' : 'Change Theme'}
               >
                 <span className="text-lg">{currentTheme.icon}</span>
-                <span className="hidden sm:inline text-white font-medium">
-                  {currentTheme.name[language]}
-                </span>
-                <span className="text-white/60 text-xs group-hover:text-white transition-colors">▼</span>
               </button>
 
-              {/* Theme Dropdown */}
+              {/* Theme Dropdown - FIXED Z-INDEX */}
               {showThemeMenu && (
-                <div 
-                  className="absolute top-full right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white/95 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden z-50"
-                  style={{ transform: 'translateZ(0)' }}
-                >
-                  <div className="p-4 border-b border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                      <span className="mr-2">🎨</span>
-                      {language === 'ar' ? 'اختر المظهر' : 'Choose Theme'}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {language === 'ar' ? 'اختر مظهراً يناسب أسلوبك' : 'Choose a theme that suits your style'}
-                    </p>
-                  </div>
+                <>
+                  {/* Overlay to close menu */}
+                  <div 
+                    className="fixed inset-0 z-[9997]" 
+                    onClick={() => setShowThemeMenu(false)} 
+                  />
                   
-                  <div className="p-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      {Object.entries(themes).map(([themeKey, themeConfig]) => (
-                        <button
-                          key={themeKey}
-                          onClick={() => handleThemeChange(themeKey)}
-                          className={`flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-lg transition-all group ${
-                            theme === themeKey
-                              ? 'bg-blue-500 text-white shadow-md'
-                              : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          <div className="flex-shrink-0">
+                  {/* Menu Content */}
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white/95 backdrop-blur-lg rounded-lg border border-white/20 shadow-xl overflow-hidden z-[9998]">
+                    <div className="p-3">
+                      <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <span>🎨</span>
+                        {language === 'ar' ? 'اختر المظهر' : 'Choose Theme'}
+                      </h3>
+                      
+                      <div className="space-y-2">
+                        {Object.entries(themes).map(([themeKey, themeConfig]) => (
+                          <button
+                            key={themeKey}
+                            onClick={() => handleThemeChange(themeKey)}
+                            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                              theme === themeKey
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
                             <div 
-                              className="w-8 h-8 rounded-full border-2 border-white shadow-lg"
+                              className="w-4 h-4 rounded-full border border-white/50"
                               style={{
                                 background: `linear-gradient(135deg, ${themeConfig.colors.primary}, ${themeConfig.colors.secondary})`
                               }}
                             />
-                          </div>
-                          
-                          <div className="flex-1 text-left rtl:text-right">
-                            <div className="font-semibold">
+                            <span className="flex-1 text-left">
                               {themeConfig.icon} {themeConfig.name[language]}
-                            </div>
-                            <div className={`text-xs ${theme === themeKey ? 'text-white/80' : 'text-gray-500'}`}>
-                              {themeKey.charAt(0).toUpperCase() + themeKey.slice(1)} theme
-                            </div>
-                          </div>
-                          
-                          {theme === themeKey && (
-                            <div className="text-white text-xl">✓</div>
-                          )}
-                        </button>
-                      ))}
+                            </span>
+                            {theme === themeKey && <span>✓</span>}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
-            {/* 4. Language Selector */}
+            {/* Language Toggle */}
             <button
               onClick={handleLanguageChange}
-              className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 transition-all duration-200"
+              className="p-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-colors"
+              title={language === 'ar' ? 'تغيير اللغة' : 'Change Language'}
             >
               <span className="text-lg">{language === 'ar' ? '🇸🇦' : '🇺🇸'}</span>
-              <span className="hidden sm:inline text-white font-medium">
-                {language === 'ar' ? 'العربية' : 'English'}
-              </span>
             </button>
 
-            {/* 5. User Profile */}
+            {/* User Profile */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 rtl:space-x-reverse px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 transition-all duration-200 group"
+                className="flex items-center gap-2 p-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-colors"
               >
                 {/* User Avatar */}
-                <div className="relative">
-                  {user?.photo ? (
-                    <img
-                      src={user.photo}
-                      alt={user.full_name}
-                      className="w-8 h-8 rounded-full object-cover border-2 border-white/30"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm border-2 border-white/30">
-                      {user?.full_name?.charAt(0) || user?.username?.charAt(0) || '?'}
-                    </div>
-                  )}
-                  
-                  {/* Online Status Indicator */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm border border-white/30">
+                  {user?.full_name?.charAt(0) || user?.username?.charAt(0) || '?'}
                 </div>
-
-                {/* User Name */}
-                <div className="hidden lg:block text-left rtl:text-right">
+                
+                {/* User Name - Hidden on small screens */}
+                <div className="hidden lg:block text-left">
                   <div className="text-white font-medium text-sm">
                     {user?.full_name || user?.username || 'المستخدم'}
                   </div>
-                  <div className="text-white/60 text-xs">
-                    {user?.role === 'admin' ? (language === 'ar' ? 'مدير النظام' : 'Administrator') :
-                     user?.role === 'medical_rep' ? (language === 'ar' ? 'مندوب طبي' : 'Medical Rep') :
-                     user?.role === 'accountant' ? (language === 'ar' ? 'محاسب' : 'Accountant') :
-                     (language === 'ar' ? 'مستخدم' : 'User')}
-                  </div>
                 </div>
-
-                <span className="text-white/60 text-xs group-hover:text-white transition-colors">▼</span>
+                
+                <span className="text-white/60 text-xs">▼</span>
               </button>
 
-              {/* User Dropdown - Mini Profile */}
+              {/* User Dropdown */}
               {showUserMenu && (
-                <div className="absolute top-full right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white/95 backdrop-blur-lg rounded-xl border border-white/20 shadow-2xl overflow-hidden z-50">
+                <>
+                  <div 
+                    className="fixed inset-0 z-[9997]" 
+                    onClick={() => setShowUserMenu(false)} 
+                  />
                   
-                  {/* Profile Header */}
-                  <div className="p-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                      <div className="relative">
-                        {user?.photo ? (
-                          <img
-                            src={user.photo}
-                            alt={user.full_name}
-                            className="w-16 h-16 rounded-full object-cover border-3 border-white/30 shadow-lg"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-2xl border-3 border-white/30 shadow-lg">
-                            {user?.full_name?.charAt(0) || user?.username?.charAt(0) || '?'}
-                          </div>
-                        )}
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white"></div>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold">{user?.full_name || user?.username}</h3>
-                        <p className="text-white/80 text-sm">@{user?.username}</p>
-                        <div className="mt-1">
-                          <span className="inline-block px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 backdrop-blur-lg rounded-lg border border-white/20 shadow-xl overflow-hidden z-[9998]">
+                    
+                    {/* Profile Header */}
+                    <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold border border-white/30">
+                          {user?.full_name?.charAt(0) || user?.username?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <h3 className="font-bold">{user?.full_name || user?.username}</h3>
+                          <p className="text-white/80 text-sm">@{user?.username}</p>
+                          <span className="inline-block px-2 py-1 bg-white/20 rounded text-xs font-medium mt-1">
                             {user?.role === 'admin' ? (language === 'ar' ? 'مدير النظام' : 'Administrator') :
                              user?.role === 'medical_rep' ? (language === 'ar' ? 'مندوب طبي' : 'Medical Rep') :
-                             user?.role === 'accountant' ? (language === 'ar' ? 'محاسب' : 'Accountant') :
                              (language === 'ar' ? 'مستخدم' : 'User')}
                           </span>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Profile Info */}
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {user?.stats?.visits || 0}
-                        </div>
-                        <div className="text-gray-600">
-                          {language === 'ar' ? 'الزيارات' : 'Visits'}
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {user?.stats?.orders || 0}
-                        </div>
-                        <div className="text-gray-600">
-                          {language === 'ar' ? 'الطلبات' : 'Orders'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="p-4">
-                    <div className="space-y-2">
-                      <button className="w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 text-left rtl:text-right bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-                        <span className="text-lg">👤</span>
-                        <span className="flex-1 text-gray-700 group-hover:text-gray-900">
-                          {language === 'ar' ? 'الملف الشخصي' : 'My Profile'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-gray-600">→</span>
+                    {/* Quick Actions */}
+                    <div className="p-4 space-y-2">
+                      <button className="w-full flex items-center gap-3 p-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <span>👤</span>
+                        <span className="text-gray-700">{language === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
                       </button>
                       
-                      <button className="w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 text-left rtl:text-right bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-                        <span className="text-lg">⚙️</span>
-                        <span className="flex-1 text-gray-700 group-hover:text-gray-900">
-                          {language === 'ar' ? 'الإعدادات' : 'Settings'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-gray-600">→</span>
+                      <button className="w-full flex items-center gap-3 p-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <span>⚙️</span>
+                        <span className="text-gray-700">{language === 'ar' ? 'الإعدادات' : 'Settings'}</span>
                       </button>
                       
-                      <button className="w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 text-left rtl:text-right bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-                        <span className="text-lg">🔔</span>
-                        <span className="flex-1 text-gray-700 group-hover:text-gray-900">
-                          {language === 'ar' ? 'الإشعارات' : 'Notifications'}
-                        </span>
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">3</span>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 p-2 text-left bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors"
+                      >
+                        <span>🚪</span>
+                        <span>{language === 'ar' ? 'تسجيل خروج' : 'Logout'}</span>
                       </button>
                     </div>
                   </div>
-
-                  {/* Logout Button */}
-                  <div className="p-4 border-t border-gray-200">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 text-left rtl:text-right bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800 rounded-lg transition-colors group"
-                    >
-                      <span className="text-lg">🚪</span>
-                      <span className="flex-1 font-medium">
-                        {language === 'ar' ? 'تسجيل خروج' : 'Logout'}
-                      </span>
-                      <span className="text-red-400 group-hover:text-red-600">→</span>
-                    </button>
-                  </div>
-                </div>
+                </>
               )}
             </div>
           </div>
