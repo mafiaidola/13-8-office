@@ -311,7 +311,370 @@ class BackendTester:
             self.log_test("Clinic Specialization Removal", False, f"Error: {str(e)}")
             return False
 
-    def test_core_apis(self):
+    def test_enhanced_user_statistics(self):
+        """Test enhanced user statistics with new metrics (debts, collections, visits, added_clinics)"""
+        try:
+            # Get users list first
+            start_time = time.time()
+            users_response = self.session.get(f"{API_BASE}/users")
+            users_response_time = (time.time() - start_time) * 1000
+            
+            if users_response.status_code == 200:
+                users = users_response.json()
+                if users and len(users) > 0:
+                    # Test user profile with enhanced statistics
+                    user_id = users[0].get("id")
+                    if user_id:
+                        start_time = time.time()
+                        profile_response = self.session.get(f"{API_BASE}/users/{user_id}/profile")
+                        profile_response_time = (time.time() - start_time) * 1000
+                        
+                        if profile_response.status_code == 200:
+                            profile_data = profile_response.json()
+                            user_stats = profile_data.get("user", {}).get("user_stats", {})
+                            
+                            # Check for enhanced metrics
+                            has_sales_activity = "sales_activity" in user_stats
+                            has_debt_info = "debt_info" in user_stats
+                            has_territory_info = "territory_info" in user_stats
+                            has_team_info = "team_info" in user_stats
+                            
+                            if has_sales_activity and has_debt_info and has_territory_info and has_team_info:
+                                sales_stats = user_stats["sales_activity"]
+                                debt_stats = user_stats["debt_info"]
+                                territory_stats = user_stats["territory_info"]
+                                
+                                self.log_test("Enhanced User Statistics", True, 
+                                            f"User stats include: visits({sales_stats.get('total_visits', 0)}), orders({sales_stats.get('total_orders', 0)}), debt({debt_stats.get('total_debt', 0)}), clinics({territory_stats.get('assigned_clinics', 0)})", 
+                                            profile_response_time)
+                                return True
+                            else:
+                                self.log_test("Enhanced User Statistics", False, 
+                                            f"Missing enhanced metrics. Has: sales({has_sales_activity}), debt({has_debt_info}), territory({has_territory_info}), team({has_team_info})", 
+                                            profile_response_time)
+                                return False
+                        else:
+                            self.log_test("Enhanced User Statistics", False, 
+                                        f"Profile retrieval failed: {profile_response.status_code} - {profile_response.text}", 
+                                        profile_response_time)
+                            return False
+                    else:
+                        self.log_test("Enhanced User Statistics", False, "No user ID found")
+                        return False
+                else:
+                    self.log_test("Enhanced User Statistics", False, "No users found")
+                    return False
+            else:
+                self.log_test("Enhanced User Statistics", False, f"Users retrieval failed: {users_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Enhanced User Statistics", False, f"Error: {str(e)}")
+            return False
+
+    def test_clinic_approval_info_structure(self):
+        """Test new approval_info data structure for clinics"""
+        try:
+            clinic_data = {
+                "name": "عيادة اختبار نظام الموافقة",
+                "doctor_name": "د. أحمد محمد",
+                "address": "شارع التحرير، القاهرة",
+                "phone": "01234567890",
+                "email": "approval@clinic.com",
+                "classification": "A",
+                "credit_status": "good",
+                "manager_name": "مدير العيادة",
+                "manager_phone": "01111111111",
+                "latitude": 30.0444,
+                "longitude": 31.2357,
+                "area_id": "test-area-id",
+                "approval_info": {
+                    "status": "pending",
+                    "submitted_at": datetime.now().isoformat(),
+                    "submitted_by": "medical_rep_id",
+                    "approval_level": "line_manager",
+                    "required_approvals": ["line_manager", "area_manager"],
+                    "approval_history": [],
+                    "rejection_reason": None,
+                    "priority": "normal",
+                    "documents_required": ["license", "insurance"],
+                    "documents_submitted": ["license"],
+                    "compliance_check": {
+                        "license_valid": True,
+                        "insurance_valid": False,
+                        "location_verified": True
+                    }
+                }
+            }
+            
+            start_time = time.time()
+            response = self.session.post(f"{API_BASE}/clinics", json=clinic_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200 or response.status_code == 201:
+                clinic_result = response.json()
+                clinic_info = clinic_result.get("clinic", {})
+                
+                # Check if approval_info structure is preserved
+                has_approval_info = "approval_info" in clinic_info
+                if has_approval_info:
+                    approval_info = clinic_info["approval_info"]
+                    has_status = "status" in approval_info
+                    has_history = "approval_history" in approval_info
+                    has_compliance = "compliance_check" in approval_info
+                    
+                    if has_status and has_history and has_compliance:
+                        self.log_test("Clinic Approval Info Structure", True, 
+                                    f"Approval info structure preserved with status: {approval_info.get('status')}", 
+                                    response_time)
+                        return True
+                    else:
+                        self.log_test("Clinic Approval Info Structure", False, 
+                                    f"Incomplete approval info. Has: status({has_status}), history({has_history}), compliance({has_compliance})", 
+                                    response_time)
+                        return False
+                else:
+                    self.log_test("Clinic Approval Info Structure", False, 
+                                "Approval info structure not preserved in response", 
+                                response_time)
+                    return False
+            else:
+                self.log_test("Clinic Approval Info Structure", False, 
+                            f"Clinic creation failed: {response.status_code} - {response.text}", 
+                            response_time)
+                return False
+                
+        except Exception as e:
+            self.log_test("Clinic Approval Info Structure", False, f"Error: {str(e)}")
+            return False
+
+    def test_debt_collection_apis(self):
+        """Test debt and collection management APIs"""
+        try:
+            # Test debt summary statistics
+            start_time = time.time()
+            debt_stats_response = self.session.get(f"{API_BASE}/debts/summary/statistics")
+            debt_stats_time = (time.time() - start_time) * 1000
+            
+            debt_stats_success = debt_stats_response.status_code == 200
+            if debt_stats_success:
+                debt_stats = debt_stats_response.json()
+                self.log_test("Debt Summary Statistics", True, 
+                            f"Debt stats: total({debt_stats.get('total_debt', 0)}), count({debt_stats.get('debt_count', 0)})", 
+                            debt_stats_time)
+            else:
+                self.log_test("Debt Summary Statistics", False, 
+                            f"Failed: {debt_stats_response.status_code} - {debt_stats_response.text}", 
+                            debt_stats_time)
+            
+            # Test collection statistics
+            start_time = time.time()
+            collection_stats_response = self.session.get(f"{API_BASE}/debts/collections/summary/statistics")
+            collection_stats_time = (time.time() - start_time) * 1000
+            
+            collection_stats_success = collection_stats_response.status_code == 200
+            if collection_stats_success:
+                collection_stats = collection_stats_response.json()
+                self.log_test("Collection Summary Statistics", True, 
+                            f"Collection stats: total({collection_stats.get('total_collected', 0)}), count({collection_stats.get('collection_count', 0)})", 
+                            collection_stats_time)
+            else:
+                self.log_test("Collection Summary Statistics", False, 
+                            f"Failed: {collection_stats_response.status_code} - {collection_stats_response.text}", 
+                            collection_stats_time)
+            
+            # Test debt records
+            start_time = time.time()
+            debts_response = self.session.get(f"{API_BASE}/debts")
+            debts_time = (time.time() - start_time) * 1000
+            
+            debts_success = debts_response.status_code == 200
+            if debts_success:
+                debts = debts_response.json()
+                debt_count = len(debts) if isinstance(debts, list) else 0
+                self.log_test("Debt Records", True, f"Retrieved {debt_count} debt records", debts_time)
+            else:
+                self.log_test("Debt Records", False, 
+                            f"Failed: {debts_response.status_code} - {debts_response.text}", debts_time)
+            
+            # Test collection records
+            start_time = time.time()
+            collections_response = self.session.get(f"{API_BASE}/debts/collections")
+            collections_time = (time.time() - start_time) * 1000
+            
+            collections_success = collections_response.status_code == 200
+            if collections_success:
+                collections = collections_response.json()
+                collection_count = len(collections) if isinstance(collections, list) else 0
+                self.log_test("Collection Records", True, f"Retrieved {collection_count} collection records", collections_time)
+            else:
+                self.log_test("Collection Records", False, 
+                            f"Failed: {collections_response.status_code} - {collections_response.text}", collections_time)
+            
+            return debt_stats_success and collection_stats_success and debts_success and collections_success
+                
+        except Exception as e:
+            self.log_test("Debt Collection APIs", False, f"Error: {str(e)}")
+            return False
+
+    def test_dashboard_enhancement_apis(self):
+        """Test enhanced dashboard APIs"""
+        try:
+            # Test dashboard statistics
+            start_time = time.time()
+            dashboard_response = self.session.get(f"{API_BASE}/dashboard/stats")
+            dashboard_time = (time.time() - start_time) * 1000
+            
+            dashboard_success = dashboard_response.status_code == 200
+            if dashboard_success:
+                dashboard_stats = dashboard_response.json()
+                self.log_test("Dashboard Statistics", True, 
+                            f"Dashboard stats: users({dashboard_stats.get('total_users', 0)}), clinics({dashboard_stats.get('total_clinics', 0)}), products({dashboard_stats.get('total_products', 0)})", 
+                            dashboard_time)
+            else:
+                self.log_test("Dashboard Statistics", False, 
+                            f"Failed: {dashboard_response.status_code} - {dashboard_response.text}", 
+                            dashboard_time)
+            
+            # Test admin activities
+            start_time = time.time()
+            activities_response = self.session.get(f"{API_BASE}/admin/activities")
+            activities_time = (time.time() - start_time) * 1000
+            
+            activities_success = activities_response.status_code == 200
+            if activities_success:
+                activities = activities_response.json()
+                activity_count = len(activities) if isinstance(activities, list) else 0
+                self.log_test("Admin Activities", True, f"Retrieved {activity_count} activities", activities_time)
+            else:
+                self.log_test("Admin Activities", False, 
+                            f"Failed: {activities_response.status_code} - {activities_response.text}", activities_time)
+            
+            # Test activity statistics
+            start_time = time.time()
+            activity_stats_response = self.session.get(f"{API_BASE}/admin/activities/stats")
+            activity_stats_time = (time.time() - start_time) * 1000
+            
+            activity_stats_success = activity_stats_response.status_code == 200
+            if activity_stats_success:
+                activity_stats = activity_stats_response.json()
+                self.log_test("Activity Statistics", True, 
+                            f"Activity stats: total({activity_stats.get('total_activities', 0)}), today({activity_stats.get('today_activities', 0)})", 
+                            activity_stats_time)
+            else:
+                self.log_test("Activity Statistics", False, 
+                            f"Failed: {activity_stats_response.status_code} - {activity_stats_response.text}", 
+                            activity_stats_time)
+            
+            # Test GPS tracking
+            start_time = time.time()
+            gps_response = self.session.get(f"{API_BASE}/admin/gps-tracking")
+            gps_time = (time.time() - start_time) * 1000
+            
+            gps_success = gps_response.status_code == 200
+            if gps_success:
+                gps_data = gps_response.json()
+                gps_count = len(gps_data) if isinstance(gps_data, list) else 0
+                self.log_test("GPS Tracking", True, f"Retrieved {gps_count} GPS records", gps_time)
+            else:
+                self.log_test("GPS Tracking", False, 
+                            f"Failed: {gps_response.status_code} - {gps_response.text}", gps_time)
+            
+            return dashboard_success and activities_success and activity_stats_success and gps_success
+                
+        except Exception as e:
+            self.log_test("Dashboard Enhancement APIs", False, f"Error: {str(e)}")
+            return False
+
+    def test_performance_metrics(self):
+        """Test API response times for performance"""
+        performance_tests = [
+            ("Users API Performance", f"{API_BASE}/users"),
+            ("Clinics API Performance", f"{API_BASE}/clinics"),
+            ("Products API Performance", f"{API_BASE}/products"),
+            ("Orders API Performance", f"{API_BASE}/orders"),
+            ("Dashboard API Performance", f"{API_BASE}/dashboard/stats")
+        ]
+        
+        total_response_time = 0
+        successful_tests = 0
+        
+        for test_name, url in performance_tests:
+            try:
+                start_time = time.time()
+                response = self.session.get(url)
+                response_time = (time.time() - start_time) * 1000
+                total_response_time += response_time
+                
+                if response.status_code == 200:
+                    # Consider response time acceptable if under 2000ms
+                    performance_acceptable = response_time < 2000
+                    if performance_acceptable:
+                        self.log_test(test_name, True, f"Response time: {response_time:.2f}ms (acceptable)", response_time)
+                        successful_tests += 1
+                    else:
+                        self.log_test(test_name, False, f"Response time: {response_time:.2f}ms (too slow)", response_time)
+                else:
+                    self.log_test(test_name, False, f"API failed: {response.status_code}", response_time)
+                    
+            except Exception as e:
+                self.log_test(test_name, False, f"Error: {str(e)}")
+        
+        # Calculate average response time
+        avg_response_time = total_response_time / len(performance_tests) if performance_tests else 0
+        
+        # Overall performance assessment
+        if successful_tests == len(performance_tests) and avg_response_time < 1000:
+            self.log_test("Overall API Performance", True, f"Average response time: {avg_response_time:.2f}ms (excellent)")
+            return True
+        elif successful_tests >= len(performance_tests) * 0.8:
+            self.log_test("Overall API Performance", True, f"Average response time: {avg_response_time:.2f}ms (good)")
+            return True
+        else:
+            self.log_test("Overall API Performance", False, f"Performance issues detected. Average: {avg_response_time:.2f}ms")
+            return False
+
+    def test_error_handling(self):
+        """Test robust error handling for new functionalities"""
+        error_tests = [
+            ("Invalid User ID", f"{API_BASE}/users/invalid-id/profile", 404),
+            ("Invalid Clinic ID", f"{API_BASE}/clinics/invalid-id", 404),
+            ("Invalid Order ID", f"{API_BASE}/orders/invalid-id", 404),
+            ("Unauthorized Debt Access", f"{API_BASE}/debts", None),  # Should work with admin token
+            ("Invalid Settings Update", f"{API_BASE}/admin/settings", None)  # Should work with admin token
+        ]
+        
+        successful_error_handling = 0
+        
+        for test_name, url, expected_status in error_tests:
+            try:
+                start_time = time.time()
+                if "settings" in url:
+                    # Test PUT with invalid data
+                    response = self.session.put(url, json={"invalid": "data"})
+                else:
+                    response = self.session.get(url)
+                response_time = (time.time() - start_time) * 1000
+                
+                if expected_status:
+                    # Expecting specific error status
+                    if response.status_code == expected_status:
+                        self.log_test(test_name, True, f"Correct error handling: {response.status_code}", response_time)
+                        successful_error_handling += 1
+                    else:
+                        self.log_test(test_name, False, f"Unexpected status: {response.status_code} (expected {expected_status})", response_time)
+                else:
+                    # Should work with admin token
+                    if response.status_code in [200, 201]:
+                        self.log_test(test_name, True, f"Authorized access works: {response.status_code}", response_time)
+                        successful_error_handling += 1
+                    else:
+                        self.log_test(test_name, False, f"Authorization issue: {response.status_code}", response_time)
+                        
+            except Exception as e:
+                self.log_test(test_name, False, f"Error: {str(e)}")
+        
+        return successful_error_handling >= len(error_tests) * 0.8
         """Test core APIs that should be working"""
         core_tests = [
             ("GET /api/users", f"{API_BASE}/users"),
