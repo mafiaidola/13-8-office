@@ -24,6 +24,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [locationError, setLocationError] = useState('');
+  const [mapError, setMapError] = useState('');
   
   const { t } = useTranslation(language);
   const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
