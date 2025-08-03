@@ -417,7 +417,7 @@ class DatabaseRelationshipTester:
                 )
                 
             else:
-                self.log_test("Fetch Debt Data", False, f"HTTP {response.status_code} - Debt system may not be implemented", response_time)
+                self.log_test("Fetch Debt Data", False, "No debt endpoints found or accessible - Debt system not implemented", 0)
                 
                 # Alternative: Check for order amounts as financial indicators
                 total_order_amount = sum(o.get('total_amount', 0) for o in self.orders_data)
