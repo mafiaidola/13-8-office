@@ -842,7 +842,7 @@ const DashboardLayout = () => {
       />
 
       {/* Main Dashboard Content with proper spacing for new header */}
-      <div className="dashboard-content flex pt-20">
+      <div className="dashboard-content flex pt-16">
         {/* Main Content */}
         <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
           sidebarCollapsed ? 'mr-16' : 'mr-80'
