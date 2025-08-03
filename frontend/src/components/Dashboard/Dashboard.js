@@ -494,6 +494,15 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           onClose={() => setShowQuickActionModal(false)}
         />
       )}
+
+      {/* Activity Details Modal */}
+      {showActivityModal && selectedActivity && (
+        <ActivityDetailsModal
+          activity={selectedActivity}
+          language={language}
+          onClose={() => setShowActivityModal(false)}
+        />
+      )}
     </div>
   );
 };
