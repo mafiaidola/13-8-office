@@ -437,6 +437,21 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
                       <div className="font-medium">{clinic.clinic_name}</div>
                       <div className="text-sm opacity-75">{clinic.address}</div>
                       <div className="text-sm opacity-60">{clinic.phone}</div>
+                      {/* Approval Information */}
+                      {clinic.approval_info && (
+                        <div className="mt-2 p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                          <div className="text-xs text-green-300 font-medium flex items-center gap-1">
+                            <span>✅</span>
+                            معتمد من: {clinic.approval_info.approved_by}
+                          </div>
+                          <div className="text-xs text-green-200/80">
+                            📍 {clinic.approval_info.approval_location}
+                          </div>
+                          <div className="text-xs text-green-200/60">
+                            📅 {new Date(clinic.approval_info.approval_date).toLocaleDateString('ar-EG')}
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="font-medium">{clinic.doctor_name}</div>
