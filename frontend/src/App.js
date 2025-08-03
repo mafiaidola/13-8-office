@@ -151,6 +151,61 @@ const ThemeProvider = ({ children }) => {
     }
   };
 
+  // Global function for switching tabs - CRITICAL FOR QUICK ACTIONS
+  const switchToTab = (tabName) => {
+    console.log(`🔄 Switching to tab: ${tabName}`);
+    setActiveTab(tabName);
+    setShowUserCard(false);
+    setShowThemes(false);
+    setShowProfile(false);
+    setShowSettings(false);
+    
+    // Log tab switch activity
+    activityLogger.logTabSwitch(tabName, {
+      timestamp: new Date().toISOString(),
+      source: 'quickAction',
+      previousTab: activeTab
+    });
+    
+    console.log(`✅ Tab switched successfully: ${tabName}`);
+  };
+
+  // Make switchToTab available globally for Dashboard quick actions
+  useEffect(() => {
+    window.switchToTab = switchToTab;
+    return () => {
+      delete window.switchToTab;
+    };
+  }, []);
+
+  const changeTheme = (newTheme) => {
+    if (AVAILABLE_THEMES[newTheme]) {
+      setTheme(newTheme);
+      console.log(`🎨 Changing theme to: ${newTheme}`);
+      
+      // Force immediate theme application with all themes including neon
+      setTimeout(() => {
+        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-neon');
+        document.body.classList.add(`theme-${newTheme}`);
+        
+        const themeConfig = AVAILABLE_THEMES[newTheme];
+        const root = document.documentElement;
+        
+        // Apply CSS variables immediately
+        root.style.setProperty('--bg-primary', themeConfig.colors.background);
+        root.style.setProperty('--bg-card', themeConfig.colors.card);
+        root.style.setProperty('--text-primary', themeConfig.colors.text);
+        root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
+        
+        console.log(`🎨 Theme applied: ${newTheme}`);
+        
+        // Force a re-render
+        const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
+        window.dispatchEvent(event);
+      }, 10);
+    }
+  };
+
   const getCurrentTheme = () => AVAILABLE_THEMES[theme];
 
   return (
