@@ -711,6 +711,12 @@ const DashboardLayout = () => {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [systemSettings, setSystemSettings] = useState({
+    system: {
+      app_name: 'EP Group System',
+      company_logo: ''
+    }
+  });
   
   const { user, logout } = useAuth();
   const { 
