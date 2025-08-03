@@ -119,12 +119,38 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
                 }
             }
         else:
-            # Other roles see limited statistics
-            stats = {
-                "total_visits": today_visits,
-                "total_orders": today_orders,
-                "my_stats": True
-            }
+            # Other roles see limited statistics but more meaningful ones
+            user_id = user.get("id")
+            user_role = user.get("role")
+            
+            if user_role in ["medical_rep", "key_account"]:
+                # Medical reps see their own performance
+                my_visits = await db.visits.count_documents({"sales_rep_id": user_id})
+                my_orders = await db.orders.count_documents({"medical_rep_id": user_id})
+                my_clinics = await db.clinics.count_documents({"assigned_rep_id": user_id})
+                my_today_visits = await db.visits.count_documents({
+                    "sales_rep_id": user_id,
+                    "created_at": {"$gte": today, "$lt": tomorrow}
+                })
+                
+                stats = {
+                    "my_visits": my_visits,
+                    "my_orders": my_orders,
+                    "my_clinics": my_clinics,
+                    "my_today_visits": my_today_visits,
+                    "total_visits": today_visits,
+                    "total_orders": today_orders,
+                    "my_stats": True
+                }
+            else:
+                # Default limited view
+                stats = {
+                    "total_visits": today_visits,
+                    "total_orders": today_orders,
+                    "total_clinics": total_clinics,
+                    "total_products": total_products,
+                    "my_stats": True
+                }
         
         return {
             "success": True,
