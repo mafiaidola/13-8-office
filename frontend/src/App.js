@@ -824,8 +824,8 @@ const DashboardLayout = () => {
           {/* Left Side - User Controls */}
           <div className="header-controls flex items-center gap-4">
             
-            {/* Theme Selector - Fixed z-index */}
-            <div className="theme-selector-enhanced relative z-[15000]">
+            {/* Theme Selector - Fixed Position and z-index */}
+            <div className="theme-selector-enhanced relative">
               <button
                 onClick={() => setShowThemes(!showThemes)}
                 className="theme-selector-btn bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl px-4 py-3 flex items-center gap-2 text-white hover:bg-white/20 transition-all duration-300"
@@ -839,9 +839,26 @@ const DashboardLayout = () => {
               </button>
 
               {showThemes && (
-                <div className="theme-dropdown-enhanced absolute top-full mt-2 right-0 z-[20000] min-w-80 bg-white/95 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl p-4">
-                  <div className="theme-dropdown-header mb-4">
-                    <h4 className="theme-dropdown-title text-lg font-bold text-gray-800">
+                <div 
+                  className="theme-dropdown-fixed"
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: '0',
+                    zIndex: 999999,
+                    marginTop: '8px',
+                    minWidth: '20rem',
+                    background: 'white',
+                    border: '2px solid #3b82f6',
+                    borderRadius: '16px',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(59, 130, 246, 0.5)',
+                    padding: '1rem',
+                    maxHeight: '400px',
+                    overflowY: 'auto'
+                  }}
+                >
+                  <div className="theme-dropdown-header mb-4 pb-3 border-b border-gray-200">
+                    <h4 className="text-lg font-bold text-gray-800">
                       {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
                     </h4>
                   </div>
