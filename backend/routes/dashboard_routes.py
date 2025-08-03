@@ -86,16 +86,37 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         
         # Role-based statistics
         if user["role"] == "admin":
-            # Admin sees everything
+            # Admin sees everything - Enhanced comprehensive stats
             stats = {
                 "total_users": total_users,
                 "total_clinics": total_clinics,
                 "total_visits": total_visits,
                 "total_orders": total_orders,
+                "total_products": total_products,
+                "total_warehouses": total_warehouses,
+                "total_doctors": total_doctors,
+                "total_lines": total_lines,
+                "total_areas": total_areas,
+                "total_debt_records": total_debt_records,
+                "total_invoices": total_invoices,
                 "today_visits": today_visits,
                 "today_orders": today_orders,
-                "pending_approvals": await db.orders.count_documents({"status": "PENDING"}),
-                "active_reps": await db.users.count_documents({"role": {"$in": ["sales_rep", "medical_rep"]}, "is_active": True})
+                "pending_approvals": await db.orders.count_documents({"status": "PENDING"}) if await db.orders.count_documents({}) > 0 else 0,
+                "active_reps": await db.users.count_documents({"role": {"$in": ["sales_rep", "medical_rep"]}, "is_active": True}),
+                "active_clinics": await db.clinics.count_documents({"is_active": True}),
+                "active_products": await db.products.count_documents({"is_active": True}),
+                # Geographic stats
+                "geographic_stats": {
+                    "lines": total_lines,
+                    "areas": total_areas,
+                    "assigned_clinics": await db.clinics.count_documents({"assigned_rep_id": {"$exists": True, "$ne": None}})
+                },
+                # Financial health
+                "financial_stats": {
+                    "debt_records": total_debt_records,
+                    "invoices": total_invoices,
+                    "pending_payments": 0  # Will be enhanced when debt system is implemented
+                }
             }
         else:
             # Other roles see limited statistics
