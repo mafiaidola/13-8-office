@@ -34,6 +34,13 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   useEffect(() => {
     loadEnhancedDashboardData();
     loadRecentActivities();
+  }, []);
+
+  // Reload data when time filter changes
+  useEffect(() => {
+    if (timeFilter) {
+      loadEnhancedDashboardData();
+    }
   }, [timeFilter]);
 
   const loadEnhancedDashboardData = async () => {
