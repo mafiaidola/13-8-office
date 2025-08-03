@@ -824,7 +824,7 @@ const DashboardLayout = () => {
           {/* Left Side - User Controls */}
           <div className="header-controls flex items-center gap-4">
             
-            {/* Theme Selector - Fixed Position and z-index */}
+            {/* Theme Selector - FIXED CRITICAL Z-INDEX ISSUE */}
             <div className="theme-selector-enhanced relative">
               <button
                 onClick={() => setShowThemes(!showThemes)}
@@ -839,48 +839,93 @@ const DashboardLayout = () => {
               </button>
 
               {showThemes && (
-                <div 
-                  className="theme-dropdown-fixed"
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: '0',
-                    zIndex: 999999,
-                    marginTop: '8px',
-                    minWidth: '20rem',
-                    background: 'white',
-                    border: '2px solid #3b82f6',
-                    borderRadius: '16px',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(59, 130, 246, 0.5)',
-                    padding: '1rem',
-                    maxHeight: '400px',
-                    overflowY: 'auto'
-                  }}
-                >
-                  <div className="theme-dropdown-header mb-4 pb-3 border-b border-gray-200">
-                    <h4 className="text-lg font-bold text-gray-800">
-                      {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
-                    </h4>
+                <>
+                  {/* Overlay to close dropdown when clicking outside */}
+                  <div 
+                    className="fixed inset-0 z-[99999]"
+                    onClick={() => setShowThemes(false)}
+                  />
+                  <div 
+                    className="theme-dropdown-critical-fix"
+                    style={{
+                      position: 'fixed',
+                      top: '90px',
+                      right: '20px',
+                      zIndex: 999999,
+                      minWidth: '22rem',
+                      background: 'white',
+                      border: '3px solid #3b82f6',
+                      borderRadius: '20px',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4)',
+                      padding: '1.5rem',
+                      maxHeight: '500px',
+                      overflowY: 'auto',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)'
+                    }}
+                  >
+                    <div className="theme-dropdown-header mb-6 pb-4 border-b-2 border-blue-200">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                          🎨 {language === 'ar' ? 'اختر المظهر' : 'Select Theme'}
+                        </h4>
+                        <button
+                          onClick={() => setShowThemes(false)}
+                          className="text-gray-500 hover:text-red-500 text-2xl font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        {language === 'ar' ? 'اختر ثيم من الأسفل لتغيير مظهر النظام' : 'Choose a theme below to change the system appearance'}
+                      </p>
+                    </div>
+                    <div className="theme-options-grid grid grid-cols-2 gap-4">
+                      {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
+                        <button
+                          key={themeKey}
+                          onClick={() => {
+                            changeTheme(themeKey);
+                            setShowThemes(false);
+                            console.log(`🎨 Theme changed to: ${themeKey}`);
+                          }}
+                          className={`theme-option-critical-fix ${theme === themeKey ? 'active' : ''} flex items-center gap-3 p-4 bg-gray-50 hover:bg-blue-50 border-2 ${theme === themeKey ? 'border-blue-500 bg-blue-100' : 'border-gray-200'} rounded-xl transition-all transform hover:scale-105 hover:shadow-lg`}
+                        >
+                          <div 
+                            className={`theme-color-preview w-5 h-5 rounded-full shadow-lg theme-preview-${themeKey} border-2 border-white`}
+                            style={{
+                              background: themeKey === 'neon' ? 'linear-gradient(45deg, #ff6600, #ff9900)' :
+                                         themeKey === 'dark' ? 'linear-gradient(45deg, #1f2937, #4338ca)' :
+                                         themeKey === 'modern' ? 'linear-gradient(45deg, #3b82f6, #8b5cf6)' :
+                                         themeKey === 'glassy' ? 'linear-gradient(45deg, #06b6d4, #10b981)' :
+                                         themeKey === 'minimal' ? 'linear-gradient(45deg, #6b7280, #374151)' :
+                                         themeKey === 'white' ? 'linear-gradient(45deg, #f3f4f6, #3b82f6)' :
+                                         'linear-gradient(45deg, #3b82f6, #8b5cf6)'
+                            }}
+                          />
+                          <div className="flex-1 text-left">
+                            <div className="font-bold text-gray-800">
+                              {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
+                            </div>
+                            <div className="text-xs text-gray-500 capitalize">
+                              {themeKey} theme
+                            </div>
+                          </div>
+                          {theme === themeKey && (
+                            <div className="text-blue-500 text-xl font-bold">
+                              ✓
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+                      <p className="text-xs text-gray-500">
+                        {language === 'ar' ? 'سيتم تطبيق الثيم فوراً على كامل النظام' : 'Theme will be applied instantly to the entire system'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="theme-options-grid grid grid-cols-2 gap-3">
-                    {Object.entries(availableThemes).map(([themeKey, themeConfig]) => (
-                      <button
-                        key={themeKey}
-                        onClick={() => {
-                          changeTheme(themeKey);
-                          setShowThemes(false);
-                        }}
-                        className={`theme-option-enhanced ${theme === themeKey ? 'active' : ''}`}
-                      >
-                        <div className={`theme-color-preview theme-preview-${themeKey}`}></div>
-                        <span className="flex-1 text-left">
-                          {language === 'ar' ? themeConfig.name.ar : themeConfig.name.en}
-                        </span>
-                        {theme === themeKey && <span className="text-blue-500 text-sm">✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                </>
               )}
             </div>
 
