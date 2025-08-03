@@ -598,7 +598,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       </div>
                     </div>
 
-                    {/* Enhanced Control Buttons */}
+                    {/* Enhanced Control Buttons - Improved Functionality */}
                     <div className="absolute bottom-4 right-4 flex gap-3">
                       <button
                         type="button"
@@ -608,10 +608,32 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                           console.log('🔗 فتح الخريطة في Google Maps');
                         }}
                         className="bg-green-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-green-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-green-500/30"
-                        title="فتح في Google Maps"
+                        title="فتح في Google Maps للتحرير"
                       >
                         <span>🔗</span>
-                        فتح الخريطة
+                        تحرير الموقع
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // فتح Google Maps في نافذة صغيرة للاختيار
+                          const googleMapsPickerUrl = `https://www.google.com/maps/@${clinicData.latitude},${clinicData.longitude},16z`;
+                          const mapWindow = window.open(
+                            googleMapsPickerUrl, 
+                            'mapPicker', 
+                            'width=800,height=600,scrollbars=yes,resizable=yes'
+                          );
+                          
+                          // إظهار رسالة للمستخدم
+                          setSuccess('تم فتح Google Maps! انسخ الإحداثيات الجديدة والصقها في الحقول أدناه');
+                          console.log('🗺️ فتح Google Maps لاختيار موقع جديد');
+                        }}
+                        className="bg-purple-600 text-white px-4 py-3 rounded-xl text-sm hover:bg-purple-700 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg border border-purple-500/30"
+                        title="اختر موقعاً جديداً"
+                      >
+                        <span>🎯</span>
+                        اختر موقعاً
                       </button>
                       
                       <button
