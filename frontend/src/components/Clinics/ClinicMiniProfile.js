@@ -158,6 +158,183 @@ const ClinicMiniProfile = ({ clinic, onClose, language, isRTL }) => {
   const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString('ar-EG', {
       year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const exportToPDF = (section) => {
+    let content = '';
+    const clinicName = clinic.clinic_name || 'عيادة غير محددة';
+    
+    switch (section) {
+      case 'orders':
+        content = `
+تقرير طلبات العيادة
+====================
+
+العيادة: ${clinicName}
+الطبيب: ${clinic.doctor_name}
+تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}
+
+الطلبات:
+--------
+${profileData.orders.map((order, index) => `
+${index + 1}. ${order.order_number}
+   التاريخ: ${formatDate(order.date)}
+   المبلغ: ${formatCurrency(order.total_amount)}
+   عدد العناصر: ${order.items_count}
+   المندوب: ${order.rep_name}
+   الحالة: ${getOrderStatusLabel(order.status)}
+`).join('\n')}
+
+الإجمالي: ${profileData.orders.length} طلب
+إجمالي القيمة: ${formatCurrency(calculateTotals().totalOrderValue)}
+        `;
+        break;
+      case 'debts':
+        content = `
+تقرير مديونيات العيادة
+=====================
+
+العيادة: ${clinicName}
+الطبيب: ${clinic.doctor_name}
+تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}
+
+المديونيات:
+-----------
+${profileData.debts.map((debt, index) => `
+${index + 1}. ${debt.invoice_number}
+   تاريخ الاستحقاق: ${formatDate(debt.due_date)}
+   المبلغ الأصلي: ${formatCurrency(debt.original_amount)}
+   المدفوع: ${formatCurrency(debt.paid_amount)}
+   المتبقي: ${formatCurrency(debt.remaining_amount)}
+   الحالة: ${debt.status === 'overdue' ? `متأخر ${debt.days_overdue} يوم` : debt.status}
+`).join('\n')}
+
+إجمالي المديونيات: ${formatCurrency(calculateTotals().totalDebt)}
+        `;
+        break;
+      case 'visits':
+        content = `
+تقرير زيارات العيادة
+===================
+
+العيادة: ${clinicName}
+الطبيب: ${clinic.doctor_name}
+تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}
+
+الزيارات:
+---------
+${profileData.visits.map((visit, index) => `
+${index + 1}. ${formatDateTime(visit.visit_date)}
+   المندوب: ${visit.rep_name}
+   النوع: ${visit.visit_type === 'routine' ? 'روتينية' :
+           visit.visit_type === 'follow_up' ? 'متابعة' :
+           visit.visit_type === 'presentation' ? 'عرض منتجات' : visit.visit_type}
+   المدة: ${visit.duration_minutes} دقيقة
+   طلب: ${visit.order_created ? `تم - ${formatCurrency(visit.order_value)}` : 'لم يتم'}
+   ${visit.notes ? `الملاحظات: ${visit.notes}` : ''}
+`).join('\n')}
+
+إجمالي الزيارات: ${calculateTotals().totalVisits}
+        `;
+        break;
+    }
+    
+    // Create and download file
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${clinicName}_${section}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert(`تم تصدير تقرير ${section === 'orders' ? 'الطلبات' : section === 'debts' ? 'المديونيات' : 'الزيارات'} بنجاح!`);
+  };
+
+  const printSection = (section) => {
+    const printWindow = window.open('', '_blank');
+    const clinicName = clinic.clinic_name || 'عيادة غير محددة';
+    
+    let content = '';
+    switch (section) {
+      case 'orders':
+        content = `
+          <h2>تقرير طلبات العيادة</h2>
+          <p><strong>العيادة:</strong> ${clinicName}</p>
+          <p><strong>الطبيب:</strong> ${clinic.doctor_name}</p>
+          <p><strong>تاريخ التقرير:</strong> ${new Date().toLocaleDateString('ar-EG')}</p>
+          <table border="1" style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th>رقم الطلب</th>
+              <th>التاريخ</th>
+              <th>المبلغ</th>
+              <th>عدد العناصر</th>
+              <th>المندوب</th>
+              <th>الحالة</th>
+            </tr>
+            ${profileData.orders.map(order => `
+              <tr>
+                <td>${order.order_number}</td>
+                <td>${formatDate(order.date)}</td>
+                <td>${formatCurrency(order.total_amount)}</td>
+                <td>${order.items_count}</td>
+                <td>${order.rep_name}</td>
+                <td>${getOrderStatusLabel(order.status)}</td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+        break;
+      case 'debts':
+      case 'visits':
+        content = `<h2>تقرير ${section === 'debts' ? 'المديونيات' : 'الزيارات'}</h2>`;
+        break;
+    }
+    
+    printWindow.document.write(`
+      <html dir="rtl">
+        <head>
+          <title>${clinicName} - تقرير ${section}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const showOrderDetails = (order) => {
+    const details = `
+تفاصيل الطلب: ${order.order_number}
+
+التاريخ: ${formatDate(order.date)}
+المبلغ: ${formatCurrency(order.total_amount)}
+عدد العناصر: ${order.items_count}
+المندوب: ${order.rep_name}
+حالة الطلب: ${getOrderStatusLabel(order.status)}
+
+العيادة: ${clinic.clinic_name}
+الطبيب: ${clinic.doctor_name}
+    `;
+    alert(details);
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString('ar-EG', {
+      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
