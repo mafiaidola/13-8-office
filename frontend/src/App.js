@@ -810,8 +810,21 @@ const DashboardLayout = () => {
 
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header - Enhanced Design with Fixed Issues */}
-      <header className={`dashboard-header fixed top-0 left-0 right-0 z-[9999] ${headerScrolled ? 'scrolled' : ''}`}>
+      {/* Professional Header - Complete New Implementation */}
+      <ProfessionalHeader 
+        user={user}
+        language={language}
+        setLanguage={setLanguage}
+        theme={theme}
+        setTheme={changeTheme}
+        isRTL={isRTL}
+        setIsRTL={setIsRTL}
+        onSearch={handleGlobalSearch}
+        systemSettings={systemSettings}
+      />
+
+      {/* Main Dashboard Content with proper spacing for new header */}
+      <div className="dashboard-content pt-24">{/* Increased padding for header height */}
         <div className="header-content flex items-center justify-between max-w-full mx-auto px-6 py-4">
           
           {/* Right Side - Logo & Brand - Enhanced */}
