@@ -100,46 +100,6 @@ const AVAILABLE_THEMES = {
     }
   }
 };
-    name: { ar: 'زجاجي', en: 'Glassy' },
-    colors: {
-      primary: 'from-cyan-500 to-teal-600',
-      secondary: 'from-teal-600 to-emerald-700',
-      background: 'from-slate-900 via-cyan-900/50 to-teal-900',
-      card: 'bg-white/10 border border-cyan-400/30 backdrop-blur-lg',
-      text: 'text-cyan-100'
-    }
-  },
-  dark: {
-    name: { ar: 'داكن', en: 'Dark' },
-    colors: {
-      primary: 'from-indigo-600 to-purple-600',
-      secondary: 'from-purple-600 to-pink-600',
-      background: 'from-gray-900 via-purple-900 to-indigo-900',
-      card: 'bg-gray-800/50',
-      text: 'text-white'
-    }
-  },
-  white: {
-    name: { ar: 'أبيض', en: 'White' },
-    colors: {
-      primary: 'from-blue-600 to-indigo-600',
-      secondary: 'from-indigo-600 to-purple-600',
-      background: 'from-white to-gray-100',
-      card: 'bg-white border border-gray-200',
-      text: 'text-gray-900'
-    }
-  },
-  neon: {
-    name: { ar: 'نيون', en: 'Neon' },
-    colors: {
-      primary: 'from-orange-500 to-orange-600',
-      secondary: 'from-amber-600 to-orange-700',
-      background: 'from-gray-900 via-orange-900 to-amber-900',
-      card: 'bg-gray-900/80 border border-orange-500/30',
-      text: 'text-orange-400'
-    }
-  }
-};
 
 // Theme Provider
 const ThemeProvider = ({ children }) => {
