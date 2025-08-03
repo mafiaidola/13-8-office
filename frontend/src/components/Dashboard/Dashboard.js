@@ -806,6 +806,235 @@ const QuickActionModal = ({ action, language, onClose }) => {
   );
 };
 
+// Activity Details Modal Component
+const ActivityDetailsModal = ({ activity, language, onClose }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500/20 text-green-300 border-green-500/30';
+      case 'pending': return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+      case 'in_progress': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+      case 'failed': return 'bg-red-500/20 text-red-300 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed': return language === 'ar' ? '✅ مكتمل' : '✅ Completed';
+      case 'pending': return language === 'ar' ? '⏳ معلق' : '⏳ Pending';
+      case 'in_progress': return language === 'ar' ? '🔄 قيد التنفيذ' : '🔄 In Progress';
+      case 'failed': return language === 'ar' ? '❌ فشل' : '❌ Failed';
+      default: return language === 'ar' ? '📋 غير محدد' : '📋 Unknown';
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ar-EG', {
+      style: 'currency',
+      currency: 'EGP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const exportToPDF = () => {
+    // Create printable content
+    const printContent = `
+      تفاصيل النشاط
+      ============
+      
+      النوع: ${activity.action}
+      الحالة: ${getStatusText(activity.status || 'completed')}
+      
+      المستخدم:
+      - الاسم: ${activity.user_name}
+      - الدور: ${activity.user_role}
+      
+      ${activity.clinic_name ? `العيادة: ${activity.clinic_name}` : ''}
+      ${activity.doctor_name ? `الطبيب: ${activity.doctor_name}` : ''}
+      ${activity.amount ? `المبلغ: ${formatCurrency(activity.amount)}` : ''}
+      ${activity.payment_method ? `طريقة الدفع: ${activity.payment_method}` : ''}
+      ${activity.visit_effectiveness ? `فعالية الزيارة: ${activity.visit_effectiveness}` : ''}
+      ${activity.new_user_name ? `المستخدم الجديد: ${activity.new_user_name} (${activity.new_user_role})` : ''}
+      
+      التوقيت والموقع:
+      - الوقت: ${activity.time}
+      - التاريخ والوقت: ${activity.timestamp ? new Date(activity.timestamp).toLocaleString('ar-EG') : 'غير محدد'}
+      - الموقع: ${activity.location || 'غير محدد'}
+      ${activity.gps_coordinates ? `- إحداثيات GPS: ${activity.gps_coordinates}` : ''}
+      
+      معلومات إضافية:
+      ${activity.notes ? `- الملاحظات: ${activity.notes}` : ''}
+      ${activity.device_info ? `- معلومات الجهاز: ${activity.device_info}` : ''}
+      ${activity.ip_address ? `- عنوان IP: ${activity.ip_address}` : ''}
+      
+      ============
+      تم إنشاء هذا التقرير في: ${new Date().toLocaleString('ar-EG')}
+      نظام EP Group - إدارة الأنشطة
+    `;
+    
+    // Create a blob and download
+    const blob = new Blob([printContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `activity_${activity.id}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Show success message
+    alert(language === 'ar' ? 'تم تصدير تفاصيل النشاط بنجاح!' : 'Activity details exported successfully!');
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="modal-header">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl">
+              {getActivityIcon(activity.type)}
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">
+                {language === 'ar' ? 'تفاصيل النشاط' : 'Activity Details'}
+              </h3>
+              <p className="text-sm opacity-75">{activity.action}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="modal-close">×</button>
+        </div>
+        
+        <div className="modal-body space-y-6">
+          {/* Activity Status */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-gray-800">
+                {language === 'ar' ? 'حالة النشاط' : 'Activity Status'}
+              </h4>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(activity.status || 'completed')}`}>
+                {getStatusText(activity.status || 'completed')}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600">
+              <p><strong>{language === 'ar' ? 'النوع:' : 'Type:'}</strong> {activity.action}</p>
+              <p><strong>{language === 'ar' ? 'الوقت المنقضي:' : 'Time Ago:'}</strong> {activity.time}</p>
+            </div>
+          </div>
+
+          {/* User Information */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              👤 {language === 'ar' ? 'معلومات المستخدم' : 'User Information'}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+              <p><strong>{language === 'ar' ? 'الاسم:' : 'Name:'}</strong> {activity.user_name}</p>
+              <p><strong>{language === 'ar' ? 'الدور:' : 'Role:'}</strong> {activity.user_role}</p>
+              {activity.new_user_name && (
+                <>
+                  <p><strong>{language === 'ar' ? 'المستخدم الجديد:' : 'New User:'}</strong> {activity.new_user_name}</p>
+                  <p><strong>{language === 'ar' ? 'دور المستخدم الجديد:' : 'New User Role:'}</strong> {activity.new_user_role}</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Clinic/Medical Information */}
+          {(activity.clinic_name || activity.doctor_name || activity.visit_effectiveness) && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                🏥 {language === 'ar' ? 'المعلومات الطبية' : 'Medical Information'}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                {activity.clinic_name && (
+                  <p><strong>{language === 'ar' ? 'العيادة:' : 'Clinic:'}</strong> {activity.clinic_name}</p>
+                )}
+                {activity.doctor_name && (
+                  <p><strong>{language === 'ar' ? 'الطبيب:' : 'Doctor:'}</strong> {activity.doctor_name}</p>
+                )}
+                {activity.visit_effectiveness && (
+                  <p><strong>{language === 'ar' ? 'فعالية الزيارة:' : 'Visit Effectiveness:'}</strong> {activity.visit_effectiveness}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Financial Information */}
+          {(activity.amount || activity.payment_method) && (
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                💰 {language === 'ar' ? 'المعلومات المالية' : 'Financial Information'}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                {activity.amount && (
+                  <p><strong>{language === 'ar' ? 'المبلغ:' : 'Amount:'}</strong> {formatCurrency(activity.amount)}</p>
+                )}
+                {activity.payment_method && (
+                  <p><strong>{language === 'ar' ? 'طريقة الدفع:' : 'Payment Method:'}</strong> {activity.payment_method}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Location & Time Information */}
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              📍 {language === 'ar' ? 'الموقع والتوقيت' : 'Location & Time'}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+              <p><strong>{language === 'ar' ? 'الوقت:' : 'Time:'}</strong> {activity.time}</p>
+              <p><strong>{language === 'ar' ? 'الموقع:' : 'Location:'}</strong> {activity.location || (language === 'ar' ? 'غير محدد' : 'Not specified')}</p>
+              {activity.timestamp && (
+                <p><strong>{language === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:'}</strong> {new Date(activity.timestamp).toLocaleString('ar-EG')}</p>
+              )}
+              {activity.gps_coordinates && (
+                <p><strong>{language === 'ar' ? 'إحداثيات GPS:' : 'GPS Coordinates:'}</strong> {activity.gps_coordinates}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          {(activity.notes || activity.device_info || activity.ip_address) && (
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-lg border">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                📋 {language === 'ar' ? 'معلومات إضافية' : 'Additional Information'}
+              </h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                {activity.notes && (
+                  <p><strong>{language === 'ar' ? 'الملاحظات:' : 'Notes:'}</strong> {activity.notes}</p>
+                )}
+                {activity.device_info && (
+                  <p><strong>{language === 'ar' ? 'معلومات الجهاز:' : 'Device Info:'}</strong> {activity.device_info}</p>
+                )}
+                {activity.ip_address && (
+                  <p><strong>{language === 'ar' ? 'عنوان IP:' : 'IP Address:'}</strong> {activity.ip_address}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="modal-footer">
+          <button
+            onClick={exportToPDF}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
+          >
+            <span>📄</span>
+            {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+          >
+            {language === 'ar' ? 'إغلاق' : 'Close'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuickActions = ({ user, language }) => {
   const { t } = useTranslation(language);
   
