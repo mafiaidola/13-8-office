@@ -2122,6 +2122,7 @@ api_router.include_router(activity_router)
 api_router.include_router(debt_router)
 api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
+api_router.include_router(analytics_router)
 
 app.include_router(api_router)
 
