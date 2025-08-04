@@ -174,13 +174,13 @@ export const SYSTEM_TABS = {
     priority: 14
   },
 
-  crm: {
-    id: 'crm',
-    path: '/crm',
-    icon: '🤝',
-    name: { ar: 'إدارة العلاقات', en: 'CRM' },
-    component: 'CRMManagement',
-    description: { ar: 'إدارة علاقات العملاء والمتابعة والتواصل', en: 'Customer relationship management, follow-up and communication' },
+  analytics: {
+    id: 'analytics',
+    path: '/analytics',
+    icon: '📊',
+    name: { ar: 'التحليلات المتقدمة', en: 'Advanced Analytics' },
+    component: 'AdvancedAnalytics',
+    description: { ar: 'تحليلات متقدمة للبيانات والتقارير التفصيلية', en: 'Advanced data analytics and detailed reporting' },
     permissions: ['admin', 'gm', 'manager', 'medical_rep', 'key_account'],
     priority: 15
   },
