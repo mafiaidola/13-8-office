@@ -175,11 +175,6 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل تتبع المواقع...'
   ),
 
-  AdvancedAnalytics: createLazyComponent(
-    () => import('../Analytics/AdvancedAnalytics'),
-    'جاري تحميل التحليلات المتقدمة...'
-  ),
-
   // Settings
   Settings: createLazyComponent(
     () => import('../Settings/Settings'),
