@@ -2110,6 +2110,7 @@ from routes.activity_routes import router as activity_router
 from routes.debt_routes import router as debt_router
 from routes.simple_notification_routes import router as simple_notification_router
 from routes.crm_routes import router as crm_router
+from routes.analytics_routes import router as analytics_router
 
 api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
