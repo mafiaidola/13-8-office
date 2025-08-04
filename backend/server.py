@@ -39,6 +39,9 @@ notification_service = NotificationService(db)
 # Initialize CRM service  
 crm_service = CRMService(db)
 
+# Initialize Analytics service
+analytics_service = AnalyticsService(db)
+
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
