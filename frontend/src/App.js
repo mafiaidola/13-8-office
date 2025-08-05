@@ -101,38 +101,18 @@ const ThemeProvider = ({ children }) => {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
     
-    // Apply theme to body with FIXED CSS variables
+    // Apply clean theme to body
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
       // Remove all theme classes first
       document.body.classList.remove(
-        'theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 
-        'theme-white', 'theme-cosmic', 'theme-golden', 'theme-professional',
-        'theme-light', 'theme-ocean', 'theme-forest', 'theme-rose'
+        'theme-dark', 'theme-light', 'theme-minimal', 'theme-professional', 'theme-warm'
       );
       
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
-      // FORCE update all text colors immediately
-      const root = document.documentElement;
-      const allElements = document.querySelectorAll('*');
-      
-      // Apply forced text colors to prevent fade issues
-      setTimeout(() => {
-        allElements.forEach(el => {
-          if (el.tagName && !['SCRIPT', 'STYLE', 'META', 'LINK'].includes(el.tagName)) {
-            const computedStyle = window.getComputedStyle(el);
-            if (computedStyle.color && computedStyle.color.includes('rgba')) {
-              // Fix any faded text
-              el.style.color = 'var(--text-primary)';
-              el.style.opacity = '1';
-            }
-          }
-        });
-      }, 100);
-      
-      console.log(`✅ Fixed theme applied: ${theme} (${themeConfig.name[language]})`);
+      console.log(`✅ Applied clean theme: ${theme} (${themeConfig.name[language]})`);
     }
   }, [isRTL, language, theme]);
 
