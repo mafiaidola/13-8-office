@@ -170,6 +170,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل نظام التحفيز...'
   ),
 
+  // Debt Collection Management
+  DebtCollectionManagement: createLazyComponent(
+    () => import('../DebtCollection/DebtCollectionManagement'),
+    'جاري تحميل إدارة الديون والتحصيل...'
+  ),
+
   GPSTracking: createLazyComponent(
     () => import('../GPS/GPSTracking'),
     'جاري تحميل تتبع المواقع...'
