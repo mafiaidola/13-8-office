@@ -563,7 +563,7 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         "debt_type": "invoice",  # نوع الدين: فاتورة
         "created_by": current_user.id,
         "created_at": datetime.utcnow(),
-        "due_date": datetime.utcnow().replace(day=datetime.utcnow().day + 30),  # استحقاق بعد 30 يوم
+        "due_date": datetime.utcnow() + timedelta(days=30),  # استحقاق بعد 30 يوم
         "status": "outstanding",  # مستحق السداد
         "payment_status": "unpaid",
         "notes": f"دين فاتورة رقم {order.order_number} - تم إنشاؤها بواسطة {current_user.full_name}",
