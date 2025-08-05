@@ -99,12 +99,19 @@ const UserManagement = ({ user, language, isRTL }) => {
 
   const handleViewPerformance = (userData) => {
     setSelectedUser(userData);
-    setShowUserCard(true);
+    setComprehensiveModalMode('view');
+    setShowComprehensiveModal(true);
+    console.log('🔍 Opening comprehensive user details for:', userData.full_name);
   };
 
   const handleEditUser = (userId) => {
-    console.log('Edit user:', userId);
-    alert('تحرير المستخدم قيد التطوير');
+    const userData = users.find(u => u.id === userId);
+    if (userData) {
+      setSelectedUser(userData);
+      setComprehensiveModalMode('edit');
+      setShowComprehensiveModal(true);
+      console.log('✏️ Opening comprehensive user edit for:', userData.full_name);
+    }
   };
 
   const handleDeleteUser = async (userId) => {
