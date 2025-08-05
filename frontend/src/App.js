@@ -27,131 +27,215 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Themes - ثيمات احترافية محسنة مع إصلاح مشاكل الدروب داون
+// Available Themes - ثيمات عصرية محدثة 2025 مع تناسق بصري مثالي
 const AVAILABLE_THEMES = {
-  // ثيم زجاجي محسن - ألوان هادئة مع دروب داون محسن
-  glassy: {
-    name: { ar: 'زجاجي', en: 'Glassy' },
+  // ثيم الليل الأنيق - Night Elegance
+  dark: {
+    name: { ar: 'الليل الأنيق', en: 'Night Elegance' },
     colors: {
-      primary: 'from-slate-600 to-blue-600',
-      secondary: 'from-blue-600 to-indigo-600',
-      background: 'from-slate-900/95 via-blue-900/90 to-indigo-900/85',
-      card: 'bg-white/8 backdrop-blur-xl border border-white/15',
-      text: 'text-slate-100'
+      primary: 'from-slate-800 to-gray-900',
+      secondary: 'from-gray-900 to-slate-900',
+      background: 'from-slate-900 via-gray-900 to-zinc-900',
+      card: 'bg-slate-800/95 backdrop-blur-xl border border-slate-700/60',
+      text: 'text-slate-50'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #111827 100%)',
+      '--bg-secondary': 'rgba(30, 41, 59, 0.8)',
+      '--bg-card': 'rgba(30, 41, 59, 0.95)',
+      '--text-primary': '#f8fafc',
+      '--text-secondary': 'rgba(248, 250, 252, 0.85)',
+      '--text-muted': 'rgba(248, 250, 252, 0.65)',
+      '--border-color': 'rgba(148, 163, 184, 0.3)',
+      '--accent-primary': '#3b82f6',
+      '--accent-secondary': '#6366f1',
+      '--shadow': '0 25px 50px -12px rgba(0, 0, 0, 0.8)'
     },
     dropdown: {
-      background: 'rgba(255, 255, 255, 0.98)',
-      text: '#1f2937',
-      hover: 'rgba(59, 130, 246, 0.1)',
-      border: 'rgba(255, 255, 255, 0.2)'
+      background: 'rgba(30, 41, 59, 0.98)',
+      text: '#f8fafc',
+      hover: 'rgba(59, 130, 246, 0.15)',
+      border: 'rgba(148, 163, 184, 0.4)'
     }
   },
   
-  // ثيم داكن كلاسيكي محسن
-  dark: {
-    name: { ar: 'داكن', en: 'Dark' },
+  // ثيم الصباح المشرق - Bright Morning
+  light: {
+    name: { ar: 'الصباح المشرق', en: 'Bright Morning' },
     colors: {
-      primary: 'from-slate-700 to-slate-800',
-      secondary: 'from-slate-800 to-slate-900',
-      background: 'from-slate-900 via-slate-800 to-slate-900',
-      card: 'bg-slate-800/90 border border-slate-600/40',
-      text: 'text-slate-100'
+      primary: 'from-blue-50 to-indigo-50',
+      secondary: 'from-indigo-50 to-blue-100',
+      background: 'from-blue-50/80 via-slate-50 to-gray-50',
+      card: 'bg-white/95 backdrop-blur-xl border border-blue-200/40',
+      text: 'text-gray-800'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)',
+      '--bg-secondary': 'rgba(255, 255, 255, 0.9)',
+      '--bg-card': 'rgba(255, 255, 255, 0.95)',
+      '--text-primary': '#1e293b',
+      '--text-secondary': 'rgba(30, 41, 59, 0.85)',
+      '--text-muted': 'rgba(30, 41, 59, 0.65)',
+      '--border-color': 'rgba(148, 163, 184, 0.2)',
+      '--accent-primary': '#2563eb',
+      '--accent-secondary': '#3b82f6',
+      '--shadow': '0 10px 25px -3px rgba(0, 0, 0, 0.1)'
     },
     dropdown: {
-      background: 'rgba(51, 65, 85, 0.98)',
-      text: '#f8fafc',
-      hover: 'rgba(148, 163, 184, 0.2)',
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#1e293b',
+      hover: 'rgba(37, 99, 235, 0.1)',
       border: 'rgba(148, 163, 184, 0.3)'
     }
   },
   
-  // ثيم ذهبي أنيق محسن
+  // ثيم الغروب الذهبي - Golden Sunset
   golden: {
-    name: { ar: 'ذهبي', en: 'Golden' },
+    name: { ar: 'الغروب الذهبي', en: 'Golden Sunset' },
     colors: {
       primary: 'from-amber-600 to-orange-600',
       secondary: 'from-orange-600 to-red-600',
-      background: 'from-amber-50 via-orange-50/80 to-red-50/60',
-      card: 'bg-white/95 border border-amber-200/60 shadow-amber-100/50',
+      background: 'from-amber-50 via-orange-50 to-red-50',
+      card: 'bg-white/90 backdrop-blur-xl border border-amber-200/60',
       text: 'text-amber-900'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fecaca 100%)',
+      '--bg-secondary': 'rgba(252, 211, 77, 0.1)',
+      '--bg-card': 'rgba(255, 255, 255, 0.9)',
+      '--text-primary': '#92400e',
+      '--text-secondary': 'rgba(146, 64, 14, 0.85)',
+      '--text-muted': 'rgba(146, 64, 14, 0.65)',
+      '--border-color': 'rgba(217, 119, 6, 0.3)',
+      '--accent-primary': '#d97706',
+      '--accent-secondary': '#f59e0b',
+      '--shadow': '0 10px 25px -3px rgba(217, 119, 6, 0.2)'
     },
     dropdown: {
       background: 'rgba(255, 255, 255, 0.98)',
       text: '#92400e',
-      hover: 'rgba(217, 119, 6, 0.1)',
-      border: 'rgba(217, 119, 6, 0.2)'
+      hover: 'rgba(217, 119, 6, 0.15)',
+      border: 'rgba(217, 119, 6, 0.4)'
     }
   },
   
-  // ثيم حديث متطور محسن
-  modern: {
-    name: { ar: 'حديث', en: 'Modern' },
+  // ثيم المحيط العميق - Deep Ocean
+  ocean: {
+    name: { ar: 'المحيط العميق', en: 'Deep Ocean' },
     colors: {
-      primary: 'from-indigo-600 to-purple-600',
-      secondary: 'from-purple-600 to-pink-600',
-      background: 'from-slate-900 via-indigo-900/80 to-purple-900/70',
-      card: 'bg-slate-800/85 border border-indigo-500/25',
-      text: 'text-indigo-100'
+      primary: 'from-cyan-900 to-blue-900',
+      secondary: 'from-blue-900 to-indigo-900',
+      background: 'from-slate-900 via-cyan-900/80 to-blue-900/70',
+      card: 'bg-cyan-950/80 backdrop-blur-xl border border-cyan-700/40',
+      text: 'text-cyan-50'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #0f172a 0%, #164e63 50%, #1e3a8a 100%)',
+      '--bg-secondary': 'rgba(6, 95, 133, 0.2)',
+      '--bg-card': 'rgba(8, 47, 73, 0.8)',
+      '--text-primary': '#ecfeff',
+      '--text-secondary': 'rgba(236, 254, 255, 0.85)',
+      '--text-muted': 'rgba(236, 254, 255, 0.65)',
+      '--border-color': 'rgba(6, 182, 212, 0.4)',
+      '--accent-primary': '#06b6d4',
+      '--accent-secondary': '#0891b2',
+      '--shadow': '0 25px 50px -12px rgba(6, 95, 133, 0.5)'
     },
     dropdown: {
-      background: 'rgba(79, 70, 229, 0.95)',
-      text: '#e0e7ff',
-      hover: 'rgba(129, 140, 248, 0.2)',
-      border: 'rgba(129, 140, 248, 0.3)'
+      background: 'rgba(8, 47, 73, 0.98)',
+      text: '#ecfeff',
+      hover: 'rgba(6, 182, 212, 0.2)',
+      border: 'rgba(6, 182, 212, 0.5)'
     }
   },
   
-  // ثيم بسيط نظيف محسن
-  minimal: {
-    name: { ar: 'بسيط', en: 'Minimal' },
+  // ثيم الغابة الخضراء - Emerald Forest
+  forest: {
+    name: { ar: 'الغابة الخضراء', en: 'Emerald Forest' },
     colors: {
-      primary: 'from-gray-500 to-slate-600',
-      secondary: 'from-slate-600 to-gray-700',
-      background: 'from-gray-50 to-slate-50',
-      card: 'bg-white border border-gray-200/80 shadow-gray-100/40',
-      text: 'text-gray-800'
+      primary: 'from-emerald-800 to-green-800',
+      secondary: 'from-green-800 to-teal-800',
+      background: 'from-emerald-50 via-green-50 to-teal-50',
+      card: 'bg-white/90 backdrop-blur-xl border border-emerald-200/60',
+      text: 'text-emerald-900'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 50%, #f0f9ff 100%)',
+      '--bg-secondary': 'rgba(16, 185, 129, 0.1)',
+      '--bg-card': 'rgba(255, 255, 255, 0.9)',
+      '--text-primary': '#064e3b',
+      '--text-secondary': 'rgba(6, 78, 59, 0.85)',
+      '--text-muted': 'rgba(6, 78, 59, 0.65)',
+      '--border-color': 'rgba(16, 185, 129, 0.3)',
+      '--accent-primary': '#10b981',
+      '--accent-secondary': '#059669',
+      '--shadow': '0 10px 25px -3px rgba(16, 185, 129, 0.2)'
     },
     dropdown: {
       background: 'rgba(255, 255, 255, 0.98)',
-      text: '#374151',
-      hover: 'rgba(107, 114, 128, 0.1)',
-      border: 'rgba(107, 114, 128, 0.2)'
+      text: '#064e3b',
+      hover: 'rgba(16, 185, 129, 0.15)',
+      border: 'rgba(16, 185, 129, 0.4)'
     }
   },
   
-  // ثيم مهني أنيق محسن
-  professional: {
-    name: { ar: 'مهني', en: 'Professional' },
-    colors: {
-      primary: 'from-slate-600 to-gray-700',
-      secondary: 'from-gray-700 to-slate-800',
-      background: 'from-slate-50 via-gray-50 to-slate-100',
-      card: 'bg-white border border-slate-200/70 shadow-slate-100/50',
-      text: 'text-slate-800'
-    },
-    dropdown: {
-      background: 'rgba(255, 255, 255, 0.98)',
-      text: '#334155',
-      hover: 'rgba(71, 85, 105, 0.1)',
-      border: 'rgba(71, 85, 105, 0.2)'
-    }
-  },
-  
-  // ثيم كوني محسن
+  // ثيم البنفسج الكوني - Cosmic Purple
   cosmic: {
-    name: { ar: 'كوني', en: 'Cosmic' },
+    name: { ar: 'البنفسج الكوني', en: 'Cosmic Purple' },
     colors: {
-      primary: 'from-violet-600 to-purple-600',
-      secondary: 'from-purple-600 to-fuchsia-600',
-      background: 'from-violet-900/90 via-purple-900/85 to-fuchsia-900/80',
-      card: 'bg-violet-500/10 backdrop-blur-lg border border-violet-400/25',
-      text: 'text-violet-100'
+      primary: 'from-violet-900 to-purple-900',
+      secondary: 'from-purple-900 to-fuchsia-900',
+      background: 'from-slate-900 via-violet-900/80 to-purple-900/70',
+      card: 'bg-violet-950/80 backdrop-blur-xl border border-violet-700/40',
+      text: 'text-violet-50'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #0f172a 0%, #581c87 50%, #7c2d12 100%)',
+      '--bg-secondary': 'rgba(124, 58, 237, 0.2)',
+      '--bg-card': 'rgba(76, 29, 149, 0.8)',
+      '--text-primary': '#f3e8ff',
+      '--text-secondary': 'rgba(243, 232, 255, 0.85)',
+      '--text-muted': 'rgba(243, 232, 255, 0.65)',
+      '--border-color': 'rgba(147, 51, 234, 0.4)',
+      '--accent-primary': '#9333ea',
+      '--accent-secondary': '#a855f7',
+      '--shadow': '0 25px 50px -12px rgba(124, 58, 237, 0.5)'
     },
     dropdown: {
-      background: 'rgba(124, 58, 237, 0.95)',
-      text: '#ede9fe',
-      hover: 'rgba(196, 181, 253, 0.2)',
-      border: 'rgba(196, 181, 253, 0.3)'
+      background: 'rgba(76, 29, 149, 0.98)',
+      text: '#f3e8ff',
+      hover: 'rgba(147, 51, 234, 0.2)',
+      border: 'rgba(147, 51, 234, 0.5)'
+    }
+  },
+  
+  // ثيم الورد الناعم - Soft Rose
+  rose: {
+    name: { ar: 'الورد الناعم', en: 'Soft Rose' },
+    colors: {
+      primary: 'from-rose-600 to-pink-600',
+      secondary: 'from-pink-600 to-fuchsia-600',
+      background: 'from-rose-50 via-pink-50 to-fuchsia-50',
+      card: 'bg-white/90 backdrop-blur-xl border border-rose-200/60',
+      text: 'text-rose-900'
+    },
+    css: {
+      '--bg-primary': 'linear-gradient(135deg, #fff1f2 0%, #fdf2f8 50%, #fdf4ff 100%)',
+      '--bg-secondary': 'rgba(244, 63, 94, 0.1)',
+      '--bg-card': 'rgba(255, 255, 255, 0.9)',
+      '--text-primary': '#881337',
+      '--text-secondary': 'rgba(136, 19, 55, 0.85)',
+      '--text-muted': 'rgba(136, 19, 55, 0.65)',
+      '--border-color': 'rgba(244, 63, 94, 0.3)',
+      '--accent-primary': '#f43f5e',
+      '--accent-secondary': '#e11d48',
+      '--shadow': '0 10px 25px -3px rgba(244, 63, 94, 0.2)'
+    },
+    dropdown: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#881337',
+      hover: 'rgba(244, 63, 94, 0.15)',
+      border: 'rgba(244, 63, 94, 0.4)'
     }
   }
 };
