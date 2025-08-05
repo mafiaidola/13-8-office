@@ -701,6 +701,47 @@ async def comprehensive_user_update(user_id: str, update_data: dict, current_use
         print(f"Error in comprehensive user update: {str(e)}")
         raise HTTPException(status_code=500, detail="خطأ في تحديث بيانات المستخدم")
 
+@api_router.get("/areas")
+async def get_areas(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المناطق المتاحة"""
+    try:
+        # Mock areas data for now - يمكن استبدالها ببيانات حقيقية من قاعدة البيانات
+        areas = [
+            {"id": "area_cairo", "name": "القاهرة الكبرى", "description": "منطقة القاهرة والجيزة", "manager_name": "أحمد محمد"},
+            {"id": "area_alexandria", "name": "الإسكندرية", "description": "محافظة الإسكندرية", "manager_name": "فاطمة أحمد"},
+            {"id": "area_giza", "name": "الجيزة", "description": "محافظة الجيزة", "manager_name": "محمد علي"},
+            {"id": "area_qalyubia", "name": "القليوبية", "description": "محافظة القليوبية", "manager_name": "سارة حسن"},
+            {"id": "area_upper_egypt", "name": "صعيد مصر", "description": "محافظات الصعيد", "manager_name": "عمر محمود"}
+        ]
+        
+        return areas
+    except Exception as e:
+        print(f"Error fetching areas: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب المناطق")
+
+@api_router.get("/users/managers")
+async def get_available_managers(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المديرين المتاحين"""
+    try:
+        if current_user.role not in ["admin", "gm"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لهذه البيانات")
+        
+        managers = await db.users.find(
+            {"role": {"$in": ["admin", "gm", "manager", "line_manager", "area_manager"]}},
+            {"full_name": 1, "role": 1, "email": 1, "department": 1}
+        ).to_list(100)
+        
+        for manager in managers:
+            if "_id" in manager:
+                del manager["_id"]
+        
+        return managers
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching managers: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب المديرين")
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
     """حذف مستخدم - Delete user"""
