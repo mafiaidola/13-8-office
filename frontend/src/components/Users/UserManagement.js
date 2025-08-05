@@ -192,13 +192,22 @@ const UserManagement = ({ user, language, isRTL }) => {
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAddModal(true)}
             className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg"
           >
             <span>➕</span>
             {language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User'}
+          </button>
+          
+          <button
+            onClick={handleDeleteTestUsers}
+            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg"
+            title={language === 'ar' ? 'حذف جميع المستخدمين التجريبيين' : 'Delete all test users'}
+          >
+            <span>🗑️</span>
+            {language === 'ar' ? 'حذف التجريبيين' : 'Delete Test Users'}
           </button>
         </div>
       </div>
