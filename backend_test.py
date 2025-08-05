@@ -162,7 +162,7 @@ class BackendTester:
                 self.log_test(
                     "Add New Real Product",
                     True,
-                    f"Successfully added '{new_product['name']}' - Price: {new_product['price']} EGP, Stock: {new_product['stock_quantity']} units",
+                    f"Successfully added '{new_product['name']}' - Price: {new_product['price']} EGP, Stock: {new_product['current_stock']} units",
                     response_time
                 )
                 
