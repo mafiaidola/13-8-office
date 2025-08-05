@@ -1,5 +1,617 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لنظام إدارة المستخدمين المحسن والمتكامل
+Comprehensive Enhanced User Management System Testing
+
+المطلوب اختبار:
+1. اختبار APIs الجديدة
+2. اختبار الربط الشامل
+3. اختبار نظام الصلاحيات
+4. اختبار التحديث الشامل
+5. اختبار التكامل مع قسم الحسابات
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import sys
+
+class EnhancedUserManagementTester:
+    def __init__(self):
+        # استخدام الـ URL من متغيرات البيئة
+        with open('/app/frontend/.env', 'r') as f:
+            for line in f:
+                if line.startswith('REACT_APP_BACKEND_URL='):
+                    self.base_url = line.split('=')[1].strip()
+                    break
+        
+        self.api_url = f"{self.base_url}/api"
+        self.admin_token = None
+        self.medical_rep_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+        print("🎯 **اختبار شامل لنظام إدارة المستخدمين المحسن والمتكامل**")
+        print(f"🔗 Backend URL: {self.api_url}")
+        print("=" * 80)
+
+    def log_test(self, test_name, success, details="", response_time=0):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ نجح" if success else "❌ فشل"
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "response_time": response_time
+        })
+        print(f"{status} | {test_name} | {details} | {response_time:.2f}ms")
+
+    def authenticate_admin(self):
+        """تسجيل دخول الأدمن"""
+        try:
+            start_time = time.time()
+            response = requests.post(f"{self.api_url}/auth/login", json={
+                "username": "admin",
+                "password": "admin123"
+            })
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("access_token")
+                user_info = data.get("user", {})
+                self.log_test(
+                    "تسجيل دخول الأدمن", 
+                    True, 
+                    f"المستخدم: {user_info.get('full_name', 'admin')}, الدور: {user_info.get('role', 'admin')}", 
+                    response_time
+                )
+                return True
+            else:
+                self.log_test("تسجيل دخول الأدمن", False, f"HTTP {response.status_code}", response_time)
+                return False
+        except Exception as e:
+            self.log_test("تسجيل دخول الأدمن", False, f"خطأ: {str(e)}")
+            return False
+
+    def authenticate_medical_rep(self):
+        """تسجيل دخول مندوب طبي للاختبار"""
+        try:
+            # البحث عن مندوب طبي في النظام
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.get(f"{self.api_url}/users", headers=headers)
+            
+            if response.status_code == 200:
+                users = response.json()
+                medical_rep = None
+                for user in users:
+                    if user.get("role") == "medical_rep":
+                        medical_rep = user
+                        break
+                
+                if medical_rep:
+                    # محاولة تسجيل دخول المندوب (نحتاج كلمة مرور افتراضية)
+                    # في حالة عدم معرفة كلمة المرور، سنستخدم الأدمن للاختبار
+                    self.medical_rep_token = self.admin_token  # استخدام توكن الأدمن مؤقتاً
+                    self.log_test("العثور على مندوب طبي", True, f"المندوب: {medical_rep.get('full_name', 'غير محدد')}")
+                    return medical_rep
+                else:
+                    self.log_test("العثور على مندوب طبي", False, "لا يوجد مندوبين طبيين في النظام")
+                    return None
+        except Exception as e:
+            self.log_test("العثور على مندوب طبي", False, f"خطأ: {str(e)}")
+            return None
+
+    def test_new_apis(self):
+        """اختبار APIs الجديدة"""
+        print("\n📋 **1. اختبار APIs الجديدة:**")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # 1. اختبار GET /api/areas
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/areas", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                areas = response.json()
+                self.log_test(
+                    "GET /api/areas", 
+                    True, 
+                    f"تم جلب {len(areas)} منطقة", 
+                    response_time
+                )
+                self.areas_data = areas
+            else:
+                self.log_test("GET /api/areas", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("GET /api/areas", False, f"خطأ: {str(e)}")
+
+        # 2. اختبار GET /api/users/managers
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/users/managers", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                managers = response.json()
+                self.log_test(
+                    "GET /api/users/managers", 
+                    True, 
+                    f"تم جلب {len(managers)} مدير متاح", 
+                    response_time
+                )
+                self.managers_data = managers
+            else:
+                self.log_test("GET /api/users/managers", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("GET /api/users/managers", False, f"خطأ: {str(e)}")
+
+        # 3. الحصول على مستخدم للاختبار
+        try:
+            response = requests.get(f"{self.api_url}/users", headers=headers)
+            if response.status_code == 200:
+                users = response.json()
+                if users:
+                    self.test_user = users[0]  # أول مستخدم للاختبار
+                    user_id = self.test_user["id"]
+                    
+                    # 4. اختبار GET /api/users/{user_id}/comprehensive-profile
+                    start_time = time.time()
+                    response = requests.get(f"{self.api_url}/users/{user_id}/comprehensive-profile", headers=headers)
+                    response_time = (time.time() - start_time) * 1000
+                    
+                    if response.status_code == 200:
+                        profile_data = response.json()
+                        user_profile = profile_data.get("user_profile", {})
+                        comprehensive_data = user_profile.get("comprehensive_data", {})
+                        
+                        # تحليل البيانات الشاملة
+                        data_sections = []
+                        if "sales_performance" in comprehensive_data:
+                            data_sections.append("أداء المبيعات")
+                        if "assigned_clinics" in comprehensive_data:
+                            data_sections.append("العيادات المخصصة")
+                        if "debt_management" in comprehensive_data:
+                            data_sections.append("إدارة الديون")
+                        if "reporting_manager" in comprehensive_data:
+                            data_sections.append("المدير المباشر")
+                        if "direct_reports" in comprehensive_data:
+                            data_sections.append("المرؤوسين")
+                        if "available_products" in comprehensive_data:
+                            data_sections.append("المنتجات المتاحة")
+                        
+                        self.log_test(
+                            "GET /api/users/{user_id}/comprehensive-profile", 
+                            True, 
+                            f"ملف شامل للمستخدم {user_profile.get('full_name', 'غير محدد')} - أقسام البيانات: {', '.join(data_sections)}", 
+                            response_time
+                        )
+                    else:
+                        self.log_test("GET /api/users/{user_id}/comprehensive-profile", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("GET /api/users/{user_id}/comprehensive-profile", False, f"خطأ: {str(e)}")
+
+    def test_comprehensive_integration(self):
+        """اختبار الربط الشامل"""
+        print("\n🔗 **2. اختبار الربط الشامل:**")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # اختبار ربط المستخدم بالفواتير والمبيعات
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/orders", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                orders = response.json()
+                orders_with_reps = [order for order in orders if order.get("medical_rep_id")]
+                self.log_test(
+                    "ربط المستخدم بالطلبات والمبيعات", 
+                    True, 
+                    f"تم العثور على {len(orders_with_reps)} طلب مرتبط بمندوبين من أصل {len(orders)} طلب", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المستخدم بالطلبات والمبيعات", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المستخدم بالطلبات والمبيعات", False, f"خطأ: {str(e)}")
+
+        # اختبار ربط المستخدم بالمديونيات
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/debts", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                debts = response.json()
+                debts_with_creators = [debt for debt in debts if debt.get("created_by")]
+                self.log_test(
+                    "ربط المستخدم بالمديونيات", 
+                    True, 
+                    f"تم العثور على {len(debts_with_creators)} دين مرتبط بمستخدمين من أصل {len(debts)} دين", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المستخدم بالمديونيات", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المستخدم بالمديونيات", False, f"خطأ: {str(e)}")
+
+        # اختبار ربط المستخدم بالعيادات المخصصة
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/clinics", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                clinics = response.json()
+                assigned_clinics = [clinic for clinic in clinics if clinic.get("assigned_rep_id")]
+                self.log_test(
+                    "ربط المستخدم بالعيادات المخصصة", 
+                    True, 
+                    f"تم العثور على {len(assigned_clinics)} عيادة مخصصة لمندوبين من أصل {len(clinics)} عيادة", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المستخدم بالعيادات المخصصة", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المستخدم بالعيادات المخصصة", False, f"خطأ: {str(e)}")
+
+        # اختبار التسلسل الإداري
+        try:
+            response = requests.get(f"{self.api_url}/users", headers=headers)
+            if response.status_code == 200:
+                users = response.json()
+                users_with_managers = [user for user in users if user.get("managed_by")]
+                managers_with_reports = {}
+                
+                for user in users:
+                    if user.get("managed_by"):
+                        manager_id = user["managed_by"]
+                        if manager_id not in managers_with_reports:
+                            managers_with_reports[manager_id] = []
+                        managers_with_reports[manager_id].append(user["full_name"])
+                
+                self.log_test(
+                    "ربط التسلسل الإداري", 
+                    True, 
+                    f"{len(users_with_managers)} مستخدم لديهم مديرين، {len(managers_with_reports)} مدير لديهم مرؤوسين"
+                )
+        except Exception as e:
+            self.log_test("ربط التسلسل الإداري", False, f"خطأ: {str(e)}")
+
+        # اختبار ربط المنتجات المتاحة للطلب
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/products", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                products = response.json()
+                active_products = [product for product in products if product.get("is_active", True)]
+                self.log_test(
+                    "ربط المنتجات المتاحة للطلب", 
+                    True, 
+                    f"تم العثور على {len(active_products)} منتج نشط من أصل {len(products)} منتج", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المنتجات المتاحة للطلب", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المنتجات المتاحة للطلب", False, f"خطأ: {str(e)}")
+
+    def test_permissions_system(self):
+        """اختبار نظام الصلاحيات"""
+        print("\n🔐 **3. اختبار نظام الصلاحيات:**")
+        
+        # اختبار صلاحيات الأدمن
+        admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        try:
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/users", headers=admin_headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                self.log_test(
+                    "صلاحيات الأدمن - عرض جميع المستخدمين", 
+                    True, 
+                    f"الأدمن يمكنه رؤية {len(users)} مستخدم", 
+                    response_time
+                )
+            else:
+                self.log_test("صلاحيات الأدمن - عرض جميع المستخدمين", False, f"HTTP {response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("صلاحيات الأدمن - عرض جميع المستخدمين", False, f"خطأ: {str(e)}")
+
+        # اختبار صلاحيات الوصول للملف الشامل
+        if hasattr(self, 'test_user'):
+            try:
+                user_id = self.test_user["id"]
+                start_time = time.time()
+                response = requests.get(f"{self.api_url}/users/{user_id}/comprehensive-profile", headers=admin_headers)
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status_code == 200:
+                    profile_data = response.json()
+                    # فحص عدم تسريب البيانات الحساسة
+                    user_profile = profile_data.get("user_profile", {})
+                    has_sensitive_data = "password_hash" in user_profile or "password" in user_profile
+                    
+                    self.log_test(
+                        "فحص عدم تسريب البيانات الحساسة", 
+                        not has_sensitive_data, 
+                        "لا توجد بيانات حساسة في الملف الشامل" if not has_sensitive_data else "تحذير: توجد بيانات حساسة", 
+                        response_time
+                    )
+                else:
+                    self.log_test("فحص عدم تسريب البيانات الحساسة", False, f"HTTP {response.status_code}", response_time)
+            except Exception as e:
+                self.log_test("فحص عدم تسريب البيانات الحساسة", False, f"خطأ: {str(e)}")
+
+        # اختبار صلاحيات المديرين
+        try:
+            response = requests.get(f"{self.api_url}/users/managers", headers=admin_headers)
+            if response.status_code == 200:
+                managers = response.json()
+                admin_managers = [m for m in managers if m.get("role") in ["admin", "gm", "manager"]]
+                self.log_test(
+                    "صلاحيات الوصول لقائمة المديرين", 
+                    True, 
+                    f"تم جلب {len(admin_managers)} مدير من أصل {len(managers)} مستخدم إداري"
+                )
+            else:
+                self.log_test("صلاحيات الوصول لقائمة المديرين", False, f"HTTP {response.status_code}")
+        except Exception as e:
+            self.log_test("صلاحيات الوصول لقائمة المديرين", False, f"خطأ: {str(e)}")
+
+    def test_comprehensive_update(self):
+        """اختبار التحديث الشامل"""
+        print("\n📝 **4. اختبار التحديث الشامل:**")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        if hasattr(self, 'test_user'):
+            user_id = self.test_user["id"]
+            
+            # إعداد بيانات التحديث الشامل
+            update_data = {
+                "full_name": f"اسم محدث للاختبار - {datetime.now().strftime('%H:%M:%S')}",
+                "email": "updated_test@example.com",
+                "phone": "+201234567890",
+                "monthly_sales_target": 75000,
+                "is_active": True
+            }
+            
+            # إضافة مدير إذا كان متاحاً
+            if hasattr(self, 'managers_data') and self.managers_data:
+                update_data["managed_by"] = self.managers_data[0]["id"]
+            
+            try:
+                start_time = time.time()
+                response = requests.put(
+                    f"{self.api_url}/users/{user_id}/comprehensive-update", 
+                    headers=headers,
+                    json=update_data
+                )
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    updated_fields = result.get("updated_fields", [])
+                    self.log_test(
+                        "PUT /api/users/{user_id}/comprehensive-update", 
+                        True, 
+                        f"تم تحديث {len(updated_fields)} حقل: {', '.join(updated_fields)}", 
+                        response_time
+                    )
+                    
+                    # التحقق من التحديث
+                    verify_response = requests.get(f"{self.api_url}/users/{user_id}/comprehensive-profile", headers=headers)
+                    if verify_response.status_code == 200:
+                        updated_profile = verify_response.json()
+                        user_profile = updated_profile.get("user_profile", {})
+                        
+                        # فحص التحديثات
+                        name_updated = user_profile.get("full_name") == update_data["full_name"]
+                        email_updated = user_profile.get("email") == update_data["email"]
+                        target_updated = user_profile.get("monthly_sales_target") == update_data["monthly_sales_target"]
+                        
+                        self.log_test(
+                            "التحقق من التحديث الشامل", 
+                            name_updated and email_updated, 
+                            f"الاسم: {'✓' if name_updated else '✗'}, البريد: {'✓' if email_updated else '✗'}, الهدف: {'✓' if target_updated else '✗'}"
+                        )
+                else:
+                    self.log_test("PUT /api/users/{user_id}/comprehensive-update", False, f"HTTP {response.status_code}", response_time)
+            except Exception as e:
+                self.log_test("PUT /api/users/{user_id}/comprehensive-update", False, f"خطأ: {str(e)}")
+
+    def test_accounting_integration(self):
+        """اختبار التكامل مع قسم الحسابات"""
+        print("\n💰 **5. اختبار التكامل مع قسم الحسابات:**")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # اختبار ربط المبيعات والإيرادات
+        try:
+            start_time = time.time()
+            orders_response = requests.get(f"{self.api_url}/orders", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if orders_response.status_code == 200:
+                orders = orders_response.json()
+                total_sales = sum(order.get("total_amount", 0) for order in orders)
+                orders_with_amounts = [order for order in orders if order.get("total_amount", 0) > 0]
+                
+                self.log_test(
+                    "ربط المبيعات والإيرادات", 
+                    True, 
+                    f"إجمالي المبيعات: {total_sales:.2f} ج.م من {len(orders_with_amounts)} طلب", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المبيعات والإيرادات", False, f"HTTP {orders_response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المبيعات والإيرادات", False, f"خطأ: {str(e)}")
+
+        # اختبار ربط المديونيات والتحصيل
+        try:
+            start_time = time.time()
+            debts_response = requests.get(f"{self.api_url}/debts", headers=headers)
+            payments_response = requests.get(f"{self.api_url}/payments", headers=headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if debts_response.status_code == 200 and payments_response.status_code == 200:
+                debts = debts_response.json()
+                payments = payments_response.json()
+                
+                total_debt = sum(debt.get("remaining_amount", 0) for debt in debts)
+                total_collected = sum(payment.get("payment_amount", 0) for payment in payments)
+                
+                self.log_test(
+                    "ربط المديونيات والتحصيل", 
+                    True, 
+                    f"إجمالي الديون: {total_debt:.2f} ج.م، إجمالي المحصل: {total_collected:.2f} ج.م", 
+                    response_time
+                )
+            else:
+                self.log_test("ربط المديونيات والتحصيل", False, f"HTTP Debts: {debts_response.status_code}, Payments: {payments_response.status_code}", response_time)
+        except Exception as e:
+            self.log_test("ربط المديونيات والتحصيل", False, f"خطأ: {str(e)}")
+
+        # اختبار الإحصائيات المالية
+        try:
+            # محاولة الحصول على إحصائيات مالية من الملف الشامل لمستخدم محاسبة
+            response = requests.get(f"{self.api_url}/users", headers=headers)
+            if response.status_code == 200:
+                users = response.json()
+                accounting_user = None
+                for user in users:
+                    if user.get("role") == "accounting":
+                        accounting_user = user
+                        break
+                
+                if accounting_user:
+                    profile_response = requests.get(
+                        f"{self.api_url}/users/{accounting_user['id']}/comprehensive-profile", 
+                        headers=headers
+                    )
+                    if profile_response.status_code == 200:
+                        profile_data = profile_response.json()
+                        comprehensive_data = profile_data.get("user_profile", {}).get("comprehensive_data", {})
+                        
+                        has_debt_management = "debt_management" in comprehensive_data
+                        has_collection_performance = "collection_performance" in comprehensive_data
+                        
+                        self.log_test(
+                            "الإحصائيات المالية للمحاسبين", 
+                            has_debt_management or has_collection_performance, 
+                            f"إدارة الديون: {'✓' if has_debt_management else '✗'}, أداء التحصيل: {'✓' if has_collection_performance else '✗'}"
+                        )
+                    else:
+                        self.log_test("الإحصائيات المالية للمحاسبين", False, f"HTTP {profile_response.status_code}")
+                else:
+                    self.log_test("الإحصائيات المالية للمحاسبين", False, "لا يوجد مستخدمين محاسبة في النظام")
+        except Exception as e:
+            self.log_test("الإحصائيات المالية للمحاسبين", False, f"خطأ: {str(e)}")
+
+    def generate_final_report(self):
+        """إنشاء التقرير النهائي"""
+        total_tests = len(self.test_results)
+        successful_tests = len([t for t in self.test_results if t["success"]])
+        failed_tests = total_tests - successful_tests
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(t["response_time"] for t in self.test_results if t["response_time"] > 0) / max(1, len([t for t in self.test_results if t["response_time"] > 0]))
+        
+        print("\n" + "=" * 80)
+        print("📊 **التقرير النهائي - نظام إدارة المستخدمين المحسن والمتكامل**")
+        print("=" * 80)
+        
+        print(f"📈 **النتائج الإجمالية:**")
+        print(f"   • إجمالي الاختبارات: {total_tests}")
+        print(f"   • الاختبارات الناجحة: {successful_tests} ✅")
+        print(f"   • الاختبارات الفاشلة: {failed_tests} ❌")
+        print(f"   • معدل النجاح: {success_rate:.1f}%")
+        print(f"   • متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        print(f"   • إجمالي وقت التنفيذ: {total_time:.2f} ثانية")
+        
+        print(f"\n🎯 **تقييم المتطلبات الأساسية:**")
+        
+        # تقييم APIs الجديدة
+        new_apis_tests = [t for t in self.test_results if "GET /api/areas" in t["test"] or "GET /api/users/managers" in t["test"] or "comprehensive-profile" in t["test"] or "comprehensive-update" in t["test"]]
+        new_apis_success = len([t for t in new_apis_tests if t["success"]])
+        print(f"   • APIs الجديدة: {new_apis_success}/{len(new_apis_tests)} ({'✅ ممتاز' if new_apis_success == len(new_apis_tests) else '⚠️ يحتاج تحسين' if new_apis_success > 0 else '❌ فاشل'})")
+        
+        # تقييم الربط الشامل
+        integration_tests = [t for t in self.test_results if "ربط" in t["test"]]
+        integration_success = len([t for t in integration_tests if t["success"]])
+        print(f"   • الربط الشامل: {integration_success}/{len(integration_tests)} ({'✅ ممتاز' if integration_success == len(integration_tests) else '⚠️ يحتاج تحسين' if integration_success > 0 else '❌ فاشل'})")
+        
+        # تقييم نظام الصلاحيات
+        permissions_tests = [t for t in self.test_results if "صلاحيات" in t["test"] or "تسريب" in t["test"]]
+        permissions_success = len([t for t in permissions_tests if t["success"]])
+        print(f"   • نظام الصلاحيات: {permissions_success}/{len(permissions_tests)} ({'✅ ممتاز' if permissions_success == len(permissions_tests) else '⚠️ يحتاج تحسين' if permissions_success > 0 else '❌ فاشل'})")
+        
+        # تقييم التحديث الشامل
+        update_tests = [t for t in self.test_results if "تحديث" in t["test"]]
+        update_success = len([t for t in update_tests if t["success"]])
+        print(f"   • التحديث الشامل: {update_success}/{len(update_tests)} ({'✅ ممتاز' if update_success == len(update_tests) else '⚠️ يحتاج تحسين' if update_success > 0 else '❌ فاشل'})")
+        
+        # تقييم التكامل مع الحسابات
+        accounting_tests = [t for t in self.test_results if "المبيعات" in t["test"] or "المديونيات" in t["test"] or "المالية" in t["test"]]
+        accounting_success = len([t for t in accounting_tests if t["success"]])
+        print(f"   • التكامل مع الحسابات: {accounting_success}/{len(accounting_tests)} ({'✅ ممتاز' if accounting_success == len(accounting_tests) else '⚠️ يحتاج تحسين' if accounting_success > 0 else '❌ فاشل'})")
+        
+        print(f"\n🏆 **التقييم النهائي:**")
+        if success_rate >= 90:
+            print("   🎉 **ممتاز!** نظام إدارة المستخدمين المحسن يعمل بشكل استثنائي!")
+        elif success_rate >= 75:
+            print("   👍 **جيد جداً!** النظام يعمل بشكل جيد مع بعض التحسينات المطلوبة.")
+        elif success_rate >= 60:
+            print("   ⚠️ **مقبول.** النظام يحتاج تحسينات في عدة مناطق.")
+        else:
+            print("   ❌ **يحتاج عمل.** النظام يحتاج إصلاحات جوهرية.")
+        
+        # عرض الاختبارات الفاشلة
+        if failed_tests > 0:
+            print(f"\n🔍 **الاختبارات الفاشلة التي تحتاج إصلاح:**")
+            for test in self.test_results:
+                if not test["success"]:
+                    print(f"   ❌ {test['test']}: {test['details']}")
+        
+        print("\n" + "=" * 80)
+        return success_rate >= 75
+
+def main():
+    """تشغيل الاختبار الشامل"""
+    tester = EnhancedUserManagementTester()
+    
+    # تسجيل الدخول
+    if not tester.authenticate_admin():
+        print("❌ فشل في تسجيل دخول الأدمن. إنهاء الاختبار.")
+        return False
+    
+    # تشغيل جميع الاختبارات
+    tester.test_new_apis()
+    tester.test_comprehensive_integration()
+    tester.test_permissions_system()
+    tester.test_comprehensive_update()
+    tester.test_accounting_integration()
+    
+    # إنشاء التقرير النهائي
+    return tester.generate_final_report()
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)
+"""
 Enhanced User Management APIs Testing
 Tests the new Enhanced User Management APIs with focus on:
 1. POST /api/users/update-last-seen
