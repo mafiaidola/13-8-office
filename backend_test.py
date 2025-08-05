@@ -1,5 +1,695 @@
 #!/usr/bin/env python3
 """
+اختبار شامل للنظام المنظف والمحسن مع التركيز على:
+1. اختبار إضافة منتج جديد
+2. اختبار نظام المديونية المحسن  
+3. اختبار نظام الدفع
+4. اختبار التكامل
+5. اختبار النظافة
+
+Comprehensive Backend Testing for Clean and Enhanced System
+Focus Areas: Product Management, Enhanced Debt System, Payment Processing, Integration Testing, System Cleanliness
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import uuid
+
+# Configuration
+BACKEND_URL = "https://0f12410c-0263-44c4-80bc-ce88c1050ca0.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class BackendTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, message, response_time=None):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        time_info = f" ({response_time:.2f}ms)" if response_time else ""
+        print(f"{status}: {test_name}{time_info}")
+        if message:
+            print(f"    📝 {message}")
+        
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "message": message,
+            "response_time": response_time
+        })
+    
+    def authenticate(self):
+        """تسجيل الدخول والحصول على JWT token"""
+        print("\n🔐 === AUTHENTICATION TESTING ===")
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD
+            })
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+                
+                user_info = data.get("user", {})
+                self.log_test(
+                    "Admin Login Authentication", 
+                    True, 
+                    f"Successfully logged in as {user_info.get('full_name', 'admin')} (Role: {user_info.get('role', 'admin')})",
+                    response_time
+                )
+                return True
+            else:
+                self.log_test("Admin Login Authentication", False, f"Login failed: {response.status_code} - {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Login Authentication", False, f"Login error: {str(e)}")
+            return False
+    
+    def test_system_cleanliness(self):
+        """اختبار نظافة النظام - فحص عدد المستخدمين والمنتجات الحالية"""
+        print("\n🧹 === SYSTEM CLEANLINESS TESTING ===")
+        
+        # Test current user count
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/users")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                user_count = len(users)
+                
+                # Check for test users
+                test_users = [u for u in users if 
+                             'test' in u.get('username', '').lower() or 
+                             'demo' in u.get('username', '').lower() or
+                             'تجربة' in u.get('full_name', '')]
+                
+                self.log_test(
+                    "System User Count Check",
+                    True,
+                    f"Total users: {user_count}, Test users found: {len(test_users)}",
+                    response_time
+                )
+            else:
+                self.log_test("System User Count Check", False, f"Failed to get users: {response.status_code}")
+        except Exception as e:
+            self.log_test("System User Count Check", False, f"Error: {str(e)}")
+        
+        # Test current product count
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/products")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                products = response.json()
+                product_count = len(products)
+                
+                self.log_test(
+                    "System Product Count Check",
+                    True,
+                    f"Total products in system: {product_count}",
+                    response_time
+                )
+            else:
+                self.log_test("System Product Count Check", False, f"Failed to get products: {response.status_code}")
+        except Exception as e:
+            self.log_test("System Product Count Check", False, f"Error: {str(e)}")
+    
+    def test_add_new_product(self):
+        """اختبار إضافة منتج جديد مع بيانات حقيقية كاملة"""
+        print("\n📦 === NEW PRODUCT ADDITION TESTING ===")
+        
+        # Real pharmaceutical product data
+        new_product = {
+            "name": "كونكور 5 مجم أقراص",
+            "generic_name": "بيسوبرولول فومارات",
+            "category": "أدوية القلب والأوعية الدموية",
+            "manufacturer": "شركة نوفارتيس للأدوية",
+            "unit": "علبة 30 قرص",
+            "price": 89.50,
+            "cost": 65.00,
+            "stock_quantity": 150,
+            "min_stock_level": 20,
+            "max_stock_level": 500,
+            "barcode": "6221155001234",
+            "batch_number": "CC240801",
+            "expiry_date": "2026-08-01",
+            "storage_conditions": "يحفظ في درجة حرارة أقل من 25 درجة مئوية",
+            "active_ingredients": "بيسوبرولول فومارات 5 مجم",
+            "dosage_form": "أقراص مغلفة",
+            "therapeutic_class": "حاصرات بيتا انتقائية",
+            "prescription_required": True,
+            "is_controlled": False,
+            "is_active": True,
+            "description": "دواء لعلاج ارتفاع ضغط الدم وأمراض القلب التاجية",
+            "side_effects": "دوخة، تعب، صداع، انخفاض ضغط الدم",
+            "contraindications": "فرط الحساسية، انسداد القلب، الربو الشديد",
+            "drug_interactions": "مثبطات الكالسيوم، مدرات البول، مضادات السكري"
+        }
+        
+        try:
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/products", json=new_product)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                product_id = result.get("product", {}).get("id") if result.get("product") else result.get("id")
+                
+                self.log_test(
+                    "Add New Real Product",
+                    True,
+                    f"Successfully added '{new_product['name']}' - Price: {new_product['price']} EGP, Stock: {new_product['stock_quantity']} units",
+                    response_time
+                )
+                
+                # Verify product appears in product list
+                self.verify_product_in_list(product_id, new_product['name'])
+                return product_id
+            else:
+                self.log_test(
+                    "Add New Real Product", 
+                    False, 
+                    f"Failed to add product: {response.status_code} - {response.text}",
+                    response_time
+                )
+                return None
+                
+        except Exception as e:
+            self.log_test("Add New Real Product", False, f"Error adding product: {str(e)}")
+            return None
+    
+    def verify_product_in_list(self, product_id, product_name):
+        """التأكد من ظهور المنتج في قائمة المنتجات"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/products")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                products = response.json()
+                found_product = None
+                
+                for product in products:
+                    if product.get("id") == product_id or product.get("name") == product_name:
+                        found_product = product
+                        break
+                
+                if found_product:
+                    self.log_test(
+                        "Verify Product in List",
+                        True,
+                        f"Product '{product_name}' found in products list with ID: {found_product.get('id')}",
+                        response_time
+                    )
+                else:
+                    self.log_test(
+                        "Verify Product in List",
+                        False,
+                        f"Product '{product_name}' not found in products list",
+                        response_time
+                    )
+            else:
+                self.log_test("Verify Product in List", False, f"Failed to get products: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Verify Product in List", False, f"Error: {str(e)}")
+    
+    def test_enhanced_debt_system(self):
+        """اختبار نظام المديونية المحسن - كل فاتورة تصبح دين تلقائياً"""
+        print("\n💰 === ENHANCED DEBT SYSTEM TESTING ===")
+        
+        # First, get available clinics and products for creating an order
+        clinics = self.get_available_clinics()
+        products = self.get_available_products()
+        warehouses = self.get_available_warehouses()
+        
+        if not clinics or not products or not warehouses:
+            self.log_test("Enhanced Debt System Setup", False, "Missing required data (clinics, products, or warehouses)")
+            return
+        
+        clinic_id = clinics[0]["id"]
+        product_id = products[0]["id"]
+        warehouse_id = warehouses[0]["id"]
+        
+        # Create a new order (which should automatically create a debt record)
+        order_data = {
+            "clinic_id": clinic_id,
+            "warehouse_id": warehouse_id,
+            "items": [
+                {
+                    "product_id": product_id,
+                    "quantity": 5
+                }
+            ],
+            "line": "خط القاهرة الكبرى",
+            "area_id": "area_cairo_1",
+            "notes": "طلب اختبار لنظام المديونية المحسن",
+            "debt_warning_acknowledged": True
+        }
+        
+        try:
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/orders", json=order_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                order_id = result.get("order_id")
+                debt_record_id = result.get("debt_record_id")
+                
+                self.log_test(
+                    "Create Order (Auto-Debt Creation)",
+                    True,
+                    f"Order created successfully. Order ID: {order_id}, Debt Record: {debt_record_id}, Amount: {result.get('total_amount')} EGP",
+                    response_time
+                )
+                
+                # Verify debt record was created
+                self.verify_debt_record_creation(debt_record_id)
+                return order_id, debt_record_id
+            else:
+                self.log_test(
+                    "Create Order (Auto-Debt Creation)",
+                    False,
+                    f"Failed to create order: {response.status_code} - {response.text}",
+                    response_time
+                )
+                return None, None
+                
+        except Exception as e:
+            self.log_test("Create Order (Auto-Debt Creation)", False, f"Error: {str(e)}")
+            return None, None
+    
+    def verify_debt_record_creation(self, debt_record_id):
+        """التأكد من إنشاء سجل دين في قاعدة البيانات"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/debts")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                debts = response.json()
+                found_debt = None
+                
+                for debt in debts:
+                    if debt.get("id") == debt_record_id:
+                        found_debt = debt
+                        break
+                
+                if found_debt:
+                    self.log_test(
+                        "Verify Debt Record Creation",
+                        True,
+                        f"Debt record found: Amount {found_debt.get('debt_amount')} EGP, Status: {found_debt.get('status')}",
+                        response_time
+                    )
+                else:
+                    self.log_test(
+                        "Verify Debt Record Creation",
+                        False,
+                        f"Debt record with ID {debt_record_id} not found",
+                        response_time
+                    )
+            else:
+                self.log_test("Verify Debt Record Creation", False, f"Failed to get debts: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Verify Debt Record Creation", False, f"Error: {str(e)}")
+    
+    def test_payment_system(self):
+        """اختبار نظام الدفع - معالجة سداد وتحديث حالة الدين"""
+        print("\n💳 === PAYMENT SYSTEM TESTING ===")
+        
+        # Get available debts for payment processing
+        debts = self.get_available_debts()
+        
+        if not debts:
+            self.log_test("Payment System Setup", False, "No debts available for payment testing")
+            return
+        
+        debt = debts[0]
+        debt_id = debt.get("id")
+        remaining_amount = debt.get("remaining_amount", debt.get("debt_amount", 0))
+        
+        # Process partial payment
+        payment_amount = min(remaining_amount * 0.6, 1000)  # Pay 60% or max 1000 EGP
+        
+        payment_data = {
+            "debt_id": debt_id,
+            "payment_amount": payment_amount,
+            "payment_method": "cash",
+            "notes": "دفعة جزئية - اختبار نظام الدفع المحسن"
+        }
+        
+        try:
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/payments/process", json=payment_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                self.log_test(
+                    "Process Payment",
+                    True,
+                    f"Payment processed: {payment_amount} EGP, Remaining: {result.get('remaining_amount')} EGP, Status: {result.get('payment_status')}",
+                    response_time
+                )
+                
+                # Verify debt status update
+                self.verify_debt_status_update(debt_id, result.get('payment_status'))
+                
+                # Test payment records
+                self.test_payment_records()
+                
+            else:
+                self.log_test(
+                    "Process Payment",
+                    False,
+                    f"Payment processing failed: {response.status_code} - {response.text}",
+                    response_time
+                )
+                
+        except Exception as e:
+            self.log_test("Process Payment", False, f"Error: {str(e)}")
+    
+    def verify_debt_status_update(self, debt_id, expected_status):
+        """التأكد من تحديث حالة الدين بعد السداد"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/debts")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                debts = response.json()
+                found_debt = None
+                
+                for debt in debts:
+                    if debt.get("id") == debt_id:
+                        found_debt = debt
+                        break
+                
+                if found_debt:
+                    actual_status = found_debt.get("payment_status")
+                    status_match = actual_status == expected_status
+                    
+                    self.log_test(
+                        "Verify Debt Status Update",
+                        status_match,
+                        f"Debt status updated: Expected '{expected_status}', Actual '{actual_status}', Remaining: {found_debt.get('remaining_amount')} EGP",
+                        response_time
+                    )
+                else:
+                    self.log_test("Verify Debt Status Update", False, f"Debt with ID {debt_id} not found")
+            else:
+                self.log_test("Verify Debt Status Update", False, f"Failed to get debts: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Verify Debt Status Update", False, f"Error: {str(e)}")
+    
+    def test_payment_records(self):
+        """اختبار عرض المدفوعات"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/payments")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                payments = response.json()
+                
+                self.log_test(
+                    "Get Payment Records",
+                    True,
+                    f"Retrieved {len(payments)} payment records",
+                    response_time
+                )
+            else:
+                self.log_test("Get Payment Records", False, f"Failed to get payments: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Get Payment Records", False, f"Error: {str(e)}")
+    
+    def test_integration_system(self):
+        """اختبار التكامل - ربط المنتجات بالطلبات والفواتير"""
+        print("\n🔗 === INTEGRATION SYSTEM TESTING ===")
+        
+        # Test product-order integration
+        self.test_product_order_integration()
+        
+        # Test permissions system
+        self.test_permissions_system()
+        
+        # Test statistics after cleanup
+        self.test_statistics_integration()
+    
+    def test_product_order_integration(self):
+        """اختبار ربط المنتجات بالطلبات والفواتير"""
+        try:
+            # Get orders and verify they contain product information
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/orders")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                orders = response.json()
+                
+                if orders:
+                    # Check first order for product integration
+                    order = orders[0]
+                    order_id = order.get("id")
+                    
+                    # Get detailed order information
+                    detail_response = self.session.get(f"{BACKEND_URL}/orders/{order_id}")
+                    if detail_response.status_code == 200:
+                        order_detail = detail_response.json()
+                        items = order_detail.get("items", [])
+                        
+                        self.log_test(
+                            "Product-Order Integration",
+                            len(items) > 0,
+                            f"Order contains {len(items)} product items, Total: {order_detail.get('total_amount')} EGP",
+                            response_time
+                        )
+                    else:
+                        self.log_test("Product-Order Integration", False, f"Failed to get order details: {detail_response.status_code}")
+                else:
+                    self.log_test("Product-Order Integration", True, "No orders found - system is clean", response_time)
+            else:
+                self.log_test("Product-Order Integration", False, f"Failed to get orders: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Product-Order Integration", False, f"Error: {str(e)}")
+    
+    def test_permissions_system(self):
+        """اختبار نظام الصلاحيات"""
+        try:
+            # Test admin permissions for user management
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/users")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                self.log_test(
+                    "Admin Permissions Test",
+                    True,
+                    f"Admin can access user management - {len(users)} users visible",
+                    response_time
+                )
+            else:
+                self.log_test("Admin Permissions Test", False, f"Admin permission denied: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Admin Permissions Test", False, f"Error: {str(e)}")
+    
+    def test_statistics_integration(self):
+        """اختبار الإحصائيات بعد التنظيف"""
+        try:
+            # Test dashboard statistics
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/dashboard/stats")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                stats = response.json()
+                
+                self.log_test(
+                    "Statistics Integration",
+                    True,
+                    f"Dashboard stats: Users({stats.get('total_users', 0)}), Clinics({stats.get('total_clinics', 0)}), Products({stats.get('total_products', 0)})",
+                    response_time
+                )
+            else:
+                self.log_test("Statistics Integration", False, f"Failed to get statistics: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test("Statistics Integration", False, f"Error: {str(e)}")
+    
+    # Helper methods
+    def get_available_clinics(self):
+        """الحصول على العيادات المتاحة"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/clinics")
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return []
+    
+    def get_available_products(self):
+        """الحصول على المنتجات المتاحة"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/products")
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return []
+    
+    def get_available_warehouses(self):
+        """الحصول على المخازن المتاحة"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/warehouses")
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return []
+    
+    def get_available_debts(self):
+        """الحصول على الديون المتاحة"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/debts")
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return []
+    
+    def generate_summary(self):
+        """إنشاء ملخص النتائج"""
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result["success"])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(r["response_time"] for r in self.test_results if r["response_time"]) / max(1, len([r for r in self.test_results if r["response_time"]]))
+        
+        print(f"\n" + "="*80)
+        print(f"🎯 COMPREHENSIVE SYSTEM TESTING COMPLETE")
+        print(f"="*80)
+        print(f"📊 FINAL RESULTS:")
+        print(f"   ✅ Tests Passed: {passed_tests}/{total_tests}")
+        print(f"   ❌ Tests Failed: {failed_tests}/{total_tests}")
+        print(f"   📈 Success Rate: {success_rate:.1f}%")
+        print(f"   ⏱️  Total Time: {total_time:.2f}s")
+        print(f"   🚀 Avg Response: {avg_response_time:.2f}ms")
+        print(f"="*80)
+        
+        # Detailed results by category
+        categories = {
+            "Authentication": ["Admin Login Authentication"],
+            "System Cleanliness": ["System User Count Check", "System Product Count Check"],
+            "Product Management": ["Add New Real Product", "Verify Product in List"],
+            "Enhanced Debt System": ["Create Order (Auto-Debt Creation)", "Verify Debt Record Creation"],
+            "Payment System": ["Process Payment", "Verify Debt Status Update", "Get Payment Records"],
+            "Integration Testing": ["Product-Order Integration", "Admin Permissions Test", "Statistics Integration"]
+        }
+        
+        for category, test_names in categories.items():
+            category_results = [r for r in self.test_results if r["test"] in test_names]
+            if category_results:
+                category_passed = sum(1 for r in category_results if r["success"])
+                category_total = len(category_results)
+                category_rate = (category_passed / category_total * 100) if category_total > 0 else 0
+                
+                status_icon = "✅" if category_rate == 100 else "⚠️" if category_rate >= 50 else "❌"
+                print(f"{status_icon} {category}: {category_passed}/{category_total} ({category_rate:.1f}%)")
+        
+        print(f"="*80)
+        
+        # Key findings
+        print(f"🔍 KEY FINDINGS:")
+        
+        if success_rate >= 90:
+            print(f"   🎉 EXCELLENT: System is working exceptionally well!")
+        elif success_rate >= 75:
+            print(f"   ✅ GOOD: System is working well with minor issues")
+        elif success_rate >= 50:
+            print(f"   ⚠️  PARTIAL: System has some significant issues")
+        else:
+            print(f"   ❌ CRITICAL: System has major issues requiring attention")
+        
+        # Failed tests summary
+        failed_test_results = [r for r in self.test_results if not r["success"]]
+        if failed_test_results:
+            print(f"\n❌ FAILED TESTS SUMMARY:")
+            for result in failed_test_results:
+                print(f"   • {result['test']}: {result['message']}")
+        
+        print(f"="*80)
+        
+        return {
+            "total_tests": total_tests,
+            "passed_tests": passed_tests,
+            "failed_tests": failed_tests,
+            "success_rate": success_rate,
+            "total_time": total_time,
+            "avg_response_time": avg_response_time
+        }
+
+def main():
+    """تشغيل الاختبار الشامل"""
+    print("🚀 Starting Comprehensive System Testing...")
+    print("Focus: Clean System, Enhanced Debt Management, Payment Processing, Integration")
+    print("="*80)
+    
+    tester = BackendTester()
+    
+    # Step 1: Authentication
+    if not tester.authenticate():
+        print("❌ Authentication failed. Cannot proceed with testing.")
+        return
+    
+    # Step 2: System Cleanliness Testing
+    tester.test_system_cleanliness()
+    
+    # Step 3: Product Addition Testing
+    tester.test_add_new_product()
+    
+    # Step 4: Enhanced Debt System Testing
+    tester.test_enhanced_debt_system()
+    
+    # Step 5: Payment System Testing
+    tester.test_payment_system()
+    
+    # Step 6: Integration Testing
+    tester.test_integration_system()
+    
+    # Step 7: Generate Summary
+    summary = tester.generate_summary()
+    
+    return summary
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار شامل لإصلاح إدارة المستخدمين والمنتجات المحدثة حديثاً
 Comprehensive Test for Updated User and Product Management APIs
 
