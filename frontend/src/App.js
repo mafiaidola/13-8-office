@@ -251,19 +251,33 @@ const ThemeProvider = ({ children }) => {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
     
-    // Apply theme to body
+    // Apply theme to body with enhanced CSS variables
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
       // Remove all theme classes first
-      document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-white', 'theme-cosmic', 'theme-golden', 'theme-professional');
+      document.body.classList.remove(
+        'theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 
+        'theme-white', 'theme-cosmic', 'theme-golden', 'theme-professional',
+        'theme-light', 'theme-ocean', 'theme-forest', 'theme-rose'
+      );
+      
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
-      // Apply CSS variables to root
+      // Apply CSS variables to root for comprehensive theming
       const root = document.documentElement;
-      root.style.setProperty('--bg-primary', themeConfig.colors.background);
-      root.style.setProperty('--bg-card', themeConfig.colors.card);
-      root.style.setProperty('--text-primary', themeConfig.colors.text);
+      
+      // Apply all CSS variables from theme config
+      if (themeConfig.css) {
+        Object.entries(themeConfig.css).forEach(([property, value]) => {
+          root.style.setProperty(property, value);
+        });
+      }
+      
+      // Apply additional Tailwind-based variables
+      root.style.setProperty('--theme-bg-primary', themeConfig.colors.background);
+      root.style.setProperty('--theme-bg-card', themeConfig.colors.card);
+      root.style.setProperty('--theme-text-primary', themeConfig.colors.text);
       
       // Apply dropdown variables for enhanced theme support
       if (themeConfig.dropdown) {
@@ -273,7 +287,13 @@ const ThemeProvider = ({ children }) => {
         root.style.setProperty('--dropdown-border', themeConfig.dropdown.border);
       }
       
-      console.log(`✅ Applied enhanced theme with dropdown support: ${theme}`);
+      // Apply shadow and border radius variables
+      root.style.setProperty('--border-radius', '0.75rem');
+      root.style.setProperty('--border-radius-lg', '1rem');
+      root.style.setProperty('--transition-fast', '0.15s ease-in-out');
+      root.style.setProperty('--transition-normal', '0.3s ease-in-out');
+      
+      console.log(`✅ Applied enhanced modern theme: ${theme} (${themeConfig.name[language]})`);
     }
   }, [isRTL, language, theme]);
 
