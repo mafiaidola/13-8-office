@@ -1607,20 +1607,27 @@ async def update_product(product_id: str, product_data: dict, current_user: User
 
 @api_router.delete("/products/{product_id}")
 async def delete_product(product_id: str, current_user: User = Depends(get_current_user)):
-    """حذف منتج - Delete product"""
+    """حذف منتج - Delete product (HARD DELETE as requested)"""
     # Check permissions
     if current_user.role not in ["admin"]:
         raise HTTPException(status_code=403, detail="غير مصرح لك بحذف المنتجات")
     
     try:
-        # Soft delete - set is_active to false
-        await db.products.update_one(
-            {"id": product_id},
-            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
-        )
+        # Check if product exists
+        existing_product = await db.products.find_one({"id": product_id})
+        if not existing_product:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
         
-        return {"success": True, "message": "تم حذف المنتج بنجاح"}
+        # HARD DELETE - Completely remove the product from database
+        result = await db.products.delete_one({"id": product_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
+        
+        return {"success": True, "message": "تم حذف المنتج نهائياً من النظام"}
     
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error deleting product: {str(e)}")
         raise HTTPException(status_code=500, detail="خطأ في حذف المنتج")
