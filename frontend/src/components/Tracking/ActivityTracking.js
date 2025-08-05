@@ -6,7 +6,7 @@ import axios from 'axios';
 const ActivityTracking = ({ user, language, isRTL }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [activities, setActivities] = useState([]);
-  const [gpsLogs, setGpsLogs] = useState([]);
+  const [activeReps, setActiveReps] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
