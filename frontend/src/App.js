@@ -27,65 +27,65 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Clean Themes - ثيمات نظيفة خالية من التلوث البصري
+// Available Ultra Readable Themes - ثيمات فائقة الوضوح والقراءة
 const AVAILABLE_THEMES = {
-  // ثيم داكن نظيف - Clean Dark
+  // ثيم داكن عالي التباين - High Contrast Dark
   dark: {
-    name: { ar: 'داكن نظيف', en: 'Clean Dark' },
+    name: { ar: 'داكن واضح', en: 'Clear Dark' },
     colors: {
-      primary: '#0a0e17',
-      secondary: '#1a1f2e',
-      background: '#0a0e17',
-      card: '#232936',
+      primary: '#1a1a1a',
+      secondary: '#2d2d2d',
+      background: '#1a1a1a',
+      card: '#3a3a3a',
       text: '#ffffff'
     }
   },
   
-  // ثيم فاتح نظيف - Clean Light
+  // ثيم فاتح عالي التباين - High Contrast Light
   light: {
-    name: { ar: 'فاتح نظيف', en: 'Clean Light' },
+    name: { ar: 'فاتح واضح', en: 'Clear Light' },
     colors: {
       primary: '#ffffff',
-      secondary: '#f7fafc',
+      secondary: '#f8f9fa',
       background: '#ffffff',
       card: '#ffffff',
-      text: '#1a202c'
+      text: '#000000'
     }
   },
   
-  // ثيم رمادي بسيط - Minimal Gray
+  // ثيم عالي التباين - Maximum Contrast
   minimal: {
-    name: { ar: 'رمادي بسيط', en: 'Minimal Gray' },
+    name: { ar: 'تباين عالي', en: 'High Contrast' },
     colors: {
-      primary: '#f5f6fa',
+      primary: '#f5f5f5',
       secondary: '#ffffff',
-      background: '#f5f6fa',
+      background: '#f5f5f5',
       card: '#ffffff',
-      text: '#2c3e50'
+      text: '#000000'
     }
   },
   
-  // ثيم أزرق مهني - Professional Blue
+  // ثيم أزرق مهني واضح - Clear Professional Blue
   professional: {
-    name: { ar: 'أزرق مهني', en: 'Professional Blue' },
+    name: { ar: 'أزرق واضح', en: 'Clear Blue' },
     colors: {
-      primary: '#f8fafc',
+      primary: '#f8f9fa',
       secondary: '#ffffff',
-      background: '#f8fafc',
+      background: '#f8f9fa',
       card: '#ffffff',
-      text: '#1e3a8a'
+      text: '#1a1a1a'
     }
   },
   
-  // ثيم دافئ - Warm Theme
+  // ثيم دافئ واضح - Clear Warm
   warm: {
-    name: { ar: 'دافئ', en: 'Warm' },
+    name: { ar: 'دافئ واضح', en: 'Clear Warm' },
     colors: {
-      primary: '#fffbf0',
+      primary: '#fff9e6',
       secondary: '#ffffff',
-      background: '#fffbf0',
+      background: '#fff9e6',
       card: '#ffffff',
-      text: '#92400e'
+      text: '#1a1a1a'
     }
   }
 };
