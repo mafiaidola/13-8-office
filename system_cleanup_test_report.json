@@ -1,0 +1,507 @@
+{
+  "total_tests": 15,
+  "successful_tests": 12,
+  "failed_tests": 3,
+  "success_rate": 80.0,
+  "execution_time": 8.2151517868042,
+  "cleanup_stats": {
+    "users_before": 58,
+    "users_after": 21,
+    "products_before": 31,
+    "products_after": 0,
+    "test_users_deleted": 37,
+    "products_deleted": 31
+  },
+  "test_results": [
+    {
+      "test": "تسجيل دخول الأدمن",
+      "success": true,
+      "message": "تم تسجيل الدخول بنجاح للمستخدم: اسم محدث للاختبار (admin)",
+      "details": "Response time: 106.83ms",
+      "timestamp": "2025-08-05T10:41:08.809559"
+    },
+    {
+      "test": "إحصائيات المستخدمين قبل التنظيف",
+      "success": true,
+      "message": "إجمالي المستخدمين: 58, تجريبيين: 37, حقيقيين: 21",
+      "details": {
+        "total_users": 58,
+        "test_users_count": 37,
+        "real_users_count": 21,
+        "test_users_sample": [
+          {
+            "id": "a4fa1087-1a83-465a-964e-601d3bcdf728",
+            "username": "area_manager_test_1753561997",
+            "full_name": "مدير المنطقة تجريبي",
+            "role": "area_manager"
+          },
+          {
+            "id": "6b916d77-ded2-49f9-a326-1bbaa1b02045",
+            "username": "district_manager_test_1753561997",
+            "full_name": "مدير المقاطعة تجريبي",
+            "role": "district_manager"
+          },
+          {
+            "id": "09dcf244-5027-4756-bc94-f7745af2640a",
+            "username": "key_account_test_1753561997",
+            "full_name": "حساب رئيسي تجريبي",
+            "role": "key_account"
+          },
+          {
+            "id": "e7cc708f-9f76-4630-9f79-5d35242159cc",
+            "username": "medical_rep_test_1753561997",
+            "full_name": "مندوب طبي تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "5050da6a-c4d4-4e83-b086-f220b23eb1ea",
+            "username": "subordinate_test_1753561997",
+            "full_name": "مرؤوس تجريبي",
+            "role": "medical_rep"
+          }
+        ],
+        "real_users_sample": [
+          {
+            "username": "admin",
+            "full_name": "اسم محدث للاختبار",
+            "role": "admin"
+          },
+          {
+            "username": "manager_1753517207",
+            "full_name": "مدير التجريبي",
+            "role": "manager"
+          },
+          {
+            "username": "sales_rep_1753517207",
+            "full_name": "مندوب المبيعات التجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "username": "wh_mgr_comp_1753517208",
+            "full_name": "مدير مخزن شامل",
+            "role": "warehouse_manager"
+          },
+          {
+            "username": "sales_rep_1753518721",
+            "full_name": "مندوب المبيعات التجريبي",
+            "role": "medical_rep"
+          }
+        ]
+      },
+      "timestamp": "2025-08-05T10:41:08.826575"
+    },
+    {
+      "test": "إحصائيات المنتجات قبل التنظيف",
+      "success": true,
+      "message": "إجمالي المنتجات: 31",
+      "details": {
+        "total_products": 31,
+        "categories": {
+          "أدوية القلب": 1,
+          "فيتامينات": 3,
+          "أدوية": 15,
+          "اختبار": 5,
+          "": 2,
+          "مكملات غذائية": 2,
+          "Test Category": 2,
+          "أدوية متخصصة": 1
+        },
+        "lines": {
+          "غير محدد": 2,
+          "خط تجريبي": 23,
+          "خط اختبار شامل 1753969122": 1,
+          "خط مكرر للاختبار": 2,
+          "Test Line Unique": 3
+        },
+        "sample_products": [
+          "دواء الضغط",
+          "فيتامين د",
+          "دواء تجريبي للاختبار",
+          "منتج اختبار d8055b93",
+          "منتج اختبار a3706eba"
+        ]
+      },
+      "timestamp": "2025-08-05T10:41:08.843335"
+    },
+    {
+      "test": "إحصائيات النظام العامة",
+      "success": true,
+      "message": "تم جلب إحصائيات النظام بنجاح",
+      "details": {
+        "العيادات": 40,
+        "الطلبات": 23,
+        "الزيارات": 53
+      },
+      "timestamp": "2025-08-05T10:41:08.910954"
+    },
+    {
+      "test": "حذف المستخدمين التجريبيين",
+      "success": true,
+      "message": "تم حذف 37 مستخدم تجريبي، فشل في حذف 0",
+      "details": {
+        "deleted_count": 37,
+        "failed_count": 0,
+        "deleted_users": [
+          {
+            "id": "a4fa1087-1a83-465a-964e-601d3bcdf728",
+            "name": "مدير المنطقة تجريبي",
+            "role": "area_manager"
+          },
+          {
+            "id": "6b916d77-ded2-49f9-a326-1bbaa1b02045",
+            "name": "مدير المقاطعة تجريبي",
+            "role": "district_manager"
+          },
+          {
+            "id": "09dcf244-5027-4756-bc94-f7745af2640a",
+            "name": "حساب رئيسي تجريبي",
+            "role": "key_account"
+          },
+          {
+            "id": "e7cc708f-9f76-4630-9f79-5d35242159cc",
+            "name": "مندوب طبي تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "5050da6a-c4d4-4e83-b086-f220b23eb1ea",
+            "name": "مرؤوس تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "ded90ffe-f998-42e0-92b9-ffd3629281ec",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "b34e9a89-c40d-47e8-a88c-b1d159325d6f",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "fa31b645-e1b8-4ea3-9615-f8b0ba0858bc",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "cf2ba58f-84d3-4e33-b636-e18cd69c01e1",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "d862fd4a-d01e-4103-a694-0d871f318207",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "f12996e2-906c-442b-9438-b69078b3d0d5",
+            "name": "مندوب اختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "08a49f3d-e316-4a64-84c7-65da8c0415f7",
+            "name": "مندوب مبيعات تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "5c499cb3-776a-4597-9bec-accf524eff53",
+            "name": "محاسب تجريبي",
+            "role": "accounting"
+          },
+          {
+            "id": "8f0ea609-7b31-4cc9-8d96-f96f7397f47d",
+            "name": "مندوب اختبار الأسعار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "6b293cf3-14b2-4604-9a48-a9744b36919d",
+            "name": "محاسب اختبار الأسعار",
+            "role": "accounting"
+          },
+          {
+            "id": "6e5644fa-4d6c-40a1-8fc0-0333a598856a",
+            "name": "مندوب اختبار الأسعار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "5b6ec49f-0e2d-4371-aa01-37fd6449d18c",
+            "name": "محاسب اختبار الأسعار",
+            "role": "accounting"
+          },
+          {
+            "id": "a81a5ef3-0d25-4837-9e9f-0ecdca9fcd5d",
+            "name": "مستخدم تجريبي مع خط",
+            "role": "medical_rep"
+          },
+          {
+            "id": "04744da7-7c7d-4802-9450-fcc0fd6df172",
+            "name": "مستخدم تجريبي خط غير صحيح",
+            "role": "medical_rep"
+          },
+          {
+            "id": "b9062722-66c3-46f9-8b02-f49f63e9cbf5",
+            "name": "مستخدم محدث مع الخط",
+            "role": "medical_rep"
+          },
+          {
+            "id": "c1270b84-dc63-44bd-9e85-8c3ef1c45f67",
+            "name": "مستخدم اختبار 855f750d",
+            "role": "medical_rep"
+          },
+          {
+            "id": "72c39db2-2850-491b-b4f7-9ad21a3c2c27",
+            "name": "مندوب طبي تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "6f6d0e73-3df0-42a3-8452-b5630f9efbd0",
+            "name": "مستخدم عادي لاختبار المنتجات",
+            "role": "warehouse_keeper"
+          },
+          {
+            "id": "1ad7ba17-7d32-4474-bad2-8a156ef145cc",
+            "name": "مندوب طبي لاختبار المنتجات",
+            "role": "medical_rep"
+          },
+          {
+            "id": "c77a226f-ff76-4f82-81f8-b3c97827cfc3",
+            "name": "مندوب اختبار العيادات",
+            "role": "medical_rep"
+          },
+          {
+            "id": "2f00b3a0-e2db-4e68-aede-3ca81608af62",
+            "name": "مندوب الاختبار النهائي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "b1dc5248-e0d6-4593-9c6f-7d7f90b08b09",
+            "name": "مندوب طبي للاختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "2db686d0-beff-4bef-af7c-e36072629831",
+            "name": "مدير خط تجريبي",
+            "role": "line_manager"
+          },
+          {
+            "id": "5824e869-1c51-4141-a21b-4e359129e5fb",
+            "name": "مندوب طبي تجريبي",
+            "role": "medical_rep"
+          },
+          {
+            "id": "03c19009-f991-4152-b660-077f8cc14bf8",
+            "name": "مندوب طبي للاختبار",
+            "role": "medical_rep"
+          },
+          {
+            "id": "a8bc04d3-16ed-4f42-90e5-dd49346593fa",
+            "name": "مندوب طبي اختبار الطلبات",
+            "role": "medical_rep"
+          },
+          {
+            "id": "b56c8007-5dd1-4f68-afc6-50a56eabaf87",
+            "name": "مندوب طبي اختبار شامل",
+            "role": "medical_rep"
+          },
+          {
+            "id": "5b7f3328-8f52-4b50-8d28-215e0d853356",
+            "name": "مدير حسابات رئيسية اختبار",
+            "role": "key_account"
+          },
+          {
+            "id": "39802715-c956-4c70-8e01-3164e7afcab4",
+            "name": "محاسب اختبار شامل",
+            "role": "accounting"
+          },
+          {
+            "id": "fe3db051-f211-44d7-9456-09934ba9fb22",
+            "name": "مدير مخزن اختبار",
+            "role": "warehouse_manager"
+          },
+          {
+            "id": "cbc08fb7-6e21-40d4-a7b9-9dac08e3695b",
+            "name": "Test User for Phase 1",
+            "role": "medical_rep"
+          },
+          {
+            "id": "b221fd39-b7f8-43e0-89b2-ceba23e28ac6",
+            "name": "Test User for Phase 1",
+            "role": "medical_rep"
+          }
+        ],
+        "failed_deletions": []
+      },
+      "timestamp": "2025-08-05T10:41:13.035460"
+    },
+    {
+      "test": "حذف جميع المنتجات (HARD DELETE)",
+      "success": true,
+      "message": "تم حذف 31 منتج، فشل في حذف 0",
+      "details": {
+        "deleted_count": 31,
+        "failed_count": 0,
+        "deleted_products": [
+          {
+            "id": "b7b1fb2b-6222-4694-9eb9-1d64800a57f6",
+            "name": "دواء الضغط",
+            "category": "أدوية القلب",
+            "line_name": null
+          },
+          {
+            "id": "51e40e8d-1f3b-4a64-9a60-e55eef0a34e1",
+            "name": "فيتامين د",
+            "category": "فيتامينات",
+            "line_name": null
+          },
+          {
+            "id": "b01be453-27b0-4e19-b816-e6f689529c23",
+            "name": "دواء تجريبي للاختبار",
+            "category": "أدوية",
+            "line_name": "خط تجريبي"
+          },
+          {
+            "id": "294e34a4-8107-4a90-bb05-e8cae96dd632",
+            "name": "منتج اختبار d8055b93",
+            "category": "أدوية",
+            "line_name": "خط تجريبي"
+          },
+          {
+            "id": "5de43e8c-6478-4d9b-bdf7-b35adb80c2ef",
+            "name": "منتج اختبار a3706eba",
+            "category": "أدوية",
+            "line_name": "خط تجريبي"
+          }
+        ],
+        "failed_deletions": []
+      },
+      "timestamp": "2025-08-05T10:41:16.485874"
+    },
+    {
+      "test": "التحقق من تنظيف المستخدمين",
+      "success": true,
+      "message": "المستخدمين قبل التنظيف: 58, بعد التنظيف: 21, متبقي تجريبي: 0",
+      "details": {
+        "users_before": 58,
+        "users_after": 21,
+        "remaining_test_users": []
+      },
+      "timestamp": "2025-08-05T10:41:16.497339"
+    },
+    {
+      "test": "التحقق من تنظيف المنتجات",
+      "success": true,
+      "message": "المنتجات قبل التنظيف: 31, بعد التنظيف: 0",
+      "details": {
+        "products_before": 31,
+        "products_after": 0,
+        "remaining_products": []
+      },
+      "timestamp": "2025-08-05T10:41:16.506458"
+    },
+    {
+      "test": "اختبار إضافة منتج جديد",
+      "success": true,
+      "message": "تم إنشاء المنتج: دواء الضغط الجديد - أملوديبين 10 مجم بسعر 45.5 ج.م",
+      "details": {
+        "product_id": "19aa4077-b6db-4e0a-8b38-e9ead117b6dd",
+        "product_name": "دواء الضغط الجديد - أملوديبين 10 مجم",
+        "verification_checks": {
+          "name_correct": true,
+          "price_correct": true,
+          "category_correct": true,
+          "line_assigned": true,
+          "has_id": true
+        },
+        "response_time": "50.62ms"
+      },
+      "timestamp": "2025-08-05T10:41:16.573434"
+    },
+    {
+      "test": "اختبار ربط المنتجات بالطلبات",
+      "success": false,
+      "message": "فشل في إنشاء الطلب: HTTP 403",
+      "details": "{\"detail\":\"Only medical reps and key accounts can create orders\"}",
+      "timestamp": "2025-08-05T10:41:16.650143"
+    },
+    {
+      "test": "اختبار نظام المديونية - الإحصائيات",
+      "success": true,
+      "message": "إحصائيات الديون: إجمالي 0 ج.م، عدد الديون 0",
+      "details": {
+        "total_debts": 1,
+        "total_amount": 5000.0,
+        "paid_amount": 3500.0,
+        "outstanding_amount": 1500.0,
+        "overdue_amount": 0.0,
+        "pending_count": 0,
+        "partial_count": 1,
+        "paid_count": 0,
+        "overdue_count": 0,
+        "high_priority_count": 1,
+        "medium_priority_count": 0,
+        "low_priority_count": 0
+      },
+      "timestamp": "2025-08-05T10:41:16.692398"
+    },
+    {
+      "test": "اختبار نظام المديونية - السجلات",
+      "success": false,
+      "message": "فشل في جلب سجلات الديون: HTTP 403",
+      "details": null,
+      "timestamp": "2025-08-05T10:41:16.775417"
+    },
+    {
+      "test": "اختبار نظام التحصيل",
+      "success": false,
+      "message": "فشل في جلب سجلات التحصيل: HTTP 404",
+      "details": null,
+      "timestamp": "2025-08-05T10:41:16.789876"
+    },
+    {
+      "test": "اختبار النظام المحاسبي - الإعدادات",
+      "success": true,
+      "message": "تم جلب إعدادات النظام بنجاح",
+      "details": null,
+      "timestamp": "2025-08-05T10:41:16.822507"
+    },
+    {
+      "test": "اختبار النظام المحاسبي - الداشبورد",
+      "success": true,
+      "message": "إحصائيات الداشبورد: مستخدمين 0, عيادات 0, منتجات 0",
+      "details": {
+        "success": true,
+        "data": {
+          "total_users": 21,
+          "total_clinics": 40,
+          "total_visits": 53,
+          "total_orders": 23,
+          "total_products": 1,
+          "total_warehouses": 2,
+          "total_doctors": 52,
+          "total_lines": 18,
+          "total_areas": 21,
+          "total_debt_records": 15,
+          "total_invoices": 5,
+          "today_visits": 0,
+          "today_orders": 0,
+          "pending_approvals": 6,
+          "active_reps": 6,
+          "active_clinics": 40,
+          "active_products": 1,
+          "geographic_stats": {
+            "lines": 18,
+            "areas": 21,
+            "assigned_clinics": 28
+          },
+          "financial_stats": {
+            "debt_records": 15,
+            "invoices": 5,
+            "pending_payments": 0
+          }
+        },
+        "user_role": "admin",
+        "timestamp": "2025-08-05T10:41:16.870819"
+      },
+      "timestamp": "2025-08-05T10:41:16.915447"
+    }
+  ]
+}
