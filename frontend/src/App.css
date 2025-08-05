@@ -1205,51 +1205,154 @@ body {
 }
 
 /* Apply theme colors to all major elements */
-.theme-modern body, .theme-modern .dashboard-layout,
-.theme-minimal body, .theme-minimal .dashboard-layout,
-.theme-glassy body, .theme-glassy .dashboard-layout,
+/* Apply theme colors to all major elements */
 .theme-dark body, .theme-dark .dashboard-layout,
-.theme-white body, .theme-white .dashboard-layout,
-.theme-neon body, .theme-neon .dashboard-layout {
+.theme-light body, .theme-light .dashboard-layout,
+.theme-golden body, .theme-golden .dashboard-layout,
+.theme-ocean body, .theme-ocean .dashboard-layout,
+.theme-forest body, .theme-forest .dashboard-layout,
+.theme-cosmic body, .theme-cosmic .dashboard-layout,
+.theme-rose body, .theme-rose .dashboard-layout {
   background: var(--bg-primary) !important;
   color: var(--text-primary) !important;
 }
 
-/* Cards and Panels */
-.card, .panel, .tab-content, .bg-card {
+/* Universal Card and Panel Styling */
+.card, .panel, .tab-content, .bg-card,
+.modal-content, .dropdown-content, 
+.notification-panel, .user-profile-card {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Enhanced Button Styling for All Themes */
+button, .btn, .button,
+input[type="submit"], input[type="button"] {
+  transition: all var(--transition-fast) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+button:hover, .btn:hover, .button:hover,
+input[type="submit"]:hover, input[type="button"]:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow) !important;
+}
+
+/* Form Elements Theme Support */
+input, select, textarea, .form-input, .form-select {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+input:focus, select:focus, textarea:focus,
+.form-input:focus, .form-select:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px var(--accent-primary)25 !important;
+  outline: none !important;
+}
+
+/* Text Colors with Theme Support */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-accent { color: var(--accent-primary) !important; }
+
+/* Enhanced Dropdown Styling for All Themes */
+.dropdown-menu, .theme-dropdown, .language-dropdown,
+select, .select-dropdown, option {
+  background: var(--dropdown-bg) !important;
+  color: var(--dropdown-text) !important;
+  border: 1px solid var(--dropdown-border) !important;
+  box-shadow: var(--dropdown-shadow) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.dropdown-menu option:hover, .theme-dropdown option:hover,
+.language-dropdown option:hover, select option:hover {
+  background: var(--dropdown-hover) !important;
+}
+
+/* Header and Navigation Theme Support */
+.header, .navigation, .navbar, .sidebar,
+.nav-item, .nav-link, .menu-item {
   background: var(--bg-card) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
 }
 
-/* Buttons and Interactive Elements */
-button, .btn {
-  transition: all 0.2s ease !important;
+/* Table Theme Support */
+table, .table, .data-table {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
 }
 
-button:hover, .btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+table th, .table th, .data-table th {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
-/* Text Colors */
-.text-primary { color: var(--text-primary) !important; }
-.text-secondary { color: var(--text-secondary) !important; }
-.text-muted { color: var(--text-muted) !important; }
-
-/* Neon Theme Special Effects */
-.theme-neon button, .theme-neon .card, .theme-neon .panel {
-  border: 1px solid var(--border-color);
+table td, .table td, .data-table td {
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
-.theme-neon button:hover {
-  box-shadow: var(--neon-glow);
-  text-shadow: 0 0 5px currentColor;
+table tr:hover, .table tr:hover, .data-table tr:hover {
+  background: var(--bg-secondary) !important;
 }
 
-.theme-neon .text-accent {
-  color: var(--accent-primary);
-  text-shadow: 0 0 3px currentColor;
+/* Alert and Notification Theme Support */
+.alert, .notification, .toast, .banner {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+/* Badge and Tag Theme Support */
+.badge, .tag, .label, .chip {
+  background: var(--accent-primary) !important;
+  color: var(--bg-card) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+/* Progress Bar Theme Support */
+.progress, .progress-bar {
+  background: var(--bg-secondary) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.progress-bar-fill {
+  background: var(--accent-primary) !important;
+}
+
+/* Spinner and Loading Theme Support */
+.spinner, .loading, .loader {
+  border-color: var(--border-color) !important;
+  border-top-color: var(--accent-primary) !important;
+}
+
+/* Special Theme Effects for Dark Themes */
+.theme-dark *::selection,
+.theme-ocean *::selection,
+.theme-cosmic *::selection {
+  background: var(--accent-primary)40 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Special Theme Effects for Light Themes */
+.theme-light *::selection,
+.theme-golden *::selection,
+.theme-forest *::selection,
+.theme-rose *::selection {
+  background: var(--accent-primary)20 !important;
+  color: var(--text-primary) !important;
 }
 
 /* Scrollbar Styling */
