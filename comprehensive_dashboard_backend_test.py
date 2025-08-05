@@ -19,7 +19,7 @@ import sys
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://0f12410c-0263-44c4-80bc-ce88c1050ca0.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://09220ea3-7f7d-4d97-b03e-0551b39b60b9.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class ComprehensiveDashboardTester:

@@ -8,7 +8,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://0f12410c-0263-44c4-80bc-ce88c1050ca0.preview.emergentagent.com/api"
+BACKEND_URL = "https://09220ea3-7f7d-4d97-b03e-0551b39b60b9.preview.emergentagent.com/api"
 
 async def detailed_diagnosis():
     """تشخيص مفصل للمشكلة"""
