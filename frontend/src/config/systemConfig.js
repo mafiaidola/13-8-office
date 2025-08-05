@@ -140,10 +140,6 @@ export const SYSTEM_TABS = {
     permissions: ['admin'], // Admin only as requested
     priority: 11
   },
-    description: { ar: 'تتبع الزيارات وسجلات الدخول مع نظام GPS', en: 'Track visits and login logs with GPS system' },
-    permissions: ['admin', 'gm', 'medical_rep'],
-    priority: 12
-  },
 
   activity_tracking: {
     id: 'activity_tracking',
