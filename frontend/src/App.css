@@ -31,34 +31,121 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
-/* Enhanced Dropdown Styling for All Themes */
-.dropdown-menu,
-.theme-dropdown,
-.language-dropdown,
-select,
-.select-dropdown {
+/* Enhanced Theme Dropdown - قوائم منسدلة محسنة للثيمات */
+.theme-dropdown, .language-dropdown,
+select.form-control, select.form-select,
+.custom-select, .dropdown-select {
   background: var(--dropdown-bg) !important;
   color: var(--dropdown-text) !important;
-  border: 1px solid var(--dropdown-border) !important;
+  border: 2px solid var(--dropdown-border) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
   box-shadow: var(--dropdown-shadow) !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
+  transition: all var(--transition-fast) !important;
+  cursor: pointer !important;
+  min-width: 8rem !important;
 }
 
-.dropdown-menu option,
-.theme-dropdown option,
-.language-dropdown option,
-select option {
+.theme-dropdown:hover, .language-dropdown:hover,
+select.form-control:hover, select.form-select:hover,
+.custom-select:hover, .dropdown-select:hover {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px var(--accent-primary)20, var(--dropdown-shadow) !important;
+}
+
+.theme-dropdown:focus, .language-dropdown:focus,
+select.form-control:focus, select.form-select:focus,
+.custom-select:focus, .dropdown-select:focus {
+  outline: none !important;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px var(--accent-primary)30, var(--dropdown-shadow) !important;
+}
+
+/* Enhanced Option Styling */
+.theme-dropdown option, .language-dropdown option,
+select.form-control option, select.form-select option,
+.custom-select option, .dropdown-select option {
   background: var(--dropdown-bg) !important;
   color: var(--dropdown-text) !important;
-  padding: 8px 12px !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 500 !important;
+  border: none !important;
 }
 
-.dropdown-menu option:hover,
-.theme-dropdown option:hover,
-.language-dropdown option:hover,
-select option:hover {
+.theme-dropdown option:hover, .language-dropdown option:hover,
+select.form-control option:hover, select.form-select option:hover,
+.custom-select option:hover, .dropdown-select option:hover {
   background: var(--dropdown-hover) !important;
+  color: var(--dropdown-text) !important;
+}
+
+.theme-dropdown option:checked, .language-dropdown option:checked,
+select.form-control option:checked, select.form-select option:checked,
+.custom-select option:checked, .dropdown-select option:checked {
+  background: var(--accent-primary) !important;
+  color: var(--bg-card) !important;
+  font-weight: 600 !important;
+}
+
+/* Theme-Specific Dropdown Enhancements */
+.theme-dark .theme-dropdown, .theme-dark .language-dropdown,
+.theme-dark select {
+  --dropdown-bg: rgba(30, 41, 59, 0.98);
+  --dropdown-text: #f8fafc;
+  --dropdown-hover: rgba(59, 130, 246, 0.15);
+  --dropdown-border: rgba(148, 163, 184, 0.4);
+}
+
+.theme-light .theme-dropdown, .theme-light .language-dropdown,
+.theme-light select {
+  --dropdown-bg: rgba(255, 255, 255, 0.98);
+  --dropdown-text: #1e293b;
+  --dropdown-hover: rgba(37, 99, 235, 0.1);
+  --dropdown-border: rgba(148, 163, 184, 0.3);
+}
+
+.theme-golden .theme-dropdown, .theme-golden .language-dropdown,
+.theme-golden select {
+  --dropdown-bg: rgba(255, 255, 255, 0.98);
+  --dropdown-text: #92400e;
+  --dropdown-hover: rgba(217, 119, 6, 0.15);
+  --dropdown-border: rgba(217, 119, 6, 0.4);
+}
+
+.theme-ocean .theme-dropdown, .theme-ocean .language-dropdown,
+.theme-ocean select {
+  --dropdown-bg: rgba(8, 47, 73, 0.98);
+  --dropdown-text: #ecfeff;
+  --dropdown-hover: rgba(6, 182, 212, 0.2);
+  --dropdown-border: rgba(6, 182, 212, 0.5);
+}
+
+.theme-forest .theme-dropdown, .theme-forest .language-dropdown,
+.theme-forest select {
+  --dropdown-bg: rgba(255, 255, 255, 0.98);
+  --dropdown-text: #064e3b;
+  --dropdown-hover: rgba(16, 185, 129, 0.15);
+  --dropdown-border: rgba(16, 185, 129, 0.4);
+}
+
+.theme-cosmic .theme-dropdown, .theme-cosmic .language-dropdown,
+.theme-cosmic select {
+  --dropdown-bg: rgba(76, 29, 149, 0.98);
+  --dropdown-text: #f3e8ff;
+  --dropdown-hover: rgba(147, 51, 234, 0.2);
+  --dropdown-border: rgba(147, 51, 234, 0.5);
+}
+
+.theme-rose .theme-dropdown, .theme-rose .language-dropdown,
+.theme-rose select {
+  --dropdown-bg: rgba(255, 255, 255, 0.98);
+  --dropdown-text: #881337;
+  --dropdown-hover: rgba(244, 63, 94, 0.15);
+  --dropdown-border: rgba(244, 63, 94, 0.4);
 }
 
 /* Enhanced Pop-up and Modal System - نظام النوافذ المنبثقة المحسن */
