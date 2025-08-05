@@ -1860,6 +1860,10 @@ async def update_product(product_id: str, product_data: dict, current_user: User
             update_data["price"] = float(update_data["price"])
         if "current_stock" in update_data:
             update_data["current_stock"] = int(update_data["current_stock"])
+        elif "stock_quantity" in update_data:
+            # Handle the field name mismatch - convert stock_quantity to current_stock
+            update_data["current_stock"] = int(update_data["stock_quantity"])
+            del update_data["stock_quantity"]
         
         await db.products.update_one({"id": product_id}, {"$set": update_data})
         
