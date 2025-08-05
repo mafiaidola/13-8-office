@@ -1,6 +1,13 @@
 // Advanced Analytics Component - نظام التحليلات المتقدمة
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import * as XLSX from 'xlsx';
 
 const AdvancedAnalytics = ({ language = 'ar' }) => {
   const [activeTab, setActiveTab] = useState('performance');
@@ -11,9 +18,13 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
   const [visitAnalytics, setVisitAnalytics] = useState({});
   const [charts, setCharts] = useState({});
   const [realTimeMetrics, setRealTimeMetrics] = useState([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Get backend URL from environment
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+  // Colors for charts
+  const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 
   // Load performance dashboard
   const loadPerformanceDashboard = useCallback(async () => {
@@ -152,8 +163,62 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
     return icons[trend] || icons.stable;
   };
 
-  // Render simple chart (placeholder - can be enhanced with actual chart library)
-  const renderSimpleChart = (chartData) => {
+  // Export to PDF
+  const exportToPDF = async (elementId, filename) => {
+    try {
+      setExportLoading(true);
+      const element = document.getElementById(elementId);
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 297; // A4 landscape width
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`${filename}.pdf`);
+      
+      console.log('✅ PDF exported successfully');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Export to Excel
+  const exportToExcel = (data, filename) => {
+    try {
+      setExportLoading(true);
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics Data');
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      
+      console.log('✅ Excel exported successfully');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Render interactive pie chart (Recharts)
+  const renderPieChart = (chartData, title) => {
     if (!chartData || !chartData.series || chartData.series.length === 0) {
       return (
         <div className="flex items-center justify-center h-48 text-gray-500">
@@ -162,58 +227,175 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
       );
     }
 
-    const series = chartData.series[0];
-    const maxValue = Math.max(...series.data.map(d => d.y));
+    const data = chartData.series[0].data.slice(0, 8).map((item, index) => ({
+      name: item.x || item.label,
+      value: item.y,
+      fill: COLORS[index % COLORS.length]
+    }));
 
     return (
-      <div className="space-y-2">
-        <h4 className="font-semibold text-gray-800 mb-4">{chartData.title}</h4>
-        {series.data.slice(0, 8).map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <div className="w-24 text-sm text-gray-600 truncate">
-              {item.x}
-            </div>
-            <div className="flex-1 bg-gray-200 rounded-full h-4 relative">
-              <div
-                className="bg-blue-500 h-4 rounded-full"
-                style={{ width: `${(item.y / maxValue) * 100}%` }}
-              />
-              <span className="absolute right-2 top-0 text-xs text-white font-medium leading-4">
-                {formatNumber(item.y)}
-              </span>
-            </div>
-          </div>
-        ))}
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-800 mb-4 text-center">{title}</h4>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              dataKey="value"
+              label={({ name, percent }) => `${name}: ${formatPercentage(percent * 100)}`}
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value) => formatNumber(value)} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Render interactive bar chart (Recharts)
+  const renderBarChart = (chartData, title) => {
+    if (!chartData || !chartData.series || chartData.series.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-48 text-gray-500">
+          {language === 'ar' ? 'لا توجد بيانات' : 'No data available'}
+        </div>
+      );
+    }
+
+    const data = chartData.series[0].data.slice(0, 12).map((item) => ({
+      name: item.x || item.label,
+      value: item.y
+    }));
+
+    return (
+      <div className="space-y-4">
+        <h4 className="font-semibold text-gray-800 mb-4 text-center">{title}</h4>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="name" 
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              fontSize={12}
+            />
+            <YAxis />
+            <Tooltip formatter={(value) => formatNumber(value)} />
+            <Bar dataKey="value" fill="#3B82F6" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Render line chart for performance metrics
+  const renderPerformanceChart = (metrics) => {
+    if (!metrics || metrics.length === 0) {
+      return null;
+    }
+
+    const data = metrics.map((metric, index) => ({
+      name: metric.name,
+      value: metric.value,
+      target: metric.target || metric.value * 1.2,
+      index: index
+    }));
+
+    return (
+      <div className="mt-6">
+        <h4 className="font-semibold text-gray-800 mb-4 text-center">
+          {language === 'ar' ? 'مؤشرات الأداء' : 'Performance Indicators'}
+        </h4>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" fontSize={10} />
+            <YAxis />
+            <Tooltip formatter={(value) => formatNumber(value)} />
+            <Legend />
+            <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={2} name={language === 'ar' ? 'القيمة الحالية' : 'Current Value'} />
+            <Line type="monotone" dataKey="target" stroke="#10B981" strokeWidth={2} strokeDasharray="5 5" name={language === 'ar' ? 'الهدف' : 'Target'} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     );
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto" id="analytics-dashboard">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">
           {language === 'ar' ? '📊 التحليلات المتقدمة' : '📊 Advanced Analytics'}
         </h1>
         
-        {/* Time Range Selector */}
+        {/* Controls */}
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">
-            {language === 'ar' ? 'الفترة الزمنية:' : 'Time Range:'}
-          </label>
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="today">{language === 'ar' ? 'اليوم' : 'Today'}</option>
-            <option value="yesterday">{language === 'ar' ? 'أمس' : 'Yesterday'}</option>
-            <option value="this_week">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</option>
-            <option value="last_week">{language === 'ar' ? 'الأسبوع الماضي' : 'Last Week'}</option>
-            <option value="this_month">{language === 'ar' ? 'هذا الشهر' : 'This Month'}</option>
-            <option value="last_month">{language === 'ar' ? 'الشهر الماضي' : 'Last Month'}</option>
-            <option value="this_year">{language === 'ar' ? 'هذا العام' : 'This Year'}</option>
-          </select>
+          {/* Time Range Selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              {language === 'ar' ? 'الفترة الزمنية:' : 'Time Range:'}
+            </label>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="today">{language === 'ar' ? 'اليوم' : 'Today'}</option>
+              <option value="yesterday">{language === 'ar' ? 'أمس' : 'Yesterday'}</option>
+              <option value="this_week">{language === 'ar' ? 'هذا الأسبوع' : 'This Week'}</option>
+              <option value="last_week">{language === 'ar' ? 'الأسبوع الماضي' : 'Last Week'}</option>
+              <option value="this_month">{language === 'ar' ? 'هذا الشهر' : 'This Month'}</option>
+              <option value="last_month">{language === 'ar' ? 'الشهر الماضي' : 'Last Month'}</option>
+              <option value="this_year">{language === 'ar' ? 'هذا العام' : 'This Year'}</option>
+            </select>
+          </div>
+
+          {/* Export Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exportToPDF('analytics-dashboard', `analytics-report-${timeRange}`)}
+              disabled={exportLoading}
+              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 text-sm flex items-center gap-1"
+            >
+              📄 {language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
+            </button>
+            
+            <button
+              onClick={() => {
+                const exportData = [
+                  ...Object.values(salesAnalytics.top_products || []),
+                  ...Object.values(visitAnalytics.rep_performance || [])
+                ];
+                exportToExcel(exportData, `analytics-data-${timeRange}`);
+              }}
+              disabled={exportLoading}
+              className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 text-sm flex items-center gap-1"
+            >
+              📊 {language === 'ar' ? 'تصدير Excel' : 'Export Excel'}
+            </button>
+            
+            <button
+              onClick={() => {
+                loadPerformanceDashboard();
+                loadSalesAnalytics();
+                loadVisitAnalytics();
+                loadCharts();
+                loadRealTimeMetrics();
+              }}
+              disabled={loading}
+              className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 text-sm flex items-center gap-1"
+            >
+              🔄 {language === 'ar' ? 'تحديث' : 'Refresh'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -280,39 +462,44 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
             </h2>
             
             {performanceDashboard.metrics && performanceDashboard.metrics.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                {performanceDashboard.metrics.map((metric, index) => (
-                  <div key={index} className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-600">{metric.name}</h3>
-                      <span className="text-lg">{getMetricIcon(metric.trend)}</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-baseline">
-                        <span className={`text-2xl font-bold ${getMetricColor(metric.trend)}`}>
-                          {formatNumber(metric.value)}
-                        </span>
-                        {metric.unit && (
-                          <span className="text-sm text-gray-500 ml-1">{metric.unit}</span>
-                        )}
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                  {performanceDashboard.metrics.map((metric, index) => (
+                    <div key={index} className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-gray-600">{metric.name}</h3>
+                        <span className="text-lg">{getMetricIcon(metric.trend)}</span>
                       </div>
                       
-                      {metric.target && (
-                        <div className="text-xs text-gray-500">
-                          {language === 'ar' ? 'الهدف:' : 'Target:'} {formatNumber(metric.target)} {metric.unit}
+                      <div className="space-y-2">
+                        <div className="flex items-baseline">
+                          <span className={`text-2xl font-bold ${getMetricColor(metric.trend)}`}>
+                            {formatNumber(metric.value)}
+                          </span>
+                          {metric.unit && (
+                            <span className="text-sm text-gray-500 ml-1">{metric.unit}</span>
+                          )}
                         </div>
-                      )}
-                      
-                      {metric.change_percentage && (
-                        <div className={`text-xs ${getMetricColor(metric.trend)}`}>
-                          {metric.change_percentage > 0 ? '+' : ''}{formatPercentage(metric.change_percentage)}
-                        </div>
-                      )}
+                        
+                        {metric.target && (
+                          <div className="text-xs text-gray-500">
+                            {language === 'ar' ? 'الهدف:' : 'Target:'} {formatNumber(metric.target)} {metric.unit}
+                          </div>
+                        )}
+                        
+                        {metric.change_percentage && (
+                          <div className={`text-xs ${getMetricColor(metric.trend)}`}>
+                            {metric.change_percentage > 0 ? '+' : ''}{formatPercentage(metric.change_percentage)}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                
+                {/* Performance Chart */}
+                {renderPerformanceChart(performanceDashboard.metrics)}
+              </>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 {language === 'ar' ? 'لا توجد مقاييس متاحة' : 'No metrics available'}
@@ -497,6 +684,55 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
               </div>
             )}
           </div>
+
+          {/* Sales Chart */}
+          {salesAnalytics.top_products && salesAnalytics.top_products.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    {language === 'ar' ? '📊 توزيع المبيعات حسب المنتج' : '📊 Sales Distribution by Product'}
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={salesAnalytics.top_products.slice(0, 8).map((product, index) => ({
+                          name: product.product_name,
+                          value: product.total_sales,
+                          fill: COLORS[index % COLORS.length]
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                      >
+                        {salesAnalytics.top_products.slice(0, 8).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${formatNumber(value)} ${language === 'ar' ? 'ج.م' : 'EGP'}`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    {language === 'ar' ? '🏢 أداء العملاء' : '🏢 Client Performance'}
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={salesAnalytics.top_clients?.slice(0, 6) || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="clinic_name" fontSize={10} />
+                      <YAxis />
+                      <Tooltip formatter={(value) => `${formatNumber(value)} ${language === 'ar' ? 'ج.م' : 'EGP'}`} />
+                      <Bar dataKey="total_sales" fill="#10B981" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -570,6 +806,24 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
             </div>
           </div>
 
+          {/* Visit Charts */}
+          {visitAnalytics.visits_by_hour && visitAnalytics.visits_by_hour.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-sm border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {language === 'ar' ? '⏰ توزيع الزيارات حسب الساعة' : '⏰ Visits Distribution by Hour'}
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={visitAnalytics.visits_by_hour}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => formatNumber(value)} />
+                  <Area type="monotone" dataKey="count" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           {/* Rep Performance */}
           {visitAnalytics.rep_performance && visitAnalytics.rep_performance.length > 0 && (
             <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -633,14 +887,14 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
             {/* Sales by Product Chart */}
             {charts.salesByProduct && (
               <div className="bg-white p-6 rounded-lg shadow-sm border">
-                {renderSimpleChart(charts.salesByProduct)}
+                {renderPieChart(charts.salesByProduct, charts.salesByProduct.title)}
               </div>
             )}
 
             {/* Visits by Hour Chart */}
             {charts.visitsByHour && (
               <div className="bg-white p-6 rounded-lg shadow-sm border">
-                {renderSimpleChart(charts.visitsByHour)}
+                {renderBarChart(charts.visitsByHour, charts.visitsByHour.title)}
               </div>
             )}
           </div>
@@ -650,19 +904,54 @@ const AdvancedAnalytics = ({ language = 'ar' }) => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {language === 'ar' ? '⚙️ خيارات الرسوم البيانية' : '⚙️ Chart Options'}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <button
                 onClick={loadCharts}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                disabled={loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {language === 'ar' ? 'تحديث الرسوم البيانية' : 'Refresh Charts'}
+                {language === 'ar' ? '🔄 تحديث الرسوم البيانية' : '🔄 Refresh Charts'}
               </button>
-              <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                {language === 'ar' ? 'تصدير كـ PDF' : 'Export as PDF'}
+              <button 
+                onClick={() => exportToPDF('analytics-dashboard', 'charts-report')}
+                disabled={exportLoading}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+              >
+                {language === 'ar' ? '📄 تصدير كـ PDF' : '📄 Export as PDF'}
               </button>
-              <button className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-                {language === 'ar' ? 'تصدير كـ Excel' : 'Export as Excel'}
+              <button 
+                onClick={() => {
+                  const chartData = Object.values(charts).map(chart => ({
+                    title: chart.title,
+                    data: chart.series?.[0]?.data || []
+                  }));
+                  exportToExcel(chartData, 'charts-data');
+                }}
+                disabled={exportLoading}
+                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50"
+              >
+                {language === 'ar' ? '📊 تصدير كـ Excel' : '📊 Export as Excel'}
               </button>
+              <button 
+                onClick={() => {
+                  window.print();
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                {language === 'ar' ? '🖨️ طباعة' : '🖨️ Print'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Loading Overlay */}
+      {exportLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <span>{language === 'ar' ? 'جاري التصدير...' : 'Exporting...'}</span>
             </div>
           </div>
         </div>
