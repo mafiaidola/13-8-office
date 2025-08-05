@@ -194,21 +194,21 @@ const ProductManagement = ({ user, language, isRTL }) => {
   const handleDeleteProduct = async (productId) => {
     const productToDelete = products.find(p => p.id === productId);
     
-    if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+    if (window.confirm(`⚠️ تحذير: سيتم حذف المنتج نهائياً من النظام!\n\nالمنتج: ${productToDelete?.name}\nالكمية الحالية: ${productToDelete?.current_stock || 0}\n\nهل أنت متأكد من المتابعة؟`)) {
       try {
         const token = localStorage.getItem('access_token');
-        console.log('🔧 Deleting product:', productId);
+        console.log('🔧 Permanently deleting product:', productId);
         
         const response = await axios.delete(`${API}/products/${productId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        console.log('✅ Product deleted successfully:', response.data);
+        console.log('✅ Product permanently deleted:', response.data);
         
         // تسجيل النشاط
         await activityLogger.logActivity(
-          'product_deletion',
-          'حذف منتج',
+          'product_permanent_deletion',
+          'حذف منتج نهائياً',
           'product',
           productId,
           productToDelete?.name || `منتج ${productId}`,
@@ -216,18 +216,20 @@ const ProductManagement = ({ user, language, isRTL }) => {
             deleted_product_name: productToDelete?.name,
             deleted_product_price: productToDelete?.price,
             deleted_product_unit: productToDelete?.unit,
-            deletion_reason: 'حذف يدوي من واجهة الإدارة',
+            stock_at_deletion: productToDelete?.current_stock || 0,
+            deletion_type: 'HARD_DELETE',
+            deletion_reason: 'حذف نهائي بناءً على طلب المستخدم',
             deleted_by_role: user?.role,
-            stock_at_deletion: productToDelete?.stock_quantity || 0
+            deletion_timestamp: new Date().toISOString()
           }
         );
         
         fetchProducts();
-        alert('تم حذف المنتج بنجاح');
+        alert('✅ تم حذف المنتج نهائياً من النظام');
       } catch (error) {
-        console.error('❌ Error deleting product:', error);
-        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف المنتج';
-        alert(`خطأ في حذف المنتج: ${errorMessage}`);
+        console.error('❌ Error permanently deleting product:', error);
+        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف المنتج نهائياً';
+        alert(`❌ خطأ في حذف المنتج: ${errorMessage}`);
       }
     }
   };
