@@ -1195,13 +1195,60 @@ body.theme-rose, body.theme-rose * {
   box-sizing: border-box;
 }
 
-/* Body Global Theming */
+/* Enhanced Typography for Better Readability */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  color: var(--text-primary);
+  font-family: var(--font-family-primary) !important;
+  line-height: 1.7 !important;
+  color: var(--text-primary) !important;
   background: var(--bg-primary) !important;
-  transition: all var(--transition-normal);
+  transition: all var(--transition-normal) !important;
+  font-weight: 400 !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Enhanced Heading Styles */
+h1, h2, h3, h4, h5, h6,
+.heading, .title, .subtitle {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Enhanced Paragraph and Text */
+p, span, div, label,
+.text, .paragraph, .description {
+  color: var(--text-primary) !important;
+  line-height: 1.6 !important;
+}
+
+/* Enhanced Link Styles */
+a, .link, .nav-link {
+  color: var(--accent-primary) !important;
+  text-decoration: none !important;
+  transition: all var(--transition-fast) !important;
+}
+
+a:hover, .link:hover, .nav-link:hover {
+  color: var(--accent-secondary) !important;
+  text-decoration: underline !important;
+}
+
+/* Enhanced List Styles */
+ul, ol, li,
+.list, .list-item, .menu-list {
+  color: var(--text-primary) !important;
+}
+
+/* Enhanced Code and Pre Styles */
+code, pre, .code-block {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 0.5rem !important;
 }
 
 /* Apply theme colors to all major elements */
