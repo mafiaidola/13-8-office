@@ -124,8 +124,8 @@ export const COMPONENT_REGISTRY = {
 
   // Visit Management
   VisitManagement: createLazyComponent(
-    () => import('../Visits/VisitManagement'),
-    'جاري تحميل إدارة الزيارات وسجل الدخول...'
+    () => import('../Visits/EnhancedVisitManagement'),
+    'جاري تحميل إدارة الزيارات المحسنة...'
   ),
 
   // Activity Tracking
