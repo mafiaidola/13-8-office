@@ -1311,47 +1311,97 @@ body {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Enhanced Heading Styles */
+/* FIXED TYPOGRAPHY - نصوص واضحة ومقروءة */
 h1, h2, h3, h4, h5, h6,
 .heading, .title, .subtitle {
   color: var(--text-primary) !important;
   font-weight: 600 !important;
   line-height: 1.4 !important;
   margin-bottom: 0.75rem !important;
+  opacity: 1 !important;
 }
 
-/* Enhanced Paragraph and Text */
-p, span, div, label,
+/* FIXED TEXT ELEMENTS - عناصر النص المحسنة */
+p, span, div, label, a,
 .text, .paragraph, .description {
   color: var(--text-primary) !important;
   line-height: 1.6 !important;
+  opacity: 1 !important;
 }
 
-/* Enhanced Link Styles */
-a, .link, .nav-link {
-  color: var(--accent-primary) !important;
-  text-decoration: none !important;
-  transition: all var(--transition-fast) !important;
+/* FIXED SECONDARY TEXT */
+.text-secondary {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
 }
 
-a:hover, .link:hover, .nav-link:hover {
-  color: var(--accent-secondary) !important;
-  text-decoration: underline !important;
+/* FIXED MUTED TEXT */
+.text-muted {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
 }
 
-/* Enhanced List Styles */
-ul, ol, li,
-.list, .list-item, .menu-list {
+/* Apply theme colors to all major elements - FIXED */
+.theme-dark body, .theme-dark .dashboard-layout, .theme-dark *,
+.theme-light body, .theme-light .dashboard-layout, .theme-light *,
+.theme-golden body, .theme-golden .dashboard-layout, .theme-golden *,
+.theme-ocean body, .theme-ocean .dashboard-layout, .theme-ocean *,
+.theme-forest body, .theme-forest .dashboard-layout, .theme-forest *,
+.theme-cosmic body, .theme-cosmic .dashboard-layout, .theme-cosmic *,
+.theme-rose body, .theme-rose .dashboard-layout, .theme-rose * {
+  background: var(--bg-primary) !important;
   color: var(--text-primary) !important;
 }
 
-/* Enhanced Code and Pre Styles */
-code, pre, .code-block {
+/* Universal Card and Panel Styling - FIXED */
+.card, .panel, .tab-content, .bg-card,
+.modal-content, .dropdown-content, 
+.notification-panel, .user-profile-card {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* FIXED BUTTONS */
+button, .btn, .button,
+input[type="submit"], input[type="button"] {
+  color: var(--text-primary) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  transition: all var(--transition-fast) !important;
+  border-radius: var(--border-radius) !important;
+  opacity: 1 !important;
+}
+
+button:hover, .btn:hover, .button:hover,
+input[type="submit"]:hover, input[type="button"]:hover {
+  transform: translateY(-1px);
   background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* FIXED FORM ELEMENTS */
+input, select, textarea, .form-input, .form-select {
+  background: var(--bg-card) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: var(--border-radius) !important;
-  padding: 0.5rem !important;
+  transition: all var(--transition-fast) !important;
+  opacity: 1 !important;
+}
+
+input:focus, select:focus, textarea:focus,
+.form-input:focus, .form-select:focus {
+  border-color: var(--accent-primary) !important;
+  color: var(--text-primary) !important;
+  outline: none !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
 }
 
 /* Apply theme colors to all major elements */
