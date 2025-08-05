@@ -181,7 +181,15 @@ const ThemeProvider = ({ children }) => {
       root.style.setProperty('--bg-card', themeConfig.colors.card);
       root.style.setProperty('--text-primary', themeConfig.colors.text);
       
-      console.log(`✅ Applied enhanced theme: ${theme}`);
+      // Apply dropdown variables for enhanced theme support
+      if (themeConfig.dropdown) {
+        root.style.setProperty('--dropdown-bg', themeConfig.dropdown.background);
+        root.style.setProperty('--dropdown-text', themeConfig.dropdown.text);
+        root.style.setProperty('--dropdown-hover', themeConfig.dropdown.hover);
+        root.style.setProperty('--dropdown-border', themeConfig.dropdown.border);
+      }
+      
+      console.log(`✅ Applied enhanced theme with dropdown support: ${theme}`);
     }
   }, [isRTL, language, theme]);
 
