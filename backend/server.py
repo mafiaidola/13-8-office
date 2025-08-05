@@ -583,6 +583,194 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         "invoice_converted_to_debt": True
     }
 
+@api_router.post("/payments/process")
+async def process_payment(payment_data: dict, current_user: User = Depends(get_current_user)):
+    """معالجة السداد وتحويل الدين إلى مدفوع"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTING, UserRole.GM]:
+        raise HTTPException(status_code=403, detail="Only admin, accounting, or GM can process payments")
+    
+    try:
+        debt_id = payment_data.get("debt_id")
+        payment_amount = float(payment_data.get("payment_amount", 0))
+        payment_method = payment_data.get("payment_method", "cash")  # cash, check, bank_transfer
+        payment_notes = payment_data.get("notes", "")
+        
+        if not debt_id:
+            raise HTTPException(status_code=400, detail="Debt ID is required")
+        
+        if payment_amount <= 0:
+            raise HTTPException(status_code=400, detail="Payment amount must be greater than 0")
+        
+        # البحث عن سجل الدين
+        debt_record = await db.debts.find_one({"id": debt_id})
+        if not debt_record:
+            raise HTTPException(status_code=404, detail="Debt record not found")
+        
+        remaining_amount = debt_record.get("remaining_amount", debt_record.get("debt_amount", 0))
+        
+        if payment_amount > remaining_amount:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Payment amount ({payment_amount}) exceeds remaining debt ({remaining_amount})"
+            )
+        
+        # حساب المبلغ المتبقي بعد السداد
+        new_remaining_amount = remaining_amount - payment_amount
+        payment_status = "paid" if new_remaining_amount == 0 else "partially_paid"
+        debt_status = "settled" if new_remaining_amount == 0 else "outstanding"
+        
+        # تحديث سجل الدين
+        update_data = {
+            "remaining_amount": new_remaining_amount,
+            "payment_status": payment_status,
+            "status": debt_status,
+            "last_payment_date": datetime.utcnow(),
+            "last_payment_amount": payment_amount,
+            "last_payment_by": current_user.id,
+            "updated_at": datetime.utcnow()
+        }
+        
+        if new_remaining_amount == 0:
+            update_data["settled_date"] = datetime.utcnow()
+            update_data["settled_by"] = current_user.id
+        
+        await db.debts.update_one({"id": debt_id}, {"$set": update_data})
+        
+        # إنشاء سجل دفع
+        payment_record = {
+            "id": f"payment_{int(time.time())}_{current_user.id}",
+            "debt_id": debt_id,
+            "order_id": debt_record.get("order_id"),
+            "clinic_id": debt_record.get("clinic_id"),
+            "payment_amount": payment_amount,
+            "payment_method": payment_method,
+            "payment_date": datetime.utcnow(),
+            "processed_by": current_user.id,
+            "processed_by_name": current_user.full_name,
+            "remaining_debt_after_payment": new_remaining_amount,
+            "payment_notes": payment_notes,
+            "status": "completed",
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.payments.insert_one(payment_record)
+        
+        # تحديث حالة الطلب إذا تم السداد بالكامل
+        if new_remaining_amount == 0 and debt_record.get("order_id"):
+            await db.orders.update_one(
+                {"id": debt_record["order_id"]}, 
+                {
+                    "$set": {
+                        "payment_status": "paid",
+                        "invoice_status": "paid",
+                        "paid_date": datetime.utcnow(),
+                        "paid_by": current_user.id
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": f"Payment processed successfully. {'Debt fully settled!' if new_remaining_amount == 0 else f'Remaining debt: {new_remaining_amount:.2f} EGP'}",
+            "payment_id": payment_record["id"],
+            "debt_id": debt_id,
+            "payment_amount": payment_amount,
+            "remaining_amount": new_remaining_amount,
+            "payment_status": payment_status,
+            "debt_status": debt_status,
+            "fully_paid": new_remaining_amount == 0
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error processing payment: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing payment")
+
+@api_router.get("/debts")
+async def get_debts(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة الديون"""
+    try:
+        if current_user.role in [UserRole.ADMIN, UserRole.ACCOUNTING, UserRole.GM]:
+            query = {}  # يمكن رؤية جميع الديون
+        elif current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            # المندوب يرى فقط ديون العيادات المخصصة له
+            assigned_clinics = await db.clinics.find({"assigned_rep_id": current_user.id}).to_list(1000)
+            clinic_ids = [clinic["id"] for clinic in assigned_clinics]
+            query = {"clinic_id": {"$in": clinic_ids}}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        debts = await db.debts.find(query, {"_id": 0}).sort("created_at", -1).limit(100).to_list(100)
+        
+        # تحسين البيانات وإضافة معلومات إضافية
+        for debt in debts:
+            # تحويل التواريخ
+            for date_field in ["created_at", "due_date", "settled_date", "last_payment_date"]:
+                if debt.get(date_field) and isinstance(debt[date_field], datetime):
+                    debt[date_field] = debt[date_field].isoformat()
+            
+            # إضافة معلومات العيادة
+            if debt.get("clinic_id"):
+                clinic = await db.clinics.find_one({"id": debt["clinic_id"]}, {"name": 1, "owner_name": 1})
+                if clinic:
+                    debt["clinic_name"] = clinic.get("name", "غير محدد")
+                    debt["clinic_owner"] = clinic.get("owner_name", "غير محدد")
+            
+            # إضافة معلومات المنشئ
+            if debt.get("created_by"):
+                creator = await db.users.find_one({"id": debt["created_by"]}, {"full_name": 1, "role": 1})
+                if creator:
+                    debt["created_by_name"] = creator.get("full_name", "غير محدد")
+                    debt["created_by_role"] = creator.get("role", "غير محدد")
+            
+            # حساب الأيام المتأخرة
+            if debt.get("due_date") and debt.get("status") == "outstanding":
+                try:
+                    due_date = datetime.fromisoformat(debt["due_date"].replace('Z', '+00:00')) if isinstance(debt["due_date"], str) else debt["due_date"]
+                    days_overdue = (datetime.utcnow() - due_date).days
+                    debt["days_overdue"] = max(0, days_overdue)
+                    debt["is_overdue"] = days_overdue > 0
+                except:
+                    debt["days_overdue"] = 0
+                    debt["is_overdue"] = False
+        
+        return debts
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching debts: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching debts")
+
+@api_router.get("/payments")
+async def get_payments(current_user: User = Depends(get_current_user)):
+    """الحصول على قائمة المدفوعات"""
+    try:
+        if current_user.role in [UserRole.ADMIN, UserRole.ACCOUNTING, UserRole.GM]:
+            query = {}
+        elif current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
+            # المندوب يرى فقط مدفوعات العيادات المخصصة له
+            assigned_clinics = await db.clinics.find({"assigned_rep_id": current_user.id}).to_list(1000)
+            clinic_ids = [clinic["id"] for clinic in assigned_clinics]
+            query = {"clinic_id": {"$in": clinic_ids}}
+        else:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        payments = await db.payments.find(query, {"_id": 0}).sort("payment_date", -1).limit(100).to_list(100)
+        
+        for payment in payments:
+            if "payment_date" in payment and isinstance(payment["payment_date"], datetime):
+                payment["payment_date"] = payment["payment_date"].isoformat()
+            if "created_at" in payment and isinstance(payment["created_at"], datetime):
+                payment["created_at"] = payment["created_at"].isoformat()
+        
+        return payments
+    
+    except Exception as e:
+        print(f"Error fetching payments: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching payments")
+
 # Visit Management Routes - نظام الزيارة المحسن
 @api_router.post("/visits")
 async def create_visit(visit_data: VisitCreate, current_user: User = Depends(get_current_user)):
