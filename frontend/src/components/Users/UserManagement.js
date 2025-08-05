@@ -128,6 +128,43 @@ const UserManagement = ({ user, language, isRTL }) => {
     }
   };
 
+  // Function to delete test/demo users
+  const handleDeleteTestUsers = async () => {
+    const testUsers = users.filter(user => 
+      user.username?.toLowerCase().includes('test') || 
+      user.username?.toLowerCase().includes('demo') ||
+      user.full_name?.includes('تجربة') ||
+      user.full_name?.toLowerCase().includes('test') ||
+      user.email?.toLowerCase().includes('test')
+    );
+
+    if (testUsers.length === 0) {
+      alert('لا توجد مستخدمين تجريبيين للحذف');
+      return;
+    }
+
+    if (window.confirm(`⚠️ سيتم حذف ${testUsers.length} مستخدم تجريبي نهائياً من النظام!\n\nهل أنت متأكد من المتابعة؟`)) {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const user of testUsers) {
+        try {
+          const token = localStorage.getItem('access_token');
+          await axios.delete(`${API}/users/${user.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Error deleting test user ${user.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      loadUsers(); // Refresh the users list
+      alert(`✅ تم حذف ${successCount} مستخدم تجريبي بنجاح${errorCount > 0 ? `\n❌ فشل حذف ${errorCount} مستخدم` : ''}`);
+    }
+  };
+
   const handleToggleSelection = (userId) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
