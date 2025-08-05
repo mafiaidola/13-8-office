@@ -27,9 +27,9 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Themes - ثيمات احترافية محسنة لراحة العين
+// Available Themes - ثيمات احترافية محسنة مع إصلاح مشاكل الدروب داون
 const AVAILABLE_THEMES = {
-  // ثيم زجاجي محسن - ألوان هادئة
+  // ثيم زجاجي محسن - ألوان هادئة مع دروب داون محسن
   glassy: {
     name: { ar: 'زجاجي', en: 'Glassy' },
     colors: {
@@ -38,9 +38,16 @@ const AVAILABLE_THEMES = {
       background: 'from-slate-900/95 via-blue-900/90 to-indigo-900/85',
       card: 'bg-white/8 backdrop-blur-xl border border-white/15',
       text: 'text-slate-100'
+    },
+    dropdown: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#1f2937',
+      hover: 'rgba(59, 130, 246, 0.1)',
+      border: 'rgba(255, 255, 255, 0.2)'
     }
   },
-  // ثيم داكن كلاسيكي
+  
+  // ثيم داكن كلاسيكي محسن
   dark: {
     name: { ar: 'داكن', en: 'Dark' },
     colors: {
@@ -49,9 +56,16 @@ const AVAILABLE_THEMES = {
       background: 'from-slate-900 via-slate-800 to-slate-900',
       card: 'bg-slate-800/90 border border-slate-600/40',
       text: 'text-slate-100'
+    },
+    dropdown: {
+      background: 'rgba(51, 65, 85, 0.98)',
+      text: '#f8fafc',
+      hover: 'rgba(148, 163, 184, 0.2)',
+      border: 'rgba(148, 163, 184, 0.3)'
     }
   },
-  // ثيم ذهبي أنيق - ألوان دافئة مريحة
+  
+  // ثيم ذهبي أنيق محسن
   golden: {
     name: { ar: 'ذهبي', en: 'Golden' },
     colors: {
@@ -60,9 +74,16 @@ const AVAILABLE_THEMES = {
       background: 'from-amber-50 via-orange-50/80 to-red-50/60',
       card: 'bg-white/95 border border-amber-200/60 shadow-amber-100/50',
       text: 'text-amber-900'
+    },
+    dropdown: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#92400e',
+      hover: 'rgba(217, 119, 6, 0.1)',
+      border: 'rgba(217, 119, 6, 0.2)'
     }
   },
-  // ثيم حديث متطور
+  
+  // ثيم حديث متطور محسن
   modern: {
     name: { ar: 'حديث', en: 'Modern' },
     colors: {
@@ -71,9 +92,16 @@ const AVAILABLE_THEMES = {
       background: 'from-slate-900 via-indigo-900/80 to-purple-900/70',
       card: 'bg-slate-800/85 border border-indigo-500/25',
       text: 'text-indigo-100'
+    },
+    dropdown: {
+      background: 'rgba(79, 70, 229, 0.95)',
+      text: '#e0e7ff',
+      hover: 'rgba(129, 140, 248, 0.2)',
+      border: 'rgba(129, 140, 248, 0.3)'
     }
   },
-  // ثيم بسيط نظيف
+  
+  // ثيم بسيط نظيف محسن
   minimal: {
     name: { ar: 'بسيط', en: 'Minimal' },
     colors: {
@@ -82,9 +110,16 @@ const AVAILABLE_THEMES = {
       background: 'from-gray-50 to-slate-50',
       card: 'bg-white border border-gray-200/80 shadow-gray-100/40',
       text: 'text-gray-800'
+    },
+    dropdown: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#374151',
+      hover: 'rgba(107, 114, 128, 0.1)',
+      border: 'rgba(107, 114, 128, 0.2)'
     }
   },
-  // ثيم مهني أنيق
+  
+  // ثيم مهني أنيق محسن
   professional: {
     name: { ar: 'مهني', en: 'Professional' },
     colors: {
@@ -93,9 +128,16 @@ const AVAILABLE_THEMES = {
       background: 'from-slate-50 via-gray-50 to-slate-100',
       card: 'bg-white border border-slate-200/70 shadow-slate-100/50',
       text: 'text-slate-800'
+    },
+    dropdown: {
+      background: 'rgba(255, 255, 255, 0.98)',
+      text: '#334155',
+      hover: 'rgba(71, 85, 105, 0.1)',
+      border: 'rgba(71, 85, 105, 0.2)'
     }
   },
-  // ثيم نيون محسن - ألوان حيوية لكن مريحة
+  
+  // ثيم كوني محسن
   cosmic: {
     name: { ar: 'كوني', en: 'Cosmic' },
     colors: {
