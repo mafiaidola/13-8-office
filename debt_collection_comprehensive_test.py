@@ -843,7 +843,7 @@ class DebtCollectionTester:
             "Authentication": ["Admin Authentication"],
             "Basic Debt APIs": ["GET /api/debts (Admin View)"],
             "Collection APIs": ["GET /api/payments (Collection Records)", "POST /api/payments/process (Create Collection)", "Collection Statistics"],
-            "Invoice Integration": ["Order to Debt Conversion", "Verify Debt Record Creation", "Debt-Order-Clinic Linking"],
+            "Invoice Integration": ["Order to Debt Conversion", "Verify Existing Debt System", "Verify Debt Record Creation", "Debt-Order-Clinic Linking"],
             "Permission System": ["Admin Debt Permissions", "Accounting Permissions"],
             "Export & Print": ["GET /api/debts/{debt_id}/export/pdf", "GET /api/debts/{debt_id}/print"]
         }
