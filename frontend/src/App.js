@@ -146,6 +146,12 @@ const AVAILABLE_THEMES = {
       background: 'from-violet-900/90 via-purple-900/85 to-fuchsia-900/80',
       card: 'bg-violet-500/10 backdrop-blur-lg border border-violet-400/25',
       text: 'text-violet-100'
+    },
+    dropdown: {
+      background: 'rgba(124, 58, 237, 0.95)',
+      text: '#ede9fe',
+      hover: 'rgba(196, 181, 253, 0.2)',
+      border: 'rgba(196, 181, 253, 0.3)'
     }
   }
 };
