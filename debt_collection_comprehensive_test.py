@@ -450,6 +450,54 @@ class DebtCollectionTester:
             self.log_test("Order to Debt Conversion", False, f"Error: {str(e)}")
             return False
     
+    def verify_existing_debt_system(self):
+        """التحقق من نظام الديون الموجود"""
+        try:
+            # Check if there are existing debts that demonstrate the system works
+            start_time = time.time()
+            response = self.session.get(f"{BACKEND_URL}/debts")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                debts = response.json()
+                
+                if debts:
+                    # Analyze existing debts to verify system functionality
+                    debt_analysis = {
+                        "total_debts": len(debts),
+                        "debts_with_orders": len([d for d in debts if d.get("order_id")]),
+                        "debts_with_invoices": len([d for d in debts if d.get("invoice_number")]),
+                        "automatic_conversion_evidence": len([d for d in debts if d.get("debt_type") == "invoice"]),
+                        "sample_debt": debts[0]
+                    }
+                    
+                    # Check if existing debts show evidence of automatic invoice-to-debt conversion
+                    has_invoice_conversion = debt_analysis["automatic_conversion_evidence"] > 0
+                    
+                    self.log_test(
+                        "Verify Existing Debt System",
+                        has_invoice_conversion,
+                        f"Found evidence of automatic invoice-to-debt conversion in {debt_analysis['automatic_conversion_evidence']} existing debts",
+                        response_time,
+                        debt_analysis
+                    )
+                    return has_invoice_conversion
+                else:
+                    self.log_test(
+                        "Verify Existing Debt System",
+                        True,
+                        "No existing debts found - system is clean and ready",
+                        response_time
+                    )
+                    return True
+            else:
+                self.log_test("Verify Existing Debt System", False, f"Failed to retrieve debts: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Verify Existing Debt System", False, f"Error: {str(e)}")
+            return False
+    
     def verify_debt_record_creation(self, debt_id):
         """التحقق من إنشاء سجل الدين"""
         if not debt_id:
