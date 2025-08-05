@@ -234,6 +234,43 @@ const ProductManagement = ({ user, language, isRTL }) => {
     }
   };
 
+  // Function to delete test/demo products
+  const handleDeleteTestProducts = async () => {
+    const testProducts = products.filter(product => 
+      product.name?.toLowerCase().includes('test') || 
+      product.name?.toLowerCase().includes('demo') ||
+      product.name?.includes('تجربة') ||
+      product.description?.toLowerCase().includes('test') ||
+      product.category?.toLowerCase().includes('test')
+    );
+
+    if (testProducts.length === 0) {
+      alert('لا توجد منتجات تجريبية للحذف');
+      return;
+    }
+
+    if (window.confirm(`⚠️ سيتم حذف ${testProducts.length} منتج تجريبي نهائياً من النظام!\n\nهل أنت متأكد من المتابعة؟`)) {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const product of testProducts) {
+        try {
+          const token = localStorage.getItem('access_token');
+          await axios.delete(`${API}/products/${product.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Error deleting test product ${product.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      fetchProducts(); // Refresh the products list
+      alert(`✅ تم حذف ${successCount} منتج تجريبي بنجاح${errorCount > 0 ? `\n❌ فشل حذف ${errorCount} منتج` : ''}`);
+    }
+  };
+
   // Filter products
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
