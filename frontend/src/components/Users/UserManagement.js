@@ -482,6 +482,24 @@ const UserManagement = ({ user, language, isRTL }) => {
           </div>
         </div>
       )}
+
+      {/* Comprehensive User Modal - مودال شامل لتفاصيل وتعديل المستخدم */}
+      {showComprehensiveModal && selectedUser && (
+        <ComprehensiveUserModal
+          user={selectedUser}
+          mode={comprehensiveModalMode}
+          onClose={() => {
+            setShowComprehensiveModal(false);
+            setSelectedUser(null);
+            setComprehensiveModalMode('view');
+          }}
+          onUserUpdated={() => {
+            loadUsers();
+            console.log('✅ User updated successfully, reloading users list');
+          }}
+          language={language}
+        />
+      )}
     </div>
   );
 };
