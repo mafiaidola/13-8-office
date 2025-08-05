@@ -576,6 +576,16 @@ class BackendTester:
             pass
         return []
     
+    def get_available_lines(self):
+        """الحصول على الخطوط المتاحة"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/lines")
+            if response.status_code == 200:
+                return response.json()
+        except:
+            pass
+        return []
+    
     def get_available_debts(self):
         """الحصول على الديون المتاحة"""
         try:
