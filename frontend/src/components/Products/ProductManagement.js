@@ -335,17 +335,28 @@ const ProductManagement = ({ user, language, isRTL }) => {
             </div>
           </div>
           
-          <button
-            onClick={() => {
-              setSelectedProduct(null);
-              setShowProductModal(true);
-              console.log('🔧 Opening product modal for new product');
-            }}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
-          >
-            <span>➕</span>
-            إضافة منتج جديد
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setSelectedProduct(null);
+                setShowProductModal(true);
+                console.log('🔧 Opening product modal for new product');
+              }}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+            >
+              <span>➕</span>
+              إضافة منتج جديد
+            </button>
+            
+            <button
+              onClick={handleDeleteTestProducts}
+              className="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium"
+              title="حذف جميع المنتجات التجريبية"
+            >
+              <span>🗑️</span>
+              حذف المنتجات التجريبية
+            </button>
+          </div>
         </div>
       </div>
 
