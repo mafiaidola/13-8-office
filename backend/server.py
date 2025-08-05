@@ -530,7 +530,7 @@ async def get_comprehensive_user_profile(user_id: str, current_user: User = Depe
             }
         
         # المرؤوسين المباشرين
-        subordinates = await db.users.find({"managed_by": user_id}, {"full_name": 1, "role": 1, "email": 1}).to_list(50)
+        subordinates = await db.users.find({"managed_by": user_id}, {"id": 1, "full_name": 1, "role": 1, "email": 1}).to_list(50)
         comprehensive_data["direct_reports"] = [
             {
                 "id": sub["id"],
