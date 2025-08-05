@@ -1,697 +1,944 @@
+// Comprehensive Debt Collection Management System - نظام إدارة الديون والتحصيل الشامل
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
 
 const DebtCollectionManagement = ({ user, language = 'ar', isRTL = true }) => {
   const [activeTab, setActiveTab] = useState('debts');
   const [debts, setDebts] = useState([]);
   const [collections, setCollections] = useState([]);
-  const [summary, setSummary] = useState({});
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDebtDetails, setShowDebtDetails] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    payment_amount: '',
+    payment_method: 'cash',
+    notes: ''
+  });
   const [filters, setFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
     status: 'all',
-    priority: 'all',
+    clinic: '',
+    rep: '',
     search: ''
   });
+  const [debtStats, setDebtStats] = useState({
+    total_outstanding: 0,
+    total_collected: 0,
+    overdue_debts: 0,
+    collection_rate: 0
+  });
 
-  // Backend URL from environment
-  const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+
+  // Check permissions
+  const canManageDebts = ['admin', 'accounting', 'gm'].includes(user?.role);
+  const canViewAllDebts = ['admin', 'accounting', 'gm', 'manager'].includes(user?.role);
 
   useEffect(() => {
-    fetchDebts();
-    fetchCollections();
-    fetchSummary();
-  }, []);
+    if (canViewAllDebts) {
+      loadDebtsData();
+      loadCollectionsData();
+      loadInvoicesData();
+      calculateDebtStats();
+    }
+  }, [user, canViewAllDebts, filters]);
 
-  const fetchDebts = async () => {
+  // Load debts data
+  const loadDebtsData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/debts/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      setLoading(true);
+      const token = localStorage.getItem('access_token');
+      
+      const params = new URLSearchParams();
+      if (filters.dateFrom) params.append('date_from', filters.dateFrom);
+      if (filters.dateTo) params.append('date_to', filters.dateTo);
+      if (filters.status !== 'all') params.append('status', filters.status);
+      if (filters.clinic) params.append('clinic_id', filters.clinic);
+
+      const response = await axios.get(`${API}/debts?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setDebts(data);
+      if (response.data && Array.isArray(response.data)) {
+        setDebts(response.data);
+        console.log('✅ Debts loaded:', response.data.length);
       } else {
-        console.error('Failed to fetch debts');
-        // Mock data for testing
-        setDebts([
-          {
-            id: '1',
-            debt_number: 'DEBT-20250102-ABC12345',
-            clinic_name: 'عيادة د. أحمد محمد',
-            doctor_name: 'د. أحمد محمد',
-            medical_rep_name: 'محمد علي',
-            original_amount: 15000,
-            outstanding_amount: 12000,
-            paid_amount: 3000,
-            status: 'partial',
-            priority: 'high',
-            debt_date: '2025-01-15',
-            due_date: '2025-02-15',
-            created_at: '2025-01-15T10:00:00Z'
-          },
-          {
-            id: '2',
-            debt_number: 'DEBT-20250102-XYZ67890',
-            clinic_name: 'مركز النور الطبي',
-            doctor_name: 'د. فاطمة حسن',
-            medical_rep_name: 'أحمد محمود',
-            original_amount: 8500,
-            outstanding_amount: 8500,
-            paid_amount: 0,
-            status: 'pending',
-            priority: 'medium',
-            debt_date: '2025-01-10',
-            due_date: '2025-02-10',
-            created_at: '2025-01-10T09:00:00Z'
-          },
-          {
-            id: '3',
-            debt_number: 'DEBT-20250101-DEF54321',
-            clinic_name: 'عيادة الشفاء',
-            doctor_name: 'د. محمد أحمد',
-            medical_rep_name: 'سارة علي',
-            original_amount: 5000,
-            outstanding_amount: 0,
-            paid_amount: 5000,
-            status: 'paid',
-            priority: 'low',
-            debt_date: '2024-12-20',
-            due_date: '2025-01-20',
-            created_at: '2024-12-20T14:00:00Z'
-          }
-        ]);
+        setDebts([]);
       }
     } catch (error) {
-      console.error('Error fetching debts:', error);
-      // Set mock data on error
+      console.error('❌ Error loading debts:', error);
       setDebts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCollections = async () => {
+  // Load collections data
+  const loadCollectionsData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/debts/collections/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const token = localStorage.getItem('access_token');
+      
+      const response = await axios.get(`${API}/payments`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setCollections(data);
+      if (response.data && Array.isArray(response.data)) {
+        setCollections(response.data);
+        console.log('✅ Collections loaded:', response.data.length);
       } else {
-        // Mock collections data
-        setCollections([
-          {
-            id: '1',
-            debt_number: 'DEBT-20250102-ABC12345',
-            collection_amount: 3000,
-            collection_method: 'cash',
-            collection_status: 'successful',
-            collector_name: 'محمد علي',
-            collection_date: '2025-01-20',
-            created_at: '2025-01-20T11:00:00Z'
-          }
-        ]);
+        setCollections([]);
       }
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      console.error('❌ Error loading collections:', error);
       setCollections([]);
     }
   };
 
-  const fetchSummary = async () => {
+  // Load invoices data
+  const loadInvoicesData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/debts/summary/statistics`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const token = localStorage.getItem('access_token');
+      
+      const response = await axios.get(`${API}/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setSummary(data);
+      if (response.data && Array.isArray(response.data)) {
+        setInvoices(response.data);
+        console.log('✅ Invoices loaded:', response.data.length);
       } else {
-        // Mock summary data
-        setSummary({
-          total_debts: 3,
-          total_amount: 28500,
-          paid_amount: 8000,
-          outstanding_amount: 20500,
-          overdue_amount: 5000,
-          pending_count: 1,
-          partial_count: 1,
-          paid_count: 1,
-          overdue_count: 0,
-          high_priority_count: 1,
-          medium_priority_count: 1,
-          low_priority_count: 1
-        });
+        setInvoices([]);
       }
     } catch (error) {
-      console.error('Error fetching summary:', error);
-      setSummary({});
+      console.error('❌ Error loading invoices:', error);
+      setInvoices([]);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'paid': return 'text-green-600 bg-green-100';
-      case 'partial': return 'text-yellow-600 bg-yellow-100';
-      case 'pending': return 'text-blue-600 bg-blue-100';
-      case 'overdue': return 'text-red-600 bg-red-100';
-      case 'disputed': return 'text-purple-600 bg-purple-100';
-      default: return 'text-gray-600 bg-gray-100';
+  // Calculate debt statistics
+  const calculateDebtStats = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      // Get aggregated debt statistics
+      const debtsResponse = await axios.get(`${API}/debts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const paymentsResponse = await axios.get(`${API}/payments`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const allDebts = debtsResponse.data || [];
+      const allPayments = paymentsResponse.data || [];
+
+      const stats = {
+        total_outstanding: allDebts
+          .filter(debt => debt.status === 'outstanding')
+          .reduce((sum, debt) => sum + (debt.remaining_amount || 0), 0),
+        
+        total_collected: allPayments
+          .reduce((sum, payment) => sum + (payment.payment_amount || 0), 0),
+        
+        overdue_debts: allDebts
+          .filter(debt => {
+            if (debt.status !== 'outstanding' || !debt.due_date) return false;
+            const dueDate = new Date(debt.due_date);
+            return dueDate < new Date();
+          }).length,
+          
+        collection_rate: 0
+      };
+
+      const totalDebtAmount = allDebts.reduce((sum, debt) => sum + (debt.original_amount || 0), 0);
+      stats.collection_rate = totalDebtAmount > 0 ? (stats.total_collected / totalDebtAmount) * 100 : 0;
+
+      setDebtStats(stats);
+      console.log('✅ Debt statistics calculated:', stats);
+
+    } catch (error) {
+      console.error('❌ Error calculating debt stats:', error);
     }
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
-      'paid': { ar: 'مدفوع', en: 'Paid' },
-      'partial': { ar: 'جزئي', en: 'Partial' },
-      'pending': { ar: 'معلق', en: 'Pending' },
-      'overdue': { ar: 'متأخر', en: 'Overdue' },
-      'disputed': { ar: 'متنازع', en: 'Disputed' }
-    };
-    return statusMap[status] ? statusMap[status][language] : status;
-  };
+  // Filter debts based on search and filters
+  const filteredDebts = debts.filter(debt => {
+    const matchesSearch = !filters.search || 
+      debt.clinic_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      debt.invoice_number?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      debt.created_by_name?.toLowerCase().includes(filters.search.toLowerCase());
+    
+    const matchesStatus = filters.status === 'all' || debt.status === filters.status;
+    
+    return matchesSearch && matchesStatus;
+  });
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'urgent': return 'text-red-800 bg-red-200';
-      case 'medium': return 'text-orange-600 bg-orange-100';
-      case 'low': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
+  // Filter collections
+  const filteredCollections = collections.filter(collection => {
+    const matchesSearch = !filters.search || 
+      collection.processed_by_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      collection.debt_id?.toLowerCase().includes(filters.search.toLowerCase());
+    
+    return matchesSearch;
+  });
+
+  // Handle payment processing
+  const handleProcessPayment = async () => {
+    if (!selectedDebt || !paymentForm.payment_amount) {
+      alert('يرجى إدخال مبلغ الدفع');
+      return;
+    }
+
+    const paymentAmount = parseFloat(paymentForm.payment_amount);
+    if (paymentAmount <= 0 || paymentAmount > (selectedDebt.remaining_amount || 0)) {
+      alert('مبلغ الدفع غير صحيح');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      const paymentData = {
+        debt_id: selectedDebt.id,
+        payment_amount: paymentAmount,
+        payment_method: paymentForm.payment_method,
+        notes: paymentForm.notes
+      };
+
+      const response = await axios.post(`${API}/payments/process`, paymentData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        alert('✅ تم معالجة الدفع بنجاح');
+        setShowPaymentModal(false);
+        setPaymentForm({ payment_amount: '', payment_method: 'cash', notes: '' });
+        setSelectedDebt(null);
+        
+        // Reload data
+        loadDebtsData();
+        loadCollectionsData();
+        calculateDebtStats();
+      } else {
+        throw new Error(response.data.message || 'فشل في معالجة الدفع');
+      }
+    } catch (error) {
+      console.error('❌ Error processing payment:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'حدث خطأ أثناء معالجة الدفع';
+      alert(`❌ خطأ في معالجة الدفع: ${errorMessage}`);
     }
   };
 
-  const getPriorityText = (priority) => {
-    const priorityMap = {
-      'high': { ar: 'عالي', en: 'High' },
-      'urgent': { ar: 'عاجل', en: 'Urgent' },
-      'medium': { ar: 'متوسط', en: 'Medium' },
-      'low': { ar: 'منخفض', en: 'Low' }
-    };
-    return priorityMap[priority] ? priorityMap[priority][language] : priority;
+  // Export functions
+  const exportToPDF = (data, filename, title) => {
+    try {
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      
+      pdf.setFontSize(16);
+      pdf.text(title, 20, 20);
+      
+      pdf.setFontSize(12);
+      pdf.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')}`, 20, 30);
+      pdf.text(`المستخدم: ${user?.full_name || 'غير محدد'}`, 20, 40);
+      
+      let yPosition = 60;
+      pdf.setFontSize(10);
+      
+      data.slice(0, 15).forEach((item, index) => {
+        let text = '';
+        if (activeTab === 'debts') {
+          text = `${index + 1}. عيادة: ${item.clinic_name || 'غير محدد'} | فاتورة: ${item.invoice_number || 'غير محدد'} | المبلغ: ${formatCurrency(item.remaining_amount)} | الحالة: ${getStatusLabel(item.status)}`;
+        } else if (activeTab === 'collections') {
+          text = `${index + 1}. المبلغ: ${formatCurrency(item.payment_amount)} | الطريقة: ${getPaymentMethodLabel(item.payment_method)} | التاريخ: ${formatDate(item.payment_date)}`;
+        }
+        
+        pdf.text(text, 20, yPosition);
+        yPosition += 8;
+        
+        if (yPosition > 180) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+      });
+      
+      pdf.save(`${filename}.pdf`);
+      console.log('✅ PDF exported successfully');
+    } catch (error) {
+      console.error('❌ Error exporting PDF:', error);
+      alert('حدث خطأ أثناء تصدير PDF');
+    }
   };
 
+  const exportToExcel = (data, filename, sheetName) => {
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      console.log('✅ Excel exported successfully');
+    } catch (error) {
+      console.error('❌ Error exporting Excel:', error);
+      alert('حدث خطأ أثناء تصدير Excel');
+    }
+  };
+
+  // Utility functions
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-EG' : 'en-US', {
+    return new Intl.NumberFormat('ar-EG', {
       style: 'currency',
       currency: 'EGP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+      minimumFractionDigits: 2
+    }).format(amount || 0);
+  };
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('ar-EG').format(num || 0);
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US');
+    if (!dateString) return 'غير محدد';
+    return new Date(dateString).toLocaleDateString('ar-EG');
   };
 
-  const filteredDebts = debts.filter(debt => {
-    const matchesStatus = filters.status === 'all' || debt.status === filters.status;
-    const matchesPriority = filters.priority === 'all' || debt.priority === filters.priority;
-    const matchesSearch = !filters.search || 
-      debt.clinic_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      debt.doctor_name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      debt.debt_number.toLowerCase().includes(filters.search.toLowerCase());
-    
-    return matchesStatus && matchesPriority && matchesSearch;
-  });
-
-  const handlePrintDebt = async (debtId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/debts/${debtId}/print`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Print data prepared:', data);
-        // In a real implementation, this would trigger the print dialog
-        alert(language === 'ar' ? 'تم تحضير بيانات الطباعة' : 'Print data prepared');
-      }
-    } catch (error) {
-      console.error('Error preparing print:', error);
-    }
+  const getStatusColor = (status) => {
+    const colors = {
+      'outstanding': 'bg-red-100 text-red-800',
+      'settled': 'bg-green-100 text-green-800',
+      'partially_paid': 'bg-yellow-100 text-yellow-800',
+      'overdue': 'bg-orange-100 text-orange-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleExportPDF = async (debtId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/debts/${debtId}/export/pdf`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('PDF data prepared:', data);
-        // In a real implementation, this would download the PDF
-        alert(language === 'ar' ? 'تم تحضير ملف PDF' : 'PDF prepared');
-      }
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-    }
+  const getStatusLabel = (status) => {
+    const labels = {
+      'outstanding': 'مستحق',
+      'settled': 'مسدد',
+      'partially_paid': 'مسدد جزئياً',
+      'overdue': 'متأخر'
+    };
+    return labels[status] || status;
   };
 
-  if (loading) {
+  const getPaymentMethodLabel = (method) => {
+    const labels = {
+      'cash': 'نقدي',
+      'check': 'شيك',
+      'bank_transfer': 'تحويل بنكي',
+      'card': 'بطاقة ائتمان'
+    };
+    return labels[method] || method;
+  };
+
+  const getDaysOverdue = (dueDate) => {
+    if (!dueDate) return 0;
+    const due = new Date(dueDate);
+    const today = new Date();
+    const diffTime = today - due;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
+  if (!canViewAllDebts) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="p-6 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-8">
+          <h2 className="text-xl font-bold text-red-800 mb-4">🚫 وصول محظور</h2>
+          <p className="text-red-700">هذا القسم متاح للأدمن والمحاسبين والمديرين فقط</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="p-6 max-w-7xl mx-auto">
+      
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {language === 'ar' ? 'إدارة الديون والتحصيل' : 'Debt & Collection Management'}
-        </h1>
-        <p className="text-gray-600">
-          {language === 'ar' 
-            ? 'إدارة شاملة للديون والمتابعة مع إمكانيات الطباعة والتصدير' 
-            : 'Comprehensive debt management and follow-up with print and export capabilities'}
-        </p>
+      <div className="mb-6 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">💰 إدارة الديون والتحصيل</h1>
+            <p className="text-red-100">نظام شامل لإدارة المديونيات ومعالجة المدفوعات</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                loadDebtsData();
+                loadCollectionsData();
+                calculateDebtStats();
+              }}
+              disabled={loading}
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              <span className={loading ? 'animate-spin' : ''}>🔄</span>
+              تحديث البيانات
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+        <div className="bg-white rounded-xl shadow-lg border border-red-100 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">
-                {language === 'ar' ? 'إجمالي الديون' : 'Total Debts'}
-              </p>
-              <p className="text-2xl font-bold">{summary.total_debts || 0}</p>
+              <p className="text-sm font-medium text-red-600">الديون المستحقة</p>
+              <p className="text-2xl font-bold text-red-700">{formatCurrency(debtStats.total_outstanding)}</p>
             </div>
-            <div className="p-3 bg-blue-400 bg-opacity-30 rounded-full">
-              <span className="text-2xl">💳</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm">
-                {language === 'ar' ? 'المبلغ المحصل' : 'Collected Amount'}
-              </p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.paid_amount || 0)}</p>
-            </div>
-            <div className="p-3 bg-green-400 bg-opacity-30 rounded-full">
-              <span className="text-2xl">💰</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-100 text-sm">
-                {language === 'ar' ? 'المبلغ المستحق' : 'Outstanding Amount'}
-              </p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.outstanding_amount || 0)}</p>
-            </div>
-            <div className="p-3 bg-orange-400 bg-opacity-30 rounded-full">
-              <span className="text-2xl">⏳</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-100 text-sm">
-                {language === 'ar' ? 'المتأخرات' : 'Overdue Amount'}
-              </p>
-              <p className="text-2xl font-bold">{formatCurrency(summary.overdue_amount || 0)}</p>
-            </div>
-            <div className="p-3 bg-red-400 bg-opacity-30 rounded-full">
+            <div className="p-3 bg-red-100 rounded-full">
               <span className="text-2xl">⚠️</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-600">إجمالي المحصل</p>
+              <p className="text-2xl font-bold text-green-700">{formatCurrency(debtStats.total_collected)}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <span className="text-2xl">💵</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-orange-600">ديون متأخرة</p>
+              <p className="text-2xl font-bold text-orange-700">{formatNumber(debtStats.overdue_debts)}</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-full">
+              <span className="text-2xl">⏰</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-600">معدل التحصيل</p>
+              <p className="text-2xl font-bold text-blue-700">{debtStats.collection_rate.toFixed(1)}%</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <span className="text-2xl">📊</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6">
-        <div className="flex flex-wrap border-b">
-          <button
-            onClick={() => setActiveTab('debts')}
-            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors duration-200 ${
-              activeTab === 'debts'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            {language === 'ar' ? 'قائمة الديون' : 'Debts List'}
-          </button>
-          <button
-            onClick={() => setActiveTab('collections')}
-            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors duration-200 ${
-              activeTab === 'collections'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            {language === 'ar' ? 'سجل التحصيل' : 'Collections Log'}
-          </button>
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors duration-200 ${
-              activeTab === 'reports'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            {language === 'ar' ? 'التقارير' : 'Reports'}
-          </button>
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          {[
+            { id: 'debts', name: 'إدارة الديون', icon: '💳', count: filteredDebts.length },
+            { id: 'collections', name: 'سجل التحصيل', icon: '💰', count: filteredCollections.length },
+            { id: 'invoices', name: 'الفواتير المرتبطة', icon: '📄', count: invoices.length }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                activeTab === tab.id
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.name}
+              <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <h3 className="font-semibold text-gray-800 mb-4">🔍 فلاتر البحث والتصفية</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">البحث</label>
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              placeholder="ابحث بالعيادة أو الفاتورة..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">من تاريخ</label>
+            <input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">إلى تاريخ</label>
+            <input
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="all">جميع الحالات</option>
+              <option value="outstanding">مستحق</option>
+              <option value="settled">مسدد</option>
+              <option value="partially_paid">مسدد جزئياً</option>
+              <option value="overdue">متأخر</option>
+            </select>
+          </div>
+          
+          <div className="flex items-end gap-2">
+            <button
+              onClick={() => setFilters({ dateFrom: '', dateTo: '', status: 'all', clinic: '', rep: '', search: '' })}
+              className="text-gray-600 hover:text-gray-800 text-sm px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              🔄 مسح
+            </button>
+            
+            <button
+              onClick={() => {
+                const data = activeTab === 'debts' ? filteredDebts : filteredCollections;
+                const title = activeTab === 'debts' ? 'تقرير الديون' : 'تقرير التحصيل';
+                const filename = activeTab === 'debts' ? 'debts-report' : 'collections-report';
+                exportToPDF(data, filename, title);
+              }}
+              className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
+            >
+              📄 PDF
+            </button>
+            
+            <button
+              onClick={() => {
+                const data = activeTab === 'debts' ? filteredDebts : filteredCollections;
+                const filename = activeTab === 'debts' ? 'debts-data' : 'collections-data';
+                const sheetName = activeTab === 'debts' ? 'الديون' : 'التحصيل';
+                exportToExcel(data, filename, sheetName);
+              }}
+              className="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1"
+            >
+              📊 Excel
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Debts Tab */}
-      {activeTab === 'debts' && (
-        <div>
-          {/* Filters and Actions */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex items-center gap-4">
-                <select
-                  value={filters.status}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">{language === 'ar' ? 'جميع الحالات' : 'All Status'}</option>
-                  <option value="pending">{language === 'ar' ? 'معلق' : 'Pending'}</option>
-                  <option value="partial">{language === 'ar' ? 'جزئي' : 'Partial'}</option>
-                  <option value="paid">{language === 'ar' ? 'مدفوع' : 'Paid'}</option>
-                  <option value="overdue">{language === 'ar' ? 'متأخر' : 'Overdue'}</option>
-                </select>
-
-                <select
-                  value={filters.priority}
-                  onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">{language === 'ar' ? 'جميع الأولويات' : 'All Priorities'}</option>
-                  <option value="high">{language === 'ar' ? 'عالي' : 'High'}</option>
-                  <option value="medium">{language === 'ar' ? 'متوسط' : 'Medium'}</option>
-                  <option value="low">{language === 'ar' ? 'منخفض' : 'Low'}</option>
-                </select>
-              </div>
-
-              <input
-                type="text"
-                placeholder={language === 'ar' ? 'البحث في الديون...' : 'Search debts...'}
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {(user?.role === 'admin' || user?.role === 'accountant') && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
-              >
-                <span>+</span>
-                {language === 'ar' ? 'إضافة دين جديد' : 'Add New Debt'}
-              </button>
-            )}
+      {/* Loading */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="bg-white rounded-lg shadow-lg p-6 flex items-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+            <span className="text-gray-700">جاري تحميل بيانات الديون والتحصيل...</span>
           </div>
+        </div>
+      )}
 
-          {/* Debts Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'رقم الدين' : 'Debt Number'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'العيادة' : 'Clinic'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'المندوب' : 'Medical Rep'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'المبلغ الأصلي' : 'Original Amount'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'المبلغ المستحق' : 'Outstanding'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'الحالة' : 'Status'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'الأولوية' : 'Priority'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'الاستحقاق' : 'Due Date'}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {language === 'ar' ? 'الإجراءات' : 'Actions'}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredDebts.map((debt) => (
-                    <tr key={debt.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {debt.debt_number}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{debt.clinic_name}</div>
-                          <div className="text-sm text-gray-500">{debt.doctor_name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {debt.medical_rep_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {formatCurrency(debt.original_amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600">
-                        {formatCurrency(debt.outstanding_amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(debt.status)}`}>
-                          {getStatusText(debt.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(debt.priority)}`}>
-                          {getPriorityText(debt.priority)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(debt.due_date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedDebt(debt);
-                              setShowDetailsModal(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                            title={language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
-                          >
-                            👁️
-                          </button>
-                          
-                          {debt.status !== 'paid' && (
-                            <button
-                              onClick={() => {
-                                setSelectedDebt(debt);
-                                setShowCollectionModal(true);
-                              }}
-                              className="text-green-600 hover:text-green-800 transition-colors duration-200"
-                              title={language === 'ar' ? 'تسجيل تحصيل' : 'Record Collection'}
-                            >
-                              💰
-                            </button>
-                          )}
-
-                          <button
-                            onClick={() => handlePrintDebt(debt.id)}
-                            className="text-purple-600 hover:text-purple-800 transition-colors duration-200"
-                            title={language === 'ar' ? 'طباعة' : 'Print'}
-                          >
-                            🖨️
-                          </button>
-
-                          <button
-                            onClick={() => handleExportPDF(debt.id)}
-                            className="text-red-600 hover:text-red-800 transition-colors duration-200"
-                            title={language === 'ar' ? 'تصدير PDF' : 'Export PDF'}
-                          >
-                            📄
-                          </button>
-                        </div>
-                      </td>
+      {/* Content */}
+      {!loading && (
+        <>
+          {/* Debts Tab */}
+          {activeTab === 'debts' && (
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <span>💳</span>
+                  إدارة الديون
+                  <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm">
+                    {filteredDebts.length} دين
+                  </span>
+                </h3>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العيادة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الفاتورة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ المتبقي</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الاستحقاق</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredDebts.length > 0 ? (
+                      filteredDebts.map((debt) => (
+                        <tr key={debt.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">{debt.clinic_name || 'غير محدد'}</div>
+                            <div className="text-sm text-gray-500">{debt.clinic_owner || 'غير محدد'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">{debt.invoice_number || 'غير محدد'}</div>
+                            <div className="text-sm text-gray-500">إنشاء: {debt.created_by_name || 'غير محدد'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-bold text-red-600">{formatCurrency(debt.remaining_amount)}</div>
+                            <div className="text-sm text-gray-500">من أصل: {formatCurrency(debt.original_amount)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div>{formatDate(debt.due_date)}</div>
+                            {debt.status === 'outstanding' && debt.due_date && getDaysOverdue(debt.due_date) > 0 && (
+                              <div className="text-red-500 text-xs">
+                                متأخر {getDaysOverdue(debt.due_date)} يوم
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(debt.status)}`}>
+                              {getStatusLabel(debt.status)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center gap-2">
+                              {canManageDebts && debt.status === 'outstanding' && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedDebt(debt);
+                                    setShowPaymentModal(true);
+                                  }}
+                                  className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded-lg transition-colors"
+                                >
+                                  💰 تحصيل
+                                </button>
+                              )}
+                              
+                              <button
+                                onClick={() => {
+                                  setSelectedDebt(debt);
+                                  setShowDebtDetails(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
+                              >
+                                📋 التفاصيل
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          لا توجد ديون متاحة
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
+          )}
 
-            {filteredDebts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">
-                  {language === 'ar' ? 'لا توجد ديون' : 'No debts found'}
+          {/* Collections Tab */}
+          {activeTab === 'collections' && (
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <span>💰</span>
+                  سجل التحصيل
+                  <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">
+                    {filteredCollections.length} عملية
+                  </span>
+                </h3>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">طريقة الدفع</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الدفع</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">معالج بواسطة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الدين</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الملاحظات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredCollections.length > 0 ? (
+                      filteredCollections.map((collection) => (
+                        <tr key={collection.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-bold text-green-600">{formatCurrency(collection.payment_amount)}</div>
+                            <div className="text-sm text-gray-500">متبقي: {formatCurrency(collection.remaining_debt_after_payment)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              {getPaymentMethodLabel(collection.payment_method)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(collection.payment_date)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">{collection.processed_by_name || 'غير محدد'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                            {collection.debt_id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {collection.payment_notes || 'لا توجد ملاحظات'}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          لا توجد عمليات تحصيل متاحة
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Invoices Tab */}
+          {activeTab === 'invoices' && (
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <span>📄</span>
+                  الفواتير المرتبطة
+                  <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">
+                    {invoices.length} فاتورة
+                  </span>
+                </h3>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الطلب</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العيادة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المندوب</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي المبلغ</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">حالة الدفع</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإنشاء</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {invoices.length > 0 ? (
+                      invoices.map((invoice) => (
+                        <tr key={invoice.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">{invoice.order_number || invoice.id}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-medium text-gray-900">{invoice.clinic_name || 'غير محدد'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{invoice.medical_rep_name || 'غير محدد'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-bold text-blue-600">{formatCurrency(invoice.total_amount)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              invoice.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 
+                              invoice.payment_status === 'partially_paid' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {invoice.payment_status === 'paid' ? 'مدفوع' : 
+                               invoice.payment_status === 'partially_paid' ? 'مدفوع جزئياً' : 'غير مدفوع'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatDate(invoice.created_at)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          لا توجد فواتير متاحة
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Payment Processing Modal */}
+      {showPaymentModal && selectedDebt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-xl">
+              <h3 className="text-lg font-bold">💰 معالجة الدفع</h3>
+              <p className="text-green-100">عيادة: {selectedDebt.clinic_name}</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">المبلغ المتبقي: <span className="font-bold text-red-600">{formatCurrency(selectedDebt.remaining_amount)}</span></p>
+                <p className="text-sm text-gray-600">فاتورة رقم: {selectedDebt.invoice_number}</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">مبلغ الدفع</label>
+                  <input
+                    type="number"
+                    value={paymentForm.payment_amount}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, payment_amount: e.target.value }))}
+                    max={selectedDebt.remaining_amount}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="أدخل مبلغ الدفع"
+                  />
                 </div>
-                <div className="text-gray-400 text-sm">
-                  {language === 'ar' ? 'قم بتعديل المرشحات أو إضافة ديون جديدة' : 'Adjust filters or add new debts'}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع</label>
+                  <select
+                    value={paymentForm.payment_method}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, payment_method: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="cash">نقدي</option>
+                    <option value="check">شيك</option>
+                    <option value="bank_transfer">تحويل بنكي</option>
+                    <option value="card">بطاقة ائتمان</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
+                  <textarea
+                    value={paymentForm.notes}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="أضف ملاحظات إضافية..."
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Collections Tab */}
-      {activeTab === 'collections' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            {language === 'ar' ? 'سجل التحصيلات' : 'Collections Log'}
-          </h2>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <p className="text-gray-600 text-center py-8">
-              {language === 'ar' ? 'سيتم عرض سجل التحصيلات هنا' : 'Collections log will be displayed here'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Reports Tab */}
-      {activeTab === 'reports' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            {language === 'ar' ? 'التقارير المالية' : 'Financial Reports'}
-          </h2>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <p className="text-gray-600 text-center py-8">
-              {language === 'ar' ? 'سيتم عرض التقارير المالية هنا' : 'Financial reports will be displayed here'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Modals would be added here for create, collection, and details */}
-      {showDetailsModal && selectedDebt && (
-        <div className="modal-overlay">
-          <div className="modal-content max-w-2xl">
-            <div className="modal-header">
-              <h3>{language === 'ar' ? 'تفاصيل الدين' : 'Debt Details'}</h3>
-              <button 
-                onClick={() => setShowDetailsModal(false)}
-                className="modal-close"
-              >
-                ×
-              </button>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setPaymentForm({ payment_amount: '', payment_method: 'cash', notes: '' });
+                    setSelectedDebt(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  إلغاء
+                </button>
+                
+                <button
+                  onClick={handleProcessPayment}
+                  disabled={!paymentForm.payment_amount}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  💰 معالجة الدفع
+                </button>
+              </div>
             </div>
-            <div className="modal-body">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+        </div>
+      )}
+
+      {/* Debt Details Modal */}
+      {showDebtDetails && selectedDebt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+              <h3 className="text-lg font-bold">📋 تفاصيل الدين</h3>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'رقم الدين' : 'Debt Number'}
-                  </label>
-                  <p className="text-gray-900 font-mono">{selectedDebt.debt_number}</p>
+                  <label className="block text-sm font-medium text-gray-700">العيادة</label>
+                  <p className="mt-1 text-gray-900">{selectedDebt.clinic_name || 'غير محدد'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'العيادة' : 'Clinic'}
-                  </label>
-                  <p className="text-gray-900">{selectedDebt.clinic_name}</p>
+                  <label className="block text-sm font-medium text-gray-700">مالك العيادة</label>
+                  <p className="mt-1 text-gray-900">{selectedDebt.clinic_owner || 'غير محدد'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'الطبيب' : 'Doctor'}
-                  </label>
-                  <p className="text-gray-900">{selectedDebt.doctor_name}</p>
+                  <label className="block text-sm font-medium text-gray-700">رقم الفاتورة</label>
+                  <p className="mt-1 text-gray-900 font-mono">{selectedDebt.invoice_number || 'غير محدد'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'المندوب الطبي' : 'Medical Rep'}
-                  </label>
-                  <p className="text-gray-900">{selectedDebt.medical_rep_name}</p>
+                  <label className="block text-sm font-medium text-gray-700">المبلغ الأصلي</label>
+                  <p className="mt-1 text-gray-900 font-bold">{formatCurrency(selectedDebt.original_amount)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'المبلغ الأصلي' : 'Original Amount'}
-                  </label>
-                  <p className="text-gray-900 font-semibold">{formatCurrency(selectedDebt.original_amount)}</p>
+                  <label className="block text-sm font-medium text-gray-700">المبلغ المتبقي</label>
+                  <p className="mt-1 text-red-600 font-bold text-lg">{formatCurrency(selectedDebt.remaining_amount)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'المبلغ المدفوع' : 'Paid Amount'}
-                  </label>
-                  <p className="text-green-600 font-semibold">{formatCurrency(selectedDebt.paid_amount)}</p>
+                  <label className="block text-sm font-medium text-gray-700">تاريخ الاستحقاق</label>
+                  <p className="mt-1 text-gray-900">{formatDate(selectedDebt.due_date)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'المبلغ المستحق' : 'Outstanding Amount'}
-                  </label>
-                  <p className="text-orange-600 font-semibold">{formatCurrency(selectedDebt.outstanding_amount)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'الحالة' : 'Status'}
-                  </label>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedDebt.status)}`}>
-                    {getStatusText(selectedDebt.status)}
+                  <label className="block text-sm font-medium text-gray-700">الحالة</label>
+                  <span className={`mt-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedDebt.status)}`}>
+                    {getStatusLabel(selectedDebt.status)}
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'تاريخ الدين' : 'Debt Date'}
-                  </label>
-                  <p className="text-gray-900">{formatDate(selectedDebt.debt_date)}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}
-                  </label>
-                  <p className="text-gray-900">{formatDate(selectedDebt.due_date)}</p>
+                  <label className="block text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
+                  <p className="mt-1 text-gray-900">{formatDate(selectedDebt.created_at)}</p>
                 </div>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors duration-200"
-              >
-                {language === 'ar' ? 'إغلاق' : 'Close'}
-              </button>
+              
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700">الملاحظات</label>
+                <p className="mt-1 text-gray-900 p-3 bg-gray-50 rounded-lg">
+                  {selectedDebt.notes || 'لا توجد ملاحظات'}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowDebtDetails(false)}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  إغلاق
+                </button>
+                
+                <button
+                  onClick={() => exportToPDF([selectedDebt], `debt-${selectedDebt.id}`, `تفاصيل الدين - ${selectedDebt.clinic_name}`)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  📄 طباعة
+                </button>
+              </div>
             </div>
           </div>
         </div>
