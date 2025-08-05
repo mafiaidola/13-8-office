@@ -1,5 +1,769 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لإصلاح إدارة المستخدمين والمنتجات المحدثة حديثاً
+Comprehensive Test for Updated User and Product Management APIs
+
+المطلوب اختبار:
+1. اختبار APIs المستخدمين (GET /api/users, DELETE /api/users/{user_id})
+2. اختبار APIs المنتجات المحدثة (GET /api/products, DELETE /api/products/{product_id})
+3. اختبار المنطق الجديد (HARD DELETE operations)
+4. اختبار التكامل (Integration testing)
+
+الهدف: التأكد من أن المستخدم سيرى جميع المستخدمين (أكثر من 3) وأن حذف المنتجات يتم نهائياً
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import sys
+import os
+
+# Configuration
+BACKEND_URL = "https://0f12410c-0263-44c4-80bc-ce88c1050ca0.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class UserProductManagementTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_result(self, test_name, success, message, details=None):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "message": message,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅ نجح" if success else "❌ فشل"
+        print(f"{status} | {test_name}: {message}")
+        if details:
+            print(f"   التفاصيل: {details}")
+    
+    def admin_login(self):
+        """تسجيل دخول الأدمن"""
+        try:
+            login_data = {
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                
+                user_info = data.get("user", {})
+                self.log_result(
+                    "تسجيل دخول الأدمن",
+                    True,
+                    f"تم تسجيل الدخول بنجاح للمستخدم: {user_info.get('full_name', 'غير محدد')} ({user_info.get('role', 'غير محدد')})",
+                    f"Response time: {response.elapsed.total_seconds()*1000:.2f}ms"
+                )
+                return True
+            else:
+                self.log_result(
+                    "تسجيل دخول الأدمن",
+                    False,
+                    f"فشل تسجيل الدخول: {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_result("تسجيل دخول الأدمن", False, f"خطأ في الاتصال: {str(e)}")
+            return False
+    
+    def test_get_users_comprehensive(self):
+        """اختبار شامل لـ GET /api/users - يجب أن يعرض أكثر من 3 مستخدمين"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/users")
+            
+            if response.status_code == 200:
+                users = response.json()
+                user_count = len(users)
+                
+                if user_count > 3:
+                    # تحليل تفصيلي للمستخدمين
+                    roles_count = {}
+                    active_users = 0
+                    real_users = []
+                    test_users = []
+                    
+                    for user in users:
+                        role = user.get("role", "غير محدد")
+                        roles_count[role] = roles_count.get(role, 0) + 1
+                        
+                        if user.get("is_active", True):
+                            active_users += 1
+                        
+                        username = user.get("username", "").lower()
+                        full_name = user.get("full_name", "").lower()
+                        
+                        if ("test" in username or "demo" in username or 
+                            "test" in full_name or "تجربة" in full_name):
+                            test_users.append(user.get("full_name", user.get("username", "غير محدد")))
+                        else:
+                            real_users.append(user.get("full_name", user.get("username", "غير محدد")))
+                    
+                    details = {
+                        "total_users": user_count,
+                        "active_users": active_users,
+                        "real_users_count": len(real_users),
+                        "test_users_count": len(test_users),
+                        "roles_distribution": roles_count,
+                        "sample_real_users": real_users[:5],  # عرض أول 5 مستخدمين حقيقيين
+                        "response_time_ms": f"{response.elapsed.total_seconds()*1000:.2f}"
+                    }
+                    
+                    self.log_result(
+                        "GET /api/users - عرض جميع المستخدمين",
+                        True,
+                        f"تم جلب {user_count} مستخدم بنجاح (أكثر من 3 كما مطلوب)",
+                        details
+                    )
+                    return users
+                else:
+                    self.log_result(
+                        "GET /api/users - عرض جميع المستخدمين",
+                        False,
+                        f"عدد المستخدمين قليل: {user_count} (مطلوب أكثر من 3)",
+                        {"user_count": user_count, "users_sample": users[:3]}
+                    )
+                    return users
+            else:
+                self.log_result(
+                    "GET /api/users - عرض جميع المستخدمين",
+                    False,
+                    f"فشل في جلب المستخدمين: HTTP {response.status_code}",
+                    response.text
+                )
+                return []
+                
+        except Exception as e:
+            self.log_result(
+                "GET /api/users - عرض جميع المستخدمين",
+                False,
+                f"خطأ في الاختبار: {str(e)}"
+            )
+            return []
+    
+    def test_user_deletion_permissions(self, users):
+        """اختبار صلاحيات حذف المستخدمين"""
+        if not users:
+            self.log_result(
+                "اختبار صلاحيات حذف المستخدمين",
+                False,
+                "لا توجد مستخدمين للاختبار"
+            )
+            return
+        
+        # البحث عن مستخدم تجريبي للحذف
+        test_user = None
+        for user in users:
+            username = user.get("username", "").lower()
+            full_name = user.get("full_name", "").lower()
+            
+            if (("test" in username or "demo" in username or 
+                 "test" in full_name or "تجربة" in full_name) and
+                user.get("role") != "admin"):
+                test_user = user
+                break
+        
+        if not test_user:
+            # إنشاء مستخدم تجريبي للحذف
+            try:
+                new_user_data = {
+                    "username": f"test_user_{int(time.time())}",
+                    "password": "test123",
+                    "full_name": "مستخدم تجريبي للحذف",
+                    "role": "medical_rep",
+                    "email": "test@example.com",
+                    "is_active": True
+                }
+                
+                response = self.session.post(f"{BACKEND_URL}/users", json=new_user_data)
+                
+                if response.status_code == 200:
+                    created_user = response.json().get("user", {})
+                    test_user = created_user
+                    self.log_result(
+                        "إنشاء مستخدم تجريبي للحذف",
+                        True,
+                        f"تم إنشاء المستخدم: {created_user.get('full_name')}",
+                        {"user_id": created_user.get("id")}
+                    )
+                else:
+                    self.log_result(
+                        "إنشاء مستخدم تجريبي للحذف",
+                        False,
+                        f"فشل في إنشاء المستخدم: HTTP {response.status_code}",
+                        response.text
+                    )
+                    return
+                    
+            except Exception as e:
+                self.log_result(
+                    "إنشاء مستخدم تجريبي للحذف",
+                    False,
+                    f"خطأ في إنشاء المستخدم: {str(e)}"
+                )
+                return
+        
+        # اختبار حذف المستخدم (HARD DELETE)
+        if test_user:
+            try:
+                user_id = test_user.get("id")
+                user_name = test_user.get("full_name", test_user.get("username", "غير محدد"))
+                
+                # عد المستخدمين قبل الحذف
+                users_before = len(self.session.get(f"{BACKEND_URL}/users").json())
+                
+                response = self.session.delete(f"{BACKEND_URL}/users/{user_id}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    # التحقق من الحذف النهائي
+                    users_after = len(self.session.get(f"{BACKEND_URL}/users").json())
+                    
+                    # محاولة الوصول للمستخدم المحذوف
+                    check_response = self.session.get(f"{BACKEND_URL}/users/{user_id}/profile")
+                    user_not_found = check_response.status_code == 404
+                    
+                    details = {
+                        "deleted_user": result.get("deleted_user", {}),
+                        "users_before_deletion": users_before,
+                        "users_after_deletion": users_after,
+                        "hard_delete_confirmed": user_not_found,
+                        "response_message": result.get("message", "")
+                    }
+                    
+                    if users_after < users_before and user_not_found:
+                        self.log_result(
+                            "DELETE /api/users/{user_id} - حذف نهائي",
+                            True,
+                            f"تم حذف المستخدم '{user_name}' نهائياً من النظام",
+                            details
+                        )
+                    else:
+                        self.log_result(
+                            "DELETE /api/users/{user_id} - حذف نهائي",
+                            False,
+                            "الحذف لم يكن نهائياً كما مطلوب",
+                            details
+                        )
+                else:
+                    self.log_result(
+                        "DELETE /api/users/{user_id} - حذف نهائي",
+                        False,
+                        f"فشل في حذف المستخدم: HTTP {response.status_code}",
+                        response.text
+                    )
+                    
+            except Exception as e:
+                self.log_result(
+                    "DELETE /api/users/{user_id} - حذف نهائي",
+                    False,
+                    f"خطأ في اختبار الحذف: {str(e)}"
+                )
+    
+    def test_user_deletion_restrictions(self):
+        """اختبار قيود حذف المستخدمين"""
+        # اختبار منع الحذف الذاتي
+        try:
+            # الحصول على معرف المستخدم الحالي من التوكن
+            import jwt
+            payload = jwt.decode(self.admin_token, options={"verify_signature": False})
+            current_user_id = payload.get("user_id")
+            
+            response = self.session.delete(f"{BACKEND_URL}/users/{current_user_id}")
+            
+            if response.status_code == 403:
+                self.log_result(
+                    "منع الحذف الذاتي",
+                    True,
+                    "تم منع المستخدم من حذف نفسه بنجاح",
+                    {"status_code": response.status_code, "message": response.json().get("detail", "")}
+                )
+            else:
+                self.log_result(
+                    "منع الحذف الذاتي",
+                    False,
+                    f"لم يتم منع الحذف الذاتي: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "منع الحذف الذاتي",
+                False,
+                f"خطأ في اختبار منع الحذف الذاتي: {str(e)}"
+            )
+        
+        # اختبار حذف مستخدم غير موجود
+        try:
+            fake_user_id = "non-existent-user-id-12345"
+            response = self.session.delete(f"{BACKEND_URL}/users/{fake_user_id}")
+            
+            if response.status_code == 404:
+                self.log_result(
+                    "حذف مستخدم غير موجود",
+                    True,
+                    "تم التعامل مع حذف مستخدم غير موجود بشكل صحيح",
+                    {"status_code": response.status_code, "message": response.json().get("detail", "")}
+                )
+            else:
+                self.log_result(
+                    "حذف مستخدم غير موجود",
+                    False,
+                    f"لم يتم التعامل مع المستخدم غير الموجود بشكل صحيح: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "حذف مستخدم غير موجود",
+                False,
+                f"خطأ في اختبار حذف مستخدم غير موجود: {str(e)}"
+            )
+    
+    def test_get_products_comprehensive(self):
+        """اختبار شامل لـ GET /api/products"""
+        try:
+            response = self.session.get(f"{BACKEND_URL}/products")
+            
+            if response.status_code == 200:
+                products = response.json()
+                product_count = len(products)
+                
+                # تحليل تفصيلي للمنتجات
+                categories = {}
+                lines = {}
+                active_products = 0
+                total_stock = 0
+                
+                for product in products:
+                    category = product.get("category", "غير محدد")
+                    categories[category] = categories.get(category, 0) + 1
+                    
+                    line_name = product.get("line_name", "غير محدد")
+                    lines[line_name] = lines.get(line_name, 0) + 1
+                    
+                    if product.get("is_active", True):
+                        active_products += 1
+                    
+                    total_stock += product.get("current_stock", 0)
+                
+                details = {
+                    "total_products": product_count,
+                    "active_products": active_products,
+                    "categories_distribution": categories,
+                    "lines_distribution": lines,
+                    "total_stock": total_stock,
+                    "sample_products": [p.get("name", "غير محدد") for p in products[:5]],
+                    "response_time_ms": f"{response.elapsed.total_seconds()*1000:.2f}"
+                }
+                
+                self.log_result(
+                    "GET /api/products - عرض جميع المنتجات",
+                    True,
+                    f"تم جلب {product_count} منتج بنجاح",
+                    details
+                )
+                return products
+            else:
+                self.log_result(
+                    "GET /api/products - عرض جميع المنتجات",
+                    False,
+                    f"فشل في جلب المنتجات: HTTP {response.status_code}",
+                    response.text
+                )
+                return []
+                
+        except Exception as e:
+            self.log_result(
+                "GET /api/products - عرض جميع المنتجات",
+                False,
+                f"خطأ في الاختبار: {str(e)}"
+            )
+            return []
+    
+    def test_product_hard_deletion(self, products):
+        """اختبار الحذف النهائي للمنتجات (HARD DELETE)"""
+        if not products:
+            self.log_result(
+                "اختبار الحذف النهائي للمنتجات",
+                False,
+                "لا توجد منتجات للاختبار"
+            )
+            return
+        
+        # إنشاء منتج تجريبي للحذف
+        try:
+            # الحصول على خط متاح
+            lines_response = self.session.get(f"{BACKEND_URL}/lines")
+            if lines_response.status_code != 200:
+                self.log_result(
+                    "إنشاء منتج تجريبي للحذف",
+                    False,
+                    "فشل في جلب الخطوط المتاحة"
+                )
+                return
+            
+            lines = lines_response.json()
+            if not lines:
+                self.log_result(
+                    "إنشاء منتج تجريبي للحذف",
+                    False,
+                    "لا توجد خطوط متاحة"
+                )
+                return
+            
+            test_product_data = {
+                "name": f"منتج تجريبي للحذف {int(time.time())}",
+                "description": "منتج تجريبي لاختبار الحذف النهائي",
+                "category": "اختبار",
+                "unit": "قطعة",
+                "line_id": lines[0]["id"],
+                "price": 100.0,
+                "price_type": "fixed",
+                "current_stock": 10,
+                "is_active": True
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/products", json=test_product_data)
+            
+            if response.status_code == 200:
+                created_product = response.json().get("product", {})
+                product_id = created_product.get("id")
+                product_name = created_product.get("name")
+                
+                self.log_result(
+                    "إنشاء منتج تجريبي للحذف",
+                    True,
+                    f"تم إنشاء المنتج: {product_name}",
+                    {"product_id": product_id}
+                )
+                
+                # اختبار الحذف النهائي
+                self._test_hard_delete_product(product_id, product_name)
+                
+            else:
+                self.log_result(
+                    "إنشاء منتج تجريبي للحذف",
+                    False,
+                    f"فشل في إنشاء المنتج: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "إنشاء منتج تجريبي للحذف",
+                False,
+                f"خطأ في إنشاء المنتج: {str(e)}"
+            )
+    
+    def _test_hard_delete_product(self, product_id, product_name):
+        """اختبار الحذف النهائي لمنتج محدد"""
+        try:
+            # عد المنتجات قبل الحذف
+            products_before = len(self.session.get(f"{BACKEND_URL}/products").json())
+            
+            # حذف المنتج
+            response = self.session.delete(f"{BACKEND_URL}/products/{product_id}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # التحقق من الحذف النهائي
+                products_after = len(self.session.get(f"{BACKEND_URL}/products").json())
+                
+                # محاولة الوصول للمنتج المحذوف
+                check_response = self.session.get(f"{BACKEND_URL}/products")
+                remaining_products = check_response.json()
+                product_still_exists = any(p.get("id") == product_id for p in remaining_products)
+                
+                details = {
+                    "products_before_deletion": products_before,
+                    "products_after_deletion": products_after,
+                    "hard_delete_confirmed": not product_still_exists,
+                    "response_message": result.get("message", ""),
+                    "deleted_product_id": product_id
+                }
+                
+                if products_after < products_before and not product_still_exists:
+                    self.log_result(
+                        "DELETE /api/products/{product_id} - حذف نهائي",
+                        True,
+                        f"تم حذف المنتج '{product_name}' نهائياً من النظام (HARD DELETE)",
+                        details
+                    )
+                else:
+                    self.log_result(
+                        "DELETE /api/products/{product_id} - حذف نهائي",
+                        False,
+                        "الحذف لم يكن نهائياً كما مطلوب",
+                        details
+                    )
+            else:
+                self.log_result(
+                    "DELETE /api/products/{product_id} - حذف نهائي",
+                    False,
+                    f"فشل في حذف المنتج: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "DELETE /api/products/{product_id} - حذف نهائي",
+                False,
+                f"خطأ في اختبار الحذف: {str(e)}"
+            )
+    
+    def test_product_deletion_permissions(self):
+        """اختبار صلاحيات حذف المنتجات (admin فقط)"""
+        # اختبار حذف منتج غير موجود
+        try:
+            fake_product_id = "non-existent-product-id-12345"
+            response = self.session.delete(f"{BACKEND_URL}/products/{fake_product_id}")
+            
+            if response.status_code == 404:
+                self.log_result(
+                    "حذف منتج غير موجود",
+                    True,
+                    "تم التعامل مع حذف منتج غير موجود بشكل صحيح (404 error)",
+                    {"status_code": response.status_code, "message": response.json().get("detail", "")}
+                )
+            else:
+                self.log_result(
+                    "حذف منتج غير موجود",
+                    False,
+                    f"لم يتم التعامل مع المنتج غير الموجود بشكل صحيح: HTTP {response.status_code}",
+                    response.text
+                )
+                
+        except Exception as e:
+            self.log_result(
+                "حذف منتج غير موجود",
+                False,
+                f"خطأ في اختبار حذف منتج غير موجود: {str(e)}"
+            )
+    
+    def test_database_integrity(self):
+        """اختبار تكامل قاعدة البيانات بعد العمليات"""
+        try:
+            # جلب إحصائيات النظام
+            endpoints_to_check = [
+                ("/users", "المستخدمين"),
+                ("/products", "المنتجات"),
+                ("/clinics", "العيادات"),
+                ("/orders", "الطلبات")
+            ]
+            
+            integrity_results = {}
+            
+            for endpoint, name in endpoints_to_check:
+                try:
+                    response = self.session.get(f"{BACKEND_URL}{endpoint}")
+                    if response.status_code == 200:
+                        data = response.json()
+                        integrity_results[name] = {
+                            "count": len(data),
+                            "status": "متاح",
+                            "response_time": f"{response.elapsed.total_seconds()*1000:.2f}ms"
+                        }
+                    else:
+                        integrity_results[name] = {
+                            "count": 0,
+                            "status": f"خطأ HTTP {response.status_code}",
+                            "response_time": "N/A"
+                        }
+                except Exception as e:
+                    integrity_results[name] = {
+                        "count": 0,
+                        "status": f"خطأ: {str(e)}",
+                        "response_time": "N/A"
+                    }
+            
+            # التحقق من أن جميع الأنظمة تعمل
+            all_working = all(result["status"] == "متاح" for result in integrity_results.values())
+            
+            self.log_result(
+                "اختبار تكامل قاعدة البيانات",
+                all_working,
+                "جميع الأنظمة تعمل بشكل طبيعي بعد عمليات الحذف" if all_working else "بعض الأنظمة تواجه مشاكل",
+                integrity_results
+            )
+            
+        except Exception as e:
+            self.log_result(
+                "اختبار تكامل قاعدة البيانات",
+                False,
+                f"خطأ في اختبار التكامل: {str(e)}"
+            )
+    
+    def generate_final_report(self):
+        """إنشاء التقرير النهائي"""
+        total_tests = len(self.test_results)
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        failed_tests = total_tests - successful_tests
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        execution_time = time.time() - self.start_time
+        
+        print("\n" + "="*80)
+        print("🎯 التقرير النهائي لاختبار إدارة المستخدمين والمنتجات المحدثة")
+        print("="*80)
+        
+        print(f"\n📊 ملخص النتائج:")
+        print(f"   إجمالي الاختبارات: {total_tests}")
+        print(f"   الاختبارات الناجحة: {successful_tests} ✅")
+        print(f"   الاختبارات الفاشلة: {failed_tests} ❌")
+        print(f"   معدل النجاح: {success_rate:.1f}%")
+        print(f"   وقت التنفيذ: {execution_time:.2f} ثانية")
+        
+        print(f"\n🔍 تفاصيل الاختبارات:")
+        
+        # تجميع النتائج حسب الفئة
+        categories = {
+            "اختبارات المستخدمين": [],
+            "اختبارات المنتجات": [],
+            "اختبارات التكامل": []
+        }
+        
+        for result in self.test_results:
+            test_name = result["test"]
+            if any(keyword in test_name for keyword in ["مستخدم", "users", "حذف الذاتي", "صلاحيات حذف المستخدمين"]):
+                categories["اختبارات المستخدمين"].append(result)
+            elif any(keyword in test_name for keyword in ["منتج", "products"]):
+                categories["اختبارات المنتجات"].append(result)
+            else:
+                categories["اختبارات التكامل"].append(result)
+        
+        for category, results in categories.items():
+            if results:
+                print(f"\n📋 {category}:")
+                for result in results:
+                    status = "✅" if result["success"] else "❌"
+                    print(f"   {status} {result['test']}: {result['message']}")
+        
+        # النتائج الحاسمة
+        print(f"\n🎯 النتائج الحاسمة للمتطلبات:")
+        
+        # التحقق من المتطلبات الأساسية
+        users_test = next((r for r in self.test_results if "عرض جميع المستخدمين" in r["test"]), None)
+        if users_test and users_test["success"]:
+            user_count = users_test["details"]["total_users"] if users_test["details"] else 0
+            print(f"   ✅ عرض المستخدمين: {user_count} مستخدم (أكثر من 3 كما مطلوب)")
+        else:
+            print(f"   ❌ عرض المستخدمين: فشل في عرض المستخدمين")
+        
+        hard_delete_user = next((r for r in self.test_results if "حذف نهائي" in r["test"] and "مستخدم" in r["test"]), None)
+        if hard_delete_user and hard_delete_user["success"]:
+            print(f"   ✅ حذف المستخدمين: HARD DELETE يعمل بشكل صحيح")
+        else:
+            print(f"   ❌ حذف المستخدمين: مشكلة في HARD DELETE")
+        
+        hard_delete_product = next((r for r in self.test_results if "حذف نهائي" in r["test"] and "منتج" in r["test"]), None)
+        if hard_delete_product and hard_delete_product["success"]:
+            print(f"   ✅ حذف المنتجات: HARD DELETE يعمل بشكل صحيح")
+        else:
+            print(f"   ❌ حذف المنتجات: مشكلة في HARD DELETE")
+        
+        integrity_test = next((r for r in self.test_results if "تكامل قاعدة البيانات" in r["test"]), None)
+        if integrity_test and integrity_test["success"]:
+            print(f"   ✅ تكامل النظام: جميع الأنظمة تعمل بشكل طبيعي")
+        else:
+            print(f"   ⚠️ تكامل النظام: قد تحتاج مراجعة")
+        
+        # التوصيات
+        print(f"\n💡 التوصيات:")
+        if success_rate >= 90:
+            print("   🎉 النظام يعمل بشكل ممتاز! جميع المتطلبات محققة.")
+        elif success_rate >= 75:
+            print("   👍 النظام يعمل بشكل جيد مع بعض التحسينات المطلوبة.")
+        else:
+            print("   ⚠️ النظام يحتاج إلى مراجعة وإصلاحات.")
+        
+        if failed_tests > 0:
+            print(f"   🔧 يرجى مراجعة الاختبارات الفاشلة ({failed_tests}) وإصلاح المشاكل.")
+        
+        print("\n" + "="*80)
+        
+        return {
+            "total_tests": total_tests,
+            "successful_tests": successful_tests,
+            "failed_tests": failed_tests,
+            "success_rate": success_rate,
+            "execution_time": execution_time,
+            "test_results": self.test_results
+        }
+    
+    def run_all_tests(self):
+        """تشغيل جميع الاختبارات"""
+        print("🚀 بدء اختبار شامل لإصلاح إدارة المستخدمين والمنتجات المحدثة حديثاً")
+        print("="*80)
+        
+        # تسجيل دخول الأدمن
+        if not self.admin_login():
+            print("❌ فشل في تسجيل دخول الأدمن. إيقاف الاختبارات.")
+            return self.generate_final_report()
+        
+        # اختبارات المستخدمين
+        print(f"\n📋 اختبارات APIs المستخدمين:")
+        users = self.test_get_users_comprehensive()
+        self.test_user_deletion_permissions(users)
+        self.test_user_deletion_restrictions()
+        
+        # اختبارات المنتجات
+        print(f"\n📋 اختبارات APIs المنتجات المحدثة:")
+        products = self.test_get_products_comprehensive()
+        self.test_product_hard_deletion(products)
+        self.test_product_deletion_permissions()
+        
+        # اختبارات التكامل
+        print(f"\n📋 اختبارات التكامل:")
+        self.test_database_integrity()
+        
+        # إنشاء التقرير النهائي
+        return self.generate_final_report()
+
+def main():
+    """الدالة الرئيسية"""
+    tester = UserProductManagementTester()
+    
+    try:
+        report = tester.run_all_tests()
+        
+        # حفظ التقرير في ملف
+        with open("/app/user_product_management_test_report.json", "w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        
+        print(f"\n💾 تم حفظ التقرير التفصيلي في: /app/user_product_management_test_report.json")
+        
+        return report["success_rate"] >= 75
+        
+    except KeyboardInterrupt:
+        print("\n⏹️ تم إيقاف الاختبار بواسطة المستخدم")
+        return False
+    except Exception as e:
+        print(f"\n💥 خطأ عام في تشغيل الاختبارات: {str(e)}")
+        return False
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)
+"""
 FINAL COMPREHENSIVE BACKEND TEST - POST ALL MAJOR ENHANCEMENTS
 Testing all functionalities enhanced during this session to ensure system stability and functionality.
 
