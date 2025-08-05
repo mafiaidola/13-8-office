@@ -251,7 +251,7 @@ const ThemeProvider = ({ children }) => {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
     
-    // Apply theme to body with enhanced CSS variables
+    // Apply theme to body with FIXED CSS variables
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
       // Remove all theme classes first
@@ -264,36 +264,25 @@ const ThemeProvider = ({ children }) => {
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
-      // Apply CSS variables to root for comprehensive theming
+      // FORCE update all text colors immediately
       const root = document.documentElement;
+      const allElements = document.querySelectorAll('*');
       
-      // Apply all CSS variables from theme config
-      if (themeConfig.css) {
-        Object.entries(themeConfig.css).forEach(([property, value]) => {
-          root.style.setProperty(property, value);
+      // Apply forced text colors to prevent fade issues
+      setTimeout(() => {
+        allElements.forEach(el => {
+          if (el.tagName && !['SCRIPT', 'STYLE', 'META', 'LINK'].includes(el.tagName)) {
+            const computedStyle = window.getComputedStyle(el);
+            if (computedStyle.color && computedStyle.color.includes('rgba')) {
+              // Fix any faded text
+              el.style.color = 'var(--text-primary)';
+              el.style.opacity = '1';
+            }
+          }
         });
-      }
+      }, 100);
       
-      // Apply additional Tailwind-based variables
-      root.style.setProperty('--theme-bg-primary', themeConfig.colors.background);
-      root.style.setProperty('--theme-bg-card', themeConfig.colors.card);
-      root.style.setProperty('--theme-text-primary', themeConfig.colors.text);
-      
-      // Apply dropdown variables for enhanced theme support
-      if (themeConfig.dropdown) {
-        root.style.setProperty('--dropdown-bg', themeConfig.dropdown.background);
-        root.style.setProperty('--dropdown-text', themeConfig.dropdown.text);
-        root.style.setProperty('--dropdown-hover', themeConfig.dropdown.hover);
-        root.style.setProperty('--dropdown-border', themeConfig.dropdown.border);
-      }
-      
-      // Apply shadow and border radius variables
-      root.style.setProperty('--border-radius', '0.75rem');
-      root.style.setProperty('--border-radius-lg', '1rem');
-      root.style.setProperty('--transition-fast', '0.15s ease-in-out');
-      root.style.setProperty('--transition-normal', '0.3s ease-in-out');
-      
-      console.log(`✅ Applied enhanced modern theme: ${theme} (${themeConfig.name[language]})`);
+      console.log(`✅ Fixed theme applied: ${theme} (${themeConfig.name[language]})`);
     }
   }, [isRTL, language, theme]);
 
