@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
+import ComprehensiveUserModal from './ComprehensiveUserModal';
 import { activityLogger } from '../../utils/activityLogger.js';
 
 const UserManagement = ({ user, language, isRTL }) => {
