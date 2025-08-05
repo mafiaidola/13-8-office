@@ -130,8 +130,8 @@ export const COMPONENT_REGISTRY = {
 
   // Activity Tracking
   ActivityTracking: createLazyComponent(
-    () => import('../Tracking/ActivityTracking'),
-    'جاري تحميل تتبع الأنشطة والحركات...'
+    () => import('../Tracking/EnhancedActivityTracking'),
+    'جاري تحميل تتبع الأنشطة المحسن...'
   ),
 
   // Visit Management
