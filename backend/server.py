@@ -1124,6 +1124,148 @@ async def get_payments(current_user: User = Depends(get_current_user)):
         print(f"Error fetching payments: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching payments")
 
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats(time_filter: str = "today", current_user: User = Depends(get_current_user)):
+    """الحصول على إحصائيات لوحة التحكم مع فلترة الوقت الفعالة"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="غير مصرح لك بالوصول لإحصائيات النظام")
+    
+    try:
+        # Calculate date ranges based on filter
+        now = datetime.utcnow()
+        
+        if time_filter == "today":
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        elif time_filter == "week":
+            start_date = now - timedelta(days=7)
+            end_date = now
+        elif time_filter == "month":
+            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        elif time_filter == "year":
+            start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        else:
+            # Default to today
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now
+        
+        # Build date filter for MongoDB
+        date_filter = {"created_at": {"$gte": start_date, "$lte": end_date}}
+        
+        # Aggregate stats
+        stats = {
+            "orders": {"count": 0, "total_amount": 0, "pending": 0, "completed": 0},
+            "visits": {"count": 0, "successful": 0, "pending": 0, "success_rate": 0},
+            "debts": {"outstanding": 0, "total_amount": 0},
+            "collections": {"today": 0, "this_month": 0, "total": 0},
+            "users": {"active": 0, "total": 0},
+            "products": {"count": 0, "low_stock": 0},
+            "clinics": {"active": 0, "total": 0},
+            "time_filter": time_filter,
+            "date_range": {
+                "start": start_date.isoformat(),
+                "end": end_date.isoformat()
+            }
+        }
+        
+        # Real data from database - but if no data, return zeros instead of mock data
+        try:
+            # Orders stats
+            orders_count = await db.orders.count_documents(date_filter)
+            orders_pipeline = await db.orders.aggregate([
+                {"$match": date_filter},
+                {"$group": {
+                    "_id": None,
+                    "total_amount": {"$sum": "$total_amount"},
+                    "count": {"$sum": 1}
+                }}
+            ]).to_list(1)
+            
+            if orders_pipeline:
+                stats["orders"]["count"] = orders_pipeline[0]["count"]
+                stats["orders"]["total_amount"] = orders_pipeline[0]["total_amount"]
+            else:
+                stats["orders"]["count"] = 0
+                stats["orders"]["total_amount"] = 0
+            
+            # Visits stats
+            visits_count = await db.visits.count_documents(date_filter)
+            successful_visits = await db.visits.count_documents({**date_filter, "status": "successful"})
+            
+            stats["visits"]["count"] = visits_count
+            stats["visits"]["successful"] = successful_visits
+            stats["visits"]["success_rate"] = (successful_visits / visits_count * 100) if visits_count > 0 else 0
+            
+            # Users stats
+            total_users = await db.users.count_documents({})
+            active_users = await db.users.count_documents({"is_active": {"$ne": False}})
+            
+            stats["users"]["total"] = total_users
+            stats["users"]["active"] = active_users
+            
+            # Products stats
+            total_products = await db.products.count_documents({"is_active": {"$ne": False}})
+            low_stock_products = await db.products.count_documents({
+                "is_active": {"$ne": False},
+                "$expr": {"$lte": ["$current_stock", "$min_stock"]}
+            })
+            
+            stats["products"]["count"] = total_products
+            stats["products"]["low_stock"] = low_stock_products
+            
+            # Clinics stats
+            total_clinics = await db.clinics.count_documents({})
+            active_clinics = await db.clinics.count_documents({"is_active": {"$ne": False}})
+            
+            stats["clinics"]["total"] = total_clinics
+            stats["clinics"]["active"] = active_clinics
+            
+            # Debts stats
+            outstanding_debts = await db.debts.count_documents({"status": "outstanding"})
+            debt_amount_pipeline = await db.debts.aggregate([
+                {"$match": {"status": "outstanding"}},
+                {"$group": {"_id": None, "total": {"$sum": "$remaining_amount"}}}
+            ]).to_list(1)
+            
+            stats["debts"]["outstanding"] = outstanding_debts
+            stats["debts"]["total_amount"] = debt_amount_pipeline[0]["total"] if debt_amount_pipeline else 0
+            
+            # Collections stats
+            today_filter = {"payment_date": {"$gte": now.replace(hour=0, minute=0, second=0, microsecond=0)}}
+            month_filter = {"payment_date": {"$gte": now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)}}
+            
+            today_collections = await db.payments.aggregate([
+                {"$match": today_filter},
+                {"$group": {"_id": None, "total": {"$sum": "$payment_amount"}}}
+            ]).to_list(1)
+            
+            month_collections = await db.payments.aggregate([
+                {"$match": month_filter},
+                {"$group": {"_id": None, "total": {"$sum": "$payment_amount"}}}
+            ]).to_list(1)
+            
+            total_collections = await db.payments.aggregate([
+                {"$group": {"_id": None, "total": {"$sum": "$payment_amount"}}}
+            ]).to_list(1)
+            
+            stats["collections"]["today"] = today_collections[0]["total"] if today_collections else 0
+            stats["collections"]["this_month"] = month_collections[0]["total"] if month_collections else 0
+            stats["collections"]["total"] = total_collections[0]["total"] if total_collections else 0
+            
+        except Exception as e:
+            print(f"Error fetching database stats: {str(e)}")
+            # Keep stats as zeros if database query fails
+        
+        return stats
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting dashboard stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب إحصائيات لوحة التحكم")
+
 # Visit Management Routes - نظام الزيارة المحسن
 @api_router.post("/visits")
 async def create_visit(visit_data: VisitCreate, current_user: User = Depends(get_current_user)):
