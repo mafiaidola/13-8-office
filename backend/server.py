@@ -388,7 +388,318 @@ async def get_user_profile(user_id: str, current_user: User = Depends(get_curren
         }
     })
     
-    return {"user": user}
+@api_router.get("/users/{user_id}/comprehensive-profile")
+async def get_comprehensive_user_profile(user_id: str, current_user: User = Depends(get_current_user)):
+    """الحصول على الملف الشخصي الشامل للمستخدم مع جميع البيانات المترابطة"""
+    if not await can_access_user_profile(current_user, user_id):
+        raise HTTPException(
+            status_code=403, 
+            detail="ليس لديك صلاحية للوصول إلى هذا الملف الشخصي"
+        )
+    
+    try:
+        # جلب بيانات المستخدم الأساسية
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # إزالة المعلومات الحساسة
+        if "_id" in user:
+            del user["_id"]
+        if "password_hash" in user:
+            del user["password_hash"]
+        
+        # جلب البيانات المترابطة الشاملة
+        comprehensive_data = {}
+        
+        # 1. بيانات المبيعات والطلبات
+        if user.get("role") in ["medical_rep", "key_account"]:
+            # إحصائيات الطلبات
+            total_orders = await db.orders.count_documents({"medical_rep_id": user_id})
+            orders_this_month = await db.orders.count_documents({
+                "medical_rep_id": user_id,
+                "created_at": {"$gte": datetime.utcnow().replace(day=1)}
+            })
+            
+            # إحصائيات المبيعات
+            sales_pipeline = await db.orders.aggregate([
+                {"$match": {"medical_rep_id": user_id}},
+                {"$group": {
+                    "_id": None,
+                    "total_sales": {"$sum": "$total_amount"},
+                    "avg_order_value": {"$avg": "$total_amount"}
+                }}
+            ]).to_list(1)
+            
+            sales_data = sales_pipeline[0] if sales_pipeline else {"total_sales": 0, "avg_order_value": 0}
+            
+            comprehensive_data["sales_performance"] = {
+                "total_orders": total_orders,
+                "orders_this_month": orders_this_month,
+                "total_sales": sales_data["total_sales"],
+                "avg_order_value": sales_data["avg_order_value"],
+                "conversion_rate": (orders_this_month / max(1, total_orders)) * 100
+            }
+            
+            # العيادات المخصصة
+            assigned_clinics = await db.clinics.find({"assigned_rep_id": user_id}).to_list(100)
+            comprehensive_data["assigned_clinics"] = [
+                {
+                    "id": clinic["id"],
+                    "name": clinic.get("name", "غير محدد"),
+                    "owner_name": clinic.get("owner_name", "غير محدد"),
+                    "location": clinic.get("location", "غير محدد"),
+                    "is_active": clinic.get("is_active", True)
+                }
+                for clinic in assigned_clinics
+            ]
+            
+            # الزيارات
+            total_visits = await db.visits.count_documents({"sales_rep_id": user_id})
+            visits_this_month = await db.visits.count_documents({
+                "sales_rep_id": user_id,
+                "date": {"$gte": datetime.utcnow().replace(day=1)}
+            })
+            
+            comprehensive_data["visit_statistics"] = {
+                "total_visits": total_visits,
+                "visits_this_month": visits_this_month,
+                "visit_frequency": visits_this_month / max(1, len(assigned_clinics)) if assigned_clinics else 0
+            }
+        
+        # 2. بيانات المديونيات والتحصيل
+        if user.get("role") in ["medical_rep", "key_account", "accounting", "admin"]:
+            # الديون المرتبطة بالمستخدم
+            if user.get("role") in ["medical_rep", "key_account"]:
+                # ديون العيادات المخصصة للمندوب
+                clinic_ids = [clinic["id"] for clinic in (comprehensive_data.get("assigned_clinics", []))]
+                debt_query = {"clinic_id": {"$in": clinic_ids}} if clinic_ids else {}
+            else:
+                # المحاسبين والأدمن يرون جميع الديون
+                debt_query = {}
+            
+            # إحصائيات الديون
+            total_debts = await db.debts.count_documents(debt_query)
+            outstanding_debts = await db.debts.count_documents({**debt_query, "status": "outstanding"})
+            
+            debt_amounts = await db.debts.aggregate([
+                {"$match": debt_query},
+                {"$group": {
+                    "_id": "$status",
+                    "total_amount": {"$sum": "$remaining_amount"},
+                    "count": {"$sum": 1}
+                }}
+            ]).to_list(10)
+            
+            debt_summary = {}
+            for debt in debt_amounts:
+                debt_summary[debt["_id"]] = {
+                    "amount": debt["total_amount"],
+                    "count": debt["count"]
+                }
+            
+            comprehensive_data["debt_management"] = {
+                "total_debts": total_debts,
+                "outstanding_debts": outstanding_debts,
+                "debt_summary_by_status": debt_summary,
+                "collection_responsibility": user.get("role") in ["accounting", "admin"]
+            }
+            
+            # المدفوعات المعالجة (للمحاسبين)
+            if user.get("role") in ["accounting", "admin"]:
+                payments_processed = await db.payments.count_documents({"processed_by": user_id})
+                total_collected = await db.payments.aggregate([
+                    {"$match": {"processed_by": user_id}},
+                    {"$group": {"_id": None, "total": {"$sum": "$payment_amount"}}}
+                ]).to_list(1)
+                
+                comprehensive_data["collection_performance"] = {
+                    "payments_processed": payments_processed,
+                    "total_amount_collected": total_collected[0]["total"] if total_collected else 0
+                }
+        
+        # 3. بيانات التسلسل الإداري
+        # المدير المباشر
+        if user.get("managed_by"):
+            manager = await db.users.find_one({"id": user["managed_by"]}, {"full_name": 1, "role": 1, "email": 1})
+            comprehensive_data["reporting_manager"] = {
+                "id": user["managed_by"],
+                "name": manager.get("full_name", "غير محدد") if manager else "غير محدد",
+                "role": manager.get("role", "غير محدد") if manager else "غير محدد",
+                "email": manager.get("email", "غير محدد") if manager else "غير محدد"
+            }
+        
+        # المرؤوسين المباشرين
+        subordinates = await db.users.find({"managed_by": user_id}, {"full_name": 1, "role": 1, "email": 1}).to_list(50)
+        comprehensive_data["direct_reports"] = [
+            {
+                "id": sub["id"],
+                "name": sub.get("full_name", "غير محدد"),
+                "role": sub.get("role", "غير محدد"),
+                "email": sub.get("email", "غير محدد")
+            }
+            for sub in subordinates
+        ]
+        
+        # 4. المنطقة والمنتجات المتاحة
+        if user.get("area_id"):
+            # بيانات المنطقة
+            area = await db.areas.find_one({"id": user["area_id"]})
+            if area:
+                comprehensive_data["area_details"] = {
+                    "id": area["id"],
+                    "name": area.get("name", "غير محدد"),
+                    "description": area.get("description", "غير محدد"),
+                    "manager": area.get("manager_name", "غير محدد")
+                }
+        
+        # المنتجات المتاحة للطلب (حسب الدور والمنطقة)
+        if user.get("role") in ["medical_rep", "key_account"]:
+            # المنتجات النشطة المتاحة للطلب
+            available_products = await db.products.find({"is_active": True}, {
+                "name": 1, "category": 1, "unit": 1, "price": 1, "current_stock": 1
+            }).to_list(100)
+            
+            comprehensive_data["available_products"] = [
+                {
+                    "id": product["id"],
+                    "name": product.get("name", "غير محدد"),
+                    "category": product.get("category", "غير محدد"),
+                    "unit": product.get("unit", "غير محدد"),
+                    "price": product.get("price", 0),
+                    "current_stock": product.get("current_stock", 0),
+                    "can_order": product.get("current_stock", 0) > 0
+                }
+                for product in available_products
+            ]
+        
+        # 5. إحصائيات الأداء المتقدمة
+        if user.get("role") in ["medical_rep", "key_account"]:
+            # أداء مقارن مع الأهداف
+            monthly_target = user.get("monthly_sales_target", 50000)  # هدف افتراضي
+            actual_sales = comprehensive_data.get("sales_performance", {}).get("total_sales", 0)
+            
+            comprehensive_data["performance_metrics"] = {
+                "monthly_target": monthly_target,
+                "actual_sales": actual_sales,
+                "target_achievement": (actual_sales / monthly_target * 100) if monthly_target > 0 else 0,
+                "performance_rating": "ممتاز" if (actual_sales / monthly_target * 100) >= 100 else 
+                                   "جيد جداً" if (actual_sales / monthly_target * 100) >= 80 else
+                                   "جيد" if (actual_sales / monthly_target * 100) >= 60 else "يحتاج تحسين"
+            }
+        
+        # دمج البيانات الأساسية مع البيانات الشاملة
+        user_profile = {
+            **user,
+            "comprehensive_data": comprehensive_data,
+            "profile_accessed_by": current_user.full_name,
+            "profile_access_time": datetime.utcnow().isoformat(),
+            "data_completeness": len(comprehensive_data) / 6 * 100  # نسبة اكتمال البيانات
+        }
+        
+        return {"user_profile": user_profile, "success": True}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting comprehensive user profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب البيانات الشاملة للمستخدم")
+
+@api_router.put("/users/{user_id}/comprehensive-update")
+async def comprehensive_user_update(user_id: str, update_data: dict, current_user: User = Depends(get_current_user)):
+    """تحديث شامل لبيانات المستخدم مع جميع الربط المطلوب"""
+    # فحص الصلاحيات
+    if current_user.role not in ["admin", "gm"] and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بتعديل هذا المستخدم")
+    
+    try:
+        # التحقق من وجود المستخدم
+        existing_user = await db.users.find_one({"id": user_id})
+        if not existing_user:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+        
+        # إعداد بيانات التحديث
+        user_update = {
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        
+        # تحديث البيانات الأساسية
+        basic_fields = ["full_name", "email", "phone", "role", "area_id", "department"]
+        for field in basic_fields:
+            if field in update_data and update_data[field] is not None:
+                user_update[field] = update_data[field]
+        
+        # تحديث التسلسل الإداري
+        if "managed_by" in update_data:
+            # التحقق من صحة المدير الجديد
+            if update_data["managed_by"]:
+                manager = await db.users.find_one({"id": update_data["managed_by"]})
+                if manager:
+                    user_update["managed_by"] = update_data["managed_by"]
+                else:
+                    raise HTTPException(status_code=400, detail="المدير المحدد غير موجود")
+            else:
+                user_update["managed_by"] = None
+        
+        # تحديث الأهداف والمقاييس
+        if "monthly_sales_target" in update_data:
+            user_update["monthly_sales_target"] = float(update_data["monthly_sales_target"])
+        
+        # تحديث حالة النشاط
+        if "is_active" in update_data:
+            user_update["is_active"] = bool(update_data["is_active"])
+        
+        # تحديث كلمة المرور (إذا تم توفيرها)
+        if "new_password" in update_data and update_data["new_password"]:
+            hashed_password = pwd_context.hash(update_data["new_password"])
+            user_update["password_hash"] = hashed_password
+        
+        # تطبيق التحديث
+        await db.users.update_one({"id": user_id}, {"$set": user_update})
+        
+        # تحديث العيادات المخصصة (للمندوبين)
+        if "assigned_clinic_ids" in update_data and existing_user.get("role") in ["medical_rep", "key_account"]:
+            # إلغاء تخصيص العيادات القديمة
+            await db.clinics.update_many(
+                {"assigned_rep_id": user_id},
+                {"$unset": {"assigned_rep_id": ""}}
+            )
+            
+            # تخصيص العيادات الجديدة
+            if update_data["assigned_clinic_ids"]:
+                await db.clinics.update_many(
+                    {"id": {"$in": update_data["assigned_clinic_ids"]}},
+                    {"$set": {"assigned_rep_id": user_id, "updated_at": datetime.utcnow()}}
+                )
+        
+        # إنشاء سجل تدقيق للتحديث
+        audit_record = {
+            "id": f"audit_{int(time.time())}_{current_user.id}",
+            "action": "user_comprehensive_update",
+            "target_user_id": user_id,
+            "target_user_name": existing_user.get("full_name", "غير محدد"),
+            "updated_by": current_user.id,
+            "updated_by_name": current_user.full_name,
+            "updated_fields": list(user_update.keys()),
+            "timestamp": datetime.utcnow(),
+            "changes_summary": f"تم تحديث {len(user_update)} حقل للمستخدم {existing_user.get('full_name', 'غير محدد')}"
+        }
+        
+        await db.audit_logs.insert_one(audit_record)
+        
+        return {
+            "success": True,
+            "message": f"تم تحديث بيانات المستخدم {existing_user.get('full_name', 'غير محدد')} بنجاح",
+            "updated_fields": list(user_update.keys()),
+            "audit_id": audit_record["id"]
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in comprehensive user update: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث بيانات المستخدم")
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
