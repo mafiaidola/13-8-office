@@ -104,9 +104,28 @@ const UserManagement = ({ user, language, isRTL }) => {
     alert('تحرير المستخدم قيد التطوير');
   };
 
-  const handleDeleteUser = (userId) => {
-    console.log('Delete user:', userId);
-    alert('حذف المستخدم قيد التطوير');
+  const handleDeleteUser = async (userId) => {
+    const userToDelete = users.find(u => u.id === userId);
+    
+    if (window.confirm(`هل أنت متأكد من حذف المستخدم: ${userToDelete?.full_name}؟`)) {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await axios.delete(`${API}/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data.success) {
+          alert('تم حذف المستخدم بنجاح');
+          loadUsers(); // Reload users list
+        } else {
+          throw new Error(response.data.message || 'فشل في حذف المستخدم');
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        const errorMessage = error.response?.data?.detail || error.message || 'حدث خطأ أثناء حذف المستخدم';
+        alert(`خطأ في حذف المستخدم: ${errorMessage}`);
+      }
+    }
   };
 
   const handleToggleSelection = (userId) => {
