@@ -475,9 +475,9 @@ async def check_clinic_order_status(clinic_id: str, current_user: User = Depends
 
 @api_router.post("/orders")
 async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
-    """إنشاء طلب مع نظام تحذير المديونية"""
-    if current_user.role not in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT]:
-        raise HTTPException(status_code=403, detail="Only medical reps and key accounts can create orders")
+    """إنشاء طلب مع نظام تحذير المديونية - كل فاتورة تصبح دين حتى السداد"""
+    if current_user.role not in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Only medical reps, key accounts, and admins can create orders")
     
     clinic = await db.clinics.find_one({"id": order_data.clinic_id})
     if not clinic:
@@ -539,7 +539,9 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         order_color=order_color,
         line=order_data.line,
         area_id=order_data.area_id,
-        notes=order_data.notes
+        notes=order_data.notes,
+        payment_status="unpaid",  # كل فاتورة تبدأ غير مدفوعة
+        invoice_status="pending"  # الفاتورة في انتظار السداد
     )
     
     await db.orders.insert_one(order.dict())
@@ -548,13 +550,37 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
         item.order_id = order.id
         await db.order_items.insert_one(item.dict())
     
+    # إنشاء سجل دين جديد للفاتورة (كل فاتورة = دين حتى السداد)
+    debt_record = {
+        "id": f"debt_{order.id}",
+        "clinic_id": order_data.clinic_id,
+        "order_id": order.id,
+        "invoice_number": order.order_number,
+        "debt_amount": total_amount,
+        "remaining_amount": total_amount,
+        "original_amount": total_amount,
+        "debt_type": "invoice",  # نوع الدين: فاتورة
+        "created_by": current_user.id,
+        "created_at": datetime.utcnow(),
+        "due_date": datetime.utcnow().replace(day=datetime.utcnow().day + 30),  # استحقاق بعد 30 يوم
+        "status": "outstanding",  # مستحق السداد
+        "payment_status": "unpaid",
+        "notes": f"دين فاتورة رقم {order.order_number} - تم إنشاؤها بواسطة {current_user.full_name}",
+        "is_overdue": False
+    }
+    
+    await db.debts.insert_one(debt_record)
+    
     return {
-        "message": "Order created successfully",
+        "message": "Order created successfully - Invoice converted to debt until payment",
         "order_id": order.id,
         "order_number": order.order_number,
         "total_amount": order.total_amount,
         "debt_warning": order.debt_warning_shown,
-        "order_color": order.order_color
+        "order_color": order.order_color,
+        "debt_record_id": debt_record["id"],
+        "payment_status": "unpaid",
+        "invoice_converted_to_debt": True
     }
 
 # Visit Management Routes - نظام الزيارة المحسن
