@@ -174,6 +174,17 @@ export const SYSTEM_TABS = {
     priority: 15
   },
 
+  debt_collection: {
+    id: 'debt_collection',
+    path: '/debt-collection',
+    icon: '💰',
+    name: { ar: 'إدارة الديون والتحصيل', en: 'Debt Collection Management' },
+    component: 'DebtCollectionManagement',
+    description: { ar: 'إدارة شاملة للديون والمديونيات ومعالجة المدفوعات مع ربط الفواتير والمستخدمين', en: 'Comprehensive debt and collection management with invoice and user integration' },
+    permissions: ['admin', 'gm', 'accounting', 'manager'],
+    priority: 16
+  },
+
   gamification: {
     id: 'gamification',
     path: '/gamification',
@@ -181,7 +192,7 @@ export const SYSTEM_TABS = {
     icon: '🎮',
     permissions: ['admin', 'gm', 'line_manager'],
     component: 'GamificationSystem',
-    priority: 16
+    priority: 17
   }
 };
 
