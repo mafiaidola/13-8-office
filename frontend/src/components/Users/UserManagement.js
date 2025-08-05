@@ -34,221 +34,27 @@ const UserManagement = ({ user, language, isRTL }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${API}/admin/users`, {
+      const response = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data && Array.isArray(response.data)) {
-        setUsers(response.data);
+        console.log('✅ Loaded users from API:', response.data.length);
+        // Filter out test users if they exist
+        const filteredUsers = response.data.filter(user => 
+          !user.username?.includes('test') && 
+          !user.username?.includes('demo') &&
+          !user.full_name?.includes('تجربة') &&
+          !user.full_name?.includes('Test')
+        );
+        setUsers(filteredUsers);
       } else {
-        // Use fallback mock data
-        setUsers([
-          {
-            id: 'user_001',
-            full_name: 'أحمد محمد علي',
-            username: 'ahmed.mohamed',
-            email: 'ahmed@epgroup.com',
-            phone: '+201234567890',
-            role: 'medical_rep',
-            area: 'القاهرة - مدينة نصر',
-            department: 'قسم المبيعات',
-            status: 'active',
-            stats_last_30_days: {
-              visits: 45,
-              orders: 12,
-              revenue: 45000,
-              rating: 4.8,
-              performance_percentage: 87,
-              total_debts: 8500,
-              total_collections: 36500,
-              total_visits: 45,
-              added_clinics: 3
-            }
-          },
-          {
-            id: 'user_002',
-            full_name: 'فاطمة أحمد السيد',
-            username: 'fatima.ahmed',
-            email: 'fatima@epgroup.com',
-            phone: '+201098765432',
-            role: 'admin',
-            area: 'الإسكندرية',
-            department: 'الإدارة العامة',
-            status: 'active',
-            stats_last_30_days: {
-              visits: 0,
-              orders: 0,
-              revenue: 0,
-              rating: 5.0,
-              performance_percentage: 95,
-              total_debts: 0,
-              total_collections: 150000,
-              total_visits: 0,
-              added_clinics: 12
-            }
-          },
-          {
-            id: 'user_003',
-            full_name: 'محمد حسن عبدالله',
-            username: 'mohamed.hassan',
-            email: 'mohamed@epgroup.com',
-            phone: '+201555123456',
-            role: 'medical_rep',
-            area: 'الجيزة - المهندسين',
-            department: 'قسم المبيعات',
-            status: 'active',
-            stats_last_30_days: {
-              visits: 38,
-              orders: 15,
-              revenue: 52000,
-              rating: 4.5,
-              performance_percentage: 92,
-              total_debts: 12000,
-              total_collections: 40000,
-              total_visits: 38,
-              added_clinics: 2
-            }
-          },
-          {
-            id: 'user_004',
-            full_name: 'سارة علي محمود',
-            username: 'sara.ali',
-            email: 'sara@epgroup.com',
-            phone: '+201777654321',
-            role: 'accountant',
-            area: 'القاهرة - مصر الجديدة',
-            department: 'قسم الحسابات',
-            status: 'active',
-            stats_last_30_days: {
-              visits: 0,
-              orders: 0,
-              revenue: 0,
-              rating: 4.9,
-              performance_percentage: 98,
-              total_debts: 250000,
-              total_collections: 180000,
-              total_visits: 0,
-              added_clinics: 0
-            }
-          },
-          {
-            id: 'user_005',
-            full_name: 'خالد محمد إبراهيم',
-            username: 'khaled.mohamed',
-            email: 'khaled@epgroup.com',
-            phone: '+201666789123',
-            role: 'warehouse_manager',
-            area: 'الإسكندرية - سموحة',
-            department: 'إدارة المخازن',
-            status: 'active',
-            stats_last_30_days: {
-              visits: 0,
-              orders: 45,
-              revenue: 0,
-              rating: 4.7,
-              performance_percentage: 89,
-              total_debts: 0,
-              total_collections: 0,
-              total_visits: 0,
-              added_clinics: 0
-            }
-          }
-        ]);
+        console.log('⚠️ API returned invalid data format');
+        setUsers([]);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
-      
-      // Fallback: Use mock data if API fails
-      setUsers([
-        {
-          id: 'user_001',
-          full_name: 'أحمد محمد علي',
-          username: 'ahmed.mohamed',
-          email: 'ahmed@epgroup.com',
-          phone: '+201234567890',
-          role: 'medical_rep',
-          area: 'القاهرة - مدينة نصر',
-          department: 'قسم المبيعات',
-          status: 'active',
-          stats_last_30_days: {
-            visits: 45,
-            orders: 12,
-            revenue: 45000,
-            rating: 4.8,
-            performance_percentage: 87,
-            total_debts: 8500,
-            total_collections: 36500,
-            total_visits: 45,
-            added_clinics: 3
-          }
-        },
-        {
-          id: 'user_002',
-          full_name: 'فاطمة أحمد السيد',
-          username: 'fatima.ahmed',
-          email: 'fatima@epgroup.com',
-          phone: '+201098765432',
-          role: 'admin',
-          area: 'الإسكندرية',
-          department: 'الإدارة العامة',
-          status: 'active',
-          stats_last_30_days: {
-            visits: 0,
-            orders: 0,
-            revenue: 0,
-            rating: 5.0,
-            performance_percentage: 95,
-            total_debts: 0,
-            total_collections: 150000,
-            total_visits: 0,
-            added_clinics: 12
-          }
-        },
-        {
-          id: 'user_003',
-          full_name: 'محمد حسن عبدالله',
-          username: 'mohamed.hassan',
-          email: 'mohamed@epgroup.com',
-          phone: '+201555123456',
-          role: 'medical_rep',
-          area: 'الجيزة - المهندسين',
-          department: 'قسم المبيعات',
-          status: 'active',
-          stats_last_30_days: {
-            visits: 38,
-            orders: 15,
-            revenue: 52000,
-            rating: 4.5,
-            performance_percentage: 92,
-            total_debts: 12000,
-            total_collections: 40000,
-            total_visits: 38,
-            added_clinics: 2
-          }
-        },
-        {
-          id: 'user_004',
-          full_name: 'سارة علي محمود',
-          username: 'sara.ali',
-          email: 'sara@epgroup.com',
-          phone: '+201777654321',
-          role: 'accountant',
-          area: 'القاهرة - مصر الجديدة',
-          department: 'قسم الحسابات',
-          status: 'active',
-          stats_last_30_days: {
-            visits: 0,
-            orders: 0,
-            revenue: 0,
-            rating: 4.9,
-            performance_percentage: 98,
-            total_debts: 250000,
-            total_collections: 180000,
-            total_visits: 0,
-            added_clinics: 0
-          }
-        }
-      ]);
+      console.error('❌ Error loading users:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
