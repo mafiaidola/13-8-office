@@ -130,23 +130,16 @@ export const SYSTEM_TABS = {
     priority: 10
   },
 
-  daily_login_records: {
-    id: 'daily_login_records',
-    path: '/daily-login-records',
-    icon: '📊',
-    name: { ar: 'سجلات الدخول اليومية', en: 'Daily Login Records' },
-    component: 'DailyLoginRecords',
-    description: { ar: 'تتبع سجلات دخول المستخدمين اليومية', en: 'Track daily user login records' },
-    permissions: ['admin', 'gm'],
-    priority: 11
-  },
-
   visit_management: {
     id: 'visit_management',
     path: '/visit-management',
     icon: '📋',
     name: { ar: 'إدارة الزيارات وسجل الدخول', en: 'Visit & Login Management' },
     component: 'VisitManagement',
+    description: { ar: 'إدارة شاملة للزيارات وسجلات الدخول مع تحميل التقارير', en: 'Comprehensive visit and login management with report downloads' },
+    permissions: ['admin'], // Admin only as requested
+    priority: 11
+  },
     description: { ar: 'تتبع الزيارات وسجلات الدخول مع نظام GPS', en: 'Track visits and login logs with GPS system' },
     permissions: ['admin', 'gm', 'medical_rep'],
     priority: 12
