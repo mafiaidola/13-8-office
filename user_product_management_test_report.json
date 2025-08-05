@@ -1,0 +1,184 @@
+{
+  "total_tests": 10,
+  "successful_tests": 10,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "execution_time": 0.4460771083831787,
+  "test_results": [
+    {
+      "test": "تسجيل دخول الأدمن",
+      "success": true,
+      "message": "تم تسجيل الدخول بنجاح للمستخدم: اسم محدث للاختبار (admin)",
+      "details": "Response time: 67.38ms",
+      "timestamp": "2025-08-05T09:51:19.229657"
+    },
+    {
+      "test": "GET /api/users - عرض جميع المستخدمين",
+      "success": true,
+      "message": "تم جلب 59 مستخدم بنجاح (أكثر من 3 كما مطلوب)",
+      "details": {
+        "total_users": 59,
+        "active_users": 59,
+        "real_users_count": 21,
+        "test_users_count": 38,
+        "roles_distribution": {
+          "admin": 1,
+          "manager": 2,
+          "medical_rep": 31,
+          "warehouse_manager": 5,
+          "accounting": 7,
+          "gm": 1,
+          "line_manager": 3,
+          "area_manager": 3,
+          "district_manager": 1,
+          "key_account": 2,
+          "sales_rep": 1,
+          "warehouse_keeper": 2
+        },
+        "sample_real_users": [
+          "اسم محدث للاختبار",
+          "مدير التجريبي",
+          "مندوب المبيعات التجريبي",
+          "مدير مخزن شامل",
+          "مندوب المبيعات التجريبي"
+        ],
+        "response_time_ms": "11.58"
+      },
+      "timestamp": "2025-08-05T09:51:19.242748"
+    },
+    {
+      "test": "DELETE /api/users/{user_id} - حذف نهائي",
+      "success": true,
+      "message": "تم حذف المستخدم 'مدير الخط تجريبي' نهائياً من النظام",
+      "details": {
+        "deleted_user": {
+          "id": "54eaa624-6885-4a84-a699-6b8c3261d6c5",
+          "username": "line_manager_test_1753561997",
+          "full_name": "مدير الخط تجريبي",
+          "was_test_user": true
+        },
+        "users_before_deletion": 59,
+        "users_after_deletion": 58,
+        "hard_delete_confirmed": true,
+        "response_message": "تم حذف المستخدم 'مدير الخط تجريبي' نهائياً من النظام"
+      },
+      "timestamp": "2025-08-05T09:51:19.302223"
+    },
+    {
+      "test": "منع الحذف الذاتي",
+      "success": true,
+      "message": "تم منع المستخدم من حذف نفسه بنجاح",
+      "details": {
+        "status_code": 403,
+        "message": "لا يمكنك حذف نفسك"
+      },
+      "timestamp": "2025-08-05T09:51:19.337184"
+    },
+    {
+      "test": "حذف مستخدم غير موجود",
+      "success": true,
+      "message": "تم التعامل مع حذف مستخدم غير موجود بشكل صحيح",
+      "details": {
+        "status_code": 404,
+        "message": "المستخدم غير موجود"
+      },
+      "timestamp": "2025-08-05T09:51:19.345429"
+    },
+    {
+      "test": "GET /api/products - عرض جميع المنتجات",
+      "success": true,
+      "message": "تم جلب 31 منتج بنجاح",
+      "details": {
+        "total_products": 31,
+        "active_products": 12,
+        "categories_distribution": {
+          "أدوية القلب": 1,
+          "فيتامينات": 3,
+          "أدوية": 15,
+          "اختبار": 5,
+          "": 2,
+          "مكملات غذائية": 2,
+          "Test Category": 2,
+          "أدوية متخصصة": 1
+        },
+        "lines_distribution": {
+          "غير محدد": 2,
+          "خط تجريبي": 23,
+          "خط اختبار شامل 1753969122": 1,
+          "خط مكرر للاختبار": 2,
+          "Test Line Unique": 3
+        },
+        "total_stock": 3000,
+        "sample_products": [
+          "دواء الضغط",
+          "فيتامين د",
+          "دواء تجريبي للاختبار",
+          "منتج اختبار d8055b93",
+          "منتج اختبار a3706eba"
+        ],
+        "response_time_ms": "9.78"
+      },
+      "timestamp": "2025-08-05T09:51:19.356245"
+    },
+    {
+      "test": "إنشاء منتج تجريبي للحذف",
+      "success": true,
+      "message": "تم إنشاء المنتج: منتج تجريبي للحذف 1754387479",
+      "details": {
+        "product_id": "4a3dc27b-575d-43be-b44e-ac1fee25a55a"
+      },
+      "timestamp": "2025-08-05T09:51:19.465138"
+    },
+    {
+      "test": "DELETE /api/products/{product_id} - حذف نهائي",
+      "success": true,
+      "message": "تم حذف المنتج 'منتج تجريبي للحذف 1754387479' نهائياً من النظام (HARD DELETE)",
+      "details": {
+        "products_before_deletion": 32,
+        "products_after_deletion": 31,
+        "hard_delete_confirmed": true,
+        "response_message": "تم حذف المنتج نهائياً من النظام",
+        "deleted_product_id": "4a3dc27b-575d-43be-b44e-ac1fee25a55a"
+      },
+      "timestamp": "2025-08-05T09:51:19.549530"
+    },
+    {
+      "test": "حذف منتج غير موجود",
+      "success": true,
+      "message": "تم التعامل مع حذف منتج غير موجود بشكل صحيح (404 error)",
+      "details": {
+        "status_code": 404,
+        "message": "المنتج غير موجود"
+      },
+      "timestamp": "2025-08-05T09:51:19.558695"
+    },
+    {
+      "test": "اختبار تكامل قاعدة البيانات",
+      "success": true,
+      "message": "جميع الأنظمة تعمل بشكل طبيعي بعد عمليات الحذف",
+      "details": {
+        "المستخدمين": {
+          "count": 58,
+          "status": "متاح",
+          "response_time": "11.82ms"
+        },
+        "المنتجات": {
+          "count": 31,
+          "status": "متاح",
+          "response_time": "9.94ms"
+        },
+        "العيادات": {
+          "count": 40,
+          "status": "متاح",
+          "response_time": "10.99ms"
+        },
+        "الطلبات": {
+          "count": 23,
+          "status": "متاح",
+          "response_time": "10.65ms"
+        }
+      },
+      "timestamp": "2025-08-05T09:51:19.606078"
+    }
+  ]
+}
