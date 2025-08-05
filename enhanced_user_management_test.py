@@ -389,7 +389,11 @@ class EnhancedUserManagementTester:
             
             # إضافة مدير إذا كان متاحاً
             if hasattr(self, 'managers_data') and self.managers_data:
-                update_data["managed_by"] = self.managers_data[0]["id"]
+                # البحث عن مدير له id
+                for manager in self.managers_data:
+                    if "id" in manager:
+                        update_data["managed_by"] = manager["id"]
+                        break
             
             try:
                 start_time = time.time()
