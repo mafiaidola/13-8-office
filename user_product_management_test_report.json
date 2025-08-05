@@ -3,14 +3,14 @@
   "successful_tests": 11,
   "failed_tests": 0,
   "success_rate": 100.0,
-  "execution_time": 0.5377192497253418,
+  "execution_time": 0.4538915157318115,
   "test_results": [
     {
       "test": "تسجيل دخول الأدمن",
       "success": true,
       "message": "تم تسجيل الدخول بنجاح للمستخدم: اسم محدث للاختبار (admin)",
-      "details": "Response time: 21.67ms",
-      "timestamp": "2025-08-05T10:49:10.788926"
+      "details": "Response time: 20.73ms",
+      "timestamp": "2025-08-05T10:49:45.348225"
     },
     {
       "test": "GET /api/users - عرض جميع المستخدمين",
@@ -40,18 +40,18 @@
           "مدير مخزن شامل",
           "مندوب المبيعات التجريبي"
         ],
-        "response_time_ms": "12.32"
+        "response_time_ms": "12.26"
       },
-      "timestamp": "2025-08-05T10:49:10.802169"
+      "timestamp": "2025-08-05T10:49:45.361453"
     },
     {
       "test": "إنشاء مستخدم تجريبي للحذف",
       "success": true,
       "message": "تم إنشاء المستخدم: مستخدم تجريبي للحذف",
       "details": {
-        "user_id": "f6a6f91d-e469-477f-be0c-3e76d88a24b6"
+        "user_id": "71979031-b6f1-4428-b0b3-a08dfb67ab4c"
       },
-      "timestamp": "2025-08-05T10:49:10.815474"
+      "timestamp": "2025-08-05T10:49:45.374251"
     },
     {
       "test": "DELETE /api/users/{user_id} - حذف نهائي",
@@ -59,8 +59,8 @@
       "message": "تم حذف المستخدم 'مستخدم تجريبي للحذف' نهائياً من النظام",
       "details": {
         "deleted_user": {
-          "id": "f6a6f91d-e469-477f-be0c-3e76d88a24b6",
-          "username": "test_user_1754390950",
+          "id": "71979031-b6f1-4428-b0b3-a08dfb67ab4c",
+          "username": "test_user_1754390985",
           "full_name": "مستخدم تجريبي للحذف",
           "was_test_user": true
         },
@@ -69,7 +69,7 @@
         "hard_delete_confirmed": true,
         "response_message": "تم حذف المستخدم 'مستخدم تجريبي للحذف' نهائياً من النظام"
       },
-      "timestamp": "2025-08-05T10:49:10.948681"
+      "timestamp": "2025-08-05T10:49:45.462699"
     },
     {
       "test": "منع الحذف الذاتي",
@@ -79,7 +79,7 @@
         "status_code": 403,
         "message": "لا يمكنك حذف نفسك"
       },
-      "timestamp": "2025-08-05T10:49:10.988219"
+      "timestamp": "2025-08-05T10:49:45.502144"
     },
     {
       "test": "حذف مستخدم غير موجود",
@@ -89,50 +89,51 @@
         "status_code": 404,
         "message": "المستخدم غير موجود"
       },
-      "timestamp": "2025-08-05T10:49:10.999311"
+      "timestamp": "2025-08-05T10:49:45.513331"
     },
     {
       "test": "GET /api/products - عرض جميع المنتجات",
       "success": true,
-      "message": "تم جلب 1 منتج بنجاح",
+      "message": "تم جلب 2 منتج بنجاح",
       "details": {
-        "total_products": 1,
-        "active_products": 1,
+        "total_products": 2,
+        "active_products": 2,
         "categories_distribution": {
-          "أدوية القلب والأوعية الدموية": 1
+          "أدوية القلب والأوعية الدموية": 2
         },
         "lines_distribution": {
-          "Line_1": 1
+          "Line_1": 2
         },
-        "total_stock": 100,
+        "total_stock": 250,
         "sample_products": [
-          "دواء الضغط الجديد - أملوديبين 10 مجم"
+          "دواء الضغط الجديد - أملوديبين 10 مجم",
+          "كونكور 5 مجم أقراص"
         ],
-        "response_time_ms": "52.37"
+        "response_time_ms": "10.34"
       },
-      "timestamp": "2025-08-05T10:49:11.052367"
+      "timestamp": "2025-08-05T10:49:45.524776"
     },
     {
       "test": "إنشاء منتج تجريبي للحذف",
       "success": true,
-      "message": "تم إنشاء المنتج: منتج تجريبي للحذف 1754390951",
+      "message": "تم إنشاء المنتج: منتج تجريبي للحذف 1754390985",
       "details": {
-        "product_id": "f67479d3-ffad-4fd3-99d2-2677e4280c66"
+        "product_id": "9b3396bd-9d8d-4837-a268-32f066cb5ce7"
       },
-      "timestamp": "2025-08-05T10:49:11.118160"
+      "timestamp": "2025-08-05T10:49:45.550059"
     },
     {
       "test": "DELETE /api/products/{product_id} - حذف نهائي",
       "success": true,
-      "message": "تم حذف المنتج 'منتج تجريبي للحذف 1754390951' نهائياً من النظام (HARD DELETE)",
+      "message": "تم حذف المنتج 'منتج تجريبي للحذف 1754390985' نهائياً من النظام (HARD DELETE)",
       "details": {
-        "products_before_deletion": 2,
-        "products_after_deletion": 1,
+        "products_before_deletion": 3,
+        "products_after_deletion": 2,
         "hard_delete_confirmed": true,
         "response_message": "تم حذف المنتج نهائياً من النظام",
-        "deleted_product_id": "f67479d3-ffad-4fd3-99d2-2677e4280c66"
+        "deleted_product_id": "9b3396bd-9d8d-4837-a268-32f066cb5ce7"
       },
-      "timestamp": "2025-08-05T10:49:11.203630"
+      "timestamp": "2025-08-05T10:49:45.677257"
     },
     {
       "test": "حذف منتج غير موجود",
@@ -142,7 +143,7 @@
         "status_code": 404,
         "message": "المنتج غير موجود"
       },
-      "timestamp": "2025-08-05T10:49:11.214229"
+      "timestamp": "2025-08-05T10:49:45.687467"
     },
     {
       "test": "اختبار تكامل قاعدة البيانات",
@@ -152,25 +153,25 @@
         "المستخدمين": {
           "count": 21,
           "status": "متاح",
-          "response_time": "9.86ms"
+          "response_time": "11.27ms"
         },
         "المنتجات": {
-          "count": 1,
+          "count": 2,
           "status": "متاح",
-          "response_time": "51.01ms"
+          "response_time": "51.24ms"
         },
         "العيادات": {
           "count": 40,
           "status": "متاح",
-          "response_time": "12.36ms"
+          "response_time": "12.97ms"
         },
         "الطلبات": {
-          "count": 25,
+          "count": 26,
           "status": "متاح",
-          "response_time": "12.14ms"
+          "response_time": "13.07ms"
         }
       },
-      "timestamp": "2025-08-05T10:49:11.304081"
+      "timestamp": "2025-08-05T10:49:45.780597"
     }
   ]
 }
