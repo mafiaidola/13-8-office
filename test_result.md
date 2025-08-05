@@ -3083,9 +3083,8 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Comprehensive Frontend Testing - Critical Login Issue"
-  stuck_tasks: 
-    - "Comprehensive Frontend Testing - Critical Login Issue"
+    - "Comprehensive Debt and Collection Management System Testing"
+  stuck_tasks: []
   completed_tasks:
     - "Clinic Creation API Testing - حل خطأ إرسال الطلب"
     - "Comprehensive Accounting System - Overview API"
