@@ -389,6 +389,58 @@ async def get_user_profile(user_id: str, current_user: User = Depends(get_curren
     
     return {"user": user}
 
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(get_current_user)):
+    """حذف مستخدم - Delete user"""
+    # Check permissions - only admin and gm can delete users
+    if current_user.role not in ["admin", "gm"]:
+        raise HTTPException(status_code=403, detail="غير مصرح لك بحذف المستخدمين")
+    
+    try:
+        # Check if user exists
+        user_to_delete = await db.users.find_one({"id": user_id})
+        if not user_to_delete:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+        
+        # Prevent deletion of admin users by non-admin
+        if user_to_delete.get("role") == "admin" and current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="لا يمكن حذف مديري النظام")
+        
+        # Prevent self-deletion
+        if user_id == current_user.id:
+            raise HTTPException(status_code=403, detail="لا يمكنك حذف نفسك")
+        
+        # Filter out test users and demo users as requested
+        is_test_user = (
+            user_to_delete.get("username", "").lower().find("test") >= 0 or
+            user_to_delete.get("username", "").lower().find("demo") >= 0 or
+            user_to_delete.get("full_name", "").find("تجربة") >= 0 or
+            user_to_delete.get("full_name", "").lower().find("test") >= 0
+        )
+        
+        # HARD DELETE - Completely remove user from database
+        result = await db.users.delete_one({"id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+        
+        return {
+            "success": True, 
+            "message": f"تم حذف المستخدم '{user_to_delete.get('full_name', user_id)}' نهائياً من النظام",
+            "deleted_user": {
+                "id": user_id,
+                "username": user_to_delete.get("username"),
+                "full_name": user_to_delete.get("full_name"),
+                "was_test_user": is_test_user
+            }
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting user: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف المستخدم")
+
 # Order Management Routes - تحذيرات المديونية
 @api_router.get("/orders/check-clinic-status/{clinic_id}")
 async def check_clinic_order_status(clinic_id: str, current_user: User = Depends(get_current_user)):
