@@ -137,33 +137,17 @@ class BackendTester:
         lines = self.get_available_lines()
         line_id = lines[0]["id"] if lines else "default_line_id"
         
-        # Real pharmaceutical product data
+        # Real pharmaceutical product data with correct structure
         new_product = {
             "name": "كونكور 5 مجم أقراص",
-            "generic_name": "بيسوبرولول فومارات",
+            "description": "دواء لعلاج ارتفاع ضغط الدم وأمراض القلب التاجية - بيسوبرولول فومارات 5 مجم",
             "category": "أدوية القلب والأوعية الدموية",
-            "manufacturer": "شركة نوفارتيس للأدوية",
             "unit": "علبة 30 قرص",
-            "price": 89.50,
-            "cost": 65.00,
-            "stock_quantity": 150,
-            "min_stock_level": 20,
-            "max_stock_level": 500,
-            "barcode": "6221155001234",
-            "batch_number": "CC240801",
-            "expiry_date": "2026-08-01",
-            "storage_conditions": "يحفظ في درجة حرارة أقل من 25 درجة مئوية",
-            "active_ingredients": "بيسوبرولول فومارات 5 مجم",
-            "dosage_form": "أقراص مغلفة",
-            "therapeutic_class": "حاصرات بيتا انتقائية",
-            "prescription_required": True,
-            "is_controlled": False,
-            "is_active": True,
             "line_id": line_id,
-            "description": "دواء لعلاج ارتفاع ضغط الدم وأمراض القلب التاجية",
-            "side_effects": "دوخة، تعب، صداع، انخفاض ضغط الدم",
-            "contraindications": "فرط الحساسية، انسداد القلب، الربو الشديد",
-            "drug_interactions": "مثبطات الكالسيوم، مدرات البول، مضادات السكري"
+            "price": 89.50,
+            "price_type": "fixed",
+            "current_stock": 150,
+            "is_active": True
         }
         
         try:
