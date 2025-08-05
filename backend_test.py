@@ -133,6 +133,10 @@ class BackendTester:
         """اختبار إضافة منتج جديد مع بيانات حقيقية كاملة"""
         print("\n📦 === NEW PRODUCT ADDITION TESTING ===")
         
+        # Get available lines first
+        lines = self.get_available_lines()
+        line_id = lines[0]["id"] if lines else "default_line_id"
+        
         # Real pharmaceutical product data
         new_product = {
             "name": "كونكور 5 مجم أقراص",
@@ -155,6 +159,7 @@ class BackendTester:
             "prescription_required": True,
             "is_controlled": False,
             "is_active": True,
+            "line_id": line_id,
             "description": "دواء لعلاج ارتفاع ضغط الدم وأمراض القلب التاجية",
             "side_effects": "دوخة، تعب، صداع، انخفاض ضغط الدم",
             "contraindications": "فرط الحساسية، انسداد القلب، الربو الشديد",
