@@ -338,6 +338,62 @@ class DebtCollectionTester:
                 self.log_test("Order to Debt Conversion", False, "No warehouses available for order creation", details=data_status)
                 return False
             
+            # If we have all required data, create a new order
+            order_data = {
+                "clinic_id": clinics[0]["id"],
+                "warehouse_id": warehouses[0]["id"],
+                "items": [
+                    {
+                        "product_id": products[0]["id"],
+                        "quantity": 3
+                    }
+                ],
+                "line": "خط القاهرة الكبرى",
+                "area_id": "area_cairo_1",
+                "notes": "طلب اختبار لنظام التكامل مع الديون",
+                "debt_warning_acknowledged": True
+            }
+            
+            start_time = time.time()
+            response = self.session.post(f"{BACKEND_URL}/orders", json=order_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                
+                order_details = {
+                    "order_id": result.get("order_id"),
+                    "order_number": result.get("order_number"),
+                    "total_amount": result.get("total_amount"),
+                    "debt_record_id": result.get("debt_record_id"),
+                    "invoice_converted_to_debt": result.get("invoice_converted_to_debt"),
+                    "payment_status": result.get("payment_status")
+                }
+                
+                self.created_order_id = result.get("order_id")
+                if result.get("debt_record_id"):
+                    self.created_debt_id = result.get("debt_record_id")
+                
+                self.log_test(
+                    "Order to Debt Conversion",
+                    True,
+                    f"Order created and converted to debt successfully. Order: {result.get('order_id')}, Debt: {result.get('debt_record_id')}",
+                    response_time,
+                    order_details
+                )
+                
+                # Verify debt record was created
+                self.verify_debt_record_creation(result.get("debt_record_id"))
+                
+                return True
+            else:
+                self.log_test("Order to Debt Conversion", False, f"Failed: {response.status_code} - {response.text}", response_time)
+                return False
+                
+        except Exception as e:
+            self.log_test("Order to Debt Conversion", False, f"Error: {str(e)}")
+            return False
+            
             # Create a new order
             order_data = {
                 "clinic_id": clinics[0]["id"],
