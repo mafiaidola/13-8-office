@@ -385,6 +385,279 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
         </div>
       </div>
 
+      {/* Enhanced Statistics Section */}
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {activeTab === 'visits' ? (
+            <>
+              {/* Total Visits */}
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">إجمالي الزيارات</p>
+                    <p className="text-3xl font-bold">{visits.length}</p>
+                    <p className="text-blue-100 text-xs">المفلترة: {filteredVisits.length}</p>
+                  </div>
+                  <div className="p-3 bg-blue-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">🚗</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Completed Visits */}
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">زيارات مكتملة</p>
+                    <p className="text-3xl font-bold">
+                      {visits.filter(v => v.status === 'completed').length}
+                    </p>
+                    <p className="text-green-100 text-xs">
+                      {visits.length > 0 ? Math.round((visits.filter(v => v.status === 'completed').length / visits.length) * 100) : 0}% من الإجمالي
+                    </p>
+                  </div>
+                  <div className="p-3 bg-green-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">✅</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Unique Clinics */}
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">عيادات مختلفة</p>
+                    <p className="text-3xl font-bold">
+                      {new Set(visits.map(v => v.clinic_id)).size}
+                    </p>
+                    <p className="text-purple-100 text-xs">عيادات فريدة</p>
+                  </div>
+                  <div className="p-3 bg-purple-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">🏥</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Representatives */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">مندوبين نشطين</p>
+                    <p className="text-3xl font-bold">
+                      {new Set(visits.map(v => v.user_id)).size}
+                    </p>
+                    <p className="text-orange-100 text-xs">مندوب فريد</p>
+                  </div>
+                  <div className="p-3 bg-orange-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Total Login Sessions */}
+              <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-indigo-100 text-sm font-medium">جلسات الدخول</p>
+                    <p className="text-3xl font-bold">{loginLogs.length}</p>
+                    <p className="text-indigo-100 text-xs">المفلترة: {filteredLoginLogs.length}</p>
+                  </div>
+                  <div className="p-3 bg-indigo-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">🔐</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Successful Logins */}
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">دخول ناجح</p>
+                    <p className="text-3xl font-bold">
+                      {loginLogs.filter(l => l.status === 'successful').length}
+                    </p>
+                    <p className="text-green-100 text-xs">
+                      {loginLogs.length > 0 ? Math.round((loginLogs.filter(l => l.status === 'successful').length / loginLogs.length) * 100) : 0}% نجح
+                    </p>
+                  </div>
+                  <div className="p-3 bg-green-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">✅</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Unique Users */}
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">مستخدمين فريدين</p>
+                    <p className="text-3xl font-bold">
+                      {new Set(loginLogs.map(l => l.user_id)).size}
+                    </p>
+                    <p className="text-blue-100 text-xs">مستخدم مختلف</p>
+                  </div>
+                  <div className="p-3 bg-blue-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Session Duration */}
+              <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-teal-100 text-sm font-medium">متوسط مدة الجلسة</p>
+                    <p className="text-3xl font-bold">
+                      {loginLogs.length > 0 
+                        ? Math.round(loginLogs.reduce((acc, l) => acc + (l.session_duration || 0), 0) / loginLogs.length / 60)
+                        : 0}
+                    </p>
+                    <p className="text-teal-100 text-xs">دقيقة في المتوسط</p>
+                  </div>
+                  <div className="p-3 bg-teal-400 bg-opacity-30 rounded-full">
+                    <span className="text-2xl">⏱️</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Advanced Analytics Charts Section */}
+      {!loading && (
+        <div className="bg-white rounded-xl shadow-lg border p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <span>📊</span>
+            التحليلات التفصيلية
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Status Distribution Chart */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-700 mb-3">
+                {activeTab === 'visits' ? 'توزيع حالات الزيارات' : 'توزيع حالات تسجيل الدخول'}
+              </h4>
+              <div className="space-y-2">
+                {activeTab === 'visits' ? (
+                  ['completed', 'pending', 'cancelled'].map(status => {
+                    const count = visits.filter(v => v.status === status).length;
+                    const percentage = visits.length > 0 ? (count / visits.length) * 100 : 0;
+                    const statusText = status === 'completed' ? 'مكتملة' : 
+                                     status === 'pending' ? 'معلقة' : 'ملغية';
+                    return (
+                      <div key={status} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{statusText}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                status === 'completed' ? 'bg-green-500' :
+                                status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">
+                            {count} ({Math.round(percentage)}%)
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  ['successful', 'failed'].map(status => {
+                    const count = loginLogs.filter(l => l.status === status).length;
+                    const percentage = loginLogs.length > 0 ? (count / loginLogs.length) * 100 : 0;
+                    const statusText = status === 'successful' ? 'ناجح' : 'فاشل';
+                    return (
+                      <div key={status} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{statusText}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                status === 'successful' ? 'bg-green-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">
+                            {count} ({Math.round(percentage)}%)
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Top Performers */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-700 mb-3">
+                {activeTab === 'visits' ? 'أكثر المندوبين نشاطاً' : 'أكثر المستخدمين تسجيل دخول'}
+              </h4>
+              <div className="space-y-3">
+                {activeTab === 'visits' ? (
+                  Object.entries(
+                    visits.reduce((acc, visit) => {
+                      const rep = visit.sales_rep_name || 'غير محدد';
+                      acc[rep] = (acc[rep] || 0) + 1;
+                      return acc;
+                    }, {})
+                  )
+                  .sort(([,a], [,b]) => b - a)
+                  .slice(0, 5)
+                  .map(([rep, count], index) => (
+                    <div key={rep} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold text-white ${
+                          index === 0 ? 'bg-yellow-500' :
+                          index === 1 ? 'bg-gray-400' :
+                          index === 2 ? 'bg-orange-600' : 'bg-blue-500'
+                        }`}>
+                          #{index + 1}
+                        </span>
+                        <span className="text-sm text-gray-700">{rep}</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600">{count} زيارة</span>
+                    </div>
+                  ))
+                ) : (
+                  Object.entries(
+                    loginLogs.reduce((acc, log) => {
+                      const user = log.user_name || 'غير محدد';
+                      acc[user] = (acc[user] || 0) + 1;
+                      return acc;
+                    }, {})
+                  )
+                  .sort(([,a], [,b]) => b - a)
+                  .slice(0, 5)
+                  .map(([user, count], index) => (
+                    <div key={user} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold text-white ${
+                          index === 0 ? 'bg-yellow-500' :
+                          index === 1 ? 'bg-gray-400' :
+                          index === 2 ? 'bg-orange-600' : 'bg-blue-500'
+                        }`}>
+                          #{index + 1}
+                        </span>
+                        <span className="text-sm text-gray-700">{user}</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600">{count} جلسة</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="flex justify-center items-center py-12">
