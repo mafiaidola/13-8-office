@@ -480,32 +480,69 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
             🔄 مسح الفلاتر
           </button>
           
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const data = activeTab === 'visits' ? filteredVisits : filteredLoginLogs;
-                const title = activeTab === 'visits' ? 'تقرير الزيارات' : 'تقرير سجل الدخول';
-                const filename = activeTab === 'visits' ? 'visits-report' : 'login-logs-report';
-                exportToPDF(data, filename, title);
-              }}
-              disabled={exportLoading}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              📄 تصدير PDF
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Advanced Export Options */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+              <span className="text-sm text-gray-600 font-medium">📊 تصدير:</span>
+              
+              <button
+                onClick={() => {
+                  const data = activeTab === 'visits' ? filteredVisits : filteredLoginLogs;
+                  const title = activeTab === 'visits' ? 'تقرير الزيارات المفصل' : 'تقرير سجل الدخول المفصل';
+                  const filename = activeTab === 'visits' ? 'detailed-visits-report' : 'detailed-login-logs-report';
+                  exportToPDF(data, filename, title);
+                }}
+                disabled={exportLoading}
+                className="bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
+              >
+                📄 PDF
+              </button>
+              
+              <button
+                onClick={() => {
+                  const data = activeTab === 'visits' ? filteredVisits : filteredLoginLogs;
+                  const filename = activeTab === 'visits' ? 'visits-data' : 'login-logs-data';
+                  const sheetName = activeTab === 'visits' ? 'الزيارات' : 'سجل الدخول';
+                  exportToExcel(data, filename, sheetName);
+                }}
+                disabled={exportLoading}
+                className="bg-green-500 text-white px-3 py-1.5 rounded-md hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
+              >
+                📊 Excel
+              </button>
+              
+              <button
+                onClick={() => exportAnalyticsReport()}
+                disabled={exportLoading}
+                className="bg-blue-500 text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
+              >
+                📈 تحليلات
+              </button>
+            </div>
             
-            <button
-              onClick={() => {
-                const data = activeTab === 'visits' ? filteredVisits : filteredLoginLogs;
-                const filename = activeTab === 'visits' ? 'visits-data' : 'login-logs-data';
-                const sheetName = activeTab === 'visits' ? 'الزيارات' : 'سجل الدخول';
-                exportToExcel(data, filename, sheetName);
-              }}
-              disabled={exportLoading}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              📊 تصدير Excel
-            </button>
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+              <span className="text-sm text-gray-600 font-medium">⚡ إجراءات:</span>
+              
+              <button
+                onClick={() => {
+                  loadVisitsData();
+                  loadLoginLogs();
+                }}
+                disabled={loading}
+                className="bg-purple-500 text-white px-3 py-1.5 rounded-md hover:bg-purple-600 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
+              >
+                <span className={loading ? 'animate-spin' : ''}>🔄</span>
+                تحديث
+              </button>
+              
+              <button
+                onClick={() => setFilters({ dateFrom: '', dateTo: '', user: '', status: 'all', search: '' })}
+                className="bg-gray-500 text-white px-3 py-1.5 rounded-md hover:bg-gray-600 transition-colors flex items-center gap-1 text-sm"
+              >
+                🧹 مسح الفلاتر
+              </button>
+            </div>
           </div>
         </div>
       </div>
