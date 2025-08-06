@@ -486,18 +486,118 @@ const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
               </div>
               
               <div className="p-6">
-                {/* Map Container */}
-                <div className="relative bg-blue-50 rounded-lg border-2 border-dashed border-blue-200 h-96 mb-6">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4">🗺️</div>
-                      <h3 className="text-xl font-bold text-blue-600 mb-2">الخريطة التفاعلية</h3>
-                      <p className="text-blue-500 mb-4">عرض مواقع المندوبين النشطين في الوقت الفعلي</p>
-                      <div className="text-sm text-blue-400">
-                        <p>يمكن تكامل هذا القسم مع:</p>
-                        <p>• Google Maps API</p>
-                        <p>• Mapbox GL JS</p>
-                        <p>• نظام GPS للتتبع الفعلي</p>
+                {/* Interactive Map Container */}
+                <div className="relative bg-gradient-to-br from-blue-100 to-green-100 rounded-lg border overflow-hidden h-96 mb-6">
+                  {/* Map Background Grid */}
+                  <div 
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+                      `,
+                      backgroundSize: '20px 20px'
+                    }}
+                  />
+                  
+                  {/* Map Legend */}
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
+                    <h4 className="text-sm font-bold text-gray-800 mb-2">مفاتيح الخريطة</h4>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <span>مندوب نشط</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <span>في رحلة</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span>عيادة</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Interactive Representatives Points */}
+                  {filteredActiveReps.filter(rep => rep.latitude && rep.longitude).map((rep, index) => {
+                    // تحويل إحداثيات GPS إلى مواقع على الخريطة
+                    const x = ((rep.longitude + 180) / 360) * 100; // تحويل longitude إلى %
+                    const y = ((90 - rep.latitude) / 180) * 100;   // تحويل latitude إلى %
+                    
+                    return (
+                      <div
+                        key={rep.id}
+                        className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 z-20"
+                        style={{
+                          left: `${Math.min(95, Math.max(5, x))}%`,
+                          top: `${Math.min(95, Math.max(5, y))}%`
+                        }}
+                        onClick={() => setSelectedRep(rep)}
+                        title={rep.full_name}
+                      >
+                        <div className={`relative group`}>
+                          {/* Representative Marker */}
+                          <div className={`w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-xs font-bold text-white transition-all duration-300 group-hover:scale-125 ${
+                            rep.status === 'active' 
+                              ? 'bg-green-500 animate-pulse' 
+                              : rep.status === 'traveling' 
+                                ? 'bg-yellow-500' 
+                                : 'bg-gray-400'
+                          }`}>
+                            {rep.full_name?.charAt(0) || '👤'}
+                          </div>
+                          
+                          {/* Tooltip on Hover */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                              <div className="font-bold">{rep.full_name}</div>
+                              <div>{rep.current_activity}</div>
+                              <div>بطارية: {rep.battery_level}%</div>
+                              {rep.last_update && (
+                                <div className="text-gray-300">تحديث: {formatTimeAgo(rep.last_update)}</div>
+                              )}
+                            </div>
+                            {/* Tooltip Arrow */}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Mock Clinic Locations */}
+                  {Array.from({length: 5}).map((_, index) => (
+                    <div
+                      key={`clinic-${index}`}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                      style={{
+                        left: `${20 + (index * 15)}%`,
+                        top: `${30 + (index % 2 * 40)}%`
+                      }}
+                    >
+                      <div className="w-4 h-4 bg-blue-500 rounded-sm border-2 border-white shadow-lg hover:scale-110 transition-transform" title={`عيادة ${index + 1}`}>
+                        <div className="text-xs text-white text-center leading-none">🏥</div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Central Command Display */}
+                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                    <div className="text-sm font-bold text-gray-800 mb-1">مركز التحكم</div>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div>المندوبين النشطين: {filteredActiveReps.filter(rep => rep.status === 'active').length}</div>
+                      <div>في رحلة: {filteredActiveReps.filter(rep => rep.status === 'traveling').length}</div>
+                      <div>إجمالي الأنشطة: {activities.length}</div>
+                    </div>
+                  </div>
+                  
+                  {/* Real-time Update Indicator */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <span>التحديث الفوري</span>
+                  </div>
+                </div>
                       </div>
                     </div>
                   </div>
