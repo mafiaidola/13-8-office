@@ -31,17 +31,32 @@ const AuthContext = createContext();
 const AVAILABLE_THEMES = {
   // ثيم داكن بسيط - Simple Dark
   dark: {
-    name: { ar: 'داكن', en: 'Dark' }
+    name: { ar: 'داكن', en: 'Dark' },
+    colors: {
+      background: '#1a1a1a',
+      card: '#2a2a2a',
+      text: '#ffffff'
+    }
   },
   
   // ثيم فاتح بسيط - Simple Light  
   light: {
-    name: { ar: 'فاتح', en: 'Light' }
+    name: { ar: 'فاتح', en: 'Light' },
+    colors: {
+      background: '#ffffff',
+      card: '#f8f9fa',
+      text: '#000000'
+    }
   },
   
   // ثيم عالي التباين - High Contrast
   minimal: {
-    name: { ar: 'تباين عالي', en: 'High Contrast' }
+    name: { ar: 'تباين عالي', en: 'High Contrast' },
+    colors: {
+      background: '#ffffff',
+      card: '#ffffff',
+      text: '#000000'
+    }
   }
 };
 
