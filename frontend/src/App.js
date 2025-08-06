@@ -799,7 +799,7 @@ const DashboardLayout = () => {
       <div className="dashboard-content flex pt-16">
         {/* Main Content */}
         <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
-          sidebarCollapsed ? 'mr-16' : 'mr-80'
+          sidebarCollapsed ? 'mr-16 sidebar-collapsed' : 'mr-80'
         }`}>
           {/* Current Tab Component */}
           <div className="tab-content">
