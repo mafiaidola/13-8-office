@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://3cda3dc5-f9f2-4f37-9cc1-77fdfe8786ca.preview.emergentagent.com/api"
+BASE_URL = "https://af82d270-0f9e-4b08-93b4-329c3531075a.preview.emergentagent.com/api"
 DEFAULT_ADMIN = {"username": "admin", "password": "admin123"}
 
 # GPS test coordinates

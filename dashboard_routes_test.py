@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend environment
-BACKEND_URL = "https://3cda3dc5-f9f2-4f37-9cc1-77fdfe8786ca.preview.emergentagent.com"
+BACKEND_URL = "https://af82d270-0f9e-4b08-93b4-329c3531075a.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class DashboardRoutesTest:

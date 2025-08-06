@@ -7,7 +7,7 @@ Test existing medical rep in the system
 import requests
 import json
 
-BACKEND_URL = "https://3cda3dc5-f9f2-4f37-9cc1-77fdfe8786ca.preview.emergentagent.com/api"
+BACKEND_URL = "https://af82d270-0f9e-4b08-93b4-329c3531075a.preview.emergentagent.com/api"
 
 def test_existing_medical_rep():
     """اختبار المندوب الطبي الموجود"""
