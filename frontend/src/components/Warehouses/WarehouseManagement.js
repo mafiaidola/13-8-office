@@ -476,6 +476,218 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
           language={language}
         />
       )}
+      
+      {/* Warehouse Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card modal-content w-full max-w-6xl">
+            {/* Modal Header */}
+            <div className="modal-header">
+              <h2 className="modal-title">📦 تحليلات المخازن الشاملة</h2>
+              <button
+                onClick={() => setShowAnalytics(false)}
+                className="modal-close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Navigation */}
+            <div className="modal-nav">
+              <button className="modal-nav-tab active">📊 الإحصائيات</button>
+              <button className="modal-nav-tab">📦 المخزون</button>
+              <button className="modal-nav-tab">🏭 التوزيع</button>
+              <button className="modal-nav-tab">📈 الحركات</button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="modal-body">
+              {/* Key Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-indigo-100 text-sm">إجمالي المخازن</p>
+                      <p className="text-2xl font-bold">{analyticsData.totalWarehouses}</p>
+                      <p className="text-indigo-200 text-xs">نشطة: {analyticsData.activeWarehouses}</p>
+                    </div>
+                    <div className="text-3xl opacity-80">🏭</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm">إجمالي المخزون</p>
+                      <p className="text-2xl font-bold">{analyticsData.totalStock.toLocaleString()}</p>
+                      <p className="text-green-200 text-xs">منتجات: {analyticsData.totalProducts}</p>
+                    </div>
+                    <div className="text-3xl opacity-80">📦</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-yellow-100 text-sm">مخزون منخفض</p>
+                      <p className="text-2xl font-bold">{analyticsData.lowStockItems}</p>
+                      <p className="text-yellow-200 text-xs">يحتاج إعادة تموين</p>
+                    </div>
+                    <div className="text-3xl opacity-80">⚠️</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm">حركات شهرية</p>
+                      <p className="text-2xl font-bold">{analyticsData.monthlyMovements}</p>
+                      <p className="text-purple-200 text-xs">هذا الشهر</p>
+                    </div>
+                    <div className="text-3xl opacity-80">🔄</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Top Products */}
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">🏆 أكثر المنتجات مخزوناً</h3>
+                  <div className="space-y-3">
+                    {analyticsData.topProducts.map((product, index) => {
+                      const percentage = analyticsData.totalStock > 0 
+                        ? ((product.stock / analyticsData.totalStock) * 100).toFixed(1) 
+                        : 0;
+                      return (
+                        <div key={product.product} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded-full font-bold text-white ${
+                              index === 0 ? 'bg-yellow-500' :
+                              index === 1 ? 'bg-gray-400' :
+                              index === 2 ? 'bg-orange-600' : 'bg-blue-500'
+                            }`}>
+                              #{index + 1}
+                            </span>
+                            <span className="font-medium">{product.product}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="h-2 bg-indigo-500 rounded-full" 
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{product.stock} ({percentage}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Region Distribution */}
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">🗺️ توزيع المخازن جغرافياً</h3>
+                  <div className="space-y-3">
+                    {Object.entries(analyticsData.regionDistribution).map(([region, count]) => {
+                      const percentage = analyticsData.totalWarehouses > 0 
+                        ? ((count / analyticsData.totalWarehouses) * 100).toFixed(1) 
+                        : 0;
+                      return (
+                        <div key={region} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
+                            <span className="font-medium">{region}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="h-2 bg-indigo-500 rounded-full"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{count} ({percentage}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock Status Distribution */}
+              <div className="bg-card p-4 rounded-lg border mb-6">
+                <h3 className="text-lg font-semibold mb-4">📊 حالة المخزون</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {Object.entries(analyticsData.stockDistribution).map(([status, count]) => {
+                    const statusColor = status === 'في المخزون' ? 'bg-green-500' :
+                                       status === 'مخزون منخفض' ? 'bg-yellow-500' : 'bg-red-500';
+                    const percentage = Object.values(analyticsData.stockDistribution).reduce((a, b) => a + b, 0) > 0 
+                      ? ((count / Object.values(analyticsData.stockDistribution).reduce((a, b) => a + b, 0)) * 100).toFixed(1)
+                      : 0;
+                    
+                    return (
+                      <div key={status} className="text-center p-4 bg-gray-50 rounded-lg">
+                        <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${statusColor}`}>
+                          <span className="text-white text-xl">
+                            {status === 'في المخزون' ? '✅' : 
+                             status === 'مخزون منخفض' ? '⚠️' : '❌'}
+                          </span>
+                        </div>
+                        <div className="text-2xl font-bold text-gray-800">{count}</div>
+                        <div className="text-sm text-gray-600">{status}</div>
+                        <div className="text-xs text-gray-500">{percentage}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recent Movements */}
+              {analyticsData.recentMovements.length > 0 && (
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">🔄 آخر الحركات</h3>
+                  <div className="space-y-2">
+                    {analyticsData.recentMovements.slice(0, 5).map((movement, index) => (
+                      <div key={movement.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            {movement.type === 'إدخال' ? '⬇️' : '⬆️'}
+                          </span>
+                          <span className="text-sm">{movement.description}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 text-right">
+                          <div>الكمية: {movement.quantity}</div>
+                          <div>{movement.warehouse}</div>
+                          <div>{new Date(movement.date).toLocaleDateString('ar-EG')}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="modal-footer">
+              <button
+                onClick={() => fetchAnalytics()}
+                className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors"
+              >
+                🔄 تحديث البيانات
+              </button>
+              
+              <button
+                onClick={() => setShowAnalytics(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
