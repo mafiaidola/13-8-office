@@ -27,66 +27,21 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Available Ultra Readable Themes - ثيمات فائقة الوضوح والقراءة
+// Ultra Simple Readable Themes - ثيمات بسيطة وواضحة
 const AVAILABLE_THEMES = {
-  // ثيم داكن عالي التباين - High Contrast Dark
+  // ثيم داكن بسيط - Simple Dark
   dark: {
-    name: { ar: 'داكن واضح', en: 'Clear Dark' },
-    colors: {
-      primary: '#1a1a1a',
-      secondary: '#2d2d2d',
-      background: '#1a1a1a',
-      card: '#3a3a3a',
-      text: '#ffffff'
-    }
+    name: { ar: 'داكن', en: 'Dark' }
   },
   
-  // ثيم فاتح عالي التباين - High Contrast Light
+  // ثيم فاتح بسيط - Simple Light  
   light: {
-    name: { ar: 'فاتح واضح', en: 'Clear Light' },
-    colors: {
-      primary: '#ffffff',
-      secondary: '#f8f9fa',
-      background: '#ffffff',
-      card: '#ffffff',
-      text: '#000000'
-    }
+    name: { ar: 'فاتح', en: 'Light' }
   },
   
-  // ثيم عالي التباين - Maximum Contrast
+  // ثيم عالي التباين - High Contrast
   minimal: {
-    name: { ar: 'تباين عالي', en: 'High Contrast' },
-    colors: {
-      primary: '#f5f5f5',
-      secondary: '#ffffff',
-      background: '#f5f5f5',
-      card: '#ffffff',
-      text: '#000000'
-    }
-  },
-  
-  // ثيم أزرق مهني واضح - Clear Professional Blue
-  professional: {
-    name: { ar: 'أزرق واضح', en: 'Clear Blue' },
-    colors: {
-      primary: '#f8f9fa',
-      secondary: '#ffffff',
-      background: '#f8f9fa',
-      card: '#ffffff',
-      text: '#1a1a1a'
-    }
-  },
-  
-  // ثيم دافئ واضح - Clear Warm
-  warm: {
-    name: { ar: 'دافئ واضح', en: 'Clear Warm' },
-    colors: {
-      primary: '#fff9e6',
-      secondary: '#ffffff',
-      background: '#fff9e6',
-      card: '#ffffff',
-      text: '#1a1a1a'
-    }
+    name: { ar: 'تباين عالي', en: 'High Contrast' }
   }
 };
 
