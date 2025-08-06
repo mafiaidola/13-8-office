@@ -694,6 +694,222 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
           isRTL={isRTL}
         />
       )}
+      
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card modal-content w-full max-w-6xl">
+            {/* Modal Header */}
+            <div className="modal-header">
+              <h2 className="modal-title">📊 تحليلات العيادات الشاملة</h2>
+              <button
+                onClick={() => setShowAnalytics(false)}
+                className="modal-close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Navigation */}
+            <div className="modal-nav">
+              <button className="modal-nav-tab active">📈 الإحصائيات</button>
+              <button className="modal-nav-tab">📊 التوزيع</button>
+              <button className="modal-nav-tab">🎯 الأداء</button>
+              <button className="modal-nav-tab">📋 النشاطات</button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="modal-body">
+              {/* Key Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm">إجمالي العيادات</p>
+                      <p className="text-2xl font-bold">{analyticsData.totalClinics}</p>
+                      <p className="text-blue-200 text-xs">نمو شهري: +{analyticsData.monthlyGrowth}%</p>
+                    </div>
+                    <div className="text-3xl opacity-80">🏥</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-green-100 text-sm">عيادات معتمدة</p>
+                      <p className="text-2xl font-bold">{analyticsData.approvedClinics}</p>
+                      <p className="text-green-200 text-xs">معدل الاعتماد: {analyticsData.performanceMetrics.approvalRate}%</p>
+                    </div>
+                    <div className="text-3xl opacity-80">✅</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-100 text-sm">زيارات نشطة</p>
+                      <p className="text-2xl font-bold">{analyticsData.activeVisits}</p>
+                      <p className="text-orange-200 text-xs">متوسط: {analyticsData.performanceMetrics.averageVisitsPerClinic} لكل عيادة</p>
+                    </div>
+                    <div className="text-3xl opacity-80">🚗</div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-100 text-sm">إجمالي الإيراد</p>
+                      <p className="text-2xl font-bold">{(analyticsData.performanceMetrics.totalRevenue || 0).toLocaleString()}</p>
+                      <p className="text-purple-200 text-xs">ج.م - حد ائتماني</p>
+                    </div>
+                    <div className="text-3xl opacity-80">💰</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Top Areas */}
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">🗺️ أعلى المناطق</h3>
+                  <div className="space-y-3">
+                    {analyticsData.topAreas.map((area, index) => {
+                      const percentage = analyticsData.totalClinics > 0 
+                        ? ((area.count / analyticsData.totalClinics) * 100).toFixed(1) 
+                        : 0;
+                      return (
+                        <div key={area.area} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded-full font-bold text-white ${
+                              index === 0 ? 'bg-yellow-500' :
+                              index === 1 ? 'bg-gray-400' :
+                              index === 2 ? 'bg-orange-600' : 'bg-blue-500'
+                            }`}>
+                              #{index + 1}
+                            </span>
+                            <span className="font-medium">{area.area}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="h-2 bg-blue-500 rounded-full" 
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{area.count} ({percentage}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Credit Status Distribution */}
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">💳 توزيع الحالة الائتمانية</h3>
+                  <div className="space-y-3">
+                    {Object.entries(analyticsData.creditStatusDistribution).map(([status, count]) => {
+                      const percentage = analyticsData.totalClinics > 0 
+                        ? ((count / analyticsData.totalClinics) * 100).toFixed(1) 
+                        : 0;
+                      const statusColor = status === 'جيد' ? 'bg-green-500' :
+                                         status === 'متوسط' ? 'bg-yellow-500' : 'bg-red-500';
+                      return (
+                        <div key={status} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full ${statusColor}`}></div>
+                            <span className="font-medium">{status}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${statusColor}`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{count} ({percentage}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Metrics */}
+              <div className="bg-card p-4 rounded-lg border mb-6">
+                <h3 className="text-lg font-semibold mb-4">📊 مقاييس الأداء</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {analyticsData.performanceMetrics.averageVisitsPerClinic}
+                    </div>
+                    <div className="text-sm text-gray-600">متوسط الزيارات لكل عيادة</div>
+                  </div>
+                  
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {analyticsData.performanceMetrics.approvalRate}%
+                    </div>
+                    <div className="text-sm text-gray-600">معدل الاعتماد</div>
+                  </div>
+                  
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {analyticsData.performanceMetrics.activeReps}
+                    </div>
+                    <div className="text-sm text-gray-600">مندوبين نشطين</div>
+                  </div>
+                  
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {analyticsData.monthlyGrowth}%
+                    </div>
+                    <div className="text-sm text-gray-600">النمو الشهري</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activities */}
+              {analyticsData.recentActivities.length > 0 && (
+                <div className="bg-card p-4 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">🔄 النشاطات الأخيرة</h3>
+                  <div className="space-y-2">
+                    {analyticsData.recentActivities.slice(0, 5).map((activity, index) => (
+                      <div key={activity.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">🏥</span>
+                          <span className="text-sm">{activity.description}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {activity.rep} - {new Date(activity.date).toLocaleDateString('ar-EG')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="modal-footer">
+              <button
+                onClick={() => fetchAnalytics()}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                🔄 تحديث البيانات
+              </button>
+              
+              <button
+                onClick={() => setShowAnalytics(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
