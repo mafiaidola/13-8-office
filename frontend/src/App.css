@@ -335,17 +335,51 @@ body.theme-cosmic {
   z-index: 900 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   box-shadow: -4px 0 32px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* Sidebar Collapsed State */
 .dashboard-sidebar.collapsed {
-  width: 64px !important;
+  width: 72px !important;
 }
 
-.dashboard-main:has(+ .dashboard-sidebar.collapsed),
-.dashboard-sidebar.collapsed + .dashboard-main {
-  margin-right: 64px !important;
+/* Adjust main content margin based on sidebar state */
+.dashboard-main {
+  margin-right: 320px !important;
+  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.dashboard-main.sidebar-collapsed {
+  margin-right: 72px !important;
+}
+
+/* Hide text in collapsed state */
+.dashboard-sidebar.collapsed .sidebar-text {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateX(20px) !important;
+}
+
+.dashboard-sidebar.collapsed .sidebar-user-text {
+  display: none !important;
+}
+
+/* Sidebar icons remain visible when collapsed */
+.sidebar-icon {
+  min-width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Adjust button layout for collapsed state */
+.dashboard-sidebar.collapsed button {
+  justify-content: center !important;
+  padding: 8px !important;
 }
 
 /* Sidebar Content */
