@@ -18,6 +18,19 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
   const [showAddWarehouseModal, setShowAddWarehouseModal] = useState(false);
   const [showEditWarehouseModal, setShowEditWarehouseModal] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState({
+    totalWarehouses: 0,
+    activeWarehouses: 0,
+    totalProducts: 0,
+    totalStock: 0,
+    lowStockItems: 0,
+    monthlyMovements: 0,
+    topProducts: [],
+    regionDistribution: {},
+    stockDistribution: {},
+    recentMovements: []
+  });
   
   const { t } = useTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
