@@ -598,24 +598,6 @@ const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
                     <span>التحديث الفوري</span>
                   </div>
                 </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Mock Map Points */}
-                  {filteredActiveReps.filter(rep => rep.status === 'active').map((rep, index) => (
-                    <div
-                      key={rep.id}
-                      className="absolute w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg cursor-pointer hover:bg-green-600 transition-colors"
-                      style={{
-                        left: `${20 + (index * 60) % 300}px`,
-                        top: `${50 + (index * 40) % 200}px`
-                      }}
-                      title={rep.full_name}
-                      onClick={() => setSelectedRep(rep)}
-                    ></div>
-                  ))}
-                </div>
 
                 {/* Representatives List */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
