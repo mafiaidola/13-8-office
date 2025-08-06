@@ -140,41 +140,108 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
     setShowDetailsModal(true);
   };
 
-  // Export to PDF
+  // Enhanced Export to PDF with better formatting
   const exportToPDF = async (data, filename, title) => {
     try {
       setExportLoading(true);
       
-      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape orientation for better table display
+      const pageWidth = pdf.internal.pageSize.width;
+      const pageHeight = pdf.internal.pageSize.height;
       
-      // Add title
-      pdf.setFontSize(16);
+      // Add Arabic font support (simplified approach)
+      pdf.setFont("times", "normal");
+      
+      // Header
+      pdf.setFillColor(99, 102, 241); // Indigo color
+      pdf.rect(0, 0, pageWidth, 30, 'F');
+      
+      // Title
+      pdf.setFontSize(18);
+      pdf.setTextColor(255, 255, 255);
       pdf.text(title, 20, 20);
       
-      // Add date
-      pdf.setFontSize(12);
-      pdf.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')}`, 20, 30);
-      
-      // Add data table (simplified for demo)
-      let yPosition = 50;
+      // Date and time
       pdf.setFontSize(10);
+      pdf.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')} - ${new Date().toLocaleTimeString('ar-EG')}`, 20, 25);
       
-      data.slice(0, 20).forEach((item, index) => {
-        const text = activeTab === 'visits' 
-          ? `${index + 1}. ${item.clinic_name || 'غير محدد'} - ${item.sales_rep_name || 'غير محدد'} - ${item.status || 'غير محدد'}`
-          : `${index + 1}. ${item.user_name || 'غير محدد'} - ${item.user_role || 'غير محدد'} - ${item.status || 'غير محدد'}`;
-        
-        pdf.text(text, 20, yPosition);
-        yPosition += 10;
-        
-        if (yPosition > 180) {
+      // Summary statistics
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(12);
+      pdf.text(`إجمالي السجلات: ${data.length}`, pageWidth - 80, 45);
+      
+      // Table headers
+      let yPosition = 60;
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(15, yPosition - 5, pageWidth - 30, 8, 'F');
+      
+      pdf.setFontSize(9);
+      pdf.setFont("times", "bold");
+      
+      if (activeTab === 'visits') {
+        pdf.text('ID', 20, yPosition);
+        pdf.text('Clinic', 40, yPosition);
+        pdf.text('Representative', 100, yPosition);
+        pdf.text('Date', 150, yPosition);
+        pdf.text('Status', 190, yPosition);
+        pdf.text('Duration', 220, yPosition);
+        pdf.text('Notes', 250, yPosition);
+      } else {
+        pdf.text('ID', 20, yPosition);
+        pdf.text('User', 40, yPosition);
+        pdf.text('Role', 90, yPosition);
+        pdf.text('Login Time', 130, yPosition);
+        pdf.text('IP Address', 170, yPosition);
+        pdf.text('Device', 210, yPosition);
+        pdf.text('Status', 250, yPosition);
+      }
+      
+      yPosition += 10;
+      pdf.setFont("times", "normal");
+      
+      // Table data
+      data.slice(0, 50).forEach((item, index) => {
+        if (yPosition > pageHeight - 20) {
           pdf.addPage();
           yPosition = 20;
         }
+        
+        // Alternating row colors
+        if (index % 2 === 0) {
+          pdf.setFillColor(249, 249, 249);
+          pdf.rect(15, yPosition - 3, pageWidth - 30, 6, 'F');
+        }
+        
+        pdf.setFontSize(8);
+        
+        if (activeTab === 'visits') {
+          pdf.text((item.id || '').toString().substring(0, 8), 20, yPosition);
+          pdf.text((item.clinic_name || 'N/A').substring(0, 15), 40, yPosition);
+          pdf.text((item.sales_rep_name || 'N/A').substring(0, 12), 100, yPosition);
+          pdf.text(formatDate(item.visit_date).substring(0, 10), 150, yPosition);
+          pdf.text((item.status || 'N/A').substring(0, 8), 190, yPosition);
+          pdf.text(formatDuration(item.duration).substring(0, 8), 220, yPosition);
+          pdf.text((item.notes || 'N/A').substring(0, 10), 250, yPosition);
+        } else {
+          pdf.text((item.id || '').toString().substring(0, 8), 20, yPosition);
+          pdf.text((item.user_name || 'N/A').substring(0, 12), 40, yPosition);
+          pdf.text((item.user_role || 'N/A').substring(0, 10), 90, yPosition);
+          pdf.text(formatDate(item.login_time).substring(0, 12), 130, yPosition);
+          pdf.text((item.ip_address || 'N/A').substring(0, 12), 170, yPosition);
+          pdf.text((item.device || 'N/A').substring(0, 10), 210, yPosition);
+          pdf.text((item.status || 'N/A').substring(0, 8), 250, yPosition);
+        }
+        
+        yPosition += 6;
       });
       
-      pdf.save(`${filename}.pdf`);
-      console.log('✅ PDF exported successfully');
+      // Footer
+      const totalPages = Math.ceil((data.length / 50));
+      pdf.setFontSize(8);
+      pdf.text(`الصفحة 1 من ${totalPages} - نظام EP Group`, pageWidth - 60, pageHeight - 10);
+      
+      pdf.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
+      console.log('✅ Enhanced PDF exported successfully');
       
     } catch (error) {
       console.error('❌ Error exporting PDF:', error);
@@ -184,17 +251,75 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
     }
   };
 
-  // Export to Excel
+  // Enhanced Export to Excel with better formatting
   const exportToExcel = (data, filename, sheetName) => {
     try {
       setExportLoading(true);
       
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      // Prepare data for Excel with better formatting
+      const excelData = data.map(item => {
+        if (activeTab === 'visits') {
+          return {
+            'معرف الزيارة': item.id || '',
+            'اسم العيادة': item.clinic_name || '',
+            'المندوب الطبي': item.sales_rep_name || '',
+            'تاريخ الزيارة': formatDate(item.visit_date),
+            'الحالة': item.status === 'completed' ? 'مكتملة' : 
+                     item.status === 'pending' ? 'معلقة' : 
+                     item.status === 'cancelled' ? 'ملغية' : item.status,
+            'المدة (دقيقة)': item.duration ? Math.round(item.duration / 60) : '',
+            'الملاحظات': item.notes || '',
+            'عنوان العيادة': item.clinic_address || '',
+            'رقم الهاتف': item.clinic_phone || '',
+            'نوع الزيارة': item.visit_type || 'زيارة عادية'
+          };
+        } else {
+          return {
+            'معرف الجلسة': item.id || '',
+            'اسم المستخدم': item.user_name || '',
+            'الدور': item.user_role || '',
+            'وقت تسجيل الدخول': formatDate(item.login_time),
+            'وقت تسجيل الخروج': formatDate(item.logout_time),
+            'مدة الجلسة': formatDuration(item.session_duration),
+            'عنوان IP': item.ip_address || '',
+            'نوع الجهاز': item.device || '',
+            'الموقع': item.location || '',
+            'الحالة': item.status === 'successful' ? 'نجح' : 
+                     item.status === 'failed' ? 'فشل' : 
+                     item.status === 'active' ? 'نشط' : item.status
+          };
+        }
+      });
       
-      console.log('✅ Excel exported successfully');
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      
+      // Set column widths
+      const colWidths = activeTab === 'visits' 
+        ? [15, 25, 20, 15, 10, 10, 30, 25, 15, 15]
+        : [15, 20, 15, 20, 20, 15, 15, 15, 20, 10];
+        
+      worksheet['!cols'] = colWidths.map(width => ({ width }));
+      
+      // Add title row
+      XLSX.utils.sheet_add_aoa(worksheet, [[
+        `تقرير ${activeTab === 'visits' ? 'الزيارات' : 'سجل الدخول'}`,
+        '',
+        '',
+        `تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')}`,
+        '',
+        '',
+        `إجمالي السجلات: ${data.length}`,
+        '',
+        '',
+        ''
+      ]], { origin: -1 });
+      
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      XLSX.writeFile(workbook, `${filename}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      console.log('✅ Enhanced Excel exported successfully');
       
     } catch (error) {
       console.error('❌ Error exporting Excel:', error);
