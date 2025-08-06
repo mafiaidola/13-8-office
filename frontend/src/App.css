@@ -1,344 +1,201 @@
-/* EP Group System - Ultra Simple & Readable Themes */
+/* EMERGENCY FIX - Force All Text to Be Readable */
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-
-/* Tajawal Font Import */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap');
 
-/* ===============================
-   SIMPLE READABLE THEMES SYSTEM
-   =============================== */
-
-/* Global Reset for Maximum Readability */
+/* FORCE READABLE TEXT ON EVERYTHING */
 * {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  box-sizing: border-box !important;
-}
-
-body {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  line-height: 1.6 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* =================== DARK THEME - البسيط الداكن =================== */
-body.theme-dark {
-  background: #1a1a1a !important;
-  color: #ffffff !important;
-}
-
-body.theme-dark * {
-  background-color: transparent !important;
-  color: #ffffff !important;
-}
-
-body.theme-dark .card,
-body.theme-dark .panel,
-body.theme-dark .bg-card,
-body.theme-dark .modal-content {
-  background: #2a2a2a !important;
-  color: #ffffff !important;
-  border: 2px solid #444444 !important;
-}
-
-body.theme-dark button,
-body.theme-dark .btn {
-  background: #0066cc !important;
-  color: #ffffff !important;
-  border: 2px solid #0066cc !important;
-}
-
-body.theme-dark input,
-body.theme-dark select,
-body.theme-dark textarea {
-  background: #2a2a2a !important;
-  color: #ffffff !important;
-  border: 2px solid #444444 !important;
-}
-
-body.theme-dark table,
-body.theme-dark .table {
-  background: #2a2a2a !important;
-  color: #ffffff !important;
-}
-
-body.theme-dark table th,
-body.theme-dark .table th {
-  background: #333333 !important;
-  color: #ffffff !important;
-}
-
-/* =================== LIGHT THEME - البسيط الفاتح =================== */
-body.theme-light {
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-body.theme-light * {
-  background-color: transparent !important;
-  color: #000000 !important;
-}
-
-body.theme-light .card,
-body.theme-light .panel,
-body.theme-light .bg-card,
-body.theme-light .modal-content {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 2px solid #cccccc !important;
-}
-
-body.theme-light button,
-body.theme-light .btn {
-  background: #0066cc !important;
-  color: #ffffff !important;
-  border: 2px solid #0066cc !important;
-}
-
-body.theme-light input,
-body.theme-light select,
-body.theme-light textarea {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 2px solid #cccccc !important;
-}
-
-body.theme-light table,
-body.theme-light .table {
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-body.theme-light table th,
-body.theme-light .table th {
-  background: #f5f5f5 !important;
-  color: #000000 !important;
-}
-
-/* =================== HIGH CONTRAST THEME - عالي التباين =================== */
-body.theme-minimal {
-  background: #f0f0f0 !important;
-  color: #000000 !important;
-}
-
-body.theme-minimal * {
-  background-color: transparent !important;
-  color: #000000 !important;
-}
-
-body.theme-minimal .card,
-body.theme-minimal .panel,
-body.theme-minimal .bg-card,
-body.theme-minimal .modal-content {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 3px solid #000000 !important;
-}
-
-body.theme-minimal button,
-body.theme-minimal .btn {
-  background: #000000 !important;
-  color: #ffffff !important;
-  border: 3px solid #000000 !important;
-}
-
-body.theme-minimal input,
-body.theme-minimal select,
-body.theme-minimal textarea {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 3px solid #000000 !important;
-}
-
-/* =================== UNIVERSAL STYLES FOR ALL THEMES =================== */
-
-/* Typography with Maximum Readability */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-weight: 700 !important;
-  line-height: 1.4 !important;
-  margin-bottom: 1rem !important;
-}
-
-h1 { font-size: 2.5rem !important; }
-h2 { font-size: 2rem !important; }
-h3 { font-size: 1.8rem !important; }
-h4 { font-size: 1.5rem !important; }
-h5 { font-size: 1.3rem !important; }
-h6 { font-size: 1.1rem !important; }
-
-p, span, div, label {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
-  line-height: 1.7 !important;
-}
-
-/* Buttons with Maximum Visibility */
-button, .btn, .button {
   font-family: 'Tajawal', Arial, sans-serif !important;
   font-size: 18px !important;
   font-weight: 600 !important;
-  padding: 12px 24px !important;
-  border-radius: 8px !important;
-  cursor: pointer !important;
-  min-height: 48px !important;
-  transition: all 0.2s ease !important;
+  line-height: 1.8 !important;
+  color: #ffffff !important;
 }
 
-button:hover, .btn:hover, .button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* Form Elements with High Visibility */
-input, select, textarea {
+body {
+  background: #000000 !important;
+  color: #ffffff !important;
   font-family: 'Tajawal', Arial, sans-serif !important;
   font-size: 18px !important;
-  font-weight: 500 !important;
-  padding: 12px 16px !important;
-  border-radius: 8px !important;
-  min-height: 48px !important;
-  width: 100% !important;
+  font-weight: 600 !important;
 }
 
-input:focus, select:focus, textarea:focus {
-  outline: none !important;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.3) !important;
+/* FORCE ALL HEADINGS TO BE WHITE */
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff !important;
+  font-family: 'Tajawal', Arial, sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 24px !important;
 }
 
-/* Cards and Panels */
-.card, .panel, .bg-card {
-  padding: 24px !important;
-  border-radius: 12px !important;
-  margin-bottom: 16px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Tables with High Readability */
-table, .table {
-  width: 100% !important;
-  border-collapse: collapse !important;
+/* FORCE ALL TEXT ELEMENTS TO BE WHITE */
+p, span, div, label, a, td, th, li, option {
+  color: #ffffff !important;
+  font-family: 'Tajawal', Arial, sans-serif !important;
   font-size: 18px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
-table th, .table th {
+/* FORCE BUTTONS TO BE READABLE */
+button, .btn, input[type="submit"] {
+  background: #0066ff !important;
+  color: #ffffff !important;
   font-family: 'Tajawal', Arial, sans-serif !important;
   font-size: 18px !important;
   font-weight: 700 !important;
-  padding: 16px !important;
-  text-align: right !important;
+  border: 3px solid #ffffff !important;
+  padding: 15px 30px !important;
+  border-radius: 10px !important;
 }
 
-table td, .table td {
+/* FORCE INPUT FIELDS TO BE READABLE */
+input, select, textarea {
+  background: #333333 !important;
+  color: #ffffff !important;
   font-family: 'Tajawal', Arial, sans-serif !important;
   font-size: 18px !important;
-  font-weight: 500 !important;
-  padding: 16px !important;
+  font-weight: 600 !important;
+  border: 3px solid #ffffff !important;
+  padding: 15px !important;
+  border-radius: 10px !important;
 }
 
-/* Modal Positioning Fix - CRITICAL */
+input::placeholder {
+  color: #cccccc !important;
+  font-weight: 600 !important;
+}
+
+/* FORCE CARDS AND PANELS */
+.card, .panel, .bg-card, .modal-content {
+  background: #222222 !important;
+  color: #ffffff !important;
+  border: 3px solid #ffffff !important;
+  border-radius: 15px !important;
+  padding: 25px !important;
+}
+
+/* FORCE TABLES TO BE READABLE */
+table, .table {
+  background: #222222 !important;
+  color: #ffffff !important;
+  border: 3px solid #ffffff !important;
+}
+
+table th, .table th,
+table td, .table td {
+  background: #222222 !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  padding: 15px !important;
+  border: 1px solid #ffffff !important;
+}
+
+/* MODAL POSITIONING FIX */
 .modal-overlay, .modal-backdrop, .overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(0, 0, 0, 0.7) !important;
+  background: rgba(0, 0, 0, 0.9) !important;
   z-index: 9999 !important;
   display: flex !important;
   align-items: flex-start !important;
   justify-content: center !important;
-  padding-top: 20px !important;
+  padding-top: 50px !important;
   overflow-y: auto !important;
 }
 
 .modal-content, .modal-dialog, .modal, .popup {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
-  padding: 32px !important;
-  border-radius: 12px !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 5px solid #ffffff !important;
+  border-radius: 20px !important;
+  padding: 40px !important;
   max-width: 90vw !important;
   max-height: 80vh !important;
   overflow-y: auto !important;
-  margin: 0 !important;
-  position: relative !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Close Button */
 .modal-close, .close, .btn-close {
   position: absolute !important;
-  top: 16px !important;
-  right: 16px !important;
-  background: #dc3545 !important;
+  top: 20px !important;
+  right: 20px !important;
+  background: #ff0000 !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 50% !important;
-  width: 36px !important;
-  height: 36px !important;
-  font-size: 20px !important;
+  width: 50px !important;
+  height: 50px !important;
+  font-size: 24px !important;
   font-weight: bold !important;
   cursor: pointer !important;
-  z-index: 10000 !important;
 }
 
-/* Dropdown Fix */
-select, .dropdown, .theme-dropdown, .language-dropdown {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  padding: 12px 16px !important;
-  min-height: 48px !important;
-  border-radius: 8px !important;
+/* LIGHT THEME OVERRIDE - WHITE BACKGROUND, BLACK TEXT */
+body.theme-light {
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
-option {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
-  padding: 8px !important;
+body.theme-light * {
+  color: #000000 !important;
 }
 
-/* Navigation Elements */
-.navbar, .sidebar, .header, .nav-link, .menu-item {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
+body.theme-light h1, body.theme-light h2, body.theme-light h3, 
+body.theme-light h4, body.theme-light h5, body.theme-light h6,
+body.theme-light p, body.theme-light span, body.theme-light div, 
+body.theme-light label, body.theme-light a, body.theme-light td, 
+body.theme-light th, body.theme-light li, body.theme-light option {
+  color: #000000 !important;
 }
 
-/* Loading and Status Elements */
-.spinner, .loading, .loader, .status-text {
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
+body.theme-light .card, body.theme-light .panel, 
+body.theme-light .bg-card, body.theme-light .modal-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
 }
 
-/* Responsive Design */
+body.theme-light input, body.theme-light select, body.theme-light textarea {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
+}
+
+body.theme-light table, body.theme-light .table {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 3px solid #000000 !important;
+}
+
+body.theme-light table th, body.theme-light .table th,
+body.theme-light table td, body.theme-light .table td {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+/* HIGH CONTRAST THEME */
+body.theme-minimal {
+  background: #ffff00 !important;
+  color: #000000 !important;
+}
+
+body.theme-minimal * {
+  color: #000000 !important;
+}
+
+/* RESPONSIVE */
 @media (max-width: 768px) {
-  body {
+  * {
     font-size: 16px !important;
   }
   
-  h1 { font-size: 2rem !important; }
-  h2 { font-size: 1.8rem !important; }
-  h3 { font-size: 1.6rem !important; }
-  
-  .modal-content, .modal-dialog, .modal, .popup {
-    max-width: 95vw !important;
-    padding: 20px !important;
+  button, .btn {
+    padding: 12px 24px !important;
+    font-size: 16px !important;
   }
-}
-
-/* Force All Text to Be Readable */
-* {
-  font-size: inherit !important;
-  color: inherit !important;
-  font-family: inherit !important;
-  font-weight: inherit !important;
 }
