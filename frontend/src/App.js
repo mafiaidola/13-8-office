@@ -56,18 +56,16 @@ const ThemeProvider = ({ children }) => {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', language);
     
-    // Apply clean theme to body
+    // Apply ultra simple theme
     const themeConfig = AVAILABLE_THEMES[theme];
     if (themeConfig) {
-      // Remove all theme classes first
-      document.body.classList.remove(
-        'theme-dark', 'theme-light', 'theme-minimal', 'theme-professional', 'theme-warm'
-      );
+      // Remove all theme classes
+      document.body.className = document.body.className.replace(/theme-\w+/g, '');
       
       // Add current theme class
       document.body.classList.add(`theme-${theme}`);
       
-      console.log(`✅ Applied clean theme: ${theme} (${themeConfig.name[language]})`);
+      console.log(`✅ Applied ultra simple theme: ${theme} (${themeConfig.name[language]})`);
     }
   }, [isRTL, language, theme]);
 
