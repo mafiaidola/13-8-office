@@ -448,6 +448,25 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
               <p className="text-lg opacity-75">إدارة شاملة للعيادات مع التصنيفات والحالة الائتمانية</p>
             </div>
           </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAnalytics(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+            >
+              <span className="text-lg">📊</span>
+              <span>التحليلات</span>
+            </button>
+            
+            <button
+              onClick={() => setShowClinicModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              <span className="text-lg">➕</span>
+              <span>إضافة عيادة</span>
+            </button>
+          </div>
         </div>
       </div>
 
