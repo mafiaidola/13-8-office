@@ -16,6 +16,18 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
   const [showClinicModal, setShowClinicModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState({
+    totalClinics: 0,
+    approvedClinics: 0,
+    pendingClinics: 0,
+    activeVisits: 0,
+    monthlyGrowth: 0,
+    topAreas: [],
+    creditStatusDistribution: {},
+    performanceMetrics: {},
+    recentActivities: []
+  });
   
   const { t } = useTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
