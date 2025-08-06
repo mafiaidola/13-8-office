@@ -1,201 +1,257 @@
-/* EMERGENCY FIX - Force All Text to Be Readable */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+/* ULTIMATE READABILITY FIX - OVERRIDE EVERYTHING */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap');
 
-/* FORCE READABLE TEXT ON EVERYTHING */
-* {
+/* NUCLEAR OPTION - FORCE EVERYTHING TO BE READABLE */
+html, body, div, span, p, h1, h2, h3, h4, h5, h6, 
+a, button, input, select, textarea, table, td, th,
+li, ul, ol, label, nav, header, main, section,
+article, aside, footer, form, fieldset, legend {
   font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
   line-height: 1.8 !important;
   color: #ffffff !important;
+  background: transparent !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
 }
 
-body {
+/* BLACK BACKGROUND FOR EVERYTHING */
+html, body {
   background: #000000 !important;
   color: #ffffff !important;
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
 }
 
-/* FORCE ALL HEADINGS TO BE WHITE */
+/* WHITE TEXT ON BLACK FOR ALL ELEMENTS */
+* {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  font-family: 'Tajawal', Arial, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 20px !important;
+}
+
+/* SUPER READABLE HEADINGS */
 h1, h2, h3, h4, h5, h6 {
   color: #ffffff !important;
-  font-family: 'Tajawal', Arial, sans-serif !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  text-shadow: 3px 3px 6px rgba(0,0,0,1) !important;
+  margin: 20px 0 !important;
+}
+
+/* ULTRA VISIBLE BUTTONS */
+button, .btn, input[type="submit"], input[type="button"] {
+  background: #ff6600 !important;
+  color: #ffffff !important;
+  font-size: 22px !important;
   font-weight: 800 !important;
-  font-size: 24px !important;
+  padding: 20px 40px !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 15px !important;
+  cursor: pointer !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,1) !important;
+  box-shadow: 0 0 20px rgba(255,102,0,0.6) !important;
 }
 
-/* FORCE ALL TEXT ELEMENTS TO BE WHITE */
-p, span, div, label, a, td, th, li, option {
-  color: #ffffff !important;
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
+button:hover, .btn:hover {
+  background: #ff9900 !important;
+  box-shadow: 0 0 30px rgba(255,153,0,0.8) !important;
 }
 
-/* FORCE BUTTONS TO BE READABLE */
-button, .btn, input[type="submit"] {
-  background: #0066ff !important;
-  color: #ffffff !important;
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  border: 3px solid #ffffff !important;
-  padding: 15px 30px !important;
-  border-radius: 10px !important;
-}
-
-/* FORCE INPUT FIELDS TO BE READABLE */
+/* SUPER VISIBLE INPUTS */
 input, select, textarea {
   background: #333333 !important;
   color: #ffffff !important;
-  font-family: 'Tajawal', Arial, sans-serif !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  border: 3px solid #ffffff !important;
-  padding: 15px !important;
-  border-radius: 10px !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  padding: 20px !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 12px !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
 }
 
 input::placeholder {
   color: #cccccc !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
-/* FORCE CARDS AND PANELS */
-.card, .panel, .bg-card, .modal-content {
+/* ULTRA VISIBLE CARDS */
+.card, .panel, .bg-card, .modal-content,
+.dashboard-card, .stat-card, .info-card {
   background: #222222 !important;
   color: #ffffff !important;
-  border: 3px solid #ffffff !important;
-  border-radius: 15px !important;
-  padding: 25px !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 20px !important;
+  padding: 30px !important;
+  margin: 20px 0 !important;
+  box-shadow: 0 0 30px rgba(255,255,255,0.3) !important;
 }
 
-/* FORCE TABLES TO BE READABLE */
+/* SUPER VISIBLE TABLES */
 table, .table {
   background: #222222 !important;
   color: #ffffff !important;
-  border: 3px solid #ffffff !important;
+  border: 4px solid #ffffff !important;
+  border-collapse: separate !important;
+  border-spacing: 2px !important;
+  border-radius: 15px !important;
 }
 
 table th, .table th,
 table td, .table td {
-  background: #222222 !important;
+  background: #333333 !important;
   color: #ffffff !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  padding: 15px !important;
-  border: 1px solid #ffffff !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  padding: 20px !important;
+  border: 2px solid #ffffff !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
 }
 
-/* MODAL POSITIONING FIX */
-.modal-overlay, .modal-backdrop, .overlay {
+/* MODAL POSITIONING - TOP OF SCREEN */
+.modal-overlay, .modal-backdrop, .overlay,
+[class*="modal"], [class*="popup"], [class*="dialog"] {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(0, 0, 0, 0.9) !important;
-  z-index: 9999 !important;
+  background: rgba(0, 0, 0, 0.95) !important;
+  z-index: 99999 !important;
   display: flex !important;
   align-items: flex-start !important;
   justify-content: center !important;
-  padding-top: 50px !important;
+  padding: 30px !important;
   overflow-y: auto !important;
 }
 
-.modal-content, .modal-dialog, .modal, .popup {
+.modal-content, .modal-dialog, .modal, .popup,
+[class*="modal-content"], [class*="popup-content"] {
   background: #000000 !important;
   color: #ffffff !important;
-  border: 5px solid #ffffff !important;
-  border-radius: 20px !important;
-  padding: 40px !important;
+  border: 6px solid #ffffff !important;
+  border-radius: 25px !important;
+  padding: 50px !important;
   max-width: 90vw !important;
   max-height: 80vh !important;
   overflow-y: auto !important;
+  box-shadow: 0 0 50px rgba(255,255,255,0.5) !important;
+  position: relative !important;
+  margin-top: 0 !important;
 }
 
-.modal-close, .close, .btn-close {
+/* ULTRA VISIBLE CLOSE BUTTON */
+.modal-close, .close, .btn-close,
+[class*="close"], [class*="modal-close"] {
   position: absolute !important;
-  top: 20px !important;
-  right: 20px !important;
+  top: 25px !important;
+  right: 25px !important;
   background: #ff0000 !important;
   color: #ffffff !important;
-  border: none !important;
+  border: 3px solid #ffffff !important;
   border-radius: 50% !important;
-  width: 50px !important;
-  height: 50px !important;
-  font-size: 24px !important;
-  font-weight: bold !important;
+  width: 60px !important;
+  height: 60px !important;
+  font-size: 30px !important;
+  font-weight: 900 !important;
   cursor: pointer !important;
+  z-index: 100000 !important;
+  box-shadow: 0 0 20px rgba(255,0,0,0.6) !important;
 }
 
-/* LIGHT THEME OVERRIDE - WHITE BACKGROUND, BLACK TEXT */
-body.theme-light {
+/* LIGHT THEME OVERRIDE */
+body.theme-light, body.theme-light * {
   background: #ffffff !important;
   color: #000000 !important;
 }
 
-body.theme-light * {
+body.theme-light html, body.theme-light body {
+  background: #ffffff !important;
   color: #000000 !important;
 }
 
 body.theme-light h1, body.theme-light h2, body.theme-light h3, 
 body.theme-light h4, body.theme-light h5, body.theme-light h6,
-body.theme-light p, body.theme-light span, body.theme-light div, 
-body.theme-light label, body.theme-light a, body.theme-light td, 
-body.theme-light th, body.theme-light li, body.theme-light option {
+body.theme-light p, body.theme-light span, body.theme-light div,
+body.theme-light a, body.theme-light label, body.theme-light td,
+body.theme-light th, body.theme-light li {
   color: #000000 !important;
+  text-shadow: none !important;
 }
 
-body.theme-light .card, body.theme-light .panel, 
-body.theme-light .bg-card, body.theme-light .modal-content {
-  background: #ffffff !important;
-  color: #000000 !important;
-  border: 3px solid #000000 !important;
+body.theme-light button, body.theme-light .btn {
+  background: #0066cc !important;
+  color: #ffffff !important;
+  border: 4px solid #000000 !important;
 }
 
 body.theme-light input, body.theme-light select, body.theme-light textarea {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 3px solid #000000 !important;
+  border: 4px solid #000000 !important;
+}
+
+body.theme-light .card, body.theme-light .panel, body.theme-light .bg-card {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 4px solid #000000 !important;
 }
 
 body.theme-light table, body.theme-light .table {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 3px solid #000000 !important;
+  border: 4px solid #000000 !important;
 }
 
 body.theme-light table th, body.theme-light .table th,
 body.theme-light table td, body.theme-light .table td {
+  background: #f5f5f5 !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+/* NAVIGATION AND LINKS */
+.navbar, .sidebar, .header, .nav-link, .menu-item, a {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+  font-size: 20px !important;
+}
+
+body.theme-light .navbar, body.theme-light .sidebar, 
+body.theme-light .header, body.theme-light .nav-link, 
+body.theme-light .menu-item, body.theme-light a {
+  color: #000000 !important;
+}
+
+/* DROPDOWN MENUS */
+select, .dropdown, option {
+  background: #333333 !important;
+  color: #ffffff !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  padding: 15px !important;
+  border: 3px solid #ffffff !important;
+}
+
+body.theme-light select, body.theme-light .dropdown, body.theme-light option {
   background: #ffffff !important;
   color: #000000 !important;
-  border: 1px solid #000000 !important;
-}
-
-/* HIGH CONTRAST THEME */
-body.theme-minimal {
-  background: #ffff00 !important;
-  color: #000000 !important;
-}
-
-body.theme-minimal * {
-  color: #000000 !important;
+  border: 3px solid #000000 !important;
 }
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
   * {
-    font-size: 16px !important;
+    font-size: 18px !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 24px !important;
   }
   
   button, .btn {
-    padding: 12px 24px !important;
-    font-size: 16px !important;
+    font-size: 20px !important;
+    padding: 15px 30px !important;
   }
 }
