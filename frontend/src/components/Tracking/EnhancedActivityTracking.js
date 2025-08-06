@@ -124,14 +124,15 @@ const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
       id: `rep-${index + 1}`,
       full_name: name,
       role: 'medical_rep',
-      lat: 30.0444 + (Math.random() - 0.5) * 0.3,
-      lng: 31.2357 + (Math.random() - 0.5) * 0.3,
+      latitude: 30.0444 + (Math.random() - 0.5) * 0.3,  // إحداثيات القاهرة مع تشويش
+      longitude: 31.2357 + (Math.random() - 0.5) * 0.3,  // إحداثيات القاهرة مع تشويش
       last_seen: new Date(Date.now() - Math.random() * 1800000).toISOString(),
       status: Math.random() > 0.2 ? 'active' : 'inactive',
       current_activity: ['زيارة عيادة', 'في الطريق', 'استراحة', 'اجتماع عمل', 'عودة للمكتب'][Math.floor(Math.random() * 5)],
       battery_level: Math.floor(Math.random() * 100),
       speed: Math.floor(Math.random() * 60),
-      area: ['القاهرة - مدينة نصر', 'الجيزة - المهندسين', 'القاهرة - مصر الجديدة', 'الإسكندرية - سموحة'][Math.floor(Math.random() * 4)]
+      area: ['القاهرة - مدينة نصر', 'الجيزة - المهندسين', 'القاهرة - مصر الجديدة', 'الإسكندرية - سموحة'][Math.floor(Math.random() * 4)],
+      last_update: new Date(Date.now() - Math.random() * 300000).toISOString()  // آخر تحديث خلال آخر 5 دقائق
     }));
   };
 
