@@ -327,13 +327,34 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
     <div className="warehouse-management-container">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-2xl text-white">🏭</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-2xl text-white">🏭</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">{t('warehouse', 'title')}</h1>
+              <p className="text-lg opacity-75">إدارة شاملة للمخازن والمخزون والطلبات</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">{t('warehouse', 'title')}</h1>
-            <p className="text-lg opacity-75">إدارة شاملة للمخازن والمخزون والطلبات</p>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAnalytics(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+            >
+              <span className="text-lg">📊</span>
+              <span>تحليلات المخازن</span>
+            </button>
+            
+            <button
+              onClick={() => setShowAddWarehouseModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              <span className="text-lg">➕</span>
+              <span>إضافة مخزن</span>
+            </button>
           </div>
         </div>
       </div>
