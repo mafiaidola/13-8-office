@@ -251,6 +251,112 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
     }
   };
 
+  // Export Analytics Report
+  const exportAnalyticsReport = () => {
+    try {
+      setExportLoading(true);
+      
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.width;
+      
+      // Header
+      pdf.setFillColor(99, 102, 241);
+      pdf.rect(0, 0, pageWidth, 35, 'F');
+      
+      pdf.setFontSize(20);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`تقرير التحليلات - ${activeTab === 'visits' ? 'الزيارات' : 'سجل الدخول'}`, 20, 20);
+      pdf.setFontSize(12);
+      pdf.text(`تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}`, 20, 30);
+      
+      let yPosition = 50;
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(14);
+      
+      if (activeTab === 'visits') {
+        // Visits Analytics
+        const completedCount = visits.filter(v => v.status === 'completed').length;
+        const uniqueClinics = new Set(visits.map(v => v.clinic_id)).size;
+        const uniqueReps = new Set(visits.map(v => v.user_id)).size;
+        
+        pdf.text('📊 إحصائيات الزيارات الشاملة', 20, yPosition);
+        yPosition += 15;
+        
+        pdf.setFontSize(12);
+        pdf.text(`• إجمالي الزيارات: ${visits.length}`, 30, yPosition); yPosition += 8;
+        pdf.text(`• الزيارات المكتملة: ${completedCount} (${Math.round((completedCount/visits.length)*100)}%)`, 30, yPosition); yPosition += 8;
+        pdf.text(`• العيادات المختلفة: ${uniqueClinics}`, 30, yPosition); yPosition += 8;
+        pdf.text(`• المندوبين النشطين: ${uniqueReps}`, 30, yPosition); yPosition += 15;
+        
+        // Top performers
+        const repStats = Object.entries(
+          visits.reduce((acc, visit) => {
+            const rep = visit.sales_rep_name || 'غير محدد';
+            acc[rep] = (acc[rep] || 0) + 1;
+            return acc;
+          }, {})
+        ).sort(([,a], [,b]) => b - a).slice(0, 5);
+        
+        pdf.setFontSize(14);
+        pdf.text('🏆 أفضل 5 مندوبين', 20, yPosition); yPosition += 10;
+        pdf.setFontSize(12);
+        repStats.forEach(([rep, count], index) => {
+          pdf.text(`${index + 1}. ${rep}: ${count} زيارة`, 30, yPosition);
+          yPosition += 8;
+        });
+        
+      } else {
+        // Login Analytics
+        const successfulCount = loginLogs.filter(l => l.status === 'successful').length;
+        const uniqueUsers = new Set(loginLogs.map(l => l.user_id)).size;
+        const avgDuration = loginLogs.length > 0 ? 
+          loginLogs.reduce((acc, l) => acc + (l.session_duration || 0), 0) / loginLogs.length : 0;
+        
+        pdf.text('🔐 إحصائيات تسجيل الدخول الشاملة', 20, yPosition);
+        yPosition += 15;
+        
+        pdf.setFontSize(12);
+        pdf.text(`• إجمالي جلسات الدخول: ${loginLogs.length}`, 30, yPosition); yPosition += 8;
+        pdf.text(`• جلسات ناجحة: ${successfulCount} (${Math.round((successfulCount/loginLogs.length)*100)}%)`, 30, yPosition); yPosition += 8;
+        pdf.text(`• مستخدمين فريدين: ${uniqueUsers}`, 30, yPosition); yPosition += 8;
+        pdf.text(`• متوسط مدة الجلسة: ${Math.round(avgDuration/60)} دقيقة`, 30, yPosition); yPosition += 15;
+        
+        // Top users
+        const userStats = Object.entries(
+          loginLogs.reduce((acc, log) => {
+            const user = log.user_name || 'غير محدد';
+            acc[user] = (acc[user] || 0) + 1;
+            return acc;
+          }, {})
+        ).sort(([,a], [,b]) => b - a).slice(0, 5);
+        
+        pdf.setFontSize(14);
+        pdf.text('👥 أكثر 5 مستخدمين نشاطاً', 20, yPosition); yPosition += 10;
+        pdf.setFontSize(12);
+        userStats.forEach(([user, count], index) => {
+          pdf.text(`${index + 1}. ${user}: ${count} جلسة`, 30, yPosition);
+          yPosition += 8;
+        });
+      }
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text(`تم إنشاء التقرير بواسطة نظام EP Group - ${new Date().toLocaleString('ar-EG')}`, 
+        pageWidth - 120, pdf.internal.pageSize.height - 10);
+      
+      const reportTitle = activeTab === 'visits' ? 'visits-analytics' : 'login-analytics';
+      pdf.save(`${reportTitle}-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      console.log('✅ Analytics report exported successfully');
+      
+    } catch (error) {
+      console.error('❌ Error exporting analytics report:', error);
+      alert('حدث خطأ أثناء تصدير تقرير التحليلات');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // Enhanced Export to Excel with better formatting
   const exportToExcel = (data, filename, sheetName) => {
     try {
