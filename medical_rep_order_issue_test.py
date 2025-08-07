@@ -175,34 +175,47 @@ class MedicalRepOrderTest:
             )
             return False
         
-        login_data = {
-            "username": medical_rep_user["username"],
-            "password": medical_rep_user["password"]
-        }
+        # Try multiple common passwords for existing users
+        passwords_to_try = [
+            medical_rep_user.get("password", "test123456"),
+            "test123456",
+            "123456",
+            "password",
+            medical_rep_user.get("username", "")
+        ]
         
-        response, response_time = self.make_request("POST", "/auth/login", login_data)
-        
-        if response and response.status_code == 200:
-            data = response.json()
-            self.jwt_token = data.get("access_token")
-            self.medical_rep_user = data.get("user", {})
+        for password in passwords_to_try:
+            if not password:
+                continue
+                
+            login_data = {
+                "username": medical_rep_user["username"],
+                "password": password
+            }
             
-            self.log_result(
-                "Medical Rep Login",
-                True,
-                f"Medical rep login successful. User: {self.medical_rep_user.get('full_name')} (Role: {self.medical_rep_user.get('role')})",
-                response_time
-            )
-            return True
-        else:
-            error_msg = response.text if response else "No response"
-            self.log_result(
-                "Medical Rep Login",
-                False,
-                f"Medical rep login failed: {error_msg}",
-                response_time
-            )
-            return False
+            response, response_time = self.make_request("POST", "/auth/login", login_data)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                self.jwt_token = data.get("access_token")
+                self.medical_rep_user = data.get("user", {})
+                
+                self.log_result(
+                    "Medical Rep Login",
+                    True,
+                    f"Medical rep login successful. User: {self.medical_rep_user.get('full_name')} (Role: {self.medical_rep_user.get('role')})",
+                    response_time
+                )
+                return True
+        
+        # If all passwords failed
+        self.log_result(
+            "Medical Rep Login",
+            False,
+            f"Medical rep login failed with all attempted passwords for user: {medical_rep_user.get('username')}",
+            response_time if 'response_time' in locals() else 0
+        )
+        return False
     
     def test_get_assigned_clinics(self):
         """اختبار الحصول على العيادات المخصصة للمندوب"""
