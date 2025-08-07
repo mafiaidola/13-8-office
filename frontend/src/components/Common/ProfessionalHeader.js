@@ -85,28 +85,6 @@ const ProfessionalHeader = ({
     }
   };
 
-  // Handle theme change - FIXED
-  const handleThemeChange = (newTheme) => {
-    console.log('🎨 Changing theme to:', newTheme);
-    
-    // Apply theme to document body
-    document.body.className = document.body.className.replace(/theme-\w+/g, '');
-    document.body.classList.add(`theme-${newTheme}`);
-    
-    // Update theme state
-    if (setTheme && typeof setTheme === 'function') {
-      setTheme(newTheme);
-    }
-    
-    // Store theme preference
-    localStorage.setItem('selectedTheme', newTheme);
-    
-    // Close theme menu
-    setShowThemeMenu(false);
-    
-    console.log('✅ Theme changed successfully');
-  };
-
   // Handle language change
   const handleLanguageChange = (newLanguage) => {
     console.log('🌐 Changing language to:', newLanguage);
