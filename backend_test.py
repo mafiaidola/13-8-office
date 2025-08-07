@@ -1,5 +1,672 @@
 #!/usr/bin/env python3
 """
+اختبار سريع للتحقق من إصلاح مشاكل الـ CRUD operations
+Quick Backend Test for CRUD Operations Fixes
+
+الهدف: التحقق من أن إصلاحات current_user.id حلت مشاكل HTTP 500
+Goal: Verify that current_user.id fixes resolved HTTP 500 issues
+
+المطلوب اختبار:
+Required Tests:
+1. العيادات المُصلحة (Fixed Clinics): PUT, DELETE
+2. المخازن المُصلحة (Fixed Warehouses): PUT, GET products  
+3. المناطق المُصلحة (Fixed Areas): PUT
+4. الديون المُصلحة (Fixed Debts): POST, GET
+5. APIs الداشبورد المؤكدة (Dashboard APIs): recent-activities, visits, collections
+
+النتيجة المطلوبة: معدل نجاح محسن >75% وإثبات أن HTTP 500 errors تم إصلاحها
+Expected Result: Improved success rate >75% and proof that HTTP 500 errors are fixed
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import os
+
+# Configuration
+BACKEND_URL = "https://af82d270-0f9e-4b08-93b4-329c3531075a.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class CRUDFixesBackendTester:
+    def __init__(self):
+        self.base_url = BACKEND_URL
+        self.token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, response_time, details="", status_code=None):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "response_time_ms": round(response_time * 1000, 2),
+            "details": details,
+            "status_code": status_code,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name} ({result['response_time_ms']}ms)")
+        if details:
+            print(f"    📝 {details}")
+        if status_code:
+            print(f"    🔢 Status: {status_code}")
+        print()
+
+    def login_admin(self):
+        """تسجيل دخول الأدمن"""
+        start_time = time.time()
+        try:
+            response = requests.post(f"{self.base_url}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD
+            }, timeout=10)
+            
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                user_info = data.get("user", {})
+                
+                self.log_test(
+                    "Admin Login", 
+                    True, 
+                    response_time,
+                    f"User: {user_info.get('full_name', 'admin')} | Role: {user_info.get('role', 'admin')}",
+                    response.status_code
+                )
+                return True
+            else:
+                self.log_test("Admin Login", False, response_time, f"Login failed: {response.text}", response.status_code)
+                return False
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("Admin Login", False, response_time, f"Exception: {str(e)}")
+            return False
+
+    def get_headers(self):
+        """الحصول على headers مع JWT token"""
+        return {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json"
+        }
+
+    def test_fixed_clinics(self):
+        """اختبار العيادات المُصلحة - PUT و DELETE"""
+        print("🏥 Testing Fixed Clinics APIs...")
+        
+        # First get available clinics
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/clinics", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                clinics = response.json()
+                clinic_count = len(clinics)
+                self.log_test(
+                    "GET /api/clinics", 
+                    True, 
+                    response_time,
+                    f"Found {clinic_count} clinics available for testing",
+                    response.status_code
+                )
+                
+                if clinic_count > 0:
+                    # Test PUT clinic update
+                    test_clinic = clinics[0]
+                    clinic_id = test_clinic.get("id")
+                    
+                    if clinic_id:
+                        self.test_clinic_update(clinic_id)
+                        self.test_clinic_delete_attempt(clinic_id)
+                else:
+                    self.log_test("Clinic Operations", False, 0, "No clinics available for testing")
+            else:
+                self.log_test("GET /api/clinics", False, response_time, f"Failed to get clinics: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/clinics", False, response_time, f"Exception: {str(e)}")
+
+    def test_clinic_update(self, clinic_id):
+        """اختبار تحديث العيادة"""
+        start_time = time.time()
+        try:
+            update_data = {
+                "name": f"عيادة محدثة - اختبار {int(time.time())}",
+                "owner_name": "د. محمد أحمد - محدث",
+                "phone": "01234567890",
+                "address": "عنوان محدث للاختبار"
+            }
+            
+            response = requests.put(
+                f"{self.base_url}/clinics/{clinic_id}", 
+                json=update_data,
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                self.log_test(
+                    "PUT /api/clinics/{id}", 
+                    True, 
+                    response_time,
+                    "Clinic update successful - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "PUT /api/clinics/{id}", 
+                    False, 
+                    response_time,
+                    f"Update failed: {response.text} - HTTP 500 error still exists",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("PUT /api/clinics/{id}", False, response_time, f"Exception: {str(e)}")
+
+    def test_clinic_delete_attempt(self, clinic_id):
+        """اختبار محاولة حذف العيادة"""
+        start_time = time.time()
+        try:
+            response = requests.delete(
+                f"{self.base_url}/clinics/{clinic_id}", 
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                self.log_test(
+                    "DELETE /api/clinics/{id}", 
+                    True, 
+                    response_time,
+                    "Clinic delete successful - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            elif response.status_code == 405:
+                self.log_test(
+                    "DELETE /api/clinics/{id}", 
+                    False, 
+                    response_time,
+                    "Method not allowed - DELETE not implemented",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "DELETE /api/clinics/{id}", 
+                    False, 
+                    response_time,
+                    f"Delete failed: {response.text} - HTTP 500 error may still exist",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("DELETE /api/clinics/{id}", False, response_time, f"Exception: {str(e)}")
+
+    def test_fixed_warehouses(self):
+        """اختبار المخازن المُصلحة"""
+        print("🏪 Testing Fixed Warehouses APIs...")
+        
+        # Get available warehouses
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/warehouses", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                warehouses = response.json()
+                warehouse_count = len(warehouses)
+                self.log_test(
+                    "GET /api/warehouses", 
+                    True, 
+                    response_time,
+                    f"Found {warehouse_count} warehouses available for testing",
+                    response.status_code
+                )
+                
+                if warehouse_count > 0:
+                    test_warehouse = warehouses[0]
+                    warehouse_id = test_warehouse.get("id")
+                    
+                    if warehouse_id:
+                        self.test_warehouse_update(warehouse_id)
+                        self.test_warehouse_products(warehouse_id)
+                else:
+                    self.log_test("Warehouse Operations", False, 0, "No warehouses available for testing")
+            else:
+                self.log_test("GET /api/warehouses", False, response_time, f"Failed to get warehouses: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/warehouses", False, response_time, f"Exception: {str(e)}")
+
+    def test_warehouse_update(self, warehouse_id):
+        """اختبار تحديث المخزن"""
+        start_time = time.time()
+        try:
+            update_data = {
+                "name": f"مخزن محدث - اختبار {int(time.time())}",
+                "location": "موقع محدث للاختبار",
+                "manager_name": "مدير محدث",
+                "capacity": 1000
+            }
+            
+            response = requests.put(
+                f"{self.base_url}/warehouses/{warehouse_id}", 
+                json=update_data,
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                self.log_test(
+                    "PUT /api/warehouses/{id}", 
+                    True, 
+                    response_time,
+                    "Warehouse update successful - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "PUT /api/warehouses/{id}", 
+                    False, 
+                    response_time,
+                    f"Update failed: {response.text} - HTTP 500 error still exists",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("PUT /api/warehouses/{id}", False, response_time, f"Exception: {str(e)}")
+
+    def test_warehouse_products(self, warehouse_id):
+        """اختبار منتجات المخزن"""
+        start_time = time.time()
+        try:
+            response = requests.get(
+                f"{self.base_url}/warehouses/{warehouse_id}/products", 
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                products = response.json()
+                product_count = len(products) if isinstance(products, list) else 0
+                self.log_test(
+                    "GET /api/warehouses/{id}/products", 
+                    True, 
+                    response_time,
+                    f"Found {product_count} products in warehouse - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "GET /api/warehouses/{id}/products", 
+                    False, 
+                    response_time,
+                    f"Failed to get warehouse products: {response.text} - HTTP 500 error still exists",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/warehouses/{id}/products", False, response_time, f"Exception: {str(e)}")
+
+    def test_fixed_areas(self):
+        """اختبار المناطق المُصلحة"""
+        print("🗺️ Testing Fixed Areas APIs...")
+        
+        # Get available areas
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/areas", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                areas = response.json()
+                area_count = len(areas)
+                self.log_test(
+                    "GET /api/areas", 
+                    True, 
+                    response_time,
+                    f"Found {area_count} areas available for testing",
+                    response.status_code
+                )
+                
+                if area_count > 0:
+                    test_area = areas[0]
+                    area_id = test_area.get("id")
+                    
+                    if area_id:
+                        self.test_area_update(area_id)
+                else:
+                    self.log_test("Area Operations", False, 0, "No areas available for testing")
+            else:
+                self.log_test("GET /api/areas", False, response_time, f"Failed to get areas: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/areas", False, response_time, f"Exception: {str(e)}")
+
+    def test_area_update(self, area_id):
+        """اختبار تحديث المنطقة"""
+        start_time = time.time()
+        try:
+            update_data = {
+                "name": f"منطقة محدثة - اختبار {int(time.time())}",
+                "description": "وصف محدث للمنطقة",
+                "manager_name": "مدير منطقة محدث",
+                "code": f"AREA_{int(time.time())}"
+            }
+            
+            response = requests.put(
+                f"{self.base_url}/areas/{area_id}", 
+                json=update_data,
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                self.log_test(
+                    "PUT /api/areas/{id}", 
+                    True, 
+                    response_time,
+                    "Area update successful - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "PUT /api/areas/{id}", 
+                    False, 
+                    response_time,
+                    f"Update failed: {response.text} - HTTP 500 error still exists",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("PUT /api/areas/{id}", False, response_time, f"Exception: {str(e)}")
+
+    def test_fixed_debts(self):
+        """اختبار الديون المُصلحة"""
+        print("💰 Testing Fixed Debts APIs...")
+        
+        # Test GET debts
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/debts", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                debts = response.json()
+                debt_count = len(debts)
+                total_debt = sum(debt.get("remaining_amount", 0) for debt in debts)
+                self.log_test(
+                    "GET /api/debts", 
+                    True, 
+                    response_time,
+                    f"Found {debt_count} debts, Total: {total_debt:.2f} EGP",
+                    response.status_code
+                )
+            else:
+                self.log_test("GET /api/debts", False, response_time, f"Failed to get debts: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/debts", False, response_time, f"Exception: {str(e)}")
+
+        # Test POST debt creation
+        self.test_debt_creation()
+
+    def test_debt_creation(self):
+        """اختبار إنشاء دين جديد"""
+        start_time = time.time()
+        try:
+            # Get a clinic for testing
+            clinics_response = requests.get(f"{self.base_url}/clinics", headers=self.get_headers(), timeout=5)
+            if clinics_response.status_code != 200 or not clinics_response.json():
+                self.log_test("POST /api/debts", False, 0, "No clinics available for debt creation test")
+                return
+
+            clinic_id = clinics_response.json()[0].get("id")
+            
+            debt_data = {
+                "clinic_id": clinic_id,
+                "debt_amount": 500.0,
+                "debt_type": "manual",
+                "description": f"اختبار دين جديد - {int(time.time())}",
+                "due_date": "2024-12-31",
+                "sales_rep_id": "test_rep_id"  # Required field based on previous error
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/debts", 
+                json=debt_data,
+                headers=self.get_headers(), 
+                timeout=10
+            )
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200 or response.status_code == 201:
+                self.log_test(
+                    "POST /api/debts", 
+                    True, 
+                    response_time,
+                    "Debt creation successful - HTTP 500 error FIXED!",
+                    response.status_code
+                )
+            else:
+                self.log_test(
+                    "POST /api/debts", 
+                    False, 
+                    response_time,
+                    f"Debt creation failed: {response.text} - May need sales_rep_id field",
+                    response.status_code
+                )
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("POST /api/debts", False, response_time, f"Exception: {str(e)}")
+
+    def test_dashboard_apis(self):
+        """اختبار APIs الداشبورد المؤكدة"""
+        print("📊 Testing Confirmed Dashboard APIs...")
+        
+        # Test recent activities
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/dashboard/recent-activities", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                activities = response.json()
+                activity_count = len(activities) if isinstance(activities, list) else 0
+                self.log_test(
+                    "GET /api/dashboard/recent-activities", 
+                    True, 
+                    response_time,
+                    f"Found {activity_count} recent activities",
+                    response.status_code
+                )
+            else:
+                self.log_test("GET /api/dashboard/recent-activities", False, response_time, f"Failed: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/dashboard/recent-activities", False, response_time, f"Exception: {str(e)}")
+
+        # Test visits
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/dashboard/visits", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                visits = response.json()
+                visit_count = len(visits) if isinstance(visits, list) else 0
+                self.log_test(
+                    "GET /api/dashboard/visits", 
+                    True, 
+                    response_time,
+                    f"Found {visit_count} visits",
+                    response.status_code
+                )
+            else:
+                self.log_test("GET /api/dashboard/visits", False, response_time, f"Failed: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/dashboard/visits", False, response_time, f"Exception: {str(e)}")
+
+        # Test collections
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/dashboard/collections", headers=self.get_headers(), timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                collections = response.json()
+                total_collections = collections.get("total", 0) if isinstance(collections, dict) else 0
+                self.log_test(
+                    "GET /api/dashboard/collections", 
+                    True, 
+                    response_time,
+                    f"Total collections: {total_collections:.2f} EGP",
+                    response.status_code
+                )
+            else:
+                self.log_test("GET /api/dashboard/collections", False, response_time, f"Failed: {response.text}", response.status_code)
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("GET /api/dashboard/collections", False, response_time, f"Exception: {str(e)}")
+
+    def generate_final_report(self):
+        """إنشاء التقرير النهائي"""
+        total_tests = len(self.test_results)
+        successful_tests = len([r for r in self.test_results if r["success"]])
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(r["response_time_ms"] for r in self.test_results) / total_tests if total_tests > 0 else 0
+        
+        print("=" * 80)
+        print("🎯 CRUD OPERATIONS FIXES - FINAL TEST REPORT")
+        print("=" * 80)
+        print()
+        
+        print(f"📊 **OVERALL RESULTS:**")
+        print(f"✅ Success Rate: {success_rate:.1f}% ({successful_tests}/{total_tests} tests passed)")
+        print(f"⏱️ Average Response Time: {avg_response_time:.2f}ms")
+        print(f"🕐 Total Test Duration: {total_time:.2f}s")
+        print()
+        
+        # Categorize results
+        categories = {
+            "🏥 Fixed Clinics": ["GET /api/clinics", "PUT /api/clinics/{id}", "DELETE /api/clinics/{id}"],
+            "🏪 Fixed Warehouses": ["GET /api/warehouses", "PUT /api/warehouses/{id}", "GET /api/warehouses/{id}/products"],
+            "🗺️ Fixed Areas": ["GET /api/areas", "PUT /api/areas/{id}"],
+            "💰 Fixed Debts": ["GET /api/debts", "POST /api/debts"],
+            "📊 Dashboard APIs": ["GET /api/dashboard/recent-activities", "GET /api/dashboard/visits", "GET /api/dashboard/collections"],
+            "🔐 Authentication": ["Admin Login"]
+        }
+        
+        for category, test_names in categories.items():
+            category_results = [r for r in self.test_results if r["test"] in test_names]
+            if category_results:
+                category_success = len([r for r in category_results if r["success"]])
+                category_total = len(category_results)
+                category_rate = (category_success / category_total * 100) if category_total > 0 else 0
+                
+                print(f"{category}: {category_rate:.1f}% ({category_success}/{category_total})")
+                for result in category_results:
+                    status = "✅" if result["success"] else "❌"
+                    print(f"  {status} {result['test']} ({result['response_time_ms']}ms)")
+                print()
+        
+        # HTTP 500 Error Analysis
+        http_500_tests = [r for r in self.test_results if r.get("status_code") == 500]
+        fixed_tests = [r for r in self.test_results if r["success"] and "FIXED" in r.get("details", "")]
+        
+        print("🔧 **HTTP 500 ERROR ANALYSIS:**")
+        if len(http_500_tests) == 0:
+            print("✅ NO HTTP 500 ERRORS DETECTED - All fixes appear successful!")
+        else:
+            print(f"❌ {len(http_500_tests)} HTTP 500 errors still exist:")
+            for test in http_500_tests:
+                print(f"  - {test['test']}: {test.get('details', 'Unknown error')}")
+        
+        print(f"✅ {len(fixed_tests)} APIs confirmed as FIXED")
+        print()
+        
+        # Success Rate Assessment
+        print("🎯 **SUCCESS RATE ASSESSMENT:**")
+        if success_rate >= 75:
+            print(f"🎉 SUCCESS! Target achieved: {success_rate:.1f}% > 75%")
+            print("✅ CRUD operations fixes have significantly improved the system!")
+        else:
+            print(f"⚠️ NEEDS IMPROVEMENT: {success_rate:.1f}% < 75% target")
+            print("❌ Additional fixes required for CRUD operations")
+        
+        print()
+        print("=" * 80)
+        
+        return {
+            "success_rate": success_rate,
+            "total_tests": total_tests,
+            "successful_tests": successful_tests,
+            "http_500_errors": len(http_500_tests),
+            "fixed_apis": len(fixed_tests),
+            "target_achieved": success_rate >= 75
+        }
+
+    def run_all_tests(self):
+        """تشغيل جميع الاختبارات"""
+        print("🚀 Starting CRUD Operations Fixes Backend Testing...")
+        print("=" * 80)
+        print()
+        
+        # Step 1: Login
+        if not self.login_admin():
+            print("❌ Cannot proceed without admin authentication")
+            return
+        
+        # Step 2: Test Fixed APIs
+        self.test_fixed_clinics()
+        self.test_fixed_warehouses() 
+        self.test_fixed_areas()
+        self.test_fixed_debts()
+        self.test_dashboard_apis()
+        
+        # Step 3: Generate Report
+        return self.generate_final_report()
+
+if __name__ == "__main__":
+    tester = CRUDFixesBackendTester()
+    final_results = tester.run_all_tests()
+    
+    # Exit with appropriate code
+    if final_results and final_results["target_achieved"]:
+        print("🎉 All tests completed successfully - CRUD fixes verified!")
+        exit(0)
+    else:
+        print("⚠️ Some tests failed - Additional fixes may be needed")
+        exit(1)
+"""
 اختبار شامل للنظام المنظف والمحسن مع التركيز على:
 1. اختبار إضافة منتج جديد
 2. اختبار نظام المديونية المحسن  
