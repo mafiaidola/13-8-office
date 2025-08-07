@@ -27,35 +27,15 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// Ultra Simple Readable Themes - ثيمات بسيطة وواضحة
+// الثيم الداكن الوحيد - Dark Theme Only
 const AVAILABLE_THEMES = {
-  // ثيم داكن بسيط - Simple Dark
+  // ثيم داكن بسيط - Simple Dark (الوحيد المتاح)
   dark: {
     name: { ar: 'داكن', en: 'Dark' },
     colors: {
-      background: '#1a1a1a',
-      card: '#2a2a2a',
+      background: '#111827',
+      card: '#1f2937',
       text: '#ffffff'
-    }
-  },
-  
-  // ثيم فاتح بسيط - Simple Light  
-  light: {
-    name: { ar: 'فاتح', en: 'Light' },
-    colors: {
-      background: '#ffffff',
-      card: '#f8f9fa',
-      text: '#000000'
-    }
-  },
-  
-  // ثيم عالي التباين - High Contrast
-  minimal: {
-    name: { ar: 'تباين عالي', en: 'High Contrast' },
-    colors: {
-      background: '#ffffff',
-      card: '#ffffff',
-      text: '#000000'
     }
   }
 };
