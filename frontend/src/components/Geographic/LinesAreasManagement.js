@@ -235,18 +235,47 @@ const LinesAreasManagement = ({ user, language, isRTL }) => {
       const token = localStorage.getItem('access_token');
       console.log('🔧 Updating area:', areaId, 'with data:', areaData);
       
-      const response = await axios.put(`${API}/areas/${areaId}`, areaData, {
-        headers: { Authorization: `Bearer ${token}` }
+      // التأكد من تعيين حالة النشاط افتراضياً
+      const updatedData = {
+        ...areaData,
+        is_active: areaData.is_active !== false // تعيين true كافتراضي
+      };
+      
+      const response = await axios.put(`${API}/areas/${areaId}`, updatedData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       console.log('✅ Area updated successfully:', response.data);
-      fetchAreas();
+      
+      // تحديث البيانات المحلية فوراً
+      setAreas(prevAreas => 
+        prevAreas.map(area => 
+          area.id === areaId 
+            ? { ...area, ...updatedData, updated_at: new Date().toISOString() }
+            : area
+        )
+      );
+      
       setShowAreaModal(false);
-      alert('تم تحديث المنطقة بنجاح');
+      alert('تم تحديث المنطقة بنجاح ✅');
+      
+      // إعادة تحميل البيانات للتأكد من التحديث
+      setTimeout(() => {
+        fetchAreas();
+      }, 1000);
+      
     } catch (error) {
       console.error('❌ Error updating area:', error);
       const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث المنطقة';
-      alert(`خطأ في تحديث المنطقة: ${errorMessage}`);
+      alert(`خطأ في تحديث المنطقة: ${errorMessage}\n\nسيتم إعادة المحاولة...`);
+      
+      // محاولة أخرى بعد ثانية واحدة
+      setTimeout(() => {
+        handleUpdateArea(areaId, areaData);
+      }, 1000);
     }
   };
 
