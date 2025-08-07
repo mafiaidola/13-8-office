@@ -491,6 +491,12 @@ class MedicalRepOrderTest:
         # Step 4: Get assigned clinics
         clinics = self.test_get_assigned_clinics()
         
+        # Step 4.1: If no clinics found, create one and assign it
+        if not clinics and admin_token and self.medical_rep_user:
+            test_clinic = self.create_test_clinic_and_assign(admin_token, self.medical_rep_user.get("id"))
+            if test_clinic:
+                clinics = [test_clinic]
+        
         # Step 5: Get available warehouses
         warehouses = self.test_get_warehouses()
         
