@@ -705,16 +705,35 @@ async def comprehensive_user_update(user_id: str, update_data: dict, current_use
 async def get_areas(current_user: User = Depends(get_current_user)):
     """الحصول على قائمة المناطق المتاحة"""
     try:
-        # Mock areas data for now - يمكن استبدالها ببيانات حقيقية من قاعدة البيانات
-        areas = [
-            {"id": "area_cairo", "name": "القاهرة الكبرى", "description": "منطقة القاهرة والجيزة", "manager_name": "أحمد محمد"},
-            {"id": "area_alexandria", "name": "الإسكندرية", "description": "محافظة الإسكندرية", "manager_name": "فاطمة أحمد"},
-            {"id": "area_giza", "name": "الجيزة", "description": "محافظة الجيزة", "manager_name": "محمد علي"},
-            {"id": "area_qalyubia", "name": "القليوبية", "description": "محافظة القليوبية", "manager_name": "سارة حسن"},
-            {"id": "area_upper_egypt", "name": "صعيد مصر", "description": "محافظات الصعيد", "manager_name": "عمر محمود"}
-        ]
+        # First, try to get areas from database
+        db_areas = await db.areas.find({}, {"_id": 0}).to_list(100)
         
-        return areas
+        # If no areas in database, create default areas
+        if not db_areas:
+            default_areas = [
+                {"id": "area_cairo", "name": "القاهرة الكبرى", "description": "منطقة القاهرة والجيزة", "manager_name": "أحمد محمد", "code": "CAI", "is_active": True, "created_at": datetime.utcnow()},
+                {"id": "area_alexandria", "name": "الإسكندرية", "description": "محافظة الإسكندرية", "manager_name": "فاطمة أحمد", "code": "ALX", "is_active": True, "created_at": datetime.utcnow()},
+                {"id": "area_giza", "name": "الجيزة", "description": "محافظة الجيزة", "manager_name": "محمد علي", "code": "GIZ", "is_active": True, "created_at": datetime.utcnow()},
+                {"id": "area_qalyubia", "name": "القليوبية", "description": "محافظة القليوبية", "manager_name": "سارة حسن", "code": "QLY", "is_active": True, "created_at": datetime.utcnow()},
+                {"id": "area_upper_egypt", "name": "صعيد مصر", "description": "محافظات الصعيد", "manager_name": "عمر محمود", "code": "UEG", "is_active": True, "created_at": datetime.utcnow()}
+            ]
+            
+            # Insert default areas into database
+            await db.areas.insert_many(default_areas)
+            print(f"DEBUG: Created {len(default_areas)} default areas in database")
+            
+            # Return the newly created areas
+            return default_areas
+        
+        # Convert datetime objects to ISO strings for JSON serialization
+        for area in db_areas:
+            if "created_at" in area and isinstance(area["created_at"], datetime):
+                area["created_at"] = area["created_at"].isoformat()
+            if "updated_at" in area and isinstance(area["updated_at"], datetime):
+                area["updated_at"] = area["updated_at"].isoformat()
+        
+        return db_areas
+        
     except Exception as e:
         print(f"Error fetching areas: {str(e)}")
         raise HTTPException(status_code=500, detail="خطأ في جلب المناطق")
