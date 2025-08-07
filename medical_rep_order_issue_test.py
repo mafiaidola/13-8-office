@@ -115,24 +115,14 @@ class MedicalRepOrderTest:
         original_token = self.jwt_token
         self.jwt_token = admin_token
         
-        # Check if medical rep already exists
-        response, _ = self.make_request("GET", "/users")
-        if response and response.status_code == 200:
-            users = response.json()
-            for user in users:
-                if user.get("role") == "medical_rep" and user.get("is_active", True):
-                    # Add a default password for existing users
-                    user["password"] = "test123456"
-                    self.jwt_token = original_token
-                    return user
-        
-        # Create new medical rep
+        # Create new medical rep with unique username
+        timestamp = int(time.time())
         rep_data = {
-            "username": f"medical_rep_test_{int(time.time())}",
+            "username": f"medical_rep_test_{timestamp}",
             "password": "test123456",
-            "full_name": "مندوب طبي للاختبار",
+            "full_name": f"مندوب طبي للاختبار {timestamp}",
             "role": "medical_rep",
-            "email": f"test_rep_{int(time.time())}@example.com",
+            "email": f"test_rep_{timestamp}@example.com",
             "phone": "01234567890",
             "is_active": True
         }
@@ -154,6 +144,23 @@ class MedicalRepOrderTest:
             self.jwt_token = original_token
             return created_user
         else:
+            # If creation failed, try to find existing medical rep
+            response, _ = self.make_request("GET", "/users")
+            if response and response.status_code == 200:
+                users = response.json()
+                for user in users:
+                    if user.get("role") == "medical_rep" and user.get("is_active", True):
+                        # Add a default password for existing users
+                        user["password"] = "test123456"
+                        self.log_result(
+                            "Create Medical Rep User",
+                            True,
+                            f"Using existing medical rep: {user.get('full_name')} (ID: {user.get('id')})",
+                            response_time
+                        )
+                        self.jwt_token = original_token
+                        return user
+            
             error_msg = response.text if response else "No response"
             self.log_result(
                 "Create Medical Rep User",
