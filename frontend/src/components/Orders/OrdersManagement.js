@@ -1,4 +1,4 @@
-// Enhanced Orders Management Component - إدارة الطلبات المحسنة
+// Enhanced Orders Management Component - إدارة الطلبات المحسنة مع صلاحيات
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import CreateOrderModal from './CreateOrderModal';
@@ -70,7 +70,7 @@ const OrdersManagement = ({ user, language, isRTL }) => {
           rep_region: user?.area || 'القاهرة الكبرى',
           rep_line: user?.line || 'الخط الأول',
           warehouse_name: 'مخزن القاهرة الرئيسي',
-          total_amount: 1500.00,
+          total_amount: user?.role === 'medical_rep' ? null : 1500.00, // إخفاء السعر من المندوب
           items_count: 5,
           status: 'pending_accounting',
           approval_flow: [
@@ -80,9 +80,9 @@ const OrdersManagement = ({ user, language, isRTL }) => {
           ],
           created_at: '2024-01-15T10:30:00Z',
           items: [
-            { name: 'أموكسيسيلين 500mg', quantity: 2, unit: 'شريط' },
-            { name: 'باراسيتامول 500mg', quantity: 3, unit: 'علبة' },
-            { name: 'فيتامين د 1000IU', quantity: 1, unit: 'علبة' }
+            { name: 'أموكسيسيلين 500mg', quantity: 2, unit: 'شريط', price: user?.role !== 'medical_rep' ? 25.50 : null },
+            { name: 'باراسيتامول 500mg', quantity: 3, unit: 'علبة', price: user?.role !== 'medical_rep' ? 15.00 : null },
+            { name: 'فيتامين د 1000IU', quantity: 1, unit: 'علبة', price: user?.role !== 'medical_rep' ? 120.00 : null }
           ]
         }
       ];
@@ -120,631 +120,370 @@ const OrdersManagement = ({ user, language, isRTL }) => {
       alert('ليس لديك صلاحية لإنشاء طلبات جديدة');
     }
   };
-          items: [
-            { name: 'مضاد التهاب', quantity: 3, price: 200.00, total: 600.00 },
-            { name: 'مسكن قوي', quantity: 2, price: 150.00, total: 300.00 },
-            { name: 'شراب للأطفال', quantity: 4, price: 80.00, total: 320.00 },
-            { name: 'كريم موضعي', quantity: 5, price: 60.00, total: 300.00 },
-            { name: 'قطرة للعين', quantity: 2, price: 90.00, total: 180.00 },
-            { name: 'أقراص فيتامين', quantity: 3, price: 120.00, total: 360.00 },
-            { name: 'مرهم طبي', quantity: 1, price: 40.00, total: 40.00 }
-          ]
-        },
-        {
-          id: 'ORD-004',
-          clinic_id: 'clinic-004',  
-          clinic_name: 'مركز الطب الحديث',
-          clinic_region: 'المنصورة',
-          clinic_line: 'خط الدقهلية',
-          sales_rep_id: 'rep-001',
-          sales_rep_name: 'محمد أحمد المندوب',
-          rep_region: 'المنصورة',
-          rep_line: 'خط الدقهلية',
-          warehouse_name: 'مخزن المنصورة',
-          total_amount: 750.50,
-          items_count: 4,
-          status: 'completed',
-          created_at: '2024-01-12T16:45:00Z',
-          items: [
-            { name: 'مضاد حساسية', quantity: 2, price: 95.00, total: 190.00 },
-            { name: 'شراب مهدئ', quantity: 1, price: 120.50, total: 120.50 },
-            { name: 'كبسولات طبيعية', quantity: 3, price: 80.00, total: 240.00 },
-            { name: 'مكمل غذائي', quantity: 1, price: 200.00, total: 200.00 }
-          ]
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
+
+  const handleOrderCreated = (newOrder) => {
+    setOrders([newOrder, ...orders]);
+    setShowCreateOrderModal(false);
   };
 
-  const handleApproveOrder = async (orderId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const response = await axios.patch(`${API}/orders/${orderId}/review`, 
-        { approved: true },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      console.log('✅ Order approved:', response.data);
-      alert('تم اعتماد الطلبية بنجاح');
-      fetchOrders();
-    } catch (error) {
-      console.error('❌ Error approving order:', error);
-      alert('خطأ في اعتماد الطلبية: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setLoading(false);
-    }
+  const getStatusText = (status) => {
+    const statusMap = {
+      'pending_accounting': 'في انتظار موافقة الحسابات',
+      'pending_warehouse': 'في انتظار موافقة المخزن',
+      'pending_debt_collection': 'في انتظار التحصيل',
+      'approved': 'تم الموافقة',
+      'rejected': 'مرفوض',
+      'completed': 'مكتمل'
+    };
+    return statusMap[status] || status;
   };
 
-  const handleRejectOrder = async (orderId) => {
-    if (window.confirm('هل أنت متأكد من رفض هذه الطلبية؟')) {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('access_token');
-        const response = await axios.patch(`${API}/orders/${orderId}/review`, 
-          { approved: false },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        
-        console.log('✅ Order rejected:', response.data);
-        alert('تم رفض الطلبية');
-        fetchOrders();
-      } catch (error) {
-        console.error('❌ Error rejecting order:', error);
-        alert('خطأ في رفض الطلبية: ' + (error.response?.data?.detail || error.message));
-      } finally {
-        setLoading(false);
-      }
-    }
+  const getStatusColor = (status) => {
+    const colorMap = {
+      'pending_accounting': 'bg-yellow-500',
+      'pending_warehouse': 'bg-blue-500',
+      'pending_debt_collection': 'bg-purple-500',
+      'approved': 'bg-green-500',
+      'rejected': 'bg-red-500',
+      'completed': 'bg-gray-500'
+    };
+    return colorMap[status] || 'bg-gray-500';
   };
 
-  const handleCreateOrder = async (orderData) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const response = await axios.post(`${API}/orders`, orderData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('✅ Order created by admin:', response.data);
-      alert('تم إنشاء الطلبية بنجاح وتسجيلها كمديونية في النظام');
-      setShowCreateOrderModal(false);
-      fetchOrders();
-    } catch (error) {
-      console.error('❌ Error creating order:', error);
-      alert('خطأ في إنشاء الطلبية: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusInfo = (status) => {
-    switch (status) {
-      case 'pending':
-        return { color: 'bg-yellow-500/20 text-yellow-300', text: 'معلق' };
-      case 'pending_manager':
-        return { color: 'bg-blue-500/20 text-blue-300', text: 'في انتظار المدير' };
-      case 'pending_accounting':
-        return { color: 'bg-purple-500/20 text-purple-300', text: 'في انتظار المحاسبة' };
-      case 'pending_warehouse':
-        return { color: 'bg-orange-500/20 text-orange-300', text: 'في انتظار المخزن' };
-      case 'approved':
-        return { color: 'bg-green-500/20 text-green-300', text: 'معتمد' };
-      case 'rejected':
-        return { color: 'bg-red-500/20 text-red-300', text: 'مرفوض' };
-      case 'completed':
-        return { color: 'bg-teal-500/20 text-teal-300', text: 'مكتمل' };
-      default:
-        return { color: 'bg-gray-500/20 text-gray-300', text: status };
-    }
-  };
-
-  // Filter orders
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.clinic_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.sales_rep_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
-    
-    return matchesSearch && matchesStatus;
+    const matchesSearch = order.clinic_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.sales_rep_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
   });
-
-  // Get order statistics
-  const orderStats = {
-    total: orders.length,
-    pending: orders.filter(o => o.status.includes('pending')).length,
-    approved: orders.filter(o => o.status === 'approved').length,
-    completed: orders.filter(o => o.status === 'completed').length
-  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>جاري تحميل الطلبات...</p>
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">جارٍ تحميل الطلبات...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="orders-management-container">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-              <span className="text-2xl text-white">🛒</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">{t('orders', 'title')}</h1>
-              <p className="text-lg opacity-75">إدارة ومراجعة جميع الطلبات مع نظام الموافقات</p>
-            </div>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">إدارة الطلبات</h1>
+            <p className="text-gray-600">
+              {user?.role === 'medical_rep' ? 'طلباتك الخاصة' : 
+               user?.role === 'manager' ? 'طلبات فريقك' : 
+               'جميع الطلبات في النظام'}
+            </p>
           </div>
           
-          {user && ['admin', 'gm', 'warehouse_manager', 'accounting'].includes(user.role) && (
+          {/* Create Order Button - للمناديب فقط */}
+          {canCreateOrder() && (
             <button
-              onClick={() => setShowCreateOrderModal(true)}
+              onClick={handleCreateOrder}
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
             >
               <span>➕</span>
-              {t('orders', 'createOrder')}
+              إنشاء طلبية جديدة
             </button>
           )}
         </div>
-      </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-          <div className="text-2xl font-bold">{orderStats.total}</div>
-          <div className="text-sm opacity-75">إجمالي الطلبات</div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-          <div className="text-2xl font-bold text-yellow-400">{orderStats.pending}</div>
-          <div className="text-sm opacity-75">طلبات معلقة</div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-          <div className="text-2xl font-bold text-green-400">{orderStats.approved}</div>
-          <div className="text-sm opacity-75">طلبات معتمدة</div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-          <div className="text-2xl font-bold text-teal-400">{orderStats.completed}</div>
-          <div className="text-sm opacity-75">طلبات مكتملة</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">البحث</label>
+        {/* Filters */}
+        <div className="mt-6 flex flex-wrap gap-4">
+          {/* Search */}
+          <div className="flex-1 min-w-64">
             <input
               type="text"
-              placeholder="ابحث عن الطلبات..."
+              placeholder="البحث في الطلبات..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">حالة الطلبية</label>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="all">جميع الحالات</option>
-              <option value="pending">معلق</option>
-              <option value="pending_manager">في انتظار المدير</option>
-              <option value="pending_accounting">في انتظار المحاسبة</option>
-              <option value="pending_warehouse">في انتظار المخزن</option>
-              <option value="approved">معتمد</option>
-              <option value="rejected">مرفوض</option>
-              <option value="completed">مكتمل</option>
-            </select>
+
+          {/* Status Filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">جميع الحالات</option>
+            <option value="pending_accounting">في انتظار الحسابات</option>
+            <option value="pending_warehouse">في انتظار المخزن</option>
+            <option value="pending_debt_collection">في انتظار التحصيل</option>
+            <option value="approved">موافق عليها</option>
+            <option value="rejected">مرفوضة</option>
+            <option value="completed">مكتملة</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Orders List */}
+      <div className="space-y-4">
+        {filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="text-6xl mb-4">📋</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد طلبات</h3>
+            <p className="text-gray-600">
+              {canCreateOrder() ? 'ابدأ بإنشاء طلبية جديدة' : 'لا توجد طلبات متاحة حالياً'}
+            </p>
           </div>
-        </div>
-      </div>
+        ) : (
+          filteredOrders.map((order) => (
+            <div key={order.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  {/* Order Header */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="font-mono text-lg font-bold text-blue-600">#{order.id}</span>
+                    <span className={`px-3 py-1 rounded-full text-white text-sm ${getStatusColor(order.status)}`}>
+                      {getStatusText(order.status)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(order.created_at).toLocaleDateString('ar-EG')}
+                    </span>
+                  </div>
 
-      {/* Orders Table */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-6 py-4 text-right text-sm font-medium">رقم الطلبية</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">العيادة</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">المندوب</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">المخزن</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">عدد العناصر</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الإجمالي</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الحالة</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">تاريخ الإنشاء</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => {
-                const statusInfo = getStatusInfo(order.status);
-                return (
-                  <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-blue-300">{order.id}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{order.clinic_name}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {order.sales_rep_name || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {order.warehouse_name || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-center font-medium">
-                        {order.items_count}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-medium">{order.total_amount} ج.م</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs ${statusInfo.color}`}>
-                        {statusInfo.text}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm opacity-75">
-                      {new Date(order.created_at).toLocaleDateString('ar')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setShowDetailsModal(true);
-                          }}
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
-                        >
-                          عرض
-                        </button>
-                        
-                        {order.status.includes('pending') && (
-                          <>
-                            <button
-                              onClick={() => handleApproveOrder(order.id)}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
-                            >
-                              موافقة
-                            </button>
-                            <button
-                              onClick={() => handleRejectOrder(order.id)}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
-                            >
-                              رفض
-                            </button>
-                          </>
-                        )}
+                  {/* Order Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-1">العيادة</h4>
+                      <p className="text-gray-900">{order.clinic_name}</p>
+                      <p className="text-sm text-gray-500">{order.clinic_region} - {order.clinic_line}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-1">المندوب</h4>
+                      <p className="text-gray-900">{order.sales_rep_name}</p>
+                      <p className="text-sm text-gray-500">{order.rep_region} - {order.rep_line}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-1">المخزن</h4>
+                      <p className="text-gray-900">{order.warehouse_name}</p>
+                      <p className="text-sm text-gray-500">عدد الأصناف: {order.items_count}</p>
+                    </div>
+                  </div>
+
+                  {/* Order Items - عرض بسيط للمندوب بدون أسعار */}
+                  <div className="mt-4">
+                    <h4 className="font-medium text-gray-700 mb-2">الأصناف المطلوبة</h4>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {order.items?.slice(0, 3).map((item, index) => (
+                          <div key={index} className="text-sm">
+                            <span className="font-medium">{item.name}</span>
+                            <span className="text-gray-600 mx-2">×</span>
+                            <span className="text-blue-600">{item.quantity} {item.unit || 'قطعة'}</span>
+                          </div>
+                        ))}
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {order.items?.length > 3 && (
+                        <p className="text-sm text-gray-500 mt-2">
+                          و {order.items.length - 3} صنف آخر...
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Approval Flow - تدرج الموافقات */}
+                  {order.approval_flow && (
+                    <div className="mt-4">
+                      <h4 className="font-medium text-gray-700 mb-2">تدرج الموافقات</h4>
+                      <div className="flex items-center gap-2">
+                        {order.approval_flow.map((stage, index) => (
+                          <div key={stage.stage} className="flex items-center">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${
+                              stage.status === 'approved' ? 'bg-green-500' :
+                              stage.status === 'rejected' ? 'bg-red-500' :
+                              stage.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-300'
+                            }`}>
+                              {stage.status === 'approved' ? '✓' :
+                               stage.status === 'rejected' ? '✕' :
+                               stage.status === 'pending' ? '⏳' : index + 1}
+                            </div>
+                            <span className="ml-2 text-sm text-gray-600">
+                              {stage.stage === 'accounting' ? 'الحسابات' :
+                               stage.stage === 'warehouse' ? 'المخزن' :
+                               stage.stage === 'debt_collection' ? 'التحصيل' : stage.stage}
+                            </span>
+                            {index < order.approval_flow.length - 1 && (
+                              <div className="w-8 h-0.5 bg-gray-300 mx-2"></div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setShowDetailsModal(true);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    التفاصيل
+                  </button>
+
+                  {/* Price Display - للمخولين فقط */}
+                  {canViewPrices() && order.total_amount && (
+                    <div className="bg-green-50 p-3 rounded-lg text-center">
+                      <div className="text-sm text-gray-600">إجمالي القيمة</div>
+                      <div className="text-lg font-bold text-green-600">
+                        {order.total_amount.toFixed(2)} ج.م
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-
-      {filteredOrders.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🛒</div>
-          <h3 className="text-xl font-bold mb-2">لا توجد طلبات</h3>
-          <p className="text-gray-600">لم يتم العثور على طلبات مطابقة للبحث</p>
-        </div>
-      )}
-
-      {/* Order Details Modal */}
-      {showDetailsModal && selectedOrder && (
-        <OrderDetailsModal
-          order={selectedOrder}
-          onClose={() => setShowDetailsModal(false)}
-          language={language}
-          user={user}
-        />
-      )}
 
       {/* Create Order Modal */}
       {showCreateOrderModal && (
         <CreateOrderModal
           onClose={() => setShowCreateOrderModal(false)}
-          onSubmit={handleCreateOrder}
-          language={language}
+          onOrderCreated={handleOrderCreated}
           user={user}
+          language={language}
         />
       )}
-    </div>
-  );
-};
 
-// Enhanced Order Details Modal Component
-const OrderDetailsModal = ({ order, onClose, language, user }) => {
-  const statusInfo = {
-    'pending': { color: 'bg-yellow-500/20 text-yellow-300', text: 'معلق' },
-    'pending_manager': { color: 'bg-blue-500/20 text-blue-300', text: 'في انتظار المدير' },
-    'pending_accounting': { color: 'bg-purple-500/20 text-purple-300', text: 'في انتظار المحاسبة' },
-    'pending_warehouse': { color: 'bg-orange-500/20 text-orange-300', text: 'في انتظار المخزن' },
-    'approved': { color: 'bg-green-500/20 text-green-300', text: 'معتمد' },
-    'rejected': { color: 'bg-red-500/20 text-red-300', text: 'مرفوض' },
-    'completed': { color: 'bg-teal-500/20 text-teal-300', text: 'مكتمل' }
-  };
+      {/* Order Details Modal */}
+      {showDetailsModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
 
-  const currentStatus = statusInfo[order.status] || { color: 'bg-gray-500/20 text-gray-300', text: order.status };
-  
-  // Check if user can view prices (accounting role)
-  const canViewPrices = user?.role === 'accounting' || user?.role === 'admin' || user?.role === 'gm';
-  
-  // Mock clinic and rep data (would come from API in real implementation)
-  const clinicDetails = {
-    id: order.clinic_id || 'clinic-001',
-    name: order.clinic_name,
-    total_orders: 15,
-    total_debt: 2500.00,
-    remaining_debt: 1200.00,
-    region: order.clinic_region || 'القاهرة الكبرى',
-    line: order.clinic_line || 'خط وسط القاهرة'
-  };
-  
-  const repDetails = {
-    id: order.sales_rep_id || 'rep-001',
-    name: order.sales_rep_name,
-    total_orders: 45,
-    total_debt: 8500.00,
-    remaining_debt: 3200.00,
-    region: order.rep_region || 'القاهرة الكبرى',
-    line: order.rep_line || 'خط وسط القاهرة'
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <span className="text-2xl text-white">🛒</span>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">تفاصيل الطلبية</h3>
-                <p className="text-lg font-medium text-orange-300">{order.id}</p>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">
-              ✕
-            </button>
-          </div>
-
-          {/* Top Section: Clinic and Rep Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Clinic Card */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-xl text-white">🏥</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">كارت العيادة</h4>
-                  <p className="text-blue-300 font-medium">{clinicDetails.name}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
-                  <div className="text-lg font-bold text-green-300">{clinicDetails.total_orders}</div>
-                  <div className="text-xs text-green-200">الطلبيات</div>
-                </div>
-                <div className="text-center bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-                  <div className="text-lg font-bold text-red-300">{clinicDetails.total_debt.toFixed(2)}ج.م</div>
-                  <div className="text-xs text-red-200">المديونيات</div>
-                </div>
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">المنطقة:</span>
-                  <span className="text-white font-medium">{clinicDetails.region}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">الخط:</span>
-                  <span className="text-white font-medium">{clinicDetails.line}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sales Rep Card */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-xl text-white">👤</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-white">كارت المندوب</h4>
-                  <p className="text-purple-300 font-medium">{repDetails.name}</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center bg-green-500/10 rounded-lg p-3 border border-green-500/20">
-                  <div className="text-lg font-bold text-green-300">{repDetails.total_orders}</div>
-                  <div className="text-xs text-green-200">الطلبيات</div>
-                </div>
-                <div className="text-center bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-                  <div className="text-lg font-bold text-red-300">{repDetails.total_debt.toFixed(2)}ج.م</div>
-                  <div className="text-xs text-red-200">المديونيات</div>
-                </div>
-              </div>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">المنطقة:</span>
-                  <span className="text-white font-medium">{repDetails.region}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">الخط:</span>
-                  <span className="text-white font-medium">{repDetails.line}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
-                <span>📋</span>
-                معلومات الطلبية
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/70">رقم الطلبية:</span>
-                  <span className="font-medium text-white">{order.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">العيادة:</span>
-                  <span className="font-medium text-white">{order.clinic_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">المندوب:</span>
-                  <span className="font-medium text-white">{order.sales_rep_name || '-'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">المخزن:</span>
-                  <span className="font-medium text-white">{order.warehouse_name || '-'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-white/70">الحالة:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${currentStatus.color}`}>
-                    {currentStatus.text}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
-                <span>💰</span>
-                المعلومات المالية
-                {!canViewPrices && (
-                  <span className="text-xs text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full">
-                    🔒 محجوبة
-                  </span>
-                )}
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/70">عدد العناصر:</span>
-                  <span className="font-medium text-white">{order.items_count}</span>
-                </div>
-                {canViewPrices ? (
-                  <div className="flex justify-between">
-                    <span className="text-white/70">إجمالي المبلغ:</span>
-                    <span className="font-medium text-green-300">{order.total_amount} ج.م</span>
+              {/* Full Order Details */}
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-700 mb-3">معلومات العيادة</h3>
+                    <div className="space-y-2">
+                      <p><strong>الاسم:</strong> {selectedOrder.clinic_name}</p>
+                      <p><strong>المنطقة:</strong> {selectedOrder.clinic_region}</p>
+                      <p><strong>الخط:</strong> {selectedOrder.clinic_line}</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="flex justify-between">
-                    <span className="text-white/70">إجمالي المبلغ:</span>
-                    <span className="text-orange-300">🔒 متاح للحسابات فقط</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-white/70">تاريخ الإنشاء:</span>
-                  <span className="font-medium text-white">{new Date(order.created_at).toLocaleDateString('ar')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">وقت الإنشاء:</span>
-                  <span className="font-medium text-white">{new Date(order.created_at).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Order Items */}
-          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-            <h4 className="font-bold text-lg text-white mb-3 flex items-center gap-2">
-              <span>📦</span>
-              عناصر الطلبية
-              {!canViewPrices && (
-                <span className="text-xs text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full">
-                  🔒 الأسعار محجوبة
-                </span>
-              )}
-            </h4>
-            {order.items && order.items.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-right py-2 text-white/80">المنتج</th>
-                      <th className="text-right py-2 text-white/80">الكمية</th>
-                      {canViewPrices && (
-                        <>
-                          <th className="text-right py-2 text-white/80">سعر الوحدة</th>
-                          <th className="text-right py-2 text-white/80">الإجمالي</th>
-                        </>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-700 mb-3">معلومات المندوب</h3>
+                    <div className="space-y-2">
+                      <p><strong>الاسم:</strong> {selectedOrder.sales_rep_name}</p>
+                      <p><strong>المنطقة:</strong> {selectedOrder.rep_region}</p>
+                      <p><strong>الخط:</strong> {selectedOrder.rep_line}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items Table */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3">تفاصيل الأصناف</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full table">
+                      <thead>
+                        <tr>
+                          <th>اسم الصنف</th>
+                          <th>الكمية</th>
+                          <th>الوحدة</th>
+                          {canViewPrices() && <th>السعر</th>}
+                          {canViewPrices() && <th>الإجمالي</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedOrder.items?.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.name}</td>
+                            <td className="text-center">{item.quantity}</td>
+                            <td className="text-center">{item.unit || 'قطعة'}</td>
+                            {canViewPrices() && <td className="text-center">{item.price ? `${item.price.toFixed(2)} ج.م` : '-'}</td>}
+                            {canViewPrices() && <td className="text-center">{item.price ? `${(item.price * item.quantity).toFixed(2)} ج.م` : '-'}</td>}
+                          </tr>
+                        ))}
+                      </tbody>
+                      {canViewPrices() && selectedOrder.total_amount && (
+                        <tfoot>
+                          <tr>
+                            <td colSpan={canViewPrices() ? "4" : "3"} className="text-right font-bold">الإجمالي:</td>
+                            <td className="text-center font-bold">{selectedOrder.total_amount.toFixed(2)} ج.م</td>
+                          </tr>
+                        </tfoot>
                       )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.items.map((item, index) => (
-                      <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-3 font-medium text-white">{item.name}</td>
-                        <td className="py-3 text-white">
-                          <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs font-medium">
-                            {item.quantity}
-                          </span>
-                        </td>
-                        {canViewPrices && (
-                          <>
-                            <td className="py-3 text-green-300">{item.price} ج.م</td>
-                            <td className="py-3 font-medium text-green-300">{item.total} ج.م</td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                
-                {canViewPrices && (
-                  <div className="mt-4 pt-4 border-t border-white/10 text-right">
-                    <div className="text-lg font-bold text-green-300">
-                      إجمالي الطلبية: {order.total_amount} ج.م
+                    </table>
+                  </div>
+                </div>
+
+                {/* Approval Flow Details */}
+                {selectedOrder.approval_flow && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-3">سجل الموافقات</h3>
+                    <div className="space-y-3">
+                      {selectedOrder.approval_flow.map((stage, index) => (
+                        <div key={stage.stage} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${
+                              stage.status === 'approved' ? 'bg-green-500' :
+                              stage.status === 'rejected' ? 'bg-red-500' :
+                              stage.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-300'
+                            }`}>
+                              {stage.status === 'approved' ? '✓' :
+                               stage.status === 'rejected' ? '✕' :
+                               stage.status === 'pending' ? '⏳' : index + 1}
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {stage.stage === 'accounting' ? 'الحسابات' :
+                                 stage.stage === 'warehouse' ? 'المخزن' :
+                                 stage.stage === 'debt_collection' ? 'التحصيل' : stage.stage}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {stage.status === 'approved' ? 'تم الموافقة' :
+                                 stage.status === 'rejected' ? 'تم الرفض' :
+                                 stage.status === 'pending' ? 'في الانتظار' : 'لم يتم الوصول إليها'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {stage.user && <div>بواسطة: {stage.user}</div>}
+                            {stage.timestamp && (
+                              <div>{new Date(stage.timestamp).toLocaleString('ar-EG')}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">📦</div>
-                <p className="text-gray-400">لا توجد تفاصيل عناصر متاحة</p>
-              </div>
-            )}
-          </div>
-          
-          {/* Close Button */}
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-            >
-              إغلاق
-            </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
