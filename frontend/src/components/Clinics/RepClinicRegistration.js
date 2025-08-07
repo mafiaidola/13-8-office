@@ -598,14 +598,66 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                     </div>
                   </div>
                 </div>
-                              className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
-                            >
-                              🔗 فتح في Google Maps
-                            </button>
-                          </div>
-                        </div>
-                      )}
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <span className="text-yellow-500 text-xl">⚠️</span>
+                      </div>
+                      <div className="mr-3">
+                        <h4 className="text-yellow-800 font-medium">تحديد الموقع مطلوب</h4>
+                        <p className="text-yellow-700 text-sm mt-1">
+                          يرجى السماح بالوصول إلى موقعك أو إدخال الإحداثيات يدوياً لتحديد موقع العيادة على الخريطة.
+                        </p>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Manual Location Entry */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                      <span>📍</span>
+                      إدخال الموقع يدوياً
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-1">
+                          خط العرض (Latitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={clinicData.latitude || ''}
+                          onChange={(e) => setClinicData(prev => ({
+                            ...prev,
+                            latitude: parseFloat(e.target.value) || null
+                          }))}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                          placeholder="مثال: 30.0444"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-1">
+                          خط الطول (Longitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={clinicData.longitude || ''}
+                          onChange={(e) => setClinicData(prev => ({
+                            ...prev,
+                            longitude: parseFloat(e.target.value) || null
+                          }))}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                          placeholder="مثال: 31.2357"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
                     
                     {/* Enhanced Control Overlay */}
                     <div className="absolute top-4 left-4 bg-black/90 backdrop-blur-sm rounded-xl p-4 text-white shadow-2xl border border-white/20">
