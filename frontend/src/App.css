@@ -842,6 +842,96 @@ body,
   border: 2px solid var(--color-danger);
 }
 
+/* Enhanced Text Visibility - Dark Theme Only */
+* {
+  color: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+}
+
+p, span, div, label, button {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure form elements are visible */
+input, textarea, select {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--bg-tertiary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
+}
+
+/* Table text visibility */
+.table th,
+.table td {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+/* Modal text visibility */
+.modal,
+.modal * {
+  color: var(--text-primary) !important;
+}
+
+.modal {
+  background-color: var(--bg-card) !important;
+}
+
+/* Card text visibility */
+.card,
+.card * {
+  color: var(--text-primary) !important;
+}
+
+.dashboard-card .card-title,
+.dashboard-card .card-value,
+.dashboard-card .card-description {
+  color: var(--text-primary) !important;
+}
+
+/* Sidebar text visibility */
+.sidebar,
+.sidebar * {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure buttons have proper contrast */
+button {
+  color: white !important;
+}
+
+button.btn-secondary {
+  color: var(--color-primary) !important;
+}
+
+/* Status badges with proper contrast */
+.status-badge {
+  color: white !important;
+}
+
+.status-badge.success {
+  color: white !important;
+  background-color: var(--color-success) !important;
+}
+
+.status-badge.warning {
+  color: var(--text-primary) !important;
+  background-color: var(--color-warning) !important;
+}
+
+.status-badge.danger {
+  color: white !important;
+  background-color: var(--color-danger) !important;
+}
+
 /* Final Enhancements - Ensure All Text is Readable */
 * {
   -webkit-font-smoothing: antialiased;
