@@ -102,7 +102,15 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
         credit_status: clinicData.credit_status,
         manager_name: clinicData.manager_name || '',
         manager_phone: clinicData.manager_phone || '',
-        registered_by: user?.id || user?.user_id
+        registered_by: user?.id || user?.user_id,
+        // إضافة موقع المستخدم وقت التسجيل
+        user_location_at_registration: userLocationAtRegistration ? {
+          latitude: userLocationAtRegistration.latitude,
+          longitude: userLocationAtRegistration.longitude,
+          accuracy: userLocationAtRegistration.accuracy,
+          timestamp: userLocationAtRegistration.timestamp,
+          registered_by_name: user?.full_name || user?.username || 'مستخدم غير معرف'
+        } : null
       };
 
       console.log('إرسال بيانات العيادة:', clinicPayload);
