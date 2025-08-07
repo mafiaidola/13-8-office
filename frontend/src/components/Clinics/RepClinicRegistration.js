@@ -482,7 +482,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                 </div>
               )}
 
-              {/* Interactive Google Maps */}
+              {/* Simple Interactive Google Maps - خريطة بسيطة */}
               {clinicData.latitude && clinicData.longitude ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -495,110 +495,109 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       onClick={getCurrentLocation}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
-                      📍 تحديث الموقع
+                      📍 استخدم موقعي الحالي
                     </button>
                   </div>
                   
-                  {/* Interactive Google Maps with Draggable Marker */}
-                  <div className="relative">
-                    <div className="w-full h-80 bg-gray-900 rounded-xl border-2 border-white/20 overflow-hidden shadow-lg">
-                      {process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? (
-                        <div className="relative w-full h-full">
-                          {/* Enhanced Google Maps with Draggable Marker */}
-                          <div 
-                            className="w-full h-full relative"
-                            id="interactive-map"
-                          >
-                            <iframe
-                              src={`https://www.google.com/maps/embed/v1/view?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&center=${clinicData.latitude},${clinicData.longitude}&zoom=16&maptype=roadmap`}
-                              width="100%"
-                              height="100%"
-                              style={{ border: 0 }}
-                              allowFullScreen
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              className="rounded-xl opacity-90"
-                              title="موقع العيادة على Google Maps"
-                              onLoad={() => console.log('✅ Google Maps loaded successfully')}
-                              onError={(e) => {
-                                console.error('❌ Google Maps failed to load:', e);
-                                e.target.style.display = 'none';
-                                if (e.target.nextElementSibling) {
-                                  e.target.nextElementSibling.style.display = 'block';
-                                }
-                              }}
-                            />
-                            
-                            {/* Fixed Pin Marker Overlay - Center Pin for Reference */}
-                            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                              <div className="relative">
-                                <div className="text-red-500 text-4xl animate-bounce" style={{ textShadow: '0 0 10px rgba(0,0,0,0.8)' }}>
-                                  📍
-                                </div>
-                                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                                  موقع العيادة
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Location Precision Indicator */}
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                              <div className="w-8 h-8 border-4 border-red-500 rounded-full bg-red-500/20 animate-pulse"></div>
-                            </div>
+                  {/* Simple Clinic Map Component */}
+                  <SimpleClinicMap
+                    latitude={clinicData.latitude}
+                    longitude={clinicData.longitude}
+                    onLocationChange={(lat, lng) => {
+                      setClinicData(prev => ({
+                        ...prev,
+                        latitude: lat,
+                        longitude: lng
+                      }));
+                      console.log('📍 تم تحديث موقع العيادة:', lat, lng);
+                    }}
+                    language={language}
+                  />
 
-                            {/* Interactive Map Instructions */}
-                            <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-sm rounded-xl p-3 text-white shadow-2xl border border-white/20 max-w-xs">
-                              <div className="text-xs space-y-1">
-                                <div className="font-bold text-green-300 flex items-center gap-1">
-                                  <span>💡</span>
-                                  تعليمات الخريطة
-                                </div>
-                                <div>• انقر على "موقع مخصص" أسفل لتغيير الموقع</div>
-                                <div>• استخدم الحقول أسفل للتعديل الدقيق</div>
-                                <div>• أو اضغط "استخدم موقعي" للموقع الحالي</div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Fallback: Static Map Link */}
-                          <div 
-                            className="w-full h-full bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center"
-                            style={{ display: 'none' }}
-                          >
-                            <div className="text-center">
-                              <div className="text-5xl mb-3">🗺️</div>
-                              <h4 className="text-lg font-bold text-white mb-2">خريطة موقع العيادة</h4>
-                              <p className="text-white/80 text-sm mb-4">
-                                📍 الموقع: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}&zoom=16`;
-                                  window.open(googleMapsUrl, '_blank');
-                                }}
-                                className="bg-green-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-green-700 transition-colors font-medium"
-                              >
-                                🔗 فتح في Google Maps
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl">
-                          <div className="text-center">
-                            <div className="text-5xl mb-3">🗺️</div>
-                            <p className="text-white text-lg font-semibold mb-2">موقع العيادة</p>
-                            <div className="text-4xl text-red-500 mb-2">📍</div>
-                            <p className="text-gray-300 text-sm mb-4">
-                              الإحداثيات: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const googleMapsUrl = `https://www.google.com/maps?q=${clinicData.latitude},${clinicData.longitude}&zoom=16`;
-                                window.open(googleMapsUrl, '_blank');
-                              }}
+                  {/* Location Coordinates Display */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-1">
+                          📍 خط العرض (Latitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={clinicData.latitude || ''}
+                          onChange={(e) => setClinicData(prev => ({
+                            ...prev,
+                            latitude: parseFloat(e.target.value) || null
+                          }))}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                          placeholder="مثال: 30.0444"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-white/90 mb-1">
+                          📍 خط الطول (Longitude)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={clinicData.longitude || ''}
+                          onChange={(e) => setClinicData(prev => ({
+                            ...prev,
+                            longitude: parseFloat(e.target.value) || null
+                          }))}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40"
+                          placeholder="مثال: 31.2357"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Quick Location Options */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Cairo center coordinates
+                          setClinicData(prev => ({
+                            ...prev,
+                            latitude: 30.0444,
+                            longitude: 31.2357
+                          }));
+                        }}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-100 rounded text-sm hover:bg-blue-500/30 transition-colors"
+                      >
+                        📍 وسط القاهرة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Alexandria coordinates
+                          setClinicData(prev => ({
+                            ...prev,
+                            latitude: 31.2001,
+                            longitude: 29.9187
+                          }));
+                        }}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-100 rounded text-sm hover:bg-blue-500/30 transition-colors"
+                      >
+                        📍 الإسكندرية
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Giza coordinates
+                          setClinicData(prev => ({
+                            ...prev,
+                            latitude: 30.0131,
+                            longitude: 31.2089
+                          }));
+                        }}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-100 rounded text-sm hover:bg-blue-500/30 transition-colors"
+                      >
+                        📍 الجيزة
+                      </button>
+                    </div>
+                  </div>
+                </div>
                               className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
                             >
                               🔗 فتح في Google Maps
