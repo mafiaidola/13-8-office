@@ -2951,7 +2951,7 @@ async def create_debt(debt_data: dict, current_user: User = Depends(get_current_
             "description": debt_data["description"],
             "status": "outstanding",
             "created_at": datetime.utcnow(),
-            "created_by": current_user["id"],
+            "created_by": current_user.id,
             "payments": []
         }
 
