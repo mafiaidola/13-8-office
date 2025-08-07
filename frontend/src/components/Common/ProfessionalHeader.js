@@ -243,14 +243,16 @@ const ProfessionalHeader = ({
             {/* Notification Center */}
             <NotificationCenter user={user} language={language} />
             
-            {/* Theme Selector */}
+            {/* Theme Selector - ENHANCED */}
             <div className="relative" ref={themeMenuRef}>
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-colors"
+                className="theme-selector-enhanced p-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl border-2 border-white/20 hover:border-white/40 transition-all duration-300 group shadow-lg hover:shadow-xl"
                 title={language === 'ar' ? 'تغيير المظهر' : 'Change Theme'}
               >
-                <span className="text-lg">{currentTheme.icon}</span>
+                <span className="text-2xl text-white group-hover:scale-110 transition-transform duration-300 inline-block">
+                  {currentTheme?.icon || '🎨'}
+                </span>
               </button>
 
               {/* Theme Dropdown - FIXED Z-INDEX */}
