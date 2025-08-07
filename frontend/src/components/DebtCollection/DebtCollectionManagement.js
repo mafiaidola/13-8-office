@@ -955,6 +955,21 @@ const DebtCollectionManagement = ({ user, language = 'ar', isRTL = true }) => {
           </div>
         </div>
       )}
+      
+      {/* Add Debt Modal */}
+      {showAddDebtModal && (
+        <AddDebtModal
+          onClose={() => setShowAddDebtModal(false)}
+          onDebtAdded={(newDebt) => {
+            console.log('✅ New debt added:', newDebt);
+            loadDebtsData();
+            calculateDebtStats();
+            setShowAddDebtModal(false);
+          }}
+          language={language}
+          user={user}
+        />
+      )}
     </div>
   );
 };
