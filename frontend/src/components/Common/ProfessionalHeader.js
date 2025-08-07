@@ -24,20 +24,7 @@ const ProfessionalHeader = ({
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
 
-  // Enhanced Professional Themes - محسن لراحة العين (الداكن فقط)
-  const themes = {
-    dark: {
-      name: { ar: 'داكن', en: 'Dark' },
-      icon: '🌙',
-      colors: {
-        primary: '#111827',
-        secondary: '#1f2937',
-        accent: '#6366f1'
-      }
-    }
-  };
 
-  const currentTheme = themes[theme] || themes.light;
 
   // Click outside handler
   useEffect(() => {
