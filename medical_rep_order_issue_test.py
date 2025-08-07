@@ -171,6 +171,53 @@ class MedicalRepOrderTest:
             self.jwt_token = original_token
             return None
     
+    def create_test_clinic_and_assign(self, admin_token, rep_id):
+        """إنشاء عيادة اختبار وتخصيصها للمندوب"""
+        if not admin_token or not rep_id:
+            return None
+            
+        # Use admin token temporarily
+        original_token = self.jwt_token
+        self.jwt_token = admin_token
+        
+        # Create test clinic
+        clinic_data = {
+            "name": f"عيادة اختبار {int(time.time())}",
+            "owner_name": "دكتور اختبار",
+            "phone": "01234567890",
+            "address": "عنوان اختبار",
+            "location": "القاهرة",
+            "area_id": "area_cairo",
+            "assigned_rep_id": rep_id,  # Assign to our medical rep
+            "is_active": True
+        }
+        
+        response, response_time = self.make_request("POST", "/clinics", clinic_data)
+        
+        if response and response.status_code == 200:
+            data = response.json()
+            clinic = data.get("clinic", {})
+            
+            self.log_result(
+                "Create Test Clinic",
+                True,
+                f"Test clinic created and assigned: {clinic.get('name')} (ID: {clinic.get('id')})",
+                response_time
+            )
+            
+            self.jwt_token = original_token
+            return clinic
+        else:
+            error_msg = response.text if response else "No response"
+            self.log_result(
+                "Create Test Clinic",
+                False,
+                f"Failed to create test clinic: {error_msg}",
+                response_time
+            )
+            self.jwt_token = original_token
+            return None
+    
     def test_medical_rep_login(self, medical_rep_user):
         """اختبار تسجيل دخول المندوب الطبي"""
         if not medical_rep_user:
