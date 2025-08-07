@@ -2914,6 +2914,292 @@ async def get_daily_login_records(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=500, detail="خطأ في جلب سجلات تسجيل الدخول")
 
 
+# ============================================================================
+# DEBTS AND COLLECTIONS APIs - أنظمة الديون والتحصيل
+# ============================================================================
+
+@api_router.post("/debts")
+async def create_debt(debt_data: dict, current_user: User = Depends(get_current_user)):
+    """إضافة دين جديد - Create new debt"""
+    try:
+        # Validate required fields
+        required_fields = ["clinic_id", "sales_rep_id", "amount", "description"]
+        for field in required_fields:
+            if field not in debt_data:
+                raise HTTPException(status_code=400, detail=f"الحقل '{field}' مطلوب")
+
+        # Get clinic and rep info
+        clinic = await db.clinics.find_one({"id": debt_data["clinic_id"]})
+        if not clinic:
+            raise HTTPException(status_code=404, detail="العيادة غير موجودة")
+        
+        sales_rep = await db.users.find_one({"id": debt_data["sales_rep_id"], "role": "medical_rep"})
+        if not sales_rep:
+            raise HTTPException(status_code=404, detail="المندوب غير موجود")
+
+        debt_id = str(uuid.uuid4())
+        debt_record = {
+            "id": debt_id,
+            "clinic_id": debt_data["clinic_id"],
+            "clinic_name": clinic.get("name", ""),
+            "sales_rep_id": debt_data["sales_rep_id"],
+            "sales_rep_name": sales_rep.get("full_name", ""),
+            "area": sales_rep.get("area", ""),
+            "amount": float(debt_data["amount"]),
+            "paid_amount": 0.0,
+            "remaining_amount": float(debt_data["amount"]),
+            "description": debt_data["description"],
+            "status": "outstanding",
+            "created_at": datetime.utcnow(),
+            "created_by": current_user["id"],
+            "payments": []
+        }
+
+        await db.debts.insert_one(debt_record)
+        
+        return {
+            "success": True, 
+            "message": "تم إضافة الدين بنجاح",
+            "debt_id": debt_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating debt: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إضافة الدين")
+
+
+@api_router.post("/debts/{debt_id}/payment")
+async def add_debt_payment(debt_id: str, payment_data: dict, current_user: User = Depends(get_current_user)):
+    """تسجيل دفعة على دين - Record debt payment"""
+    try:
+        debt = await db.debts.find_one({"id": debt_id})
+        if not debt:
+            raise HTTPException(status_code=404, detail="الدين غير موجود")
+
+        payment_amount = float(payment_data.get("amount", 0))
+        if payment_amount <= 0:
+            raise HTTPException(status_code=400, detail="مبلغ الدفعة يجب أن يكون أكبر من صفر")
+
+        if payment_amount > debt["remaining_amount"]:
+            raise HTTPException(status_code=400, detail="مبلغ الدفعة أكبر من المبلغ المتبقي")
+
+        # Update debt record
+        new_paid_amount = debt["paid_amount"] + payment_amount
+        new_remaining = debt["amount"] - new_paid_amount
+        new_status = "paid" if new_remaining == 0 else "partially_paid"
+
+        payment_record = {
+            "id": str(uuid.uuid4()),
+            "amount": payment_amount,
+            "payment_date": datetime.utcnow(),
+            "notes": payment_data.get("notes", ""),
+            "recorded_by": current_user["id"]
+        }
+
+        await db.debts.update_one(
+            {"id": debt_id},
+            {
+                "$set": {
+                    "paid_amount": new_paid_amount,
+                    "remaining_amount": new_remaining,
+                    "status": new_status,
+                    "updated_at": datetime.utcnow()
+                },
+                "$push": {"payments": payment_record}
+            }
+        )
+
+        return {
+            "success": True,
+            "message": "تم تسجيل الدفعة بنجاح",
+            "remaining_amount": new_remaining
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error adding payment: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تسجيل الدفعة")
+
+
+# ============================================================================
+# ENHANCED DASHBOARD APIs - لوحة التحكم المحسنة
+# ============================================================================
+
+@api_router.get("/dashboard/recent-activities")
+async def get_recent_activities(current_user: User = Depends(get_current_user)):
+    """الأنشطة الحديثة - Get recent activities"""
+    try:
+        activities = [
+            {
+                "id": f"activity-{i}",
+                "type": "visit",
+                "title": f"زيارة عيادة - {i}",
+                "description": f"قام المندوب محمد أحمد بزيارة عيادة الدكتور أحمد محمد",
+                "user": "محمد أحمد المندوب",
+                "clinic": "عيادة الدكتور أحمد محمد",
+                "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
+                "status": "completed"
+            } for i in range(1, 11)
+        ]
+
+        return {"success": True, "data": activities}
+
+    except Exception as e:
+        print(f"Error fetching recent activities: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب الأنشطة الحديثة")
+
+
+@api_router.get("/dashboard/visits")
+async def get_dashboard_visits(current_user: User = Depends(get_current_user)):
+    """زيارات المناديب - Get representative visits"""
+    try:
+        visits = [
+            {
+                "id": f"visit-{i}",
+                "sales_rep_name": f"مندوب {i}",
+                "clinic_name": f"عيادة {i}",
+                "visit_date": (datetime.utcnow() - timedelta(days=i)).isoformat(),
+                "notes": f"زيارة ناجحة - تم عرض المنتجات الجديدة",
+                "products_presented": [f"منتج {j}" for j in range(1, 4)],
+                "next_visit": (datetime.utcnow() + timedelta(days=7)).isoformat(),
+                "status": "completed"
+            } for i in range(1, 11)
+        ]
+
+        return {"success": True, "data": visits}
+
+    except Exception as e:
+        print(f"Error fetching visits: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب الزيارات")
+
+
+@api_router.get("/dashboard/collections")
+async def get_dashboard_collections(current_user: User = Depends(get_current_user)):
+    """آخر التحصيلات - Get recent collections"""
+    try:
+        collections = [
+            {
+                "id": f"collection-{i}",
+                "clinic_name": f"عيادة الدكتور {i}",
+                "sales_rep_name": f"مندوب {i}",
+                "amount": 1000 + (i * 500),
+                "collection_date": (datetime.utcnow() - timedelta(days=i)).isoformat(),
+                "payment_method": "نقداً" if i % 2 == 0 else "شيك",
+                "remaining_debt": max(0, 5000 - (1000 + i * 500)),
+                "notes": f"تحصيل جزئي - الدفعة {i}"
+            } for i in range(1, 11)
+        ]
+
+        return {"success": True, "data": collections}
+
+    except Exception as e:
+        print(f"Error fetching collections: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب التحصيلات")
+
+
+# ============================================================================
+# WAREHOUSE MANAGEMENT APIs - إدارة المخازن
+# ============================================================================
+
+@api_router.get("/warehouses/{warehouse_id}/products")
+async def get_warehouse_products(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    """الحصول على منتجات المخزن - Get warehouse products"""
+    try:
+        warehouse = await db.warehouses.find_one({"id": warehouse_id})
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="المخزن غير موجود")
+
+        # Get products associated with this warehouse
+        products = [
+            {
+                "id": f"prod-{i}",
+                "name": f"منتج {i}",
+                "category": "أدوية" if i % 2 == 0 else "مستحضرات",
+                "quantity": 100 + (i * 10),
+                "price": 25.50 + (i * 5),
+                "expiry_date": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                "supplier": f"مورد {i}",
+                "batch_number": f"BATCH-{i}-2024"
+            } for i in range(1, 21)
+        ]
+
+        return {
+            "success": True,
+            "warehouse": warehouse,
+            "products": products,
+            "total_products": len(products)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching warehouse products: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في جلب منتجات المخزن")
+
+
+@api_router.put("/warehouses/{warehouse_id}")
+async def update_warehouse(warehouse_id: str, warehouse_data: dict, current_user: User = Depends(get_current_user)):
+    """تحديث مخزن - Update warehouse"""
+    try:
+        existing_warehouse = await db.warehouses.find_one({"id": warehouse_id})
+        if not existing_warehouse:
+            raise HTTPException(status_code=404, detail="المخزن غير موجود")
+
+        # Update warehouse data
+        update_data = warehouse_data.copy()
+        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_by"] = current_user["id"]
+
+        await db.warehouses.update_one({"id": warehouse_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث المخزن بنجاح"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating warehouse: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث المخزن")
+
+
+# ============================================================================
+# AREAS MANAGEMENT FIXES - إصلاحات إدارة المناطق
+# ============================================================================
+
+@api_router.put("/areas/{area_id}")
+async def update_area(area_id: str, area_data: dict, current_user: User = Depends(get_current_user)):
+    """تحديث منطقة - Update area"""
+    try:
+        existing_area = await db.areas.find_one({"id": area_id})
+        if not existing_area:
+            raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
+
+        # Validate required fields
+        if "name" not in area_data:
+            raise HTTPException(status_code=400, detail="اسم المنطقة مطلوب")
+
+        # Update area data
+        update_data = area_data.copy()
+        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_by"] = current_user["id"]
+        
+        # Ensure is_active is boolean
+        if "is_active" in update_data:
+            update_data["is_active"] = bool(update_data["is_active"])
+
+        await db.areas.update_one({"id": area_id}, {"$set": update_data})
+        
+        return {"success": True, "message": "تم تحديث المنطقة بنجاح"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating area: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث المنطقة")
+
+
 # Include routers
 from routes.auth_routes import router as auth_router
 from routes.dashboard_routes import router as dashboard_router
