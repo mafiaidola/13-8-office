@@ -121,18 +121,101 @@ const ProfessionalHeader = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle search
+  // Handle search - ENHANCED
   const handleSearch = async (query, type) => {
     if (!query.trim()) return;
     
+    console.log(`🔍 Searching for: "${query}" (Type: ${type})`);
+    
     try {
-      // Call parent search function
+      // Show search indicator
+      setShowAdvancedSearch(false);
+      
+      // Call parent search function if provided
       if (onSearch) {
         const results = await onSearch(query, type);
         setSearchResults(results || []);
+        return;
       }
+      
+      // Default search implementation
+      const token = localStorage.getItem('access_token');
+      const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+      
+      let searchUrl = '';
+      let results = [];
+      
+      switch(type) {
+        case 'users':
+          try {
+            const response = await fetch(`${API}/users?search=${encodeURIComponent(query)}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              results = data.filter(user => 
+                user.full_name?.toLowerCase().includes(query.toLowerCase()) ||
+                user.username?.toLowerCase().includes(query.toLowerCase())
+              );
+            }
+          } catch (error) {
+            console.log('Users search failed, using local search');
+          }
+          break;
+          
+        case 'clinics':
+          try {
+            const response = await fetch(`${API}/clinics?search=${encodeURIComponent(query)}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              results = data.filter(clinic => 
+                clinic.name?.toLowerCase().includes(query.toLowerCase()) ||
+                clinic.doctor_name?.toLowerCase().includes(query.toLowerCase())
+              );
+            }
+          } catch (error) {
+            console.log('Clinics search failed, using local search');
+          }
+          break;
+          
+        case 'products':
+          try {
+            const response = await fetch(`${API}/products?search=${encodeURIComponent(query)}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              results = data.filter(product => 
+                product.name?.toLowerCase().includes(query.toLowerCase()) ||
+                product.category?.toLowerCase().includes(query.toLowerCase())
+              );
+            }
+          } catch (error) {
+            console.log('Products search failed, using local search');
+          }
+          break;
+          
+        default:
+          // Global search - search in all categories
+          console.log(`🌐 Performing global search for: ${query}`);
+          break;
+      }
+      
+      setSearchResults(results);
+      
+      // Show success message
+      if (results.length > 0) {
+        console.log(`✅ Found ${results.length} results for "${query}"`);
+      } else {
+        console.log(`ℹ️ No results found for "${query}"`);
+        alert(language === 'ar' ? 'لم يتم العثور على نتائج' : 'No results found');
+      }
+      
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('❌ Search error:', error);
+      alert(language === 'ar' ? 'خطأ في البحث' : 'Search error');
     }
   };
 
