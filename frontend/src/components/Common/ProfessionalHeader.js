@@ -77,6 +77,11 @@ const ProfessionalHeader = ({
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close theme menu if clicked outside
+      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target)) {
+        setShowThemeMenu(false);
+      }
+      
       // Close user menu if clicked outside
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
@@ -85,12 +90,47 @@ const ProfessionalHeader = ({
       // Close search results if clicked outside
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setSearchResults([]);
+        setShowAdvancedSearch(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle theme change with advanced styling
+  const handleThemeChange = (newTheme) => {
+    console.log('🎨 Changing to advanced theme:', newTheme);
+    
+    // Apply theme to document body
+    document.body.className = document.body.className.replace(/theme-\w+/g, '');
+    document.body.classList.add(`theme-${newTheme}`);
+    
+    // Update theme state
+    if (setTheme && typeof setTheme === 'function') {
+      setTheme(newTheme);
+    }
+    
+    // Apply advanced theme colors
+    const themeConfig = themes[newTheme];
+    if (themeConfig) {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-primary', themeConfig.colors.background);
+      root.style.setProperty('--bg-card', themeConfig.colors.card);
+      root.style.setProperty('--text-primary', themeConfig.colors.text);
+      
+      // Advanced gradient background
+      document.body.style.background = `linear-gradient(135deg, ${themeConfig.colors.background}, ${themeConfig.colors.card})`;
+    }
+    
+    // Store theme preference
+    localStorage.setItem('selectedTheme', newTheme);
+    
+    // Close theme menu
+    setShowThemeMenu(false);
+    
+    console.log('✅ Advanced theme applied successfully');
+  };
 
   // Enhanced Search Functionality - FIXED
   const handleSearch = async (query) => {
