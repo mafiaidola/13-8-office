@@ -1,6 +1,7 @@
 // Enhanced Orders Management Component - إدارة الطلبات المحسنة
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
+import CreateOrderModal from './CreateOrderModal';
 import axios from 'axios';
 
 const OrdersManagement = ({ user, language, isRTL }) => {
