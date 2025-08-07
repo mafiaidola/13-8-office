@@ -1484,7 +1484,7 @@ const PerformanceCard = ({ title, value, icon, color }) => {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm opacity-75 mb-1">{title}</p>
-          <p className="text-2xl font-bold">{value.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{(value || 0).toLocaleString()}</p>
         </div>
         <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-white text-lg`}>
           {icon}
