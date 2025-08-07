@@ -190,6 +190,86 @@ const ProfessionalHeader = ({
           user={user}
         />
 
+        {/* Advanced Theme Selector - محدد الثيمات المتطور */}
+        <div className="relative" ref={themeMenuRef}>
+          <button
+            onClick={() => {
+              console.log('🎨 Advanced theme selector opened');
+              setShowThemeMenu(!showThemeMenu);
+            }}
+            className="p-3 bg-white/20 hover:bg-white/30 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300"
+            title={language === 'ar' ? 'اختر الثيم المفضل' : 'Choose Your Preferred Theme'}
+          >
+            <span className="text-2xl">🎨</span>
+          </button>
+
+          {/* Advanced Theme Dropdown */}
+          {showThemeMenu && (
+            <>
+              {/* Overlay */}
+              <div 
+                className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+                style={{ zIndex: 99998 }}
+                onClick={() => setShowThemeMenu(false)} 
+              />
+              
+              {/* Theme Menu */}
+              <div className="absolute top-full right-0 mt-3 w-80 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden"
+                   style={{ zIndex: 99999 }}>
+                <div className="p-6">
+                  <h3 className="font-bold text-white mb-6 flex items-center gap-3 text-lg">
+                    <span className="text-2xl">🎨</span>
+                    {language === 'ar' ? 'اختر الثيم المفضل' : 'Choose Your Theme'}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {Object.entries(themes).map(([themeKey, themeConfig]) => (
+                      <button
+                        key={themeKey}
+                        onClick={() => {
+                          console.log('🎨 Advanced theme selected:', themeKey);
+                          handleThemeChange(themeKey);
+                        }}
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
+                          theme === themeKey
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl scale-105'
+                            : 'bg-white/10 text-white hover:bg-white/20 hover:shadow-lg hover:scale-102'
+                        }`}
+                      >
+                        <div 
+                          className="w-8 h-8 rounded-lg border-2 border-white/50 shadow-md flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${themeConfig.colors.background}, ${themeConfig.colors.card})`
+                          }}
+                        />
+                        <div className="flex-1 text-left">
+                          <div className="font-semibold text-base">
+                            {themeConfig.name[language]}
+                          </div>
+                          <div className="text-sm opacity-75 mt-1">
+                            {language === 'ar' ? 'ثيم احترافي متطور' : 'Advanced Professional Theme'}
+                          </div>
+                        </div>
+                        {theme === themeKey && (
+                          <div className="text-xl">✨</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-white/20">
+                    <div className="text-xs text-white/60 text-center flex items-center justify-center gap-2">
+                      <span>🌟</span>
+                      {language === 'ar' ? 'ثيمات احترافية محسنة للعين' : 'Professional Eye-Optimized Themes'}
+                      <span>🌟</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Language Selector */}
         <button
           onClick={() => handleLanguageChange(language === 'ar' ? 'en' : 'ar')}
