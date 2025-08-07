@@ -20,6 +20,7 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
   });
   
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [userLocationAtRegistration, setUserLocationAtRegistration] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
