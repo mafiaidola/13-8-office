@@ -1,5 +1,269 @@
 #!/usr/bin/env python3
 """
+اختبار مُركز لمشكلة PUT /api/areas/{area_id} endpoint
+Focused test for PUT /api/areas/{area_id} endpoint issue
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://e0c0a695-5df9-4c27-89c6-e048414b1d42.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class AreaEndpointTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.jwt_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, response_time, details):
+        """تسجيل نتيجة الاختبار"""
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "response_time": response_time,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        status = "✅ SUCCESS" if success else "❌ FAILED"
+        print(f"{status} | {test_name} | {response_time:.2f}ms | {details}")
+    
+    def login_admin(self):
+        """1) تسجيل دخول admin/admin123 للحصول على JWT token"""
+        print("\n🔐 Step 1: Admin Login")
+        print("=" * 50)
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/auth/login",
+                json={
+                    "username": ADMIN_USERNAME,
+                    "password": ADMIN_PASSWORD
+                },
+                timeout=10
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.jwt_token = data.get("access_token")
+                
+                if self.jwt_token:
+                    self.session.headers.update({
+                        "Authorization": f"Bearer {self.jwt_token}"
+                    })
+                    
+                    user_info = data.get("user", {})
+                    details = f"User: {user_info.get('full_name', 'Unknown')}, Role: {user_info.get('role', 'Unknown')}"
+                    self.log_test("Admin Login", True, response_time, details)
+                    return True
+                else:
+                    self.log_test("Admin Login", False, response_time, "No access token in response")
+                    return False
+            else:
+                self.log_test("Admin Login", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Admin Login", False, response_time, f"Exception: {str(e)}")
+            return False
+    
+    def get_all_areas(self):
+        """2) GET /api/areas - جلب جميع المناطق المتاحة مع طباعة الـ IDs الفعلية"""
+        print("\n📍 Step 2: Get All Areas")
+        print("=" * 50)
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BACKEND_URL}/areas", timeout=10)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                areas = response.json()
+                
+                if isinstance(areas, list) and len(areas) > 0:
+                    print(f"📊 Found {len(areas)} areas:")
+                    for i, area in enumerate(areas, 1):
+                        area_id = area.get('id', 'NO_ID')
+                        area_name = area.get('name', 'NO_NAME')
+                        print(f"   {i}. ID: '{area_id}' | Name: '{area_name}'")
+                    
+                    details = f"Retrieved {len(areas)} areas successfully"
+                    self.log_test("GET /api/areas", True, response_time, details)
+                    return areas
+                else:
+                    self.log_test("GET /api/areas", False, response_time, "No areas found or invalid response format")
+                    return []
+            else:
+                self.log_test("GET /api/areas", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                return []
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/areas", False, response_time, f"Exception: {str(e)}")
+            return []
+    
+    def test_put_area_endpoint(self, area_id, area_name, test_number=1):
+        """3) اختبار PUT /api/areas/{area_id} باستخدام منطقة محددة"""
+        print(f"\n🔧 Step 3.{test_number}: Test PUT /api/areas/{area_id}")
+        print("=" * 60)
+        
+        # Test data to update
+        update_data = {
+            "name": f"{area_name} - Updated {datetime.now().strftime('%H:%M:%S')}",
+            "is_active": True,
+            "code": f"UPD_{test_number}",
+            "description": f"Updated area description for test {test_number}"
+        }
+        
+        print(f"🎯 Testing with Area ID: '{area_id}'")
+        print(f"📝 Update Data: {json.dumps(update_data, ensure_ascii=False, indent=2)}")
+        
+        start_time = time.time()
+        try:
+            response = self.session.put(
+                f"{BACKEND_URL}/areas/{area_id}",
+                json=update_data,
+                timeout=10
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            print(f"📡 Response Status: {response.status_code}")
+            print(f"📄 Response Body: {response.text}")
+            
+            if response.status_code == 200:
+                try:
+                    response_data = response.json()
+                    details = f"Area '{area_id}' updated successfully"
+                    self.log_test(f"PUT /api/areas/{area_id}", True, response_time, details)
+                    return True
+                except:
+                    details = f"Area updated but response not JSON: {response.text[:100]}"
+                    self.log_test(f"PUT /api/areas/{area_id}", True, response_time, details)
+                    return True
+            else:
+                details = f"HTTP {response.status_code}: {response.text}"
+                self.log_test(f"PUT /api/areas/{area_id}", False, response_time, details)
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            details = f"Exception: {str(e)}"
+            self.log_test(f"PUT /api/areas/{area_id}", False, response_time, details)
+            return False
+    
+    def check_backend_logs(self):
+        """4) فحص الـ debug logs في الباكند للتأكد من المشكلة"""
+        print("\n📋 Step 4: Check Backend Debug Logs")
+        print("=" * 50)
+        
+        try:
+            import subprocess
+            
+            # Check supervisor backend logs
+            result = subprocess.run(
+                ["tail", "-n", "50", "/var/log/supervisor/backend.*.log"],
+                capture_output=True,
+                text=True,
+                shell=True
+            )
+            
+            if result.stdout:
+                print("🔍 Recent Backend Logs:")
+                print("-" * 40)
+                print(result.stdout)
+                print("-" * 40)
+            else:
+                print("⚠️ No recent backend logs found")
+                
+        except Exception as e:
+            print(f"❌ Error checking logs: {str(e)}")
+    
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🎯 FOCUSED TEST: PUT /api/areas/{area_id} Endpoint Issue")
+        print("=" * 70)
+        print(f"🕐 Test Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"🌐 Backend URL: {BACKEND_URL}")
+        
+        # Step 1: Login
+        if not self.login_admin():
+            print("❌ Cannot proceed without admin login")
+            return
+        
+        # Step 2: Get all areas
+        areas = self.get_all_areas()
+        if not areas:
+            print("❌ Cannot proceed without areas data")
+            return
+        
+        # Step 3: Test PUT endpoint with different areas
+        success_count = 0
+        total_tests = min(3, len(areas))  # Test up to 3 areas
+        
+        for i in range(total_tests):
+            area = areas[i]
+            area_id = area.get('id')
+            area_name = area.get('name', 'Unknown')
+            
+            if area_id:
+                success = self.test_put_area_endpoint(area_id, area_name, i + 1)
+                if success:
+                    success_count += 1
+            else:
+                print(f"⚠️ Skipping area {i+1} - no ID found")
+        
+        # Step 4: Check backend logs
+        self.check_backend_logs()
+        
+        # Final Results
+        self.print_final_results(success_count, total_tests)
+    
+    def print_final_results(self, success_count, total_tests):
+        """طباعة النتائج النهائية"""
+        total_time = time.time() - self.start_time
+        success_rate = (sum(1 for r in self.test_results if r['success']) / len(self.test_results)) * 100
+        avg_response_time = sum(r['response_time'] for r in self.test_results) / len(self.test_results)
+        
+        print("\n" + "=" * 70)
+        print("📊 FINAL TEST RESULTS")
+        print("=" * 70)
+        
+        print(f"🎯 PUT /api/areas Tests: {success_count}/{total_tests} successful")
+        print(f"📈 Overall Success Rate: {success_rate:.1f}% ({sum(1 for r in self.test_results if r['success'])}/{len(self.test_results)} tests)")
+        print(f"⚡ Average Response Time: {avg_response_time:.2f}ms")
+        print(f"⏱️ Total Test Duration: {total_time:.2f}s")
+        
+        print("\n📋 Detailed Results:")
+        for result in self.test_results:
+            status = "✅" if result['success'] else "❌"
+            print(f"   {status} {result['test']}: {result['details']}")
+        
+        # Diagnosis
+        print("\n🔍 DIAGNOSIS:")
+        if success_count == 0:
+            print("❌ CRITICAL: PUT /api/areas/{area_id} endpoint is completely broken")
+            print("🔧 RECOMMENDATION: Check server.py for areas PUT endpoint implementation")
+        elif success_count < total_tests:
+            print("⚠️ WARNING: PUT /api/areas/{area_id} endpoint works partially")
+            print("🔧 RECOMMENDATION: Check specific area IDs that are failing")
+        else:
+            print("✅ SUCCESS: PUT /api/areas/{area_id} endpoint is working correctly")
+        
+        print("\n" + "=" * 70)
+
+if __name__ == "__main__":
+    tester = AreaEndpointTester()
+    tester.run_comprehensive_test()
+"""
 اختبار شامل للتحقق من الإصلاحات المطبقة - Comprehensive Testing for Applied Fixes
 التركيز على المناطق والديون والعيادات والمخازن كما طُلب في المراجعة العربية
 Focus on Areas, Debts, Clinics, and Warehouses as requested in Arabic review
