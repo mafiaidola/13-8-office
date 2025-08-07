@@ -3220,8 +3220,10 @@ async def update_area(area_id: str, area_data: dict, current_user: User = Depend
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error updating area: {str(e)}")
-        raise HTTPException(status_code=500, detail="خطأ في تحديث المنطقة")
+        print(f"DEBUG: Unexpected error in update_area: {str(e)}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"خطأ في تحديث المنطقة: {str(e)}")
 
 
 # Include routers
