@@ -166,38 +166,38 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
       console.log(`✅ Dashboard data loaded successfully for ${timeFilter}`);
       console.log('Users:', usersData.length, 'Clinics:', clinicsData.length, 'Products:', productsData.length);
 
-      // Enhanced comprehensive stats with real API data
+      // Enhanced comprehensive stats with real API data - show zero if no data exists
       setStats({
-        // User metrics
-        totalUsers: usersData.length || dashboardData.total_users || 58,
-        totalClinics: clinicsData.length || dashboardData.total_clinics || 31,
-        totalProducts: productsData.length || dashboardData.total_products || 28,
-        totalOrders: dashboardData.total_orders || 127,
+        // User metrics - show actual counts or zero
+        totalUsers: usersData.length || 0,
+        totalClinics: clinicsData.length || 0,
+        totalProducts: productsData.length || 0,
+        totalOrders: dashboardData.total_orders || 0,
         
-        // Management metrics
-        totalManagers: dashboardData.total_managers || 8,
-        totalReps: dashboardData.total_reps || 42,
+        // Management metrics - use API data or zero
+        totalManagers: dashboardData.total_managers || 0,
+        totalReps: dashboardData.total_reps || 0,
         
-        // Visit metrics
-        totalVisits: dashboardData.total_visits || 156,
-        thisMonthVisits: dashboardData.month_visits || 23,
+        // Visit metrics - show zero if no data
+        totalVisits: dashboardData.total_visits || 0,
+        thisMonthVisits: dashboardData.month_visits || 0,
         
-        // Debt metrics (from new debt system)
-        totalDebts: debtData.total_debts || 15,
-        totalDebtAmount: debtData.total_amount || 125000,
-        outstandingDebtAmount: debtData.outstanding_amount || 85000,
-        paidDebtAmount: debtData.paid_amount || 40000,
+        // Debt metrics (from new debt system) - show zero if no debts
+        totalDebts: debtData.total_debts || 0,
+        totalDebtAmount: debtData.total_amount || 0,
+        outstandingDebtAmount: debtData.outstanding_amount || 0,
+        paidDebtAmount: debtData.paid_amount || 0,
         
-        // Warehouse metrics
-        totalWarehouses: dashboardData.total_warehouses || 5,
-        lowStockItems: dashboardData.low_stock_items || 12,
+        // Warehouse metrics - show zero if no warehouses
+        totalWarehouses: dashboardData.total_warehouses || 0,
+        lowStockItems: dashboardData.low_stock_items || 0,
         
-        // Performance metrics based on time filter (filtered locally)
+        // Performance metrics based on time filter - ensure zero values shown
         performanceMetrics: getFilteredMetrics(timeFilter, {
-          orders: dashboardData.total_orders || 127,
-          visits: dashboardData.total_visits || 156,
-          clinics: clinicsData.length || 31,
-          collections: debtData.paid_amount || 40000
+          orders: dashboardData.total_orders || 0,
+          visits: dashboardData.total_visits || 0,
+          clinics: clinicsData.length || 0,
+          collections: debtData.paid_amount || 0
         })
       });
       
