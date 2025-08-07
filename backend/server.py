@@ -2008,46 +2008,6 @@ async def get_areas(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="خطأ في جلب المناطق")
 
 
-@api_router.put("/areas/{area_id}")
-async def update_area(area_id: str, area_data: AreaCreate, current_user: User = Depends(get_current_user)):
-    """تحديث منطقة - Update area"""
-    # Check permissions
-    if current_user.role not in ["admin", "gm", "area_manager"]:
-        raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المناطق")
-    
-    try:
-        existing_area = await db.areas.find_one({"id": area_id})
-        if not existing_area:
-            raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
-        
-        # Role-based access control
-        if current_user.role == "area_manager" and existing_area.get("manager_id") != current_user.id:
-            raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث هذه المنطقة")
-        
-        # Update area
-        update_data = area_data.dict()
-        update_data["updated_at"] = datetime.utcnow()
-        
-        # Enrich with related data
-        if update_data.get("parent_line_id"):
-            line = await db.lines.find_one({"id": update_data["parent_line_id"]})
-            update_data["parent_line_name"] = line.get("name", "") if line else ""
-        
-        if update_data.get("manager_id"):
-            manager = await db.users.find_one({"id": update_data["manager_id"]})
-            update_data["manager_name"] = manager.get("full_name", "") if manager else ""
-        
-        await db.areas.update_one({"id": area_id}, {"$set": update_data})
-        
-        return {"success": True, "message": "تم تحديث المنطقة بنجاح"}
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error updating area: {str(e)}")
-        raise HTTPException(status_code=500, detail="خطأ في تحديث المنطقة")
-
-
 @api_router.delete("/areas/{area_id}")
 async def delete_area(area_id: str, current_user: User = Depends(get_current_user)):
     """حذف منطقة - Delete area"""
