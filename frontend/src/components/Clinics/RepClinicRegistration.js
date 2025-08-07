@@ -294,22 +294,21 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                   </button>
                 </div>
                 
-                {/* Simple Map Placeholder - مع مؤشر أحمر فقط */}
-                <div className="w-full h-80 bg-gray-100 rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🗺️</div>
-                      <p className="text-gray-600 mb-2 font-medium">خريطة تفاعلية بسيطة</p>
-                      <div className="text-3xl text-red-500 animate-bounce mb-2">📍</div>
-                      <p className="text-sm text-gray-500">
-                        الموقع: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        استخدم الحقول أدناه لتعديل الإحداثيات
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  
+                  {/* Live GPS Map Component - خريطة GPS حية ودقيقة */}
+                  <LiveGPSMap
+                    onLocationCapture={(location) => {
+                      setUserLocationAtRegistration(location);
+                      setClinicData(prev => ({
+                        ...prev,
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                      }));
+                      console.log('📍 تم التقاط موقع المستخدم:', location);
+                    }}
+                    language={language}
+                    readOnly={false}
+                  />
 
                 {/* Location Coordinates Input */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
