@@ -1495,19 +1495,89 @@ const PerformanceCard = ({ title, value, icon, color }) => {
 const EnhancedQuickActions = ({ user, language, onActionClick }) => {
   const { t } = useTranslation(language);
   
-  // Comprehensive quick actions based on user role
+  // Comprehensive quick actions based on user role with detailed descriptions
   const getAllActions = () => {
     const baseActions = [
-      { id: 'add-user', title: language === 'ar' ? 'إضافة مستخدم' : 'Add User', icon: '👤➕', color: 'blue', roles: ['admin', 'gm'] },
-      { id: 'register-clinic', title: language === 'ar' ? 'تسجيل عيادة' : 'Register Clinic', icon: '🏥➕', color: 'green', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
-      { id: 'add-product', title: language === 'ar' ? 'إضافة منتج' : 'Add Product', icon: '📦➕', color: 'purple', roles: ['admin', 'gm', 'product_manager'] },
-      { id: 'create-order', title: language === 'ar' ? 'إنشاء طلبية' : 'Create Order', icon: '🛒➕', color: 'orange', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
-      { id: 'record-visit', title: language === 'ar' ? 'تسجيل زيارة' : 'Record Visit', icon: '👨‍⚕️➕', color: 'teal', roles: ['admin', 'gm', 'medical_rep', 'line_manager'] },
-      { id: 'add-debt', title: language === 'ar' ? 'تسجيل دين' : 'Record Debt', icon: '💳➕', color: 'red', roles: ['admin', 'gm', 'accounting', 'finance'] },
-      { id: 'record-collection', title: language === 'ar' ? 'تسجيل تحصيل' : 'Record Collection', icon: '💰➕', color: 'emerald', roles: ['admin', 'gm', 'medical_rep', 'accounting'] },
-      { id: 'manage-warehouse', title: language === 'ar' ? 'إدارة المخزن' : 'Manage Warehouse', icon: '🏭➕', color: 'gray', roles: ['admin', 'gm', 'warehouse_manager'] },
-      { id: 'generate-report', title: language === 'ar' ? 'إنشاء تقرير' : 'Generate Report', icon: '📊➕', color: 'indigo', roles: ['admin', 'gm', 'line_manager', 'accounting'] },
-      { id: 'system-settings', title: language === 'ar' ? 'إعدادات النظام' : 'System Settings', icon: '⚙️', color: 'amber', roles: ['admin', 'gm'] }
+      { 
+        id: 'add-user', 
+        title: language === 'ar' ? 'إضافة مستخدم' : 'Add User', 
+        description: language === 'ar' ? 'إنشاء حساب مستخدم جديد في النظام' : 'Create a new user account in the system',
+        icon: '👤➕', 
+        color: 'blue', 
+        roles: ['admin', 'gm'] 
+      },
+      { 
+        id: 'register-clinic', 
+        title: language === 'ar' ? 'تسجيل عيادة' : 'Register Clinic', 
+        description: language === 'ar' ? 'إضافة عيادة جديدة إلى قاعدة البيانات' : 'Add a new clinic to the database',
+        icon: '🏥➕', 
+        color: 'green', 
+        roles: ['admin', 'gm', 'medical_rep', 'line_manager'] 
+      },
+      { 
+        id: 'add-product', 
+        title: language === 'ar' ? 'إضافة منتج' : 'Add Product', 
+        description: language === 'ar' ? 'إضافة منتج جديد إلى المخزون' : 'Add a new product to inventory',
+        icon: '📦➕', 
+        color: 'purple', 
+        roles: ['admin', 'gm', 'product_manager'] 
+      },
+      { 
+        id: 'create-order', 
+        title: language === 'ar' ? 'إنشاء طلبية' : 'Create Order', 
+        description: language === 'ar' ? 'إنشاء طلبية جديدة للعيادات' : 'Create a new order for clinics',
+        icon: '🛒➕', 
+        color: 'orange', 
+        roles: ['admin', 'gm', 'medical_rep', 'line_manager'] 
+      },
+      { 
+        id: 'record-visit', 
+        title: language === 'ar' ? 'تسجيل زيارة' : 'Record Visit', 
+        description: language === 'ar' ? 'توثيق زيارة جديدة للعيادة' : 'Document a new clinic visit',
+        icon: '👨‍⚕️➕', 
+        color: 'teal', 
+        roles: ['admin', 'gm', 'medical_rep', 'line_manager'] 
+      },
+      { 
+        id: 'add-debt', 
+        title: language === 'ar' ? 'تسجيل دين' : 'Record Debt', 
+        description: language === 'ar' ? 'إضافة مديونية جديدة للمتابعة' : 'Add a new debt for tracking',
+        icon: '💳➕', 
+        color: 'red', 
+        roles: ['admin', 'gm', 'accounting', 'finance'] 
+      },
+      { 
+        id: 'record-collection', 
+        title: language === 'ar' ? 'تسجيل تحصيل' : 'Record Collection', 
+        description: language === 'ar' ? 'توثيق عملية تحصيل جديدة' : 'Document a new collection payment',
+        icon: '💰➕', 
+        color: 'emerald', 
+        roles: ['admin', 'gm', 'medical_rep', 'accounting'] 
+      },
+      { 
+        id: 'manage-warehouse', 
+        title: language === 'ar' ? 'إدارة المخزن' : 'Manage Warehouse', 
+        description: language === 'ar' ? 'عرض وإدارة المخزون والمنتجات' : 'View and manage inventory and products',
+        icon: '🏭➕', 
+        color: 'gray', 
+        roles: ['admin', 'gm', 'warehouse_manager'] 
+      },
+      { 
+        id: 'generate-report', 
+        title: language === 'ar' ? 'إنشاء تقرير' : 'Generate Report', 
+        description: language === 'ar' ? 'إنتاج تقارير مفصلة وإحصائيات' : 'Generate detailed reports and statistics',
+        icon: '📊➕', 
+        color: 'indigo', 
+        roles: ['admin', 'gm', 'line_manager', 'accounting'] 
+      },
+      { 
+        id: 'system-settings', 
+        title: language === 'ar' ? 'إعدادات النظام' : 'System Settings', 
+        description: language === 'ar' ? 'تخصيص إعدادات النظام العامة' : 'Customize general system settings',
+        icon: '⚙️', 
+        color: 'amber', 
+        roles: ['admin', 'gm'] 
+      }
     ];
 
     // Filter actions based on user role
