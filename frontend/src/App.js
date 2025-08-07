@@ -75,24 +75,22 @@ const ThemeProvider = ({ children }) => {
       setTheme(newTheme);
       console.log(`🎨 Changing theme to: ${newTheme}`);
       
-      // Force immediate theme application with all enhanced themes
+      // Force immediate dark theme application only
       setTimeout(() => {
-        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-dark', 'theme-golden', 'theme-professional', 'theme-cosmic');
-        document.body.classList.add(`theme-${newTheme}`);
+        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-light', 'theme-white', 'theme-golden', 'theme-professional', 'theme-cosmic');
+        document.body.classList.add('theme-dark');
         
-        const themeConfig = AVAILABLE_THEMES[newTheme];
+        // Apply CSS variables for dark theme only
         const root = document.documentElement;
-        
-        // Apply CSS variables immediately
-        root.style.setProperty('--bg-primary', themeConfig.colors.background);
-        root.style.setProperty('--bg-card', themeConfig.colors.card);
-        root.style.setProperty('--text-primary', themeConfig.colors.text);
+        root.style.setProperty('--bg-primary', '#111827');
+        root.style.setProperty('--bg-card', '#1f2937');
+        root.style.setProperty('--text-primary', '#ffffff');
         root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
         
-        console.log(`🎨 Enhanced theme applied: ${newTheme}`);
+        console.log(`🎨 Dark theme applied exclusively`);
         
         // Force a re-render
-        const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
+        const event = new CustomEvent('themeChanged', { detail: { theme: 'dark' } });
         window.dispatchEvent(event);
       }, 10);
     }
