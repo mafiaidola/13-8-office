@@ -2631,7 +2631,7 @@ async def delete_clinic(clinic_id: str, current_user: User = Depends(get_current
             {"$set": {
                 "is_active": False,
                 "deleted_at": datetime.utcnow(),
-                "deleted_by": current_user["id"]
+                "deleted_by": current_user.id
             }}
         )
         
