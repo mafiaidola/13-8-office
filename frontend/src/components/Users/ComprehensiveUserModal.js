@@ -27,11 +27,15 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
+      console.log('🔄 Loading comprehensive profile for user:', user.id);
+      
       const response = await axios.get(`${API}/users/${user.id}/comprehensive-profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.success) {
+      console.log('📊 Comprehensive profile response:', response.data);
+
+      if (response.data?.success && response.data?.user_profile) {
         const profile = response.data.user_profile;
         setUserProfile(profile);
         
@@ -44,10 +48,56 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
           area_id: profile.area_id || '',
           department: profile.department || '',
           managed_by: profile.managed_by || '',
+          line: profile.line || '', // إضافة الخط
           monthly_sales_target: profile.monthly_sales_target || 50000,
           is_active: profile.is_active !== false,
           assigned_clinic_ids: profile.comprehensive_data?.assigned_clinics?.map(c => c.id) || []
         });
+        
+        console.log('✅ Comprehensive profile loaded successfully');
+      } else {
+        // استخدام بيانات المستخدم الأساسية إذا فشل تحميل البيانات الشاملة
+        console.log('⚠️ Using basic user data as fallback');
+        setUserProfile(user);
+        setFormData({
+          full_name: user.full_name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          role: user.role || '',
+          area_id: user.area_id || '',
+          department: user.department || '',
+          managed_by: user.managed_by || '',
+          line: user.line || '',
+          monthly_sales_target: user.monthly_sales_target || 50000,
+          is_active: user.is_active !== false,
+          assigned_clinic_ids: []
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error loading comprehensive profile:', error);
+      
+      // استخدام بيانات المستخدم الأساسية كحل احتياطي
+      console.log('🔄 Using basic user data as error fallback');
+      setUserProfile(user);
+      setFormData({
+        full_name: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || '',
+        area_id: user.area_id || '',
+        department: user.department || '',
+        managed_by: user.managed_by || '',
+        line: user.line || '',
+        monthly_sales_target: user.monthly_sales_target || 50000,
+        is_active: user.is_active !== false,
+        assigned_clinic_ids: []
+      });
+      
+      // لا نُظهر خطأ للمستخدم، بل نستخدم البيانات الأساسية
+    } finally {
+      setLoading(false);
+    }
+  };
       }
     } catch (error) {
       console.error('Error loading comprehensive profile:', error);
