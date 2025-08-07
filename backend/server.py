@@ -2498,8 +2498,8 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "doctor_name": clinic_data["doctor_name"],
             "phone": clinic_data["phone"],
             "address": clinic_data["address"],
-            "manager_name": clinic_data.get("manager_name", ""),  # New field
-            "manager_phone": clinic_data.get("manager_phone", ""),  # New field
+            "manager_name": clinic_data.get("manager_name", ""),
+            "manager_phone": clinic_data.get("manager_phone", ""),
             "latitude": clinic_data.get("latitude", 0.0),
             "longitude": clinic_data.get("longitude", 0.0),
             "area_id": clinic_data.get("area_id", ""),
@@ -2514,8 +2514,23 @@ async def create_clinic(clinic_data: dict, current_user: User = Depends(get_curr
             "updated_at": datetime.utcnow(),
             "created_by": current_user.id,
             "created_by_name": current_user.full_name or "",
-            # Fix: Set assigned_rep_id for medical reps so they can see their clinics
-            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None
+            "assigned_rep_id": current_user.id if current_user.role in [UserRole.MEDICAL_REP, UserRole.KEY_ACCOUNT] else None,
+            # إضافة موقع المستخدم وقت التسجيل
+            "user_location_at_registration": clinic_data.get("user_location_at_registration"),
+            # إضافة سجل الحركة
+            "activity_log": [{
+                "action": "clinic_registered",
+                "action_ar": "تسجيل العيادة",
+                "user_id": current_user.id,
+                "user_name": current_user.full_name or current_user.username,
+                "user_location": clinic_data.get("user_location_at_registration"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "details": {
+                    "clinic_name": clinic_data["name"],
+                    "doctor_name": clinic_data["doctor_name"],
+                    "registration_method": "gps_live_location"
+                }
+            }]
         }
 
         # Insert into database
