@@ -121,6 +121,8 @@ class MedicalRepOrderTest:
             users = response.json()
             for user in users:
                 if user.get("role") == "medical_rep" and user.get("is_active", True):
+                    # Add a default password for existing users
+                    user["password"] = "test123456"
                     self.jwt_token = original_token
                     return user
         
