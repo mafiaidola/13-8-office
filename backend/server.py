@@ -3183,7 +3183,7 @@ async def update_area(area_id: str, area_data: dict, current_user: User = Depend
         # Update area data
         update_data = area_data.copy()
         update_data["updated_at"] = datetime.utcnow()
-        update_data["updated_by"] = current_user["id"]
+        update_data["updated_by"] = current_user.id
         
         # Ensure is_active is boolean
         if "is_active" in update_data:
