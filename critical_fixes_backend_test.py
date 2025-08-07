@@ -19,7 +19,7 @@ import sys
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://af82d270-0f9e-4b08-93b4-329c3531075a.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://d1397441-cae3-4bcf-ad67-36c0ba328d1b.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class CriticalFixesBackendTester:
