@@ -23,31 +23,85 @@ const OrdersManagement = ({ user, language, isRTL }) => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${API}/orders`, {
+      let url = `${API}/orders`;
+      
+      // فلترة حسب دور المستخدم
+      if (user?.role === 'medical_rep') {
+        url += `?rep_id=${user.id}`; // المندوب يرى طلباته فقط
+      } else if (user?.role === 'manager') {
+        url += `?manager_id=${user.id}`; // المدير يرى طلبات فريقه فقط
+      }
+      // المخازن والحسابات يرون جميع الطلبات
+      
+      console.log('🔍 Fetching orders for user role:', user?.role, 'URL:', url);
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setOrders(response.data || []);
+      
+      let ordersData = response.data || [];
+      
+      // فلترة إضافية في الفرونت إند للأمان
+      if (user?.role === 'medical_rep') {
+        ordersData = ordersData.filter(order => order.sales_rep_id === user.id);
+      } else if (user?.role === 'manager') {
+        // فلترة طلبات الفريق حسب المنطقة أو الخط
+        ordersData = ordersData.filter(order => 
+          order.rep_region === user.area || order.rep_line === user.line
+        );
+      }
+      
+      setOrders(ordersData);
+      console.log(`✅ Loaded ${ordersData.length} orders for ${user?.role}`);
+      
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      // Enhanced mock data for development
-      setOrders([
+      console.error('❌ Error fetching orders:', error);
+      
+      // بيانات وهمية محسنة حسب الدور
+      const mockOrders = [
         {
           id: 'ORD-001',
           clinic_id: 'clinic-001',
           clinic_name: 'عيادة الدكتور أحمد محمد',
-          clinic_region: 'القاهرة الكبرى',
-          clinic_line: 'خط وسط القاهرة',
-          sales_rep_id: 'rep-001',
-          sales_rep_name: 'محمد أحمد المندوب',
-          rep_region: 'القاهرة الكبرى',
-          rep_line: 'خط وسط القاهرة',
+          clinic_region: user?.area || 'القاهرة الكبرى',
+          clinic_line: user?.line || 'الخط الأول',
+          sales_rep_id: user?.role === 'medical_rep' ? user.id : 'rep-001',
+          sales_rep_name: user?.role === 'medical_rep' ? user.full_name : 'محمد أحمد المندوب',
+          rep_region: user?.area || 'القاهرة الكبرى',
+          rep_line: user?.line || 'الخط الأول',
           warehouse_name: 'مخزن القاهرة الرئيسي',
           total_amount: 1500.00,
           items_count: 5,
-          status: 'pending_manager',
+          status: 'pending_accounting',
+          approval_flow: [
+            { stage: 'accounting', status: 'pending', user: null, timestamp: null },
+            { stage: 'warehouse', status: 'not_reached', user: null, timestamp: null },
+            { stage: 'debt_collection', status: 'not_reached', user: null, timestamp: null }
+          ],
           created_at: '2024-01-15T10:30:00Z',
           items: [
-            { name: 'أموكسيسيلين 500mg', quantity: 2, price: 25.50, total: 51.00 },
+            { name: 'أموكسيسيلين 500mg', quantity: 2, unit: 'شريط' },
+            { name: 'باراسيتامول 500mg', quantity: 3, unit: 'علبة' },
+            { name: 'فيتامين د 1000IU', quantity: 1, unit: 'علبة' }
+          ]
+        }
+      ];
+      
+      // فلترة البيانات الوهمية حسب الدور
+      let filteredMockOrders = mockOrders;
+      if (user?.role === 'medical_rep') {
+        filteredMockOrders = mockOrders.map(order => ({
+          ...order,
+          sales_rep_id: user.id,
+          sales_rep_name: user.full_name || user.username
+        }));
+      }
+      
+      setOrders(filteredMockOrders);
+    } finally {
+      setLoading(false);
+    }
+  };
             { name: 'فيتامين د3', quantity: 1, price: 120.00, total: 120.00 },
             { name: 'أنسولين طويل المفعول', quantity: 3, price: 85.00, total: 255.00 },
             { name: 'مسكن للألم', quantity: 5, price: 15.00, total: 75.00 },
