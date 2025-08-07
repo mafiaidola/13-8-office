@@ -488,116 +488,63 @@ const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
               </div>
               
               <div className="p-6">
-                {/* Interactive Map Container */}
-                <div className="relative bg-gradient-to-br from-blue-100 to-green-100 rounded-lg border overflow-hidden h-96 mb-6">
-                  {/* Map Background Grid */}
-                  <div 
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                      backgroundImage: `
-                        linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                      `,
-                      backgroundSize: '20px 20px'
-                    }}
-                  />
-                  
-                  {/* Map Legend */}
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-10">
-                    <h4 className="text-sm font-bold text-gray-800 mb-2">مفاتيح الخريطة</h4>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                        <span>مندوب نشط</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <span>في رحلة</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span>عيادة</span>
-                      </div>
-                    </div>
+                {/* Advanced Activity Tracking Map */}
+                <AdvancedActivityMap
+                  currentLocation={selectedRep ? {
+                    latitude: selectedRep.latitude,
+                    longitude: selectedRep.longitude,
+                    accuracy: selectedRep.location_accuracy || 50,
+                    timestamp: selectedRep.last_update || new Date().toISOString()
+                  } : null}
+                  activityHistory={activities.filter(activity => 
+                    !selectedRep || activity.user_id === selectedRep.id
+                  ).map(activity => ({
+                    latitude: activity.latitude || (30.0444 + (Math.random() - 0.5) * 0.1),
+                    longitude: activity.longitude || (31.2357 + (Math.random() - 0.5) * 0.1),
+                    activity_type: activity.activity_type,
+                    timestamp: activity.timestamp,
+                    description: activity.description,
+                    duration: activity.duration
+                  }))}
+                  visitLocations={activities.filter(activity => 
+                    activity.activity_type === 'visit' && (!selectedRep || activity.user_id === selectedRep.id)
+                  ).map(visit => ({
+                    latitude: visit.latitude || (30.0444 + (Math.random() - 0.5) * 0.1),
+                    longitude: visit.longitude || (31.2357 + (Math.random() - 0.5) * 0.1),
+                    clinic_name: visit.clinic_name,
+                    doctor_name: visit.doctor_name,
+                    visit_date: visit.timestamp,
+                    duration: visit.duration,
+                    status: visit.status,
+                    notes: visit.description
+                  }))}
+                  repInfo={selectedRep ? {
+                    name: selectedRep.full_name,
+                    area: selectedRep.area || 'غير محدد',
+                    line: selectedRep.line || 'غير محدد',
+                    phone: selectedRep.phone,
+                    email: selectedRep.email
+                  } : null}
+                  language={language}
+                  showControls={true}
+                />
+                
+                {/* Representative Selection */}
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="col-span-full mb-4">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <span>👥</span>
+                      اختيار المندوب لتتبع نشاطه
+                      {selectedRep && (
+                        <button
+                          onClick={() => setSelectedRep(null)}
+                          className="ml-2 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition-colors"
+                        >
+                          إظهار الكل
+                        </button>
+                      )}
+                    </h4>
                   </div>
-                  
-                  {/* Interactive Representatives Points */}
-                  {filteredActiveReps.filter(rep => rep.latitude && rep.longitude).map((rep, index) => {
-                    // تحويل إحداثيات GPS إلى مواقع على الخريطة
-                    const x = ((rep.longitude + 180) / 360) * 100; // تحويل longitude إلى %
-                    const y = ((90 - rep.latitude) / 180) * 100;   // تحويل latitude إلى %
-                    
-                    return (
-                      <div
-                        key={rep.id}
-                        className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 z-20"
-                        style={{
-                          left: `${Math.min(95, Math.max(5, x))}%`,
-                          top: `${Math.min(95, Math.max(5, y))}%`
-                        }}
-                        onClick={() => setSelectedRep(rep)}
-                        title={rep.full_name}
-                      >
-                        <div className={`relative group`}>
-                          {/* Representative Marker */}
-                          <div className={`w-6 h-6 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-xs font-bold text-white transition-all duration-300 group-hover:scale-125 ${
-                            rep.status === 'active' 
-                              ? 'bg-green-500 animate-pulse' 
-                              : rep.status === 'traveling' 
-                                ? 'bg-yellow-500' 
-                                : 'bg-gray-400'
-                          }`}>
-                            {rep.full_name?.charAt(0) || '👤'}
-                          </div>
-                          
-                          {/* Tooltip on Hover */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
-                              <div className="font-bold">{rep.full_name}</div>
-                              <div>{rep.current_activity}</div>
-                              <div>بطارية: {rep.battery_level}%</div>
-                              {rep.last_update && (
-                                <div className="text-gray-300">تحديث: {formatTimeAgo(rep.last_update)}</div>
-                              )}
-                            </div>
-                            {/* Tooltip Arrow */}
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Mock Clinic Locations */}
-                  {Array.from({length: 5}).map((_, index) => (
-                    <div
-                      key={`clinic-${index}`}
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                      style={{
-                        left: `${20 + (index * 15)}%`,
-                        top: `${30 + (index % 2 * 40)}%`
-                      }}
-                    >
-                      <div className="w-4 h-4 bg-blue-500 rounded-sm border-2 border-white shadow-lg hover:scale-110 transition-transform" title={`عيادة ${index + 1}`}>
-                        <div className="text-xs text-white text-center leading-none">🏥</div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Central Command Display */}
-                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                    <div className="text-sm font-bold text-gray-800 mb-1">مركز التحكم</div>
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <div>المندوبين النشطين: {filteredActiveReps.filter(rep => rep.status === 'active').length}</div>
-                      <div>في رحلة: {filteredActiveReps.filter(rep => rep.status === 'traveling').length}</div>
-                      <div>إجمالي الأنشطة: {activities.length}</div>
-                    </div>
-                  </div>
-                  
-                  {/* Real-time Update Indicator */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    <span>التحديث الفوري</span>
                   </div>
                 </div>
 
