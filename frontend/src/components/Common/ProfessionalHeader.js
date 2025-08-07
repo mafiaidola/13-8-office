@@ -14,6 +14,7 @@ const ProfessionalHeader = ({
   systemSettings = {}
 }) => {
   // States
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +22,7 @@ const ProfessionalHeader = ({
   const [searchResults, setSearchResults] = useState([]);
   
   // Refs for click outside detection
+  const themeMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
 
