@@ -3156,28 +3156,66 @@ async def update_warehouse(warehouse_id: str, warehouse_data: dict, current_user
 
 @api_router.put("/areas/{area_id}")
 async def update_area(area_id: str, area_data: dict, current_user: User = Depends(get_current_user)):
-    """تحديث منطقة - Update area"""
+    """تحديث منطقة - Update area - FIXED"""
     try:
+        print(f"DEBUG: Looking for area with ID: {area_id}")
+        
+        # Try multiple approaches to find the area
         existing_area = await db.areas.find_one({"id": area_id})
+        
         if not existing_area:
-            raise HTTPException(status_code=404, detail="المنطقة غير موجودة")
+            # Try with _id if id field doesn't exist
+            try:
+                from bson import ObjectId
+                if ObjectId.is_valid(area_id):
+                    existing_area = await db.areas.find_one({"_id": ObjectId(area_id)})
+            except:
+                pass
+        
+        if not existing_area:
+            # Get first area for debugging
+            sample_area = await db.areas.find_one({})
+            print(f"DEBUG: Sample area structure: {sample_area}")
+            
+            # List all areas for debugging
+            all_areas = await db.areas.find({}).to_list(10)
+            print(f"DEBUG: Found {len(all_areas)} areas")
+            for area in all_areas:
+                print(f"DEBUG: Area ID: {area.get('id', 'NO_ID')}, Name: {area.get('name', 'NO_NAME')}")
+            
+            raise HTTPException(status_code=404, detail=f"المنطقة غير موجودة - ID: {area_id}")
 
-        # Validate required fields
-        if "name" not in area_data:
-            raise HTTPException(status_code=400, detail="اسم المنطقة مطلوب")
+        print(f"DEBUG: Found area: {existing_area.get('name', 'Unknown')}")
 
-        # Update area data
+        # Validate and prepare update data
         update_data = area_data.copy()
         update_data["updated_at"] = datetime.utcnow()
         update_data["updated_by"] = current_user.id
         
-        # Ensure is_active is boolean
-        if "is_active" in update_data:
+        # Set default is_active to True if not provided
+        if "is_active" not in update_data:
+            update_data["is_active"] = True
+        else:
             update_data["is_active"] = bool(update_data["is_active"])
-
-        await db.areas.update_one({"id": area_id}, {"$set": update_data})
         
-        return {"success": True, "message": "تم تحديث المنطقة بنجاح"}
+        # Ensure code field if provided
+        if "code" not in update_data and not existing_area.get("code"):
+            update_data["code"] = f"AREA_{area_id}"
+
+        # Update the area
+        result = await db.areas.update_one({"id": area_id}, {"$set": update_data})
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="فشل في تحديث المنطقة - لم يتم العثور على التطابق")
+        
+        print(f"DEBUG: Area updated successfully. Modified count: {result.modified_count}")
+        
+        return {
+            "success": True, 
+            "message": "تم تحديث المنطقة بنجاح",
+            "area_id": area_id,
+            "modified_count": result.modified_count
+        }
 
     except HTTPException:
         raise
