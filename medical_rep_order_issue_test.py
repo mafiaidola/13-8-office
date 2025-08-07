@@ -196,6 +196,17 @@ class MedicalRepOrderTest:
         if response and response.status_code == 200:
             data = response.json()
             clinic = data.get("clinic", {})
+            clinic_id = clinic.get("id")
+            
+            # Now assign the clinic to the medical rep
+            if clinic_id:
+                assign_data = {
+                    "assigned_rep_id": rep_id
+                }
+                assign_response, _ = self.make_request("PUT", f"/clinics/{clinic_id}", assign_data)
+                
+                if assign_response and assign_response.status_code == 200:
+                    clinic["assigned_rep_id"] = rep_id  # Update local data
             
             self.log_result(
                 "Create Test Clinic",
