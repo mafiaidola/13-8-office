@@ -112,42 +112,14 @@ const OrdersManagement = ({ user, language, isRTL }) => {
   const canViewPrices = () => {
     return user?.role !== 'medical_rep';
   };
-        {
-          id: 'ORD-002',
-          clinic_id: 'clinic-002',
-          clinic_name: 'عيادة الدكتورة فاطمة سعد',
-          clinic_region: 'الإسكندرية',
-          clinic_line: 'خط الإسكندرية الشرقي',
-          sales_rep_id: 'rep-002',
-          sales_rep_name: 'أحمد محمد السيد',
-          rep_region: 'الإسكندرية',
-          rep_line: 'خط الإسكندرية الشرقي',
-          warehouse_name: 'مخزن الإسكندرية',
-          total_amount: 890.00,
-          items_count: 3,
-          status: 'approved',
-          created_at: '2024-01-14T14:20:00Z',
-          items: [
-            { name: 'أنسولين قصير المفعول', quantity: 1, price: 85.00, total: 85.00 },
-            { name: 'مضاد حيوي', quantity: 2, price: 120.00, total: 240.00 },
-            { name: 'فيتامين ب12', quantity: 1, price: 565.00, total: 565.00 }
-          ]
-        },
-        {
-          id: 'ORD-003',
-          clinic_id: 'clinic-003',
-          clinic_name: 'عيادة الدكتور علي حسن',
-          clinic_region: 'الجيزة',
-          clinic_line: 'خط الجيزة الشمالي',
-          sales_rep_id: 'rep-003',
-          sales_rep_name: 'سارة أحمد محمود',
-          rep_region: 'الجيزة',
-          rep_line: 'خط الجيزة الشمالي',
-          warehouse_name: 'مخزن الجيزة',
-          total_amount: 2100.00,
-          items_count: 7,
-          status: 'pending_accounting',
-          created_at: '2024-01-13T09:15:00Z',
+
+  const handleCreateOrder = () => {
+    if (canCreateOrder()) {
+      setShowCreateOrderModal(true);
+    } else {
+      alert('ليس لديك صلاحية لإنشاء طلبات جديدة');
+    }
+  };
           items: [
             { name: 'مضاد التهاب', quantity: 3, price: 200.00, total: 600.00 },
             { name: 'مسكن قوي', quantity: 2, price: 150.00, total: 300.00 },
