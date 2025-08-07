@@ -500,19 +500,18 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                   </div>
                   
                   {/* Simple Clinic Map Component */}
-                  <SimpleClinicMap
-                    latitude={clinicData.latitude}
-                    longitude={clinicData.longitude}
-                    onLocationChange={(lat, lng) => {
-                      setClinicData(prev => ({
-                        ...prev,
-                        latitude: lat,
-                        longitude: lng
-                      }));
-                      console.log('📍 تم تحديث موقع العيادة:', lat, lng);
-                    }}
-                    language={language}
-                  />
+                  <div className="w-full h-80 bg-gray-100 rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">🗺️</div>
+                        <p className="text-gray-600 mb-2">خريطة تفاعلية بسيطة</p>
+                        <div className="text-2xl text-red-500">📍</div>
+                        <p className="text-sm text-gray-500 mt-2">
+                          الموقع: {clinicData.latitude?.toFixed(6)}, {clinicData.longitude?.toFixed(6)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Location Coordinates Display */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
@@ -556,7 +555,6 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       <button
                         type="button"
                         onClick={() => {
-                          // Cairo center coordinates
                           setClinicData(prev => ({
                             ...prev,
                             latitude: 30.0444,
@@ -570,7 +568,6 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       <button
                         type="button"
                         onClick={() => {
-                          // Alexandria coordinates
                           setClinicData(prev => ({
                             ...prev,
                             latitude: 31.2001,
@@ -584,7 +581,6 @@ const RepClinicRegistration = ({ user, language, isRTL }) => {
                       <button
                         type="button"
                         onClick={() => {
-                          // Giza coordinates
                           setClinicData(prev => ({
                             ...prev,
                             latitude: 30.0131,
