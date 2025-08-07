@@ -545,11 +545,8 @@ const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
                       )}
                     </h4>
                   </div>
-                  </div>
-                </div>
-
-                {/* Representatives List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  
+                  {/* Representatives List */}
                   {filteredActiveReps.map((rep) => (
                     <div 
                       key={rep.id}
