@@ -102,12 +102,16 @@ const OrdersManagement = ({ user, language, isRTL }) => {
       setLoading(false);
     }
   };
-            { name: 'فيتامين د3', quantity: 1, price: 120.00, total: 120.00 },
-            { name: 'أنسولين طويل المفعول', quantity: 3, price: 85.00, total: 255.00 },
-            { name: 'مسكن للألم', quantity: 5, price: 15.00, total: 75.00 },
-            { name: 'شراب السعال', quantity: 2, price: 45.50, total: 91.00 }
-          ]
-        },
+
+  // التحقق من صلاحيات إنشاء طلب
+  const canCreateOrder = () => {
+    return user?.role === 'medical_rep' || user?.role === 'key_account';
+  };
+
+  // التحقق من صلاحيات عرض الأسعار
+  const canViewPrices = () => {
+    return user?.role !== 'medical_rep';
+  };
         {
           id: 'ORD-002',
           clinic_id: 'clinic-002',
