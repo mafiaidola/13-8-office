@@ -1,6 +1,7 @@
 // Enhanced Activity Tracking System - نظام تتبع الحركات والأنشطة المحسن مع خريطة المندوبين النشطين
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AdvancedActivityMap from '../Maps/AdvancedActivityMap';
 
 const EnhancedActivityTracking = ({ user, language = 'ar', isRTL = true }) => {
   const [activeTab, setActiveTab] = useState('overview');
