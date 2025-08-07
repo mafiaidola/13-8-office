@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-اختبار سريع للمشاكل المبلغ عنها - Arabic Review Quick Test
-التركيز على HTTP 500 errors والمشاكل في التحديث والحذف
+اختبار شامل للتحقق من الإصلاحات المطبقة - Comprehensive Testing for Applied Fixes
+التركيز على المناطق والديون والعيادات والمخازن كما طُلب في المراجعة العربية
+Focus on Areas, Debts, Clinics, and Warehouses as requested in Arabic review
 """
 
 import requests
