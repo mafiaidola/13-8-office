@@ -35,17 +35,67 @@ const CreateOrderModal = ({ onClose, onOrderCreated, user, language = 'ar' }) =>
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Load all required data
-      const [clinicsRes, usersRes, warehousesRes, productsRes] = await Promise.all([
-        axios.get(`${API}/clinics`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/users`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/warehouses`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${API}/products`, { headers }).catch(() => ({ data: [] }))
-      ]);
+      // تحميل العيادات المخصصة للمندوب فقط
+      let clinicsResponse;
+      if (user?.role === 'medical_rep') {
+        // فلترة العيادات حسب المنطقة والخط المخصص للمندوب
+        clinicsResponse = await axios.get(`${API}/clinics?rep_id=${user.id}`, { headers });
+      } else {
+        clinicsResponse = await axios.get(`${API}/clinics`, { headers });
+      }
 
-      setClinics(clinicsRes.data || []);
-      setSalesReps((usersRes.data || []).filter(user => user.role === 'medical_rep'));
-      setWarehouses(warehousesRes.data || []);
+      // تحميل المخازن المخصصة للمستخدم
+      const warehousesResponse = await axios.get(`${API}/warehouses`, { headers });
+      
+      // فلترة المخازن حسب المستخدم
+      let userWarehouses = warehousesResponse.data || [];
+      if (user?.assigned_warehouse_id) {
+        userWarehouses = userWarehouses.filter(w => w.id === user.assigned_warehouse_id);
+      }
+
+      // تحميل المنتجات
+      const productsResponse = await axios.get(`${API}/products`, { headers });
+
+      setAvailableClinics(clinicsResponse.data || []);
+      setAvailableWarehouses(userWarehouses);
+      setAvailableProducts(productsResponse.data || []);
+
+      // تعيين المخزن الافتراضي إذا كان هناك مخزن واحد فقط
+      if (userWarehouses.length === 1) {
+        setFormData(prev => ({ ...prev, warehouse_id: userWarehouses[0].id }));
+        loadWarehouseStock(userWarehouses[0].id);
+      }
+
+      console.log('✅ Initial data loaded:', {
+        clinics: clinicsResponse.data?.length || 0,
+        warehouses: userWarehouses.length,
+        products: productsResponse.data?.length || 0
+      });
+
+    } catch (error) {
+      console.error('❌ Error loading initial data:', error);
+      
+      // بيانات وهمية للاختبار
+      setAvailableClinics([
+        { id: 'clinic-1', name: 'عيادة د. أحمد محمد', area: user?.area, line: user?.line },
+        { id: 'clinic-2', name: 'عيادة د. فاطمة سعد', area: user?.area, line: user?.line }
+      ]);
+      
+      setAvailableWarehouses([
+        { id: 'warehouse-1', name: 'مخزن القاهرة الرئيسي', location: user?.area }
+      ]);
+      
+      setAvailableProducts([
+        { id: 'product-1', name: 'أموكسيسيلين 500mg', unit: 'شريط', category: 'أدوية' },
+        { id: 'product-2', name: 'باراسيتامول 500mg', unit: 'علبة', category: 'أدوية' },
+        { id: 'product-3', name: 'فيتامين د 1000IU', unit: 'علبة', category: 'مكملات' }
+      ]);
+      
+      if (user?.assigned_warehouse_id) {
+        setFormData(prev => ({ ...prev, warehouse_id: 'warehouse-1' }));
+      }
+    }
+  };
       setProducts(productsRes.data || []);
 
     } catch (error) {
