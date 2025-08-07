@@ -580,25 +580,71 @@ button:disabled {
   border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
-/* Enhanced Theme System - الثيم الداكن فقط مع إصلاح شامل للألوان */
+/* Enhanced Theme System - 5 Advanced Professional Themes */
+
+/* 1. Classic Dark Theme - الثيم الداكن الكلاسيكي */
 .theme-dark,
-body,
-.app-container,
-#root {
-  --bg-primary: #111827 !important;
-  --bg-secondary: #1f2937 !important;
-  --bg-tertiary: #374151 !important;
-  --bg-card: #1f2937 !important;
+body.theme-dark,
+.app-container.theme-dark {
+  --bg-primary: #0f172a !important;
+  --bg-secondary: #1e293b !important;
+  --bg-tertiary: #334155 !important;
+  --bg-card: #1e293b !important;
   
-  /* Enhanced text colors for maximum visibility and contrast */
-  --text-primary: #ffffff !important;
-  --text-secondary: #f3f4f6 !important;
-  --text-muted: #e5e7eb !important;
-  --text-inverse: #111827 !important;
-  --text-light: #f9fafb !important;
+  background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+  color: #ffffff !important;
+}
+
+/* 2. Deep Night Theme - ثيم الليل العميق */
+.theme-midnight,
+body.theme-midnight,
+.app-container.theme-midnight {
+  --bg-primary: #030712 !important;
+  --bg-secondary: #111827 !important;
+  --bg-tertiary: #1f2937 !important;
+  --bg-card: #111827 !important;
   
-  background-color: var(--bg-primary) !important;
-  color: var(--text-primary) !important;
+  background: linear-gradient(135deg, #030712, #111827) !important;
+  color: #ffffff !important;
+}
+
+/* 3. Oceanic Blue Theme - الثيم الأزرق المحيطي */
+.theme-oceanic,
+body.theme-oceanic,
+.app-container.theme-oceanic {
+  --bg-primary: #0c4a6e !important;
+  --bg-secondary: #075985 !important;
+  --bg-tertiary: #0284c7 !important;
+  --bg-card: #075985 !important;
+  
+  background: linear-gradient(135deg, #0c4a6e, #075985) !important;
+  color: #ffffff !important;
+}
+
+/* 4. Royal Purple Theme - الثيم البنفسجي الملكي */
+.theme-royal,
+body.theme-royal,
+.app-container.theme-royal {
+  --bg-primary: #4c1d95 !important;
+  --bg-secondary: #6b21a8 !important;
+  --bg-tertiary: #7c3aed !important;
+  --bg-card: #6b21a8 !important;
+  
+  background: linear-gradient(135deg, #4c1d95, #6b21a8) !important;
+  color: #ffffff !important;
+}
+
+/* 5. Forest Green Theme - ثيم أخضر الغابة */
+.theme-forest,
+body.theme-forest,
+.app-container.theme-forest {
+  --bg-primary: #14532d !important;
+  --bg-secondary: #166534 !important;
+  --bg-tertiary: #15803d !important;
+  --bg-card: #166534 !important;
+  
+  background: linear-gradient(135deg, #14532d, #166534) !important;
+  color: #ffffff !important;
 }
 
 /* Enhanced Responsive Design */
