@@ -26,17 +26,8 @@ const ProfessionalHeader = ({
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
 
-  // Enhanced Professional Themes - محسن لراحة العين
+  // Enhanced Professional Themes - محسن لراحة العين (الداكن فقط)
   const themes = {
-    light: {
-      name: { ar: 'فاتح', en: 'Light' },
-      icon: '☀️',
-      colors: {
-        primary: '#ffffff',
-        secondary: '#f8fafc',
-        accent: '#6366f1'
-      }
-    },
     dark: {
       name: { ar: 'داكن', en: 'Dark' },
       icon: '🌙',
@@ -44,51 +35,6 @@ const ProfessionalHeader = ({
         primary: '#111827',
         secondary: '#1f2937',
         accent: '#6366f1'
-      }
-    },
-    modern: {
-      name: { ar: 'عصري', en: 'Modern' },
-      icon: '✨',
-      colors: {
-        primary: '#fafbfc',
-        secondary: '#f1f3f5',
-        accent: '#6366f1'
-      }
-    },
-    glassy: {
-      name: { ar: 'زجاجي', en: 'Glassy' },
-      icon: '🔮',
-      colors: {
-        primary: 'rgba(255, 255, 255, 0.1)',
-        secondary: 'rgba(248, 250, 252, 0.1)',
-        accent: '#6366f1'
-      }
-    },
-    golden: {
-      name: { ar: 'ذهبي', en: 'Golden' },
-      icon: '🌟',
-      colors: {
-        primary: '#fffbf0',
-        secondary: '#fef3cd',
-        accent: '#f59e0b'
-      }
-    },
-    professional: {
-      name: { ar: 'احترافي', en: 'Professional' },
-      icon: '💼',
-      colors: {
-        primary: '#f8fafc',
-        secondary: '#e2e8f0',
-        accent: '#475569'
-      }
-    },
-    cosmic: {
-      name: { ar: 'كوني', en: 'Cosmic' },
-      icon: '🌌',
-      colors: {
-        primary: '#0f0f23',
-        secondary: '#1a1a3e',
-        accent: '#6d28d9'
       }
     }
   };
