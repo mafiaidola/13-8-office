@@ -2607,6 +2607,43 @@ async def update_clinic(clinic_id: str, clinic_data: dict, current_user: User = 
         raise HTTPException(status_code=500, detail="خطأ في تحديث العيادة")
 
 
+@api_router.delete("/clinics/{clinic_id}")
+async def delete_clinic(clinic_id: str, current_user: User = Depends(get_current_user)):
+    """حذف عيادة - Delete clinic"""
+    try:
+        # Check if clinic exists
+        existing_clinic = await db.clinics.find_one({"id": clinic_id})
+        if not existing_clinic:
+            raise HTTPException(status_code=404, detail="العيادة غير موجودة")
+
+        # Check if clinic has active orders/debts
+        active_orders = await db.orders.find_one({"clinic_id": clinic_id, "status": {"$in": ["pending", "processing", "shipped"]}})
+        if active_orders:
+            raise HTTPException(status_code=400, detail="لا يمكن حذف العيادة - توجد طلبات نشطة")
+
+        outstanding_debts = await db.debts.find_one({"clinic_id": clinic_id, "status": "outstanding"})
+        if outstanding_debts:
+            raise HTTPException(status_code=400, detail="لا يمكن حذف العيادة - توجد ديون مستحقة")
+
+        # Soft delete - mark as inactive instead of hard delete
+        await db.clinics.update_one(
+            {"id": clinic_id}, 
+            {"$set": {
+                "is_active": False,
+                "deleted_at": datetime.utcnow(),
+                "deleted_by": current_user["id"]
+            }}
+        )
+        
+        return {"success": True, "message": "تم حذف العيادة بنجاح"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting clinic: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف العيادة")
+
+
 
 @api_router.get("/clinics/stats")
 async def get_clinics_stats(current_user: User = Depends(get_current_user)):
