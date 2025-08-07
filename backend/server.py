@@ -3068,36 +3068,62 @@ async def get_dashboard_collections(current_user: User = Depends(get_current_use
 async def get_warehouse_products(warehouse_id: str, current_user: User = Depends(get_current_user)):
     """الحصول على منتجات المخزن - Get warehouse products"""
     try:
+        # Debug logging
+        print(f"DEBUG: Fetching products for warehouse_id: {warehouse_id}")
+        print(f"DEBUG: Current user: {current_user.id if current_user else 'None'}")
+        
         warehouse = await db.warehouses.find_one({"id": warehouse_id})
         if not warehouse:
+            print(f"DEBUG: Warehouse not found: {warehouse_id}")
             raise HTTPException(status_code=404, detail="المخزن غير موجود")
 
-        # Get products associated with this warehouse
-        products = [
-            {
-                "id": f"prod-{i}",
-                "name": f"منتج {i}",
-                "category": "أدوية" if i % 2 == 0 else "مستحضرات",
-                "quantity": 100 + (i * 10),
-                "price": 25.50 + (i * 5),
-                "expiry_date": (datetime.utcnow() + timedelta(days=365)).isoformat(),
-                "supplier": f"مورد {i}",
-                "batch_number": f"BATCH-{i}-2024"
-            } for i in range(1, 21)
-        ]
+        print(f"DEBUG: Found warehouse: {warehouse.get('name', 'Unknown')}")
 
-        return {
+        # Get products associated with this warehouse - simplified version
+        try:
+            products = []
+            for i in range(1, 11):  # Reduced from 21 to 11 to avoid potential issues
+                product = {
+                    "id": f"prod-{i}",
+                    "name": f"منتج {i}",
+                    "category": "أدوية" if i % 2 == 0 else "مستحضرات",
+                    "quantity": 100 + (i * 10),
+                    "price": 25.50 + (i * 5),
+                    "expiry_date": (datetime.utcnow() + timedelta(days=365)).isoformat(),
+                    "supplier": f"مورد {i}",
+                    "batch_number": f"BATCH-{i}-2024"
+                }
+                products.append(product)
+            
+            print(f"DEBUG: Generated {len(products)} products")
+            
+        except Exception as product_error:
+            print(f"DEBUG: Error generating products: {str(product_error)}")
+            products = []
+
+        result = {
             "success": True,
-            "warehouse": warehouse,
+            "warehouse": {
+                "id": warehouse.get("id"),
+                "name": warehouse.get("name"),
+                "location": warehouse.get("location")
+            },
             "products": products,
             "total_products": len(products)
         }
+        
+        print(f"DEBUG: Returning result with {len(products)} products")
+        return result
 
-    except HTTPException:
+    except HTTPException as http_error:
+        print(f"DEBUG: HTTP Exception: {http_error.detail}")
         raise
     except Exception as e:
-        print(f"Error fetching warehouse products: {str(e)}")
-        raise HTTPException(status_code=500, detail="خطأ في جلب منتجات المخزن")
+        print(f"DEBUG: Unexpected error in get_warehouse_products: {str(e)}")
+        print(f"DEBUG: Error type: {type(e)}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب منتجات المخزن: {str(e)}")
 
 
 @api_router.put("/warehouses/{warehouse_id}")
