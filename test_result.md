@@ -3283,8 +3283,10 @@ metadata:
 
 test_plan:
   current_focus: 
-    - "Comprehensive Debt and Collection Management System Testing"
-  stuck_tasks: []
+    - "Comprehensive Testing for Applied Fixes - Arabic Review"
+  stuck_tasks:
+    - "PUT /api/areas/{area_id} - Area Update Issue"
+    - "POST /api/debts - Debt Creation Field Validation"
   completed_tasks:
     - "Clinic Creation API Testing - حل خطأ إرسال الطلب"
     - "Comprehensive Accounting System - Overview API"
