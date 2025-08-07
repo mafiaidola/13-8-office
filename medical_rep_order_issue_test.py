@@ -183,12 +183,11 @@ class MedicalRepOrderTest:
         # Create test clinic
         clinic_data = {
             "name": f"عيادة اختبار {int(time.time())}",
-            "owner_name": "دكتور اختبار",
+            "doctor_name": "دكتور اختبار",  # Changed from owner_name to doctor_name
             "phone": "01234567890",
             "address": "عنوان اختبار",
             "location": "القاهرة",
             "area_id": "area_cairo",
-            "assigned_rep_id": rep_id,  # Assign to our medical rep
             "is_active": True
         }
         
