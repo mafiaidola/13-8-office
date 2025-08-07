@@ -844,94 +844,330 @@ body,
   border: 2px solid var(--color-danger);
 }
 
-/* Enhanced Text Visibility - Dark Theme Only */
-* {
-  color: inherit;
+/* COMPREHENSIVE TEXT VISIBILITY SYSTEM - إصلاح شامل للنصوص */
+
+/* Force all text elements to use proper colors */
+*,
+*::before,
+*::after {
+  color: var(--text-primary) !important;
 }
 
+/* Specific overrides for key elements */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
 }
 
-p, span, div, label, button {
-  color: var(--text-primary) !important;
+p, span, div, label, li, td, th, a {
+  color: #f3f4f6 !important;
 }
 
-/* Ensure form elements are visible */
-input, textarea, select {
+/* Button text colors */
+button,
+.btn {
+  color: #ffffff !important;
+}
+
+button.btn-secondary,
+.btn-secondary {
   background-color: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
+  color: #ffffff !important;
   border-color: var(--bg-tertiary) !important;
+}
+
+/* Form elements with maximum contrast */
+input, textarea, select, option {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border-color: #4b5563 !important;
+  border-width: 1px !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 0.8 !important;
+  color: #d1d5db !important;
+  opacity: 0.9 !important;
 }
 
-/* Table text visibility */
-.table th,
-.table td {
-  color: var(--text-primary) !important;
-  background-color: transparent !important;
+/* Focus states for better visibility */
+input:focus, 
+textarea:focus, 
+select:focus {
+  background-color: #4b5563 !important;
+  color: #ffffff !important;
+  border-color: var(--color-primary) !important;
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
 }
 
-/* Modal text visibility */
-.modal,
-.modal * {
-  color: var(--text-primary) !important;
-}
-
-.modal {
+/* Table elements with strong contrast */
+.table,
+table {
   background-color: var(--bg-card) !important;
 }
 
-/* Card text visibility */
+.table th,
+.table td,
+table th,
+table td,
+thead th,
+tbody td {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  border-color: #4b5563 !important;
+}
+
+.table thead th {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Modal content with maximum visibility */
+.modal,
+.modal-content,
+.modal-dialog {
+  background-color: var(--bg-card) !important;
+  color: #ffffff !important;
+}
+
+.modal *,
+.modal-content *,
+.modal-dialog * {
+  color: #ffffff !important;
+}
+
+.modal-header {
+  background-color: #374151 !important;
+  border-bottom: 1px solid #4b5563 !important;
+}
+
+.modal-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Card elements with proper contrast */
 .card,
-.card * {
-  color: var(--text-primary) !important;
+.dashboard-card,
+.stat-card,
+.enhanced-stat-card {
+  background-color: var(--bg-card) !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
 }
 
-.dashboard-card .card-title,
-.dashboard-card .card-value,
-.dashboard-card .card-description {
-  color: var(--text-primary) !important;
+.card *,
+.dashboard-card *,
+.stat-card *,
+.enhanced-stat-card * {
+  color: #ffffff !important;
 }
 
-/* Sidebar text visibility */
+.card-title,
+.card-value,
+.card-description {
+  color: #ffffff !important;
+}
+
+/* Sidebar with enhanced visibility */
 .sidebar,
-.sidebar * {
-  color: var(--text-primary) !important;
+.navigation {
+  background-color: var(--bg-secondary) !important;
 }
 
-/* Ensure buttons have proper contrast */
-button {
-  color: white !important;
+.sidebar *,
+.navigation * {
+  color: #ffffff !important;
 }
 
-button.btn-secondary {
+.sidebar .nav-link,
+.navigation .nav-link {
+  color: #f3f4f6 !important;
+}
+
+.sidebar .nav-link:hover,
+.navigation .nav-link:hover,
+.sidebar .nav-link.active,
+.navigation .nav-link.active {
+  color: #ffffff !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Header elements */
+.professional-header,
+.header {
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid #4b5563 !important;
+}
+
+.professional-header *,
+.header * {
+  color: #ffffff !important;
+}
+
+/* Status badges with maximum contrast */
+.status-badge,
+.badge {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.status-badge.success,
+.badge-success {
+  background-color: var(--color-success) !important;
+  color: #ffffff !important;
+}
+
+.status-badge.warning,
+.badge-warning {
+  background-color: var(--color-warning) !important;
+  color: #000000 !important;
+}
+
+.status-badge.danger,
+.badge-danger {
+  background-color: var(--color-danger) !important;
+  color: #ffffff !important;
+}
+
+.status-badge.info,
+.badge-info {
+  background-color: var(--color-info) !important;
+  color: #ffffff !important;
+}
+
+/* Dropdown menus */
+.dropdown-menu,
+.select-menu {
+  background-color: var(--bg-tertiary) !important;
+  border-color: #4b5563 !important;
+}
+
+.dropdown-menu *,
+.select-menu * {
+  color: #ffffff !important;
+}
+
+.dropdown-item,
+.select-option {
+  color: #ffffff !important;
+}
+
+.dropdown-item:hover,
+.select-option:hover {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Alert messages */
+.alert {
+  border-width: 1px !important;
+}
+
+.alert-success {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #ffffff !important;
+  border-color: var(--color-success) !important;
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  color: #ffffff !important;
+  border-color: var(--color-warning) !important;
+}
+
+.alert-danger {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #ffffff !important;
+  border-color: var(--color-danger) !important;
+}
+
+.alert-info {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+  color: #ffffff !important;
+  border-color: var(--color-info) !important;
+}
+
+/* Search and filter elements */
+.search-container,
+.filter-container {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.search-container *,
+.filter-container * {
+  color: #ffffff !important;
+}
+
+/* Pagination */
+.pagination {
+  background-color: var(--bg-card) !important;
+}
+
+.pagination * {
+  color: #ffffff !important;
+}
+
+.page-link {
+  background-color: var(--bg-tertiary) !important;
+  border-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.page-link:hover {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Tabs */
+.nav-tabs {
+  border-bottom: 1px solid #4b5563 !important;
+}
+
+.nav-tabs .nav-link {
+  color: #f3f4f6 !important;
+  border-color: transparent !important;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: var(--bg-card) !important;
+  border-color: #4b5563 #4b5563 var(--bg-card) !important;
+  color: #ffffff !important;
+}
+
+/* Loading and spinner elements */
+.loading,
+.spinner {
   color: var(--color-primary) !important;
 }
 
-/* Status badges with proper contrast */
-.status-badge {
-  color: white !important;
+/* Ensure no element can override these critical colors */
+.text-white { color: #ffffff !important; }
+.text-gray-100 { color: #f3f4f6 !important; }
+.text-gray-200 { color: #e5e7eb !important; }
+.text-gray-300 { color: #d1d5db !important; }
+.text-primary { color: var(--color-primary) !important; }
+
+/* Final safety net - force all text to be visible */
+body * {
+  text-shadow: none !important;
 }
 
-.status-badge.success {
-  color: white !important;
-  background-color: var(--color-success) !important;
+/* Accessibility improvements */
+*:focus {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
 }
 
-.status-badge.warning {
-  color: var(--text-primary) !important;
-  background-color: var(--color-warning) !important;
-}
-
-.status-badge.danger {
-  color: white !important;
-  background-color: var(--color-danger) !important;
+/* Print styles with proper contrast */
+@media print {
+  * {
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
 }
 
 /* Final Enhancements - Ensure All Text is Readable */
