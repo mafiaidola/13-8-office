@@ -3151,7 +3151,7 @@ async def update_warehouse(warehouse_id: str, warehouse_data: dict, current_user
         # Update warehouse data
         update_data = warehouse_data.copy()
         update_data["updated_at"] = datetime.utcnow()
-        update_data["updated_by"] = current_user["id"]
+        update_data["updated_by"] = current_user.id
 
         await db.warehouses.update_one({"id": warehouse_id}, {"$set": update_data})
         
