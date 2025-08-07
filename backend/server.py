@@ -2594,7 +2594,7 @@ async def update_clinic(clinic_id: str, clinic_data: dict, current_user: User = 
         # Update clinic data
         update_data = clinic_data.copy()
         update_data["updated_at"] = datetime.utcnow()
-        update_data["updated_by"] = current_user["id"]
+        update_data["updated_by"] = current_user.id
 
         await db.clinics.update_one({"id": clinic_id}, {"$set": update_data})
         
