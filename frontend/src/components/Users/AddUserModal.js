@@ -32,6 +32,40 @@ const AddUserModal = ({ onClose, onUserAdded, language = 'ar' }) => {
     { value: 'warehouse_keeper', labelAr: 'أمين مخزن', labelEn: 'Warehouse Keeper' }
   ];
 
+  const lines = [
+    { value: 'line1', labelAr: 'الخط الأول', labelEn: 'Line 1' },
+    { value: 'line2', labelAr: 'الخط الثاني', labelEn: 'Line 2' }
+  ];
+
+  useEffect(() => {
+    loadSupportingData();
+  }, []);
+
+  const loadSupportingData = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // تحميل المديرين
+      const managersResponse = await axios.get(`${API}/users`, { headers });
+      const managersData = managersResponse.data.filter(user => 
+        user.role === 'manager' || user.role === 'admin'
+      );
+      setManagers(managersData);
+
+      // تحميل المناطق
+      const areasResponse = await axios.get(`${API}/areas`, { headers });
+      setAreas(areasResponse.data || []);
+
+      console.log('✅ Supporting data loaded:', { 
+        managers: managersData.length, 
+        areas: areasResponse.data?.length || 0 
+      });
+    } catch (error) {
+      console.error('❌ Error loading supporting data:', error);
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
