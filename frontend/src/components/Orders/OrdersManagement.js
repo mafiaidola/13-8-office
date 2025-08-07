@@ -433,6 +433,7 @@ const OrdersManagement = ({ user, language, isRTL }) => {
           onClose={() => setShowCreateOrderModal(false)}
           onSubmit={handleCreateOrder}
           language={language}
+          user={user}
         />
       )}
     </div>
