@@ -317,6 +317,154 @@ const AddUserModal = ({ onClose, onUserAdded, language = 'ar' }) => {
               </span>
             </label>
           </div>
+          
+          {/* Additional Fields Section */}
+          <div className="mt-6">
+            <h4 className="text-lg font-medium text-primary mb-4 border-b pb-2">
+              {language === 'ar' ? 'معلومات إضافية' : 'Additional Information'}
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Direct Manager */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">
+                  {language === 'ar' ? 'المدير المباشر' : 'Direct Manager'}
+                </label>
+                
+                {/* Non-dropdown Manager Selection */}
+                <div className="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {managers.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          name="managed_by"
+                          value=""
+                          checked={!formData.managed_by}
+                          onChange={() => setFormData(prev => ({ ...prev, managed_by: '' }))}
+                          className="mr-2"
+                        />
+                        <span className="text-gray-500">بدون مدير مباشر</span>
+                      </div>
+                      {managers.map(manager => (
+                        <div key={manager.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="managed_by"
+                            value={manager.id}
+                            checked={formData.managed_by === manager.id}
+                            onChange={() => setFormData(prev => ({ ...prev, managed_by: manager.id }))}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">
+                            {manager.full_name} - {manager.role === 'admin' ? 'مدير النظام' : 'مدير'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">لا يوجد مديرين متاحين</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Area */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">
+                  {language === 'ar' ? 'المنطقة' : 'Area'}
+                </label>
+                
+                {/* Non-dropdown Area Selection */}
+                <div className="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {areas.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          name="area_id"
+                          value=""
+                          checked={!formData.area_id}
+                          onChange={() => setFormData(prev => ({ ...prev, area_id: '' }))}
+                          className="mr-2"
+                        />
+                        <span className="text-gray-500">بدون منطقة</span>
+                      </div>
+                      {areas.map(area => (
+                        <div key={area.id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="area_id"
+                            value={area.id}
+                            checked={formData.area_id === area.id}
+                            onChange={() => setFormData(prev => ({ ...prev, area_id: area.id }))}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">
+                            {area.name} - {area.is_active ? 'نشط' : 'غير نشط'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">لا يوجد مناطق متاحة</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Line Selection */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">
+                  {language === 'ar' ? 'الخط' : 'Line'}
+                </label>
+                
+                {/* Non-dropdown Line Selection */}
+                <div className="border border-gray-300 rounded-lg p-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="line"
+                        value=""
+                        checked={!formData.line}
+                        onChange={() => setFormData(prev => ({ ...prev, line: '' }))}
+                        className="mr-2"
+                      />
+                      <span className="text-gray-500">بدون خط</span>
+                    </div>
+                    {lines.map(line => (
+                      <div key={line.value} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="line"
+                          value={line.value}
+                          checked={formData.line === line.value}
+                          onChange={() => setFormData(prev => ({ ...prev, line: line.value }))}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{line.labelAr}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-secondary mb-2">
+                  {language === 'ar' ? 'القسم' : 'Department'}
+                </label>
+                <input
+                  type="text"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  placeholder={language === 'ar' ? 'أدخل القسم' : 'Enter department'}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
         </form>
         
         <div className="modal-footer">
