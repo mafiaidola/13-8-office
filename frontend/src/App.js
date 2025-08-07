@@ -113,24 +113,29 @@ const ThemeProvider = ({ children }) => {
   const changeTheme = (newTheme) => {
     if (AVAILABLE_THEMES[newTheme]) {
       setTheme(newTheme);
-      console.log(`🎨 Changing theme to: ${newTheme}`);
+      console.log(`🎨 Changing to professional theme: ${newTheme}`);
       
-      // Force immediate dark theme application only
+      // Apply theme immediately with advanced color system
       setTimeout(() => {
-        document.body.classList.remove('theme-modern', 'theme-minimal', 'theme-glassy', 'theme-light', 'theme-white', 'theme-golden', 'theme-professional', 'theme-cosmic');
-        document.body.classList.add('theme-dark');
+        document.body.classList.remove('theme-dark', 'theme-midnight', 'theme-oceanic', 'theme-royal', 'theme-forest');
+        document.body.classList.add(`theme-${newTheme}`);
         
-        // Apply CSS variables for dark theme only
+        // Apply CSS variables for the selected theme
         const root = document.documentElement;
-        root.style.setProperty('--bg-primary', '#111827');
-        root.style.setProperty('--bg-card', '#1f2937');
-        root.style.setProperty('--text-primary', '#ffffff');
+        const themeConfig = AVAILABLE_THEMES[newTheme];
+        
+        root.style.setProperty('--bg-primary', themeConfig.colors.background);
+        root.style.setProperty('--bg-card', themeConfig.colors.card);
+        root.style.setProperty('--text-primary', themeConfig.colors.text);
         root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
         
-        console.log(`🎨 Dark theme applied exclusively`);
+        // Advanced theme-specific styling
+        document.body.style.background = `linear-gradient(135deg, ${themeConfig.colors.background}, ${themeConfig.colors.card})`;
         
-        // Force a re-render
-        const event = new CustomEvent('themeChanged', { detail: { theme: 'dark' } });
+        console.log(`✅ Professional theme applied successfully: ${newTheme}`);
+        
+        // Dispatch theme change event
+        const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
         window.dispatchEvent(event);
       }, 10);
     }
