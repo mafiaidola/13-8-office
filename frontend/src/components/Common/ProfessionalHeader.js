@@ -42,11 +42,6 @@ const ProfessionalHeader = ({
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Close theme menu if clicked outside
-      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target)) {
-        setShowThemeMenu(false);
-      }
-      
       // Close user menu if clicked outside
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
