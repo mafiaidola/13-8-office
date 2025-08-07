@@ -1599,17 +1599,31 @@ const EnhancedQuickActions = ({ user, language, onActionClick }) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {actions.map((action) => (
           <button
             key={action.id}
             onClick={() => onActionClick(action.id)}
-            className="enhanced-action-btn group p-4 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 text-center border border-white/10 hover:border-white/20 hover:scale-105 hover:shadow-lg"
+            className="enhanced-action-btn group p-6 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-left border border-white/10 hover:border-white/20 hover:scale-105 hover:shadow-lg"
           >
-            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">
-              {action.icon}
+            <div className="flex items-start gap-4">
+              <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                {action.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-base font-bold mb-2 leading-tight text-white">
+                  {action.title}
+                </div>
+                <div className="text-sm text-white/70 leading-relaxed line-clamp-2">
+                  {action.description}
+                </div>
+              </div>
             </div>
-            <div className="text-sm font-medium leading-tight">{action.title}</div>
+            
+            {/* Hover effect indicator */}
+            <div className="mt-4 w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-400 to-purple-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            </div>
           </button>
         ))}
       </div>
