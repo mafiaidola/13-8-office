@@ -27,14 +27,54 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// الثيم الداكن الوحيد - Dark Theme Only
+// 5 ثيمات احترافية متقدمة - 5 Advanced Professional Themes
 const AVAILABLE_THEMES = {
-  // ثيم داكن بسيط - Simple Dark (الوحيد المتاح)
+  // 1. الثيم الداكن الأساسي - Primary Dark Theme
   dark: {
-    name: { ar: 'داكن', en: 'Dark' },
+    name: { ar: 'داكن كلاسيكي', en: 'Classic Dark' },
     colors: {
-      background: '#111827',
-      card: '#1f2937',
+      background: '#0f172a',
+      card: '#1e293b',
+      text: '#ffffff'
+    }
+  },
+  
+  // 2. ثيم الليل العميق - Deep Night Theme
+  midnight: {
+    name: { ar: 'ليل عميق', en: 'Deep Night' },
+    colors: {
+      background: '#030712',
+      card: '#111827',
+      text: '#ffffff'
+    }
+  },
+  
+  // 3. ثيم الأزرق المهني - Professional Blue Theme
+  oceanic: {
+    name: { ar: 'أزرق محيطي', en: 'Oceanic Blue' },
+    colors: {
+      background: '#0c4a6e',
+      card: '#075985',
+      text: '#ffffff'
+    }
+  },
+  
+  // 4. ثيم البنفسجي الملكي - Royal Purple Theme
+  royal: {
+    name: { ar: 'بنفسجي ملكي', en: 'Royal Purple' },
+    colors: {
+      background: '#4c1d95',
+      card: '#6b21a8',
+      text: '#ffffff'
+    }
+  },
+  
+  // 5. ثيم الأخضر المتطور - Advanced Green Theme
+  forest: {
+    name: { ar: 'أخضر الغابة', en: 'Forest Green' },
+    colors: {
+      background: '#14532d',
+      card: '#166534',
       text: '#ffffff'
     }
   }
