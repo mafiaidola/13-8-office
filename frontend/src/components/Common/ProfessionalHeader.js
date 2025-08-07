@@ -28,6 +28,52 @@ const ProfessionalHeader = ({
 
 
 
+  // Advanced Professional Themes - ثيمات احترافية متطورة
+  const themes = {
+    dark: {
+      name: { ar: 'داكن كلاسيكي', en: 'Classic Dark' },
+      colors: {
+        background: '#0f172a',
+        card: '#1e293b',
+        text: '#ffffff'
+      }
+    },
+    midnight: {
+      name: { ar: 'ليل عميق', en: 'Deep Night' },
+      colors: {
+        background: '#030712',
+        card: '#111827',
+        text: '#ffffff'
+      }
+    },
+    oceanic: {
+      name: { ar: 'أزرق محيطي', en: 'Oceanic Blue' },
+      colors: {
+        background: '#0c4a6e',
+        card: '#075985',
+        text: '#ffffff'
+      }
+    },
+    royal: {
+      name: { ar: 'بنفسجي ملكي', en: 'Royal Purple' },
+      colors: {
+        background: '#4c1d95',
+        card: '#6b21a8',
+        text: '#ffffff'
+      }
+    },
+    forest: {
+      name: { ar: 'أخضر الغابة', en: 'Forest Green' },
+      colors: {
+        background: '#14532d',
+        card: '#166534',
+        text: '#ffffff'
+      }
+    }
+  };
+
+  const currentTheme = themes[theme] || themes.dark;
+
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
