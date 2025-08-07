@@ -580,20 +580,22 @@ button:disabled {
   border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
-/* Enhanced Theme System - الثيم الداكن فقط */
+/* Enhanced Theme System - الثيم الداكن فقط مع إصلاح شامل للألوان */
 .theme-dark,
 body,
-.app-container {
+.app-container,
+#root {
   --bg-primary: #111827 !important;
   --bg-secondary: #1f2937 !important;
   --bg-tertiary: #374151 !important;
   --bg-card: #1f2937 !important;
   
-  /* Enhanced text colors for better visibility */
-  --text-primary: #f9fafb !important;
-  --text-secondary: #e5e7eb !important;
-  --text-muted: #d1d5db !important;
+  /* Enhanced text colors for maximum visibility and contrast */
+  --text-primary: #ffffff !important;
+  --text-secondary: #f3f4f6 !important;
+  --text-muted: #e5e7eb !important;
   --text-inverse: #111827 !important;
+  --text-light: #f9fafb !important;
   
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
