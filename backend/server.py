@@ -557,7 +557,7 @@ async def get_comprehensive_user_profile(user_id: str, current_user: User = Depe
         if user.get("role") in ["medical_rep", "key_account"]:
             # المنتجات النشطة المتاحة للطلب
             available_products = await db.products.find({"is_active": True}, {
-                "name": 1, "category": 1, "unit": 1, "price": 1, "current_stock": 1
+                "id": 1, "name": 1, "category": 1, "unit": 1, "price": 1, "current_stock": 1
             }).to_list(100)
             
             comprehensive_data["available_products"] = [
