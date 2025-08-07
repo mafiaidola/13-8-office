@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const AddUserModal = ({ onClose, onUserAdded, language }) => {
+const AddUserModal = ({ onClose, onUserAdded, language = 'ar' }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -10,12 +10,17 @@ const AddUserModal = ({ onClose, onUserAdded, language }) => {
     email: '',
     phone: '',
     role: 'medical_rep',
-    area: '',
-    line: '',
+    department: '',
+    area_id: '',
+    line: '', // إضافة الخط
+    managed_by: '', // إضافة المدير المباشر
+    monthly_sales_target: 50000,
     is_active: true
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [managers, setManagers] = useState([]);
+  const [areas, setAreas] = useState([]);
 
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
