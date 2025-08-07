@@ -2995,7 +2995,7 @@ async def add_debt_payment(debt_id: str, payment_data: dict, current_user: User 
             "amount": payment_amount,
             "payment_date": datetime.utcnow(),
             "notes": payment_data.get("notes", ""),
-            "recorded_by": current_user["id"]
+            "recorded_by": current_user.id
         }
 
         await db.debts.update_one(
