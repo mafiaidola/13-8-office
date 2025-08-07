@@ -253,6 +253,14 @@
     stuck_count: 0
     priority: "critical"
     needs_retesting: false
+
+  - task: "Fix Multiple UI/UX Issues Reported by User"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
