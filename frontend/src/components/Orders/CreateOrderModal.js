@@ -1,29 +1,27 @@
-// Enhanced Create Order Modal - مودال إنشاء طلبية محسن
+// Enhanced Create Order Modal - مودال إنشاء طلبية محسن للمناديب
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const CreateOrderModal = ({ onClose, onSubmit, language, user }) => {
+const CreateOrderModal = ({ onClose, onOrderCreated, user, language = 'ar' }) => {
   const [formData, setFormData] = useState({
     clinic_id: '',
-    sales_rep_id: '',
     warehouse_id: '',
     items: [],
     notes: '',
     priority: 'normal'
   });
   
-  const [clinics, setClinics] = useState([]);
-  const [salesReps, setSalesReps] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [availableClinics, setAvailableClinics] = useState([]);
+  const [availableWarehouses, setAvailableWarehouses] = useState([]);
+  const [availableProducts, setAvailableProducts] = useState([]);
+  const [warehouseStock, setWarehouseStock] = useState({});
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [currentItem, setCurrentItem] = useState({
     product_id: '',
     product_name: '',
     quantity: 1,
-    price: 0,
-    total: 0
+    unit: ''
   });
 
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
