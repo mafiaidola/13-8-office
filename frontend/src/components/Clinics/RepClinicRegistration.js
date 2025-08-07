@@ -1,7 +1,6 @@
 // Enhanced Clinic Registration Component - تسجيل العيادات المحسن
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
-import SimpleClinicMap from '../Maps/SimpleClinicMap';
 import axios from 'axios';
 
 const RepClinicRegistration = ({ user, language, isRTL }) => {
