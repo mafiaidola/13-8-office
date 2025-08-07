@@ -98,14 +98,6 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
       setLoading(false);
     }
   };
-      }
-    } catch (error) {
-      console.error('Error loading comprehensive profile:', error);
-      alert('خطأ في تحميل البيانات الشاملة');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadSupportingData = async () => {
     try {
