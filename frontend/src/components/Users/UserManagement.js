@@ -484,6 +484,19 @@ const UserManagement = ({ user, language, isRTL }) => {
         </div>
       )}
 
+      {/* Add User Modal */}
+      {showAddModal && (
+        <AddUserModal
+          onClose={() => setShowAddModal(false)}
+          onUserAdded={(newUser) => {
+            console.log('✅ New user added:', newUser);
+            loadUsers();
+            setShowAddModal(false);
+          }}
+          language={language}
+        />
+      )}
+
       {/* Comprehensive User Modal - مودال شامل لتفاصيل وتعديل المستخدم */}
       {showComprehensiveModal && selectedUser && (
         <ComprehensiveUserModal
