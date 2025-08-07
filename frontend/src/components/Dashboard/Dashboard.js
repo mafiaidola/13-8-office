@@ -1459,7 +1459,10 @@ const EnhancedStatCard = ({ title, value, icon, color, trend, description, isFin
       <div>
         <p className="text-sm opacity-75 mb-1">{title}</p>
         <p className={`${isFinancial ? 'text-2xl' : 'text-3xl'} font-bold mb-1`}>
-          {isFinancial ? value : (typeof value === 'number' ? value.toLocaleString() : value)}
+          {isFinancial ? 
+            (value || 0) : 
+            (typeof value === 'number' ? value.toLocaleString() : (value || 0))
+          }
         </p>
         <p className="text-xs opacity-60">{description}</p>
       </div>
