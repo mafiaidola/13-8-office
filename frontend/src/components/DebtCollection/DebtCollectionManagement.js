@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
+import AddDebtModal from './AddDebtModal';
 
 const DebtCollectionManagement = ({ user, language = 'ar', isRTL = true }) => {
   const [activeTab, setActiveTab] = useState('debts');
@@ -13,6 +14,7 @@ const DebtCollectionManagement = ({ user, language = 'ar', isRTL = true }) => {
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDebtDetails, setShowDebtDetails] = useState(false);
+  const [showAddDebtModal, setShowAddDebtModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     payment_amount: '',
     payment_method: 'cash',
