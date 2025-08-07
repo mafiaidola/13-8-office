@@ -718,34 +718,4 @@ const OrderDetailsModal = ({ order, onClose, language, user }) => {
   );
 };
 
-// Create Order Modal Component (placeholder)
-const CreateOrderModal = ({ onClose, onSubmit, language }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-xl max-w-2xl w-full border border-white/20">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold">إنشاء طلبية جديدة</h3>
-            <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">
-              ✕
-            </button>
-          </div>
-          
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🚧</div>
-            <h4 className="text-xl font-bold mb-2">قيد التطوير</h4>
-            <p className="text-gray-400 mb-6">نموذج إنشاء الطلبية قيد التطوير وسيكون متاحاً قريباً</p>
-            <button
-              onClick={onClose}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              إغلاق
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default OrdersManagement;
