@@ -388,7 +388,7 @@ class ActivityLogger {
       'تسجيل دخول',
       'system',
       'login',
-      'نظام EP Group',
+      'نظام الإدارة الطبية',
       {
         login_method: loginDetails.method || 'password',
         biometric_verified: loginDetails.biometricVerified || false,
