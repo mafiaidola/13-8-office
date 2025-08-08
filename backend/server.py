@@ -3318,6 +3318,14 @@ api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
 api_router.include_router(analytics_router)
 
+# تسجيل الموجه المالي المتكامل
+if FINANCIAL_SYSTEM_AVAILABLE:
+    try:
+        api_router.include_router(financial_router)
+        print("✅ Integrated Financial Router registered successfully")
+    except Exception as e:
+        print(f"⚠️ Error registering financial router: {e}")
+
 app.include_router(api_router)
 
 @app.get("/")
