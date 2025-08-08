@@ -1,4 +1,4 @@
-// EP Group System - Professional Header Component
+// Medical Management System - Professional Header Component
 // Enhanced with Perfect Theme Integration
 
 import React, { useState, useEffect, useRef } from 'react';
