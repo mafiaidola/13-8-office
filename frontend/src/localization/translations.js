@@ -1,4 +1,4 @@
-// EP Group System - Central Translation System
+// Medical Management System - Central Translation System
 // نظام الترجمة المركزي
 
 export const TRANSLATIONS = {
