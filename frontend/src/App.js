@@ -609,9 +609,19 @@ const LoginForm = () => {
     setLoading(true);
     setError('');
 
+    console.log('🔐 Attempting login with credentials:', credentials.username);
+    
     const result = await login(credentials);
     
-    if (!result.success) {
+    if (result.success) {
+      console.log('✅ Login successful, user:', result.user);
+      console.log('✅ Authentication state should be updated now');
+      // Force a small delay to ensure state updates propagate
+      setTimeout(() => {
+        window.location.reload(); // Force refresh to ensure UI updates
+      }, 100);
+    } else {
+      console.error('❌ Login failed:', result.error);
       setError(result.error);
     }
     
