@@ -1,4 +1,4 @@
-// EP Group System Configuration - إعدادات نظام EP Group
+// Medical Management System Configuration - إعدادات نظام الإدارة الطبية
 // Centralized configuration for system tabs, roles, and permissions
 
 // User Roles - أدوار المستخدمين
