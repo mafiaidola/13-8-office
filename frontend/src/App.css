@@ -178,7 +178,7 @@ body.theme-forest {
 /* UNIVERSAL THEME APPLICATION - التطبيق الشامل للثيمات */
 /* ============================================================================ */
 
-/* تطبيق الثيم على جميع العناصر دون استثناء */
+/* تطبيق الثيم على جميع العناصر دون استثناء - تحسين شامل للثيمات */
 html,
 body,
 #root,
@@ -197,9 +197,78 @@ input, textarea, select, button,
   transition: color 0.3s ease, background-color 0.3s ease !important;
 }
 
-/* تطبيق قوي على جميع العناصر */
+/* تطبيق قوي ومباشر على جميع العناصر */
 * {
   color: var(--text-primary) !important;
+}
+
+/* إصلاح مشاكل الثيمات المحددة - الأقسام الرئيسية */
+.enhanced-dashboard-container,
+.enhanced-dashboard-container *,
+.bg-white,
+.bg-white *,
+.bg-gray-50,
+.bg-gray-50 *,
+.bg-blue-50,
+.bg-blue-50 *,
+.bg-green-50,
+.bg-green-50 *,
+.bg-purple-50,
+.bg-purple-50 *,
+.bg-orange-50,
+.bg-orange-50 *,
+.bg-red-50,
+.bg-red-50 *,
+.bg-yellow-50,
+.bg-yellow-50 *,
+.bg-pink-50,
+.bg-pink-50 *,
+.bg-indigo-50,
+.bg-indigo-50 *,
+.bg-emerald-50,
+.bg-emerald-50 *,
+.bg-teal-50,
+.bg-teal-50 * {
+  color: var(--text-primary) !important;
+}
+
+/* إصلاح مشاكل البطاقات والأقسام */
+.rounded-xl,
+.rounded-xl *,
+.shadow-lg,
+.shadow-lg *,
+.border,
+.border *,
+.border-gray-100,
+.border-gray-100 *,
+.p-4,
+.p-4 *,
+.p-6,
+.p-6 * {
+  color: var(--text-primary) !important;
+}
+
+/* إصلاح مشاكل النصوص في البطاقات المالية */
+.text-2xl,
+.text-3xl,
+.text-xl,
+.text-lg,
+.text-base,
+.text-sm,
+.text-xs,
+.font-bold,
+.font-semibold,
+.font-medium {
+  color: var(--text-primary) !important;
+}
+
+/* إصلاح مشاكل الخلفيات الملونة */
+.bg-gradient-to-r {
+  color: #ffffff !important;
+}
+
+.bg-gradient-to-r * {
+  color: #ffffff !important;
 }
 
 /* ============================================================================ */
