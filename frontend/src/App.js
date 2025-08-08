@@ -1211,12 +1211,24 @@ const App = () => {
 };
 
 const AppContent = () => {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
+  
+  // Debug logging for authentication state
+  React.useEffect(() => {
+    console.log('🔍 AppContent Auth State Check:', { 
+      loading, 
+      isAuthenticated, 
+      user: user?.username,
+      timestamp: new Date().toISOString()
+    });
+  }, [loading, isAuthenticated, user]);
 
   if (loading) {
+    console.log('⏳ App is loading...');
     return <LoadingSpinner />;
   }
 
+  console.log('🎯 App rendering decision:', isAuthenticated ? 'DashboardLayout' : 'LoginForm');
   return isAuthenticated ? <DashboardLayout /> : <LoginForm />;
 };
 
