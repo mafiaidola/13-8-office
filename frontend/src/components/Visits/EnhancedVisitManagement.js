@@ -238,7 +238,7 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
       // Footer
       const totalPages = Math.ceil((data.length / 50));
       pdf.setFontSize(8);
-      pdf.text(`الصفحة 1 من ${totalPages} - نظام EP Group`, pageWidth - 60, pageHeight - 10);
+      pdf.text(`الصفحة 1 من ${totalPages} - النظام الطبي المتكامل`, pageWidth - 60, pageHeight - 10);
       
       pdf.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
       console.log('✅ Enhanced PDF exported successfully');
