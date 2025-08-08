@@ -72,6 +72,16 @@ crm_service = CRMService(db)
 # Initialize Analytics service
 analytics_service = AnalyticsService(db)
 
+# Initialize integrated financial service if available
+financial_service = None
+if FINANCIAL_SYSTEM_AVAILABLE:
+    try:
+        financial_service = IntegratedFinancialService(db)
+        print("✅ Integrated Financial Service initialized successfully")
+    except Exception as e:
+        print(f"⚠️ Error initializing financial service: {e}")
+        FINANCIAL_SYSTEM_AVAILABLE = False
+
 # JWT Configuration
 JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
