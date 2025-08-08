@@ -703,7 +703,7 @@ const DashboardLayout = () => {
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [systemSettings, setSystemSettings] = useState({
     system: {
-      app_name: 'EP Group System',
+      app_name: 'نظام الإدارة الطبية المتكامل',
       company_logo: ''
     }
   });
