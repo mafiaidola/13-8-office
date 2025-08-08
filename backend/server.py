@@ -27,16 +27,15 @@ import traceback
 
 # استيراد النماذج المالية المتكاملة
 try:
-    # Skip financial models import for now due to Pydantic validator issues
-    # from models.financial_models import (
-    #     IntegratedInvoice, IntegratedDebtRecord, DebtPaymentRecord,
-    #     CreateInvoiceRequest, ProcessPaymentRequest, FinancialReportRequest,
-    #     InvoiceStatus, DebtStatus, PaymentStatus, MoneyAmount, FinancialConfig
-    # )
-    # from services.financial_service import IntegratedFinancialService
-    # from routers.integrated_financial_router import router as financial_router
-    FINANCIAL_SYSTEM_AVAILABLE = False
-    print("⚠️ Integrated Financial System temporarily disabled due to model issues")
+    from models.financial_models import (
+        IntegratedInvoice, IntegratedDebtRecord, DebtPaymentRecord,
+        CreateInvoiceRequest, ProcessPaymentRequest, FinancialReportRequest,
+        InvoiceStatus, DebtStatus, PaymentStatus, MoneyAmount, FinancialConfig
+    )
+    from services.financial_service import IntegratedFinancialService
+    from routers.integrated_financial_router import router as financial_router
+    FINANCIAL_SYSTEM_AVAILABLE = True
+    print("✅ Integrated Financial System loaded successfully")
 except ImportError as e:
     FINANCIAL_SYSTEM_AVAILABLE = False
     print(f"⚠️ Financial System not available: {e}")
