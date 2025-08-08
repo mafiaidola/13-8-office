@@ -1,4 +1,5 @@
-/* Medical Management System - Enhanced Arabic UI/UX with Perfect Theme System */
+/* نظام الإدارة الطبية المتكامل - تحسينات الرؤية والوضوح */
+/* Medical Management System - Enhanced Visibility and Clarity */
 
 /* CSS Variables and Root Configuration */
 :root {
@@ -11,6 +12,12 @@
   --color-info: #06b6d4;
   --color-dark: #1f2937;
   --color-light: #f9fafb;
+  
+  /* Enhanced Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-contrast: #000000;
   
   /* Enhanced Spacing System */
   --space-xs: 0.25rem;
@@ -50,7 +57,7 @@
   --z-header-button: 10001;
 }
 
-/* Enhanced Global Styles */
+/* Enhanced Global Styles for Better Visibility */
 * {
   margin: 0;
   padding: 0;
@@ -62,18 +69,34 @@
   outline-offset: 2px;
 }
 
-/* Enhanced Typography */
+/* Enhanced Typography with Better Contrast */
+body {
+  font-family: 'Segoe UI', 'Cairo', 'Roboto', -apple-system, BlinkMacSystemFont, 'Oxygen', 'Ubuntu', Cantarell, sans-serif;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.3;
   font-weight: 600;
   margin-bottom: var(--space-md);
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 p {
   margin-bottom: var(--space-md);
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
-/* Enhanced Button Styles */
+/* Enhanced Button Styles with Better Visibility */
 button {
   font-family: inherit;
   cursor: pointer;
@@ -87,7 +110,10 @@ button {
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  min-height: 44px; /* Accessibility - minimum touch target */
+  min-height: 44px;
+  font-size: 14px;
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 button:hover {
@@ -108,7 +134,7 @@ button:disabled {
   flex-direction: column;
 }
 
-/* PROFESSIONAL HEADER - Enhanced Professional Header */
+/* PROFESSIONAL HEADER - Enhanced Professional Header with Better Text Visibility */
 .professional-header {
   position: fixed !important;
   top: 0;
@@ -128,20 +154,23 @@ button:disabled {
 .professional-header * {
   color: white !important;
   fill: white !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Header Logo */
+/* Header Logo with Enhanced Visibility */
 .professional-header .logo {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 700 !important;
   color: white !important;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* ENHANCED SEARCH - Enhanced Search Functionality */
+/* ENHANCED SEARCH with Better Text Contrast */
 .professional-header .search-container {
   flex: 1;
   max-width: 500px;
@@ -160,10 +189,13 @@ button:disabled {
   font-size: 1rem !important;
   transition: all 0.3s ease !important;
   min-height: 44px;
+  font-weight: 500 !important;
+  text-shadow: none !important;
 }
 
 .professional-header .search-container input::placeholder {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 400 !important;
 }
 
 .professional-header .search-container input:focus {
@@ -173,7 +205,7 @@ button:disabled {
   box-shadow: var(--shadow-lg) !important;
 }
 
-/* Search Results Dropdown */
+/* Search Results Dropdown with Enhanced Text */
 .professional-header .search-results {
   position: absolute !important;
   top: 100% !important;
@@ -186,6 +218,11 @@ button:disabled {
   z-index: var(--z-header-dropdown) !important;
   max-height: 300px !important;
   overflow-y: auto !important;
+}
+
+.professional-header .search-results * {
+  color: var(--text-contrast) !important;
+  text-shadow: none !important;
 }
 
 /* THEME SELECTOR - Enhanced Visibility */
@@ -203,6 +240,8 @@ button:disabled {
   z-index: var(--z-header-button) !important;
   position: relative !important;
   padding: var(--space-sm) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
 .professional-header .theme-selector-enhanced:hover,
@@ -227,7 +266,7 @@ button:disabled {
   background: transparent !important;
 }
 
-/* User Menu */
+/* User Menu with Better Text Visibility */
 .professional-header .user-menu {
   position: relative !important;
 }
@@ -245,14 +284,19 @@ button:disabled {
   padding: var(--space-md) !important;
 }
 
+.professional-header .user-menu .dropdown * {
+  color: var(--text-contrast) !important;
+  text-shadow: none !important;
+}
+
 /* MAIN LAYOUT - Proper Spacing for Fixed Header */
 .main-layout {
   display: flex;
   min-height: 100vh;
-  padding-top: 72px; /* Account for fixed header height */
+  padding-top: 72px;
 }
 
-/* Enhanced Sidebar */
+/* Enhanced Sidebar with Better Text Contrast */
 .sidebar {
   width: 280px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -262,8 +306,18 @@ button:disabled {
   height: calc(100vh - 72px);
   position: fixed;
   top: 72px;
-  right: 0; /* RTL - sidebar on the right */
+  right: 0;
   z-index: var(--z-fixed);
+}
+
+.sidebar * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.sidebar .sidebar-text {
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
 }
 
 .sidebar.collapsed {
@@ -279,7 +333,7 @@ button:disabled {
 .sidebar-toggle {
   position: fixed !important;
   top: 50% !important;
-  left: 280px !important; /* RTL - button on the left of sidebar */
+  left: 280px !important;
   transform: translateY(-50%) !important;
   z-index: calc(var(--z-header-button) + 1) !important;
   background: var(--color-primary) !important;
@@ -304,29 +358,39 @@ button:disabled {
 }
 
 .sidebar.collapsed + .sidebar-toggle {
-  left: 72px !important; /* Adjust position when collapsed */
+  left: 72px !important;
 }
 
-/* Main Content */
+/* Main Content with Enhanced Text Visibility */
 .main-content {
   flex: 1;
-  margin-right: 280px; /* RTL - space for sidebar on the right */
+  margin-right: 280px;
   padding: var(--space-lg);
   min-height: calc(100vh - 72px);
   transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-collapsed .main-content {
-  margin-right: 72px; /* Adjust when sidebar is collapsed */
+.main-content * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
 }
 
-/* Enhanced Card Styles */
+.sidebar-collapsed .main-content {
+  margin-right: 72px;
+}
+
+/* Enhanced Card Styles with Better Text Visibility */
 .card {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: var(--space-lg);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+}
+
+.card * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
 }
 
 .card:hover {
@@ -359,6 +423,11 @@ button:disabled {
   animation: slideInUp 0.3s ease !important;
 }
 
+.modal * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -375,7 +444,7 @@ button:disabled {
   }
 }
 
-/* Enhanced Form Styles */
+/* Enhanced Form Styles with Better Visibility */
 .form-group {
   margin-bottom: var(--space-lg);
 }
@@ -385,6 +454,8 @@ button:disabled {
   margin-bottom: var(--space-sm);
   font-weight: 500;
   font-size: 0.875rem;
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
 }
 
 .form-input {
@@ -395,19 +466,28 @@ button:disabled {
   font-size: 1rem;
   transition: all 0.3s ease;
   min-height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary) !important;
+  font-weight: 500;
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8;
 }
 
 .form-input:invalid {
   border-color: var(--color-danger);
 }
 
-/* Enhanced Table Styles */
+/* Enhanced Table Styles with Better Text Visibility */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -419,18 +499,22 @@ button:disabled {
 .table th,
 .table td {
   padding: var(--space-md);
-  text-align: right; /* RTL */
+  text-align: right;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
 }
 
 .table th {
-  font-weight: 600;
+  font-weight: 600 !important;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* ENHANCED DASHBOARD CARDS - Fixed Visibility */
+/* ENHANCED DASHBOARD CARDS - Fixed Visibility with Better Text Contrast */
 .dashboard-card {
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: var(--radius-xl) !important;
@@ -444,12 +528,19 @@ button:disabled {
   visibility: visible !important;
   opacity: 1 !important;
   min-height: 120px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .dashboard-card:hover {
   transform: translateY(-4px) !important;
   box-shadow: var(--shadow-xl) !important;
   border-color: var(--color-primary) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dashboard-card * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
 }
 
 .dashboard-card .card-header {
@@ -464,6 +555,8 @@ button:disabled {
   font-size: 1rem !important;
   margin: 0 !important;
   opacity: 1 !important;
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 .dashboard-card .card-value {
@@ -473,15 +566,18 @@ button:disabled {
   margin: var(--space-sm) 0 !important;
   opacity: 1 !important;
   display: block !important;
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 .dashboard-card .card-description {
   font-size: 0.875rem !important;
   margin: 0 !important;
-  opacity: 0.8 !important;
+  opacity: 0.9 !important;
+  color: var(--text-secondary) !important;
 }
 
-/* Enhanced Status Badges */
+/* Enhanced Status Badges with Better Contrast */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -495,40 +591,32 @@ button:disabled {
 }
 
 .status-badge.success {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--color-success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.2);
+  color: #00ff88;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.warning {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--color-warning);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.2);
+  color: #ffd700;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .status-badge.danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--color-danger);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-badge.info {
-  background: rgba(6, 182, 212, 0.1);
-  color: var(--color-info);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(6, 182, 212, 0.2);
+  color: #66d9ef;
+  border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
-/* === ENHANCED THEME SYSTEM - PERFECT IMPLEMENTATION === */
+/* === ENHANCED THEME SYSTEM - PERFECT IMPLEMENTATION WITH BETTER TEXT VISIBILITY === */
 
-/* Theme Variables - Dynamic Color System */
-body {
-  font-family: 'Segoe UI', 'Cairo', 'Roboto', -apple-system, BlinkMacSystemFont, 'Oxygen', 'Ubuntu', Cantarell, sans-serif;
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  overflow-x: hidden;
-}
-
-/* 1. Classic Dark Theme */
+/* 1. Classic Dark Theme with Enhanced Text Contrast */
 .theme-dark,
 body.theme-dark {
   --bg-primary: #0f172a !important;
@@ -554,7 +642,7 @@ body.theme-dark {
     rgba(59, 130, 246, 0.95) 100%) !important;
 }
 
-/* 2. Deep Night Theme */
+/* 2. Deep Night Theme with Enhanced Visibility */
 .theme-midnight,
 body.theme-midnight {
   --bg-primary: #030712 !important;
@@ -580,7 +668,7 @@ body.theme-midnight {
     rgba(31, 41, 55, 0.95) 100%) !important;
 }
 
-/* 3. Oceanic Blue Theme */
+/* 3. Oceanic Blue Theme with High Contrast */
 .theme-oceanic,
 body.theme-oceanic {
   --bg-primary: #0c4a6e !important;
@@ -606,7 +694,7 @@ body.theme-oceanic {
     rgba(7, 89, 133, 0.95) 100%) !important;
 }
 
-/* 4. Royal Purple Theme */
+/* 4. Royal Purple Theme with Enhanced Text */
 .theme-royal,
 body.theme-royal {
   --bg-primary: #4c1d95 !important;
@@ -632,7 +720,7 @@ body.theme-royal {
     rgba(107, 33, 168, 0.95) 100%) !important;
 }
 
-/* 5. Forest Green Theme */
+/* 5. Forest Green Theme with Better Visibility */
 .theme-forest,
 body.theme-forest {
   --bg-primary: #14532d !important;
@@ -658,14 +746,14 @@ body.theme-forest {
     rgba(22, 101, 52, 0.95) 100%) !important;
 }
 
-/* Universal Theme Application - For ALL Elements */
+/* Universal Theme Application - For ALL Elements with Enhanced Visibility */
 [class*="theme-"] *,
 [class*="theme-"] *::before,
 [class*="theme-"] *::after {
   color: var(--text-primary) !important;
 }
 
-/* Cards and Components */
+/* Cards and Components with Enhanced Background */
 [class*="theme-"] .card,
 [class*="theme-"] .dashboard-card,
 [class*="theme-"] .modal,
@@ -674,7 +762,7 @@ body.theme-forest {
   border-color: var(--border-color) !important;
 }
 
-/* Form Elements */
+/* Form Elements with Better Contrast */
 [class*="theme-"] .form-input,
 [class*="theme-"] input,
 [class*="theme-"] textarea,
@@ -682,6 +770,7 @@ body.theme-forest {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
+  font-weight: 500 !important;
 }
 
 [class*="theme-"] .form-input::placeholder,
@@ -690,7 +779,7 @@ body.theme-forest {
   color: var(--text-muted) !important;
 }
 
-/* Tables */
+/* Tables with Enhanced Text */
 [class*="theme-"] .table {
   background: var(--bg-card) !important;
 }
@@ -707,7 +796,8 @@ body.theme-forest {
 
 /* Buttons maintain their original colors but adapt text */
 [class*="theme-"] button {
-  color: white !important; /* Buttons keep white text for contrast */
+  color: white !important;
+  font-weight: 500 !important;
 }
 
 /* Enhanced Responsive Design */
@@ -757,7 +847,7 @@ body.theme-forest {
   }
   
   .professional-header .search-container {
-    display: none; /* Hide search on mobile, show in menu instead */
+    display: none;
   }
   
   .dashboard-card {
@@ -813,6 +903,11 @@ body.theme-forest {
   
   [class*="theme-"] {
     --border-color: #ffffff;
+    --text-primary: #ffffff !important;
+  }
+  
+  [class*="theme-"] * {
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8) !important;
   }
 }
 
@@ -846,9 +941,9 @@ body.theme-forest {
   }
 }
 
-/* Enhanced Focus Management */
+/* Enhanced Focus Management with Better Visibility */
 .focus-visible {
-  outline: 2px solid var(--color-primary) !important;
+  outline: 3px solid var(--color-primary) !important;
   outline-offset: 2px !important;
 }
 
@@ -892,7 +987,7 @@ body.theme-forest {
   background: rgba(16, 185, 129, 0.05);
 }
 
-/* Additional utility classes */
+/* Additional utility classes with better visibility */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .text-left { text-align: left; }
@@ -919,11 +1014,12 @@ body.theme-forest {
 .p-3 { padding: var(--space-md); }
 .p-4 { padding: var(--space-lg); }
 
-/* Enhanced Button Variants */
+/* Enhanced Button Variants with Better Text */
 .btn-primary {
   background: var(--color-primary);
-  color: white;
+  color: white !important;
   border: 2px solid var(--color-primary);
+  font-weight: 500 !important;
 }
 
 .btn-primary:hover {
@@ -933,28 +1029,31 @@ body.theme-forest {
 
 .btn-secondary {
   background: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary) !important;
   border: 2px solid var(--color-primary);
+  font-weight: 500 !important;
 }
 
 .btn-secondary:hover {
   background: var(--color-primary);
-  color: white;
+  color: white !important;
 }
 
 .btn-success {
   background: var(--color-success);
-  color: white;
+  color: white !important;
   border: 2px solid var(--color-success);
+  font-weight: 500 !important;
 }
 
 .btn-danger {
   background: var(--color-danger);
-  color: white;
+  color: white !important;
   border: 2px solid var(--color-danger);
+  font-weight: 500 !important;
 }
 
-/* Final Enhancements - Ensure All Text is Readable */
+/* Final Enhancements - Ensure All Text is Readable with Maximum Visibility */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -974,11 +1073,13 @@ body.theme-forest {
   hyphens: auto;
 }
 
-/* Ensure buttons are always clickable */
+/* Ensure buttons are always clickable and visible */
 button, .btn {
   pointer-events: auto !important;
   position: relative !important;
   z-index: 1 !important;
+  color: inherit !important;
+  opacity: 1 !important;
 }
 
 /* Ensure modals are always above everything else */
@@ -988,4 +1089,33 @@ button, .btn {
 
 .modal {
   z-index: 1000000 !important;
+}
+
+/* Force text visibility in all scenarios */
+span, div, p, h1, h2, h3, h4, h5, h6, label, a, li, td, th {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* Special treatment for input elements */
+input, textarea, select {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* Specific fixes for common problematic areas */
+.dashboard-container * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.sidebar-content * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.card-content * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
 }
