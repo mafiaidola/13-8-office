@@ -5,7 +5,7 @@ from .clinic_models import *
 from .order_models import *
 from .visit_models import *
 from .warehouse_models import *
-from .financial_models import *
+# from .financial_models import *  # Temporarily disabled due to Pydantic validator issues
 from .support_models import *
 from .movement_models import *
 from .system_models import *
