@@ -52,7 +52,7 @@ JWT_EXPIRATION_HOURS = 24
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Create the main app
-app = FastAPI(title="EP Group System API - Clean Version", version="2.0.0")
+app = FastAPI(title="Medical Management System API", version="2.0.0")
 api_router = APIRouter(prefix="/api")
 
 # Track startup time
