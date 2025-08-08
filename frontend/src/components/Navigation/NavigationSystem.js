@@ -1,4 +1,4 @@
-// EP Group System - Central Navigation System
+// Medical Management System - Central Navigation System
 // نظام التنقل المركزي
 
 import React, { useState, useEffect } from 'react';
