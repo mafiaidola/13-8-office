@@ -414,7 +414,7 @@ class MedicalSystemTester:
             print("❌ فشل في المصادقة - توقف الاختبار")
         
         # تقرير النتائج النهائية
-        self.generate_final_report()
+        return self.generate_final_report()
 
     def generate_final_report(self):
         """إنشاء التقرير النهائي"""
