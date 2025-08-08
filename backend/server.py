@@ -3330,7 +3330,12 @@ app.include_router(api_router)
 
 @app.get("/")
 async def root():
-    return {"message": "EP Group System API - Clean Version", "status": "running"}
+    return {
+        "message": "نظام الإدارة الطبية المتكامل - Medical Management System", 
+        "status": "running",
+        "financial_system": FINANCIAL_SYSTEM_AVAILABLE,
+        "version": "2.0.0-integrated"
+    }
 
 @app.get("/health")
 async def health_check():
