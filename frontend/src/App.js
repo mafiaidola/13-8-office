@@ -20,6 +20,9 @@ import NavigationSystem from './components/Navigation/NavigationSystem.js';
 import { ComponentRenderer, ComponentRegistry } from './components/Core/ComponentRegistry.js';
 import { useTranslation } from './localization/translations.js';
 
+// Integrated Financial System
+import IntegratedFinancialDashboard from './components/Financial/IntegratedFinancialDashboard.js';
+
 // API Configuration
 const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
