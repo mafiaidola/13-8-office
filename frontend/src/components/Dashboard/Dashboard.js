@@ -1962,7 +1962,7 @@ const ActivityDetailsModal = ({ activity, language, onClose }) => {
       <body>
         <div class="header">
           <h1>📋 ${activityData.title}</h1>
-          <p>تقرير مفصل - نظام EP Group</p>
+          <p>تقرير مفصل - النظام الطبي المتكامل</p>
         </div>
 
         <div class="section">
