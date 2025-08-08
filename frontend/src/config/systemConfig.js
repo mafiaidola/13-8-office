@@ -149,6 +149,20 @@ export const SYSTEM_TABS = {
     component: 'ActivityTracking',
     description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
     permissions: ['admin', 'gm'],
+    priority: 12
+  },
+
+  integrated_financial: {
+    id: 'integrated_financial',
+    path: '/financial',
+    icon: '💰',
+    name: { ar: 'النظام المالي المتكامل', en: 'Integrated Financial System' },
+    component: 'IntegratedFinancialDashboard',
+    description: { ar: 'إدارة شاملة للفواتير والديون والتحصيل', en: 'Comprehensive management of invoices, debts and collections' },
+    permissions: ['admin', 'gm', 'accounting', 'finance'],
+    priority: 6
+  },
+    permissions: ['admin', 'gm'],
     priority: 13
   },
 
