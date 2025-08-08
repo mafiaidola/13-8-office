@@ -416,13 +416,16 @@ const NotificationCenter = ({ user, language = 'ar' }) => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm mb-1">
+                      <h4 className="font-medium text-sm mb-1"
+                          style={{color: 'var(--text-primary)'}}>
                         {notification.title}
                       </h4>
-                      <p className="text-gray-600 text-xs mb-2 line-clamp-2">
+                      <p className="text-xs mb-2 line-clamp-2"
+                         style={{color: 'var(--text-secondary)'}}>
                         {notification.message}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs"
+                           style={{color: 'var(--text-muted)'}}>
                         <span>{formatTime(notification.timestamp || notification.created_at)}</span>
                         <div className="flex gap-1">
                           {notification.status === 'unread' && (
