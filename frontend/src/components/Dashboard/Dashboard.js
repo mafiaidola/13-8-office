@@ -546,7 +546,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           `).join('')}
         </div>
         <div class="footer">
-          <p>🏥 نظام EP Group - تقرير الأنشطة</p>
+          <p>🏥 النظام الطبي المتكامل - تقرير الأنشطة</p>
         </div>
       </body>
       </html>
