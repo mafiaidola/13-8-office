@@ -176,6 +176,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة الديون والتحصيل...'
   ),
 
+  // Integrated Financial System
+  IntegratedFinancialDashboard: createLazyComponent(
+    () => import('../Financial/IntegratedFinancialDashboard'),
+    'جاري تحميل النظام المالي المتكامل...'
+  ),
+
   GPSTracking: createLazyComponent(
     () => import('../GPS/GPSTracking'),
     'جاري تحميل تتبع المواقع...'
