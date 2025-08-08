@@ -1,4 +1,4 @@
-// EP Group System - Central Component Registry
+// Medical Management System - Central Component Registry
 // سجل المكونات المركزي
 
 import React, { Suspense, lazy } from 'react';
