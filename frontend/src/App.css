@@ -1060,6 +1060,103 @@ body.theme-forest {
   text-rendering: optimizeLegibility;
 }
 
+/* === ENHANCED FINANCIAL DASHBOARD STYLES === */
+.financial-dashboard-container {
+  padding: 1.5rem;
+  min-height: calc(100vh - 72px);
+}
+
+.financial-dashboard-container * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.financial-card {
+  min-height: 140px !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.financial-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.financial-card * {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.financial-action-btn {
+  min-height: 60px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.financial-action-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.financial-section {
+  backdrop-filter: blur(15px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.financial-section:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.financial-section * {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* Enhanced Theme Integration for Financial Dashboard */
+[class*="theme-"] .financial-dashboard-container {
+  background: transparent !important;
+}
+
+[class*="theme-"] .financial-card,
+[class*="theme-"] .financial-action-btn,
+[class*="theme-"] .financial-section {
+  border-color: var(--border-color) !important;
+  backdrop-filter: blur(15px) !important;
+}
+
+[class*="theme-"] .financial-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Specific theme enhancements for financial cards */
+.theme-dark .financial-section {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.theme-midnight .financial-section {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-oceanic .financial-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme-royal .financial-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.theme-forest .financial-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 /* Ensure no text overflow issues */
 .text-ellipsis {
   white-space: nowrap;
