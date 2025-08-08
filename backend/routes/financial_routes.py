@@ -161,31 +161,51 @@ async def get_invoices(
             query_filter["assigned_rep_id"] = current_user.id
         
         # جلب الطلبات كبديل للفواتير
-        orders_cursor = db.orders.find(query_filter).skip(skip).limit(limit)
         orders = []
-        
-        async for order in orders_cursor:
-            # جلب معلومات العيادة
-            clinic = await db.clinics.find_one({"id": order.get("clinic_id", "")})
-            clinic_name = clinic.get("name", "غير محدد") if clinic else "غير محدد"
+        try:
+            orders_cursor = db.orders.find(query_filter).skip(skip).limit(limit)
             
-            # جلب معلومات المندوب
-            rep = await db.users.find_one({"id": order.get("assigned_rep_id", "")})
-            rep_name = rep.get("full_name", "غير محدد") if rep else "غير محدد"
-            
-            orders.append({
-                "id": order.get("id", ""),
-                "invoice_number": f"INV-{order.get('order_number', '')}",
-                "clinic_name": clinic_name,
-                "sales_rep_name": rep_name,
-                "issue_date": order.get("created_at", datetime.utcnow()).strftime("%Y-%m-%d"),
-                "due_date": (order.get("created_at", datetime.utcnow()) + timedelta(days=30)).strftime("%Y-%m-%d"),
-                "total_amount": float(order.get("total_amount", 0)),
-                "paid_amount": 0.0,
-                "outstanding_amount": float(order.get("total_amount", 0)),
-                "status": "pending",
-                "currency": "EGP"
-            })
+            async for order in orders_cursor:
+                # جلب معلومات العيادة
+                clinic = None
+                try:
+                    clinic = await db.clinics.find_one({"id": order.get("clinic_id", "")})
+                except:
+                    pass
+                clinic_name = clinic.get("name", "غير محدد") if clinic else "غير محدد"
+                
+                # جلب معلومات المندوب
+                rep = None
+                try:
+                    rep = await db.users.find_one({"id": order.get("assigned_rep_id", "")})
+                except:
+                    pass
+                rep_name = rep.get("full_name", "غير محدد") if rep else "غير محدد"
+                
+                # إنشاء تاريخ الإنشاء الآمن
+                created_at = order.get("created_at", datetime.utcnow())
+                if isinstance(created_at, str):
+                    try:
+                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    except:
+                        created_at = datetime.utcnow()
+                
+                orders.append({
+                    "id": order.get("id", ""),
+                    "invoice_number": f"INV-{order.get('order_number', '')}",
+                    "clinic_name": clinic_name,
+                    "sales_rep_name": rep_name,
+                    "issue_date": created_at.strftime("%Y-%m-%d"),
+                    "due_date": (created_at + timedelta(days=30)).strftime("%Y-%m-%d"),
+                    "total_amount": float(order.get("total_amount", 0)),
+                    "paid_amount": 0.0,
+                    "outstanding_amount": float(order.get("total_amount", 0)),
+                    "status": "pending",
+                    "currency": "EGP"
+                })
+        except Exception as e:
+            print(f"Error processing orders for invoices: {str(e)}")
+            orders = []
         
         return orders
         
