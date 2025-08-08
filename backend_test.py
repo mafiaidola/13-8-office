@@ -1,6 +1,491 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+اختبار شامل للنظام الطبي المتكامل - Comprehensive Medical System Backend Testing
+تاريخ: 2025
+الهدف: اختبار شامل للباكند بما يشمل المصادقة، APIs الأساسية، النظام المالي المتكامل، والتحقق من MongoDB
+"""
+
+import requests
+import json
+import time
+from datetime import datetime, timedelta
+import sys
+import os
+
+# إعدادات الاختبار
+BASE_URL = "http://localhost:8001/api"
+TEST_CREDENTIALS = {
+    "username": "admin",
+    "password": "admin123"
+}
+
+class MedicalSystemTester:
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.session = requests.Session()
+        self.jwt_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, response_time=None, details=None, error=None):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test_name": test_name,
+            "success": success,
+            "response_time": response_time,
+            "details": details,
+            "error": str(error) if error else None,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        time_info = f" ({response_time:.2f}ms)" if response_time else ""
+        print(f"{status} {test_name}{time_info}")
+        if error:
+            print(f"   Error: {error}")
+        if details:
+            print(f"   Details: {details}")
+    
+    def make_request(self, method, endpoint, data=None, headers=None):
+        """إجراء طلب HTTP مع قياس الوقت"""
+        url = f"{self.base_url}{endpoint}"
+        
+        # إضافة JWT token إذا كان متاحاً
+        if self.jwt_token and headers is None:
+            headers = {"Authorization": f"Bearer {self.jwt_token}"}
+        elif self.jwt_token and headers:
+            headers["Authorization"] = f"Bearer {self.jwt_token}"
+        
+        start_time = time.time()
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=headers)
+            elif method.upper() == "POST":
+                response = self.session.post(url, json=data, headers=headers)
+            elif method.upper() == "PUT":
+                response = self.session.put(url, json=data, headers=headers)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url, headers=headers)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+            
+            response_time = (time.time() - start_time) * 1000
+            return response, response_time
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            return None, response_time, e
+
+    def test_authentication(self):
+        """اختبار نظام المصادقة"""
+        print("\n🔐 اختبار نظام المصادقة...")
+        
+        # اختبار تسجيل الدخول
+        try:
+            response, response_time = self.make_request("POST", "/auth/login", TEST_CREDENTIALS)
+            
+            if response and response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.jwt_token = data["access_token"]
+                    user_info = data.get("user", {})
+                    self.log_test(
+                        "تسجيل دخول admin/admin123",
+                        True,
+                        response_time,
+                        f"المستخدم: {user_info.get('full_name', 'غير محدد')}, الدور: {user_info.get('role', 'غير محدد')}"
+                    )
+                    return True
+                else:
+                    self.log_test("تسجيل دخول admin/admin123", False, response_time, "لا يوجد access_token في الاستجابة")
+            else:
+                error_msg = response.json().get("detail", "خطأ غير معروف") if response else "لا توجد استجابة"
+                self.log_test("تسجيل دخول admin/admin123", False, response_time, error=error_msg)
+        except Exception as e:
+            self.log_test("تسجيل دخول admin/admin123", False, error=e)
+        
+        return False
+
+    def test_basic_apis(self):
+        """اختبار APIs الأساسية للنظام"""
+        print("\n📊 اختبار APIs الأساسية...")
+        
+        basic_endpoints = [
+            ("/users", "المستخدمين"),
+            ("/clinics", "العيادات"),
+            ("/products", "المنتجات"),
+            ("/orders", "الطلبات"),
+            ("/visits", "الزيارات"),
+            ("/debts", "الديون"),
+            ("/payments", "المدفوعات"),
+            ("/warehouses", "المخازن"),
+            ("/areas", "المناطق")
+        ]
+        
+        for endpoint, name in basic_endpoints:
+            try:
+                response, response_time = self.make_request("GET", endpoint)
+                
+                if response and response.status_code == 200:
+                    data = response.json()
+                    count = len(data) if isinstance(data, list) else "غير محدد"
+                    self.log_test(
+                        f"GET {endpoint} ({name})",
+                        True,
+                        response_time,
+                        f"عدد السجلات: {count}"
+                    )
+                else:
+                    error_msg = response.json().get("detail", f"HTTP {response.status_code}") if response else "لا توجد استجابة"
+                    self.log_test(f"GET {endpoint} ({name})", False, response_time, error=error_msg)
+            except Exception as e:
+                self.log_test(f"GET {endpoint} ({name})", False, error=e)
+
+    def test_dashboard_stats(self):
+        """اختبار إحصائيات لوحة التحكم"""
+        print("\n📈 اختبار إحصائيات لوحة التحكم...")
+        
+        time_filters = ["today", "week", "month", "year"]
+        
+        for time_filter in time_filters:
+            try:
+                response, response_time = self.make_request("GET", f"/dashboard/stats?time_filter={time_filter}")
+                
+                if response and response.status_code == 200:
+                    data = response.json()
+                    stats_summary = f"الطلبات: {data.get('orders', {}).get('count', 0)}, الزيارات: {data.get('visits', {}).get('count', 0)}"
+                    self.log_test(
+                        f"إحصائيات لوحة التحكم ({time_filter})",
+                        True,
+                        response_time,
+                        stats_summary
+                    )
+                else:
+                    error_msg = response.json().get("detail", f"HTTP {response.status_code}") if response else "لا توجد استجابة"
+                    self.log_test(f"إحصائيات لوحة التحكم ({time_filter})", False, response_time, error=error_msg)
+            except Exception as e:
+                self.log_test(f"إحصائيات لوحة التحكم ({time_filter})", False, error=e)
+
+    def test_integrated_financial_system(self):
+        """اختبار النظام المالي المتكامل الجديد"""
+        print("\n💰 اختبار النظام المالي المتكامل...")
+        
+        financial_endpoints = [
+            ("/financial/dashboard/financial-overview", "نظرة عامة مالية"),
+            ("/financial/invoices", "الفواتير المالية"),
+            ("/financial/debts", "الديون المالية"),
+            ("/financial/reports/aging-analysis", "تحليل الأعمار"),
+            ("/financial/reports/financial-summary", "الملخص المالي"),
+            ("/financial/system/integrity-check", "فحص سلامة النظام المالي")
+        ]
+        
+        for endpoint, name in financial_endpoints:
+            try:
+                response, response_time = self.make_request("GET", endpoint)
+                
+                if response and response.status_code == 200:
+                    data = response.json()
+                    details = "متاح ويعمل بنجاح"
+                    if isinstance(data, dict):
+                        if "total_amount" in data:
+                            details = f"المبلغ الإجمالي: {data['total_amount']}"
+                        elif "count" in data:
+                            details = f"عدد السجلات: {data['count']}"
+                    
+                    self.log_test(f"النظام المالي المتكامل - {name}", True, response_time, details)
+                else:
+                    error_msg = response.json().get("detail", f"HTTP {response.status_code}") if response else "لا توجد استجابة"
+                    self.log_test(f"النظام المالي المتكامل - {name}", False, response_time, error=error_msg)
+            except Exception as e:
+                self.log_test(f"النظام المالي المتكامل - {name}", False, error=e)
+
+    def test_debt_and_collection_system(self):
+        """اختبار نظام الديون والتحصيل"""
+        print("\n💳 اختبار نظام الديون والتحصيل...")
+        
+        # اختبار إنشاء دين جديد
+        try:
+            # أولاً، الحصول على عيادة ومندوب للاختبار
+            clinics_response, _ = self.make_request("GET", "/clinics")
+            users_response, _ = self.make_request("GET", "/users")
+            
+            if clinics_response and clinics_response.status_code == 200 and users_response and users_response.status_code == 200:
+                clinics = clinics_response.json()
+                users = users_response.json()
+                
+                # العثور على عيادة ومندوب طبي
+                clinic = clinics[0] if clinics else None
+                medical_rep = next((u for u in users if u.get("role") == "medical_rep"), None)
+                
+                if clinic and medical_rep:
+                    # إنشاء دين جديد
+                    debt_data = {
+                        "clinic_id": clinic["id"],
+                        "sales_rep_id": medical_rep["id"],
+                        "amount": 2500.75,
+                        "description": "اختبار إنشاء دين جديد - فاتورة رقم TEST001",
+                        "due_date": (datetime.now() + timedelta(days=30)).isoformat()
+                    }
+                    
+                    response, response_time = self.make_request("POST", "/debts", debt_data)
+                    
+                    if response and response.status_code == 200:
+                        debt_result = response.json()
+                        self.log_test(
+                            "إنشاء دين جديد",
+                            True,
+                            response_time,
+                            f"ID الدين: {debt_result.get('debt_id', 'غير محدد')}, المبلغ: {debt_data['amount']} ج.م"
+                        )
+                        
+                        # اختبار معالجة دفعة جزئية
+                        if debt_result.get("debt_id"):
+                            payment_data = {
+                                "debt_id": debt_result["debt_id"],
+                                "payment_amount": 1000.50,
+                                "payment_method": "cash",
+                                "notes": "دفعة جزئية - اختبار النظام"
+                            }
+                            
+                            payment_response, payment_time = self.make_request("POST", "/payments/process", payment_data)
+                            
+                            if payment_response and payment_response.status_code == 200:
+                                payment_result = payment_response.json()
+                                remaining = payment_result.get("remaining_amount", 0)
+                                self.log_test(
+                                    "معالجة دفعة جزئية",
+                                    True,
+                                    payment_time,
+                                    f"تم دفع {payment_data['payment_amount']} ج.م, المتبقي: {remaining} ج.م"
+                                )
+                            else:
+                                error_msg = payment_response.json().get("detail", "خطأ في معالجة الدفعة") if payment_response else "لا توجد استجابة"
+                                self.log_test("معالجة دفعة جزئية", False, payment_time, error=error_msg)
+                    else:
+                        error_msg = response.json().get("detail", "خطأ في إنشاء الدين") if response else "لا توجد استجابة"
+                        self.log_test("إنشاء دين جديد", False, response_time, error=error_msg)
+                else:
+                    self.log_test("إنشاء دين جديد", False, details="لا توجد عيادات أو مندوبين طبيين للاختبار")
+            else:
+                self.log_test("إنشاء دين جديد", False, details="فشل في الحصول على بيانات العيادات والمستخدمين")
+        except Exception as e:
+            self.log_test("إنشاء دين جديد", False, error=e)
+
+    def test_order_creation_system(self):
+        """اختبار نظام إنشاء الطلبات"""
+        print("\n📦 اختبار نظام إنشاء الطلبات...")
+        
+        try:
+            # الحصول على البيانات المطلوبة للطلب
+            clinics_response, _ = self.make_request("GET", "/clinics")
+            products_response, _ = self.make_request("GET", "/products")
+            warehouses_response, _ = self.make_request("GET", "/warehouses")
+            
+            if (clinics_response and clinics_response.status_code == 200 and
+                products_response and products_response.status_code == 200 and
+                warehouses_response and warehouses_response.status_code == 200):
+                
+                clinics = clinics_response.json()
+                products = products_response.json()
+                warehouses = warehouses_response.json()
+                
+                if clinics and products and warehouses:
+                    # إنشاء طلب جديد
+                    order_data = {
+                        "clinic_id": clinics[0]["id"],
+                        "warehouse_id": warehouses[0]["id"],
+                        "items": [
+                            {
+                                "product_id": products[0]["id"],
+                                "quantity": 5
+                            }
+                        ] if products else [],
+                        "notes": "طلب اختبار - تم إنشاؤه بواسطة النظام الآلي",
+                        "debt_warning_acknowledged": True,
+                        "line": "خط اختبار",
+                        "area_id": "منطقة اختبار"
+                    }
+                    
+                    response, response_time = self.make_request("POST", "/orders", order_data)
+                    
+                    if response and response.status_code == 200:
+                        order_result = response.json()
+                        self.log_test(
+                            "إنشاء طلب جديد",
+                            True,
+                            response_time,
+                            f"رقم الطلب: {order_result.get('order_number', 'غير محدد')}, المبلغ: {order_result.get('total_amount', 0)} ج.م"
+                        )
+                    else:
+                        error_msg = response.json().get("detail", "خطأ في إنشاء الطلب") if response else "لا توجد استجابة"
+                        self.log_test("إنشاء طلب جديد", False, response_time, error=error_msg)
+                else:
+                    self.log_test("إنشاء طلب جديد", False, details="لا توجد بيانات كافية (عيادات، منتجات، مخازن)")
+            else:
+                self.log_test("إنشاء طلب جديد", False, details="فشل في الحصول على البيانات المطلوبة")
+        except Exception as e:
+            self.log_test("إنشاء طلب جديد", False, error=e)
+
+    def test_mongodb_connection(self):
+        """اختبار اتصال MongoDB ونموذج البيانات"""
+        print("\n🗄️ اختبار اتصال MongoDB ونموذج البيانات...")
+        
+        # اختبار الاتصال من خلال APIs
+        collections_to_test = [
+            ("users", "المستخدمين"),
+            ("clinics", "العيادات"),
+            ("products", "المنتجات"),
+            ("orders", "الطلبات"),
+            ("debts", "الديون"),
+            ("payments", "المدفوعات")
+        ]
+        
+        total_records = 0
+        working_collections = 0
+        
+        for collection, name in collections_to_test:
+            try:
+                endpoint = f"/{collection}"
+                response, response_time = self.make_request("GET", endpoint)
+                
+                if response and response.status_code == 200:
+                    data = response.json()
+                    count = len(data) if isinstance(data, list) else 1
+                    total_records += count
+                    working_collections += 1
+                    
+                    self.log_test(
+                        f"MongoDB - مجموعة {name}",
+                        True,
+                        response_time,
+                        f"عدد السجلات: {count}"
+                    )
+                else:
+                    self.log_test(f"MongoDB - مجموعة {name}", False, response_time, "فشل في الوصول للمجموعة")
+            except Exception as e:
+                self.log_test(f"MongoDB - مجموعة {name}", False, error=e)
+        
+        # ملخص حالة قاعدة البيانات
+        db_health = (working_collections / len(collections_to_test)) * 100
+        self.log_test(
+            "حالة قاعدة البيانات العامة",
+            db_health >= 80,
+            details=f"المجموعات العاملة: {working_collections}/{len(collections_to_test)}, إجمالي السجلات: {total_records}"
+        )
+
+    def test_system_performance(self):
+        """اختبار أداء النظام"""
+        print("\n⚡ اختبار أداء النظام...")
+        
+        # حساب متوسط أوقات الاستجابة
+        response_times = [r["response_time"] for r in self.test_results if r["response_time"] is not None]
+        
+        if response_times:
+            avg_response_time = sum(response_times) / len(response_times)
+            max_response_time = max(response_times)
+            min_response_time = min(response_times)
+            
+            performance_rating = "ممتاز" if avg_response_time < 50 else "جيد" if avg_response_time < 100 else "مقبول" if avg_response_time < 200 else "يحتاج تحسين"
+            
+            self.log_test(
+                "تقييم الأداء العام",
+                avg_response_time < 200,
+                details=f"متوسط الاستجابة: {avg_response_time:.2f}ms, الأسرع: {min_response_time:.2f}ms, الأبطأ: {max_response_time:.2f}ms, التقييم: {performance_rating}"
+            )
+
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء الاختبار الشامل للنظام الطبي المتكامل...")
+        print(f"📍 عنوان الخادم: {self.base_url}")
+        print(f"🕐 وقت البدء: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 80)
+        
+        # تشغيل جميع الاختبارات
+        if self.test_authentication():
+            self.test_basic_apis()
+            self.test_dashboard_stats()
+            self.test_integrated_financial_system()
+            self.test_debt_and_collection_system()
+            self.test_order_creation_system()
+            self.test_mongodb_connection()
+            self.test_system_performance()
+        else:
+            print("❌ فشل في المصادقة - توقف الاختبار")
+        
+        # تقرير النتائج النهائية
+        self.generate_final_report()
+
+    def generate_final_report(self):
+        """إنشاء التقرير النهائي"""
+        print("\n" + "=" * 80)
+        print("📋 التقرير النهائي للاختبار الشامل")
+        print("=" * 80)
+        
+        total_tests = len(self.test_results)
+        passed_tests = len([r for r in self.test_results if r["success"]])
+        failed_tests = total_tests - passed_tests
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        
+        print(f"📊 إحصائيات الاختبار:")
+        print(f"   • إجمالي الاختبارات: {total_tests}")
+        print(f"   • الاختبارات الناجحة: {passed_tests}")
+        print(f"   • الاختبارات الفاشلة: {failed_tests}")
+        print(f"   • معدل النجاح: {success_rate:.1f}%")
+        print(f"   • إجمالي وقت التنفيذ: {total_time:.2f} ثانية")
+        
+        # تصنيف النتائج
+        if success_rate >= 90:
+            status = "🎉 ممتاز - النظام يعمل بشكل مثالي!"
+            color = "GREEN"
+        elif success_rate >= 75:
+            status = "✅ جيد - النظام يعمل بشكل جيد مع بعض المشاكل البسيطة"
+            color = "YELLOW"
+        elif success_rate >= 50:
+            status = "⚠️ مقبول - النظام يحتاج تحسينات"
+            color = "ORANGE"
+        else:
+            status = "❌ ضعيف - النظام يحتاج إصلاحات جذرية"
+            color = "RED"
+        
+        print(f"\n🎯 التقييم النهائي: {status}")
+        
+        # عرض الاختبارات الفاشلة
+        if failed_tests > 0:
+            print(f"\n❌ الاختبارات الفاشلة ({failed_tests}):")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   • {result['test_name']}: {result.get('error', 'خطأ غير محدد')}")
+        
+        # توصيات
+        print(f"\n💡 التوصيات:")
+        if success_rate >= 90:
+            print("   • النظام جاهز للإنتاج")
+            print("   • يمكن التركيز على تحسينات الأداء")
+        elif success_rate >= 75:
+            print("   • إصلاح المشاكل البسيطة المتبقية")
+            print("   • مراجعة الاختبارات الفاشلة")
+        else:
+            print("   • مراجعة شاملة للنظام مطلوبة")
+            print("   • إصلاح المشاكل الأساسية قبل الإنتاج")
+        
+        print("\n" + "=" * 80)
+        return success_rate
+
+def main():
+    """الدالة الرئيسية"""
+    tester = MedicalSystemTester()
+    success_rate = tester.run_comprehensive_test()
+    
+    # إنهاء البرنامج مع رمز الحالة المناسب
+    sys.exit(0 if success_rate >= 75 else 1)
+
+if __name__ == "__main__":
+    main()
+# -*- coding: utf-8 -*-
+"""
 اختبار النظام المالي المتكامل المدمج في النظام الطبي
 Integrated Financial System Testing for Medical Management System
 
