@@ -1,19 +1,48 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+# نظام الإدارة الطبية المتكامل - الخادم الرئيسي مع النظام المالي المتكامل
+# Medical Management System - Main Server with Integrated Financial System
+
 import os
-import logging
-from pathlib import Path
-from typing import List, Optional, Dict, Any
-import uuid
-from datetime import datetime, timedelta
-import jwt
-import hashlib
-import math
 import time
+import uuid
+import hashlib
+import asyncio
+from datetime import datetime, date, timedelta
+from typing import List, Dict, Any, Optional, Union
+from decimal import Decimal
+
+# استيراد المكتبات الأساسية
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field, validator
 from passlib.context import CryptContext
+import jwt
+from motor.motor_asyncio import AsyncIOMotorClient
+from bson import ObjectId
+from enum import Enum
+import json
+import logging
+import traceback
+
+# استيراد النماذج المالية المتكاملة
+try:
+    from models.financial_models import (
+        IntegratedInvoice, IntegratedDebtRecord, DebtPaymentRecord,
+        CreateInvoiceRequest, ProcessPaymentRequest, FinancialReportRequest,
+        InvoiceStatus, DebtStatus, PaymentStatus, MoneyAmount, FinancialConfig
+    )
+    from services.financial_service import IntegratedFinancialService
+    from routers.integrated_financial_router import router as financial_router
+    FINANCIAL_SYSTEM_AVAILABLE = True
+    print("✅ Integrated Financial System loaded successfully")
+except ImportError as e:
+    FINANCIAL_SYSTEM_AVAILABLE = False
+    print(f"⚠️ Financial System not available: {e}")
+
+# باقي الاستيرادات...
+from dotenv import load_dotenv
+from pathlib import Path
 
 # Import all models from organized modules
 from models.all_models import *
