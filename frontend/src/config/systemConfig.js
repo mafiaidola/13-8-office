@@ -162,6 +162,14 @@ export const SYSTEM_TABS = {
     permissions: ['admin', 'gm', 'accounting', 'finance'],
     priority: 6
   },
+
+  debt_collection: {
+    id: 'debt_collection',
+    path: '/debt-collection',
+    icon: '💳',
+    name: { ar: 'إدارة الديون والتحصيل', en: 'Debt Collection' },
+    component: 'DebtCollection',
+    description: { ar: 'إدارة وتحصيل الديون مع تتبع المدفوعات', en: 'Manage and collect debts with payment tracking' },
     permissions: ['admin', 'gm'],
     priority: 13
   },
