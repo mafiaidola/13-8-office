@@ -1,7 +1,7 @@
 # نظام الإدارة الطبية المتكامل - النماذج المالية المتكاملة
 # Medical Management System - Integrated Financial Models
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional, Any, Union, Literal
 from datetime import datetime, date
 from enum import Enum
