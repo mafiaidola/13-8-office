@@ -238,47 +238,59 @@ async def get_debts(
             query_filter["assigned_rep_id"] = current_user.id
         
         # جلب الديون
-        debts_cursor = db.debts.find(query_filter).skip(skip).limit(limit)
         debts = []
-        
-        async for debt in debts_cursor:
-            # حساب التقادم
-            due_date = debt.get("due_date", datetime.utcnow())
-            if isinstance(due_date, str):
-                due_date = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+        try:
+            debts_cursor = db.debts.find(query_filter).skip(skip).limit(limit)
             
-            days_overdue = max(0, (datetime.utcnow() - due_date).days)
-            
-            # تحديد مستوى المخاطرة
-            if days_overdue > 90:
-                risk_level = "critical"
-            elif days_overdue > 60:
-                risk_level = "high"
-            elif days_overdue > 30:
-                risk_level = "medium"
-            else:
-                risk_level = "low"
-            
-            # جلب معلومات العيادة والمندوب
-            clinic = await db.clinics.find_one({"id": debt.get("clinic_id", "")})
-            rep = await db.users.find_one({"id": debt.get("assigned_rep_id", "")})
-            
-            debts.append({
-                "id": debt.get("id", ""),
-                "debt_number": debt.get("debt_number", ""),
-                "invoice_number": debt.get("invoice_number", ""),
-                "clinic_name": clinic.get("name", debt.get("clinic_name", "غير محدد")) if clinic else debt.get("clinic_name", "غير محدد"),
-                "sales_rep_name": rep.get("full_name", "غير محدد") if rep else "غير محدد",
-                "original_amount": float(debt.get("amount", 0)),
-                "paid_amount": float(debt.get("paid_amount", 0)),
-                "outstanding_amount": float(debt.get("remaining_amount", 0)),
-                "due_date": due_date.strftime("%Y-%m-%d"),
-                "status": debt.get("status", "outstanding"),
-                "priority": "high" if days_overdue > 60 else "medium" if days_overdue > 30 else "normal",
-                "days_overdue": days_overdue,
-                "risk_level": risk_level,
-                "payments_count": len(debt.get("payments", []))
-            })
+            async for debt in debts_cursor:
+                # حساب التقادم الآمن
+                due_date = debt.get("due_date", datetime.utcnow())
+                if isinstance(due_date, str):
+                    try:
+                        due_date = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                    except:
+                        due_date = datetime.utcnow()
+                
+                days_overdue = max(0, (datetime.utcnow() - due_date).days)
+                
+                # تحديد مستوى المخاطرة
+                if days_overdue > 90:
+                    risk_level = "critical"
+                elif days_overdue > 60:
+                    risk_level = "high"
+                elif days_overdue > 30:
+                    risk_level = "medium"
+                else:
+                    risk_level = "low"
+                
+                # جلب معلومات العيادة والمندوب بأمان
+                clinic = None
+                rep = None
+                try:
+                    clinic = await db.clinics.find_one({"id": debt.get("clinic_id", "")})
+                    rep = await db.users.find_one({"id": debt.get("assigned_rep_id", "")})
+                except:
+                    pass
+                
+                debts.append({
+                    "id": debt.get("id", ""),
+                    "debt_number": debt.get("debt_number", f"DBT-{debt.get('id', '')[:8]}"),
+                    "invoice_number": debt.get("invoice_number", ""),
+                    "clinic_name": clinic.get("name", debt.get("clinic_name", "غير محدد")) if clinic else debt.get("clinic_name", "غير محدد"),
+                    "sales_rep_name": rep.get("full_name", "غير محدد") if rep else "غير محدد",
+                    "original_amount": float(debt.get("amount", 0)),
+                    "paid_amount": float(debt.get("paid_amount", 0)),
+                    "outstanding_amount": float(debt.get("remaining_amount", debt.get("amount", 0))),
+                    "due_date": due_date.strftime("%Y-%m-%d"),
+                    "status": debt.get("status", "outstanding"),
+                    "priority": "high" if days_overdue > 60 else "medium" if days_overdue > 30 else "normal",
+                    "days_overdue": days_overdue,
+                    "risk_level": risk_level,
+                    "payments_count": len(debt.get("payments", []))
+                })
+        except Exception as e:
+            print(f"Error processing debts: {str(e)}")
+            debts = []
         
         return debts
         
