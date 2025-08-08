@@ -228,18 +228,27 @@ const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
+      console.log('🔄 Starting login process...');
       const response = await axios.post(`${API}/auth/login`, credentials);
       
+      console.log('📡 Login API Response:', response.data);
+      
       if (response.data && response.data.access_token) {
+        console.log('💾 Saving token and updating user state...');
         localStorage.setItem('access_token', response.data.access_token);
         setUser(response.data.user);
         setIsAuthenticated(true);
+        
+        console.log('✅ User state updated:', response.data.user);
+        console.log('✅ isAuthenticated set to true');
+        
         return { success: true, user: response.data.user };
       }
       
+      console.error('❌ Invalid response format:', response.data);
       return { success: false, error: 'Invalid response format' };
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('❌ Login API error:', error);
       return { 
         success: false, 
         error: error.response?.data?.detail || 'Login failed' 
