@@ -66,8 +66,8 @@ const createLazyComponent = (importFunc, fallbackMessage) => {
 export const COMPONENT_REGISTRY = {
   // Core Components
   Dashboard: createLazyComponent(
-    () => import('../Dashboard/EnhancedDashboard'),
-    'جاري تحميل لوحة التحكم المحسنة...'  
+    () => import('../Dashboard/Dashboard'),
+    'جاري تحميل لوحة التحكم...'  
   ),
 
   // User Management
