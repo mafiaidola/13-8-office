@@ -91,13 +91,43 @@ const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
     try {
       setLoading(true);
       
-      // جلب النظرة العامة
-      const overviewResponse = await axios.get('/api/financial/dashboard/financial-overview');
-      setFinancialOverview(overviewResponse.data);
+      // استخدام fetch بدلاً من axios
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      const token = localStorage.getItem('access_token');
       
-      // جلب تحليل التقادم
-      const agingResponse = await axios.get('/api/financial/reports/aging-analysis');
-      setAgingAnalysis(agingResponse.data);
+      if (!token) {
+        setError('لم يتم العثور على رمز الدخول');
+        setLoading(false);
+        return;
+      }
+      
+      // جلب النظرة العامة
+      const overviewResponse = await fetch(`${backendUrl}/api/financial/dashboard/financial-overview`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (overviewResponse.ok) {
+        const overviewData = await overviewResponse.json();
+        setFinancialOverview(overviewData);
+        
+        // جلب تحليل التقادم
+        const agingResponse = await fetch(`${backendUrl}/api/financial/reports/aging-analysis`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (agingResponse.ok) {
+          const agingData = await agingResponse.json();
+          setAgingAnalysis(Array.isArray(agingData) ? agingData : []);
+        }
+      } else {
+        setError('خطأ في تحميل البيانات المالية');
+      }
       
       setError('');
     } catch (err) {
