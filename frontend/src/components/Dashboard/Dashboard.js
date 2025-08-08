@@ -694,7 +694,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           📊 مخطط الأداء - سيتم تطويره في المرحلة القادمة
         </div>
         <div style="text-align: center; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px;">
-          <p>🏥 نظام EP Group - تحليل الأداء</p>
+          <p>🏥 النظام الطبي المتكامل - تحليل الأداء</p>
         </div>
       </body>
       </html>
