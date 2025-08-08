@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://406a5bee-8cdb-4ba1-be7e-252147eebee8.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class InvoiceProductTester:
