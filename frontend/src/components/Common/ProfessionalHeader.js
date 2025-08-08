@@ -245,7 +245,8 @@ const ProfessionalHeader = ({
                     setShowUserMenu(false);
                     console.log('Profile clicked');
                   }}
-                  className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 text-sm"
+                  className="w-full text-left px-3 py-2 hover:bg-white/10 text-sm"
+                  style={{color: 'var(--text-primary)'}}
                 >
                   {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
                 </button>
