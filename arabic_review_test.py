@@ -37,7 +37,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://e0c0a695-5df9-4c27-89c6-e048414b1d42.preview.emergentagent.com/api"
+BASE_URL = "https://406a5bee-8cdb-4ba1-be7e-252147eebee8.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {"username": "admin", "password": "admin123"}
 
 class ArabicReviewTester:
