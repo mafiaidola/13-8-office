@@ -686,7 +686,7 @@ const LoginForm = () => {
 
         {/* Footer */}
         <div className="text-center mt-6 text-white/50 text-sm">
-          EP Group System • {new Date().getFullYear()}
+          نظام الإدارة الطبية • {new Date().getFullYear()}
         </div>
       </div>
     </div>
