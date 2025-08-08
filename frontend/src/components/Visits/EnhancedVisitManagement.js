@@ -341,7 +341,7 @@ const EnhancedVisitManagement = ({ user, language = 'ar', isRTL = true }) => {
       
       // Footer
       pdf.setFontSize(8);
-      pdf.text(`تم إنشاء التقرير بواسطة نظام EP Group - ${new Date().toLocaleString('ar-EG')}`, 
+      pdf.text(`تم إنشاء التقرير بواسطة النظام الطبي المتكامل - ${new Date().toLocaleString('ar-EG')}`, 
         pageWidth - 120, pdf.internal.pageSize.height - 10);
       
       const reportTitle = activeTab === 'visits' ? 'visits-analytics' : 'login-analytics';
