@@ -1266,7 +1266,7 @@ const AppContent = () => {
   
   // TEMPORARY: Skip login to test themes as requested by user
   // Remove this after theme testing is complete
-  const SKIP_LOGIN_FOR_THEME_TESTING = true;
+  const SKIP_LOGIN_FOR_THEME_TESTING = false;  // Set to false to test login
   
   if (SKIP_LOGIN_FOR_THEME_TESTING) {
     console.log('⚠️ TEMPORARY: Skipping login for theme testing');
