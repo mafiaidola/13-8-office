@@ -127,8 +127,8 @@ const ProfessionalHeader = ({
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{result.icon}</span>
                   <div>
-                    <div className="font-medium text-gray-900">{result.title}</div>
-                    <div className="text-sm text-gray-600">{result.subtitle}</div>
+                    <div className="font-medium" style={{color: 'var(--text-primary)'}}>{result.title}</div>
+                    <div className="text-sm" style={{color: 'var(--text-secondary)'}}>{result.subtitle}</div>
                   </div>
                 </div>
               </div>
