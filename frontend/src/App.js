@@ -684,8 +684,13 @@ const LoginForm = () => {
             </label>
             <input
               type="text"
+              name="username"
+              id="username"
               value={credentials.username}
-              onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
+              onChange={(e) => {
+                console.log('👤 Username changed:', e.target.value);
+                setCredentials(prev => ({ ...prev, username: e.target.value }));
+              }}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder={t('auth', 'username')}
               required
@@ -698,8 +703,13 @@ const LoginForm = () => {
             </label>
             <input
               type="password"
+              name="password"
+              id="password"
               value={credentials.password}
-              onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+              onChange={(e) => {
+                console.log('🔒 Password changed:', e.target.value.length > 0 ? 'has value' : 'empty');
+                setCredentials(prev => ({ ...prev, password: e.target.value }));
+              }}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder={t('auth', 'password')}
               required
