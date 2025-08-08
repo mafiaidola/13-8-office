@@ -1068,3 +1068,218 @@ button, .btn {
   word-break: break-word;
   hyphens: auto;
 }
+
+/* ============================================================================ */
+/* إصلاح شامل لمشاكل الثيمات والرؤية - الحل النهائي */
+/* ============================================================================ */
+
+/* الطلبيات - Orders Section */
+.bg-white .text-green-600,
+.bg-white .text-green-700,
+.bg-green-50 .text-green-600,
+.bg-green-50 .text-green-700,
+.bg-blue-50 .text-blue-600,
+.bg-blue-50 .text-blue-700,
+.bg-yellow-50 .text-yellow-600,
+.bg-yellow-50 .text-yellow-700,
+.bg-purple-50 .text-purple-600,
+.bg-purple-50 .text-purple-700 {
+  color: var(--text-primary) !important;
+}
+
+/* الزيارات - Visits Section */
+.bg-white .text-blue-600,
+.bg-white .text-blue-700,
+.bg-blue-50 .text-blue-600,
+.bg-blue-50 .text-blue-700,
+.bg-green-50 .text-green-600,
+.bg-green-50 .text-green-700,
+.bg-orange-50 .text-orange-600,
+.bg-orange-50 .text-orange-700,
+.bg-indigo-50 .text-indigo-600,
+.bg-indigo-50 .text-indigo-700 {
+  color: var(--text-primary) !important;
+}
+
+/* المديونيات - Debts Section */
+.bg-white .text-red-600,
+.bg-white .text-red-700,
+.bg-red-50 .text-red-600,
+.bg-red-50 .text-red-700,
+.bg-pink-50 .text-pink-600,
+.bg-pink-50 .text-pink-700 {
+  color: var(--text-primary) !important;
+}
+
+/* التحصيل - Collections Section */
+.bg-white .text-emerald-600,
+.bg-white .text-emerald-700,
+.bg-emerald-50 .text-emerald-600,
+.bg-emerald-50 .text-emerald-700,
+.bg-teal-50 .text-teal-600,
+.bg-teal-50 .text-teal-700,
+.bg-green-50 .text-green-600,
+.bg-green-50 .text-green-700 {
+  color: var(--text-primary) !important;
+}
+
+/* الإجراءات السريعة - Quick Actions */
+.bg-blue-50,
+.bg-green-50,
+.bg-purple-50,
+.bg-orange-50,
+.bg-indigo-50,
+.bg-gray-50 {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.bg-blue-50 .text-blue-800,
+.bg-green-50 .text-green-800,
+.bg-purple-50 .text-purple-800,
+.bg-orange-50 .text-orange-800,
+.bg-indigo-50 .text-indigo-800,
+.bg-gray-50 .text-gray-800 {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.bg-blue-50 .text-blue-600,
+.bg-green-50 .text-green-600,
+.bg-purple-50 .text-purple-600,
+.bg-orange-50 .text-orange-600,
+.bg-indigo-50 .text-indigo-600,
+.bg-gray-50 .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+/* الأنشطة الحديثة - Recent Activities */
+.bg-gray-50,
+.bg-gray-100 {
+  background: var(--bg-secondary) !important;
+}
+
+.text-gray-800,
+.text-gray-600,
+.text-gray-500 {
+  color: var(--text-primary) !important;
+}
+
+/* جداول البيانات - Data Tables */
+.table tr,
+.table tr *,
+.table td,
+.table td *,
+.table th,
+.table th * {
+  color: var(--text-primary) !important;
+  background: var(--bg-card) !important;
+}
+
+/* البطاقات والمودالز - Cards and Modals */
+.modal-content,
+.modal-content *,
+.card-body,
+.card-body *,
+.dropdown-menu,
+.dropdown-menu *,
+.form-control,
+.form-control * {
+  color: var(--text-primary) !important;
+  background: var(--bg-card) !important;
+}
+
+/* إصلاح شامل للنصوص الباهتة */
+.opacity-75,
+.opacity-60,
+.opacity-50 {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+/* ضمان الرؤية في جميع الثيمات */
+[class*="theme-"] .text-white {
+  color: #ffffff !important;
+}
+
+[class*="theme-"] .bg-white,
+[class*="theme-"] .bg-white * {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+[class*="theme-"] .text-gray-800,
+[class*="theme-"] .text-gray-700,
+[class*="theme-"] .text-gray-600,
+[class*="theme-"] .text-gray-500 {
+  color: var(--text-primary) !important;
+}
+
+/* مشاكل التباين المحددة */
+.theme-dark .bg-white,
+.theme-midnight .bg-white,
+.theme-oceanic .bg-white,
+.theme-royal .bg-white,
+.theme-forest .bg-white {
+  background: var(--bg-card) !important;
+}
+
+.theme-dark .bg-white *,
+.theme-midnight .bg-white *,
+.theme-oceanic .bg-white *,
+.theme-royal .bg-white *,
+.theme-forest .bg-white * {
+  color: var(--text-primary) !important;
+}
+
+/* حل مشاكل النصوص في البطاقات الملونة */
+.card .text-2xl,
+.card .text-xl,
+.card .font-bold,
+.card .font-semibold {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* الحل النهائي لجميع مشاكل الرؤية */
+* {
+  color: var(--text-primary) !important;
+}
+
+.bg-gradient-to-r,
+.bg-gradient-to-r * {
+  color: #ffffff !important;
+}
+
+/* ضمان وضوح جميع العناصر التفاعلية */
+button,
+button *,
+.btn,
+.btn *,
+a,
+a * {
+  color: inherit !important;
+}
+
+.btn-primary,
+.btn-primary * {
+  color: #ffffff !important;
+}
+
+/* الحل النهائي لمشاكل الخلفيات */
+[class*="bg-"] {
+  background: var(--bg-card) !important;
+}
+
+[class*="bg-gradient"] {
+  background: var(--bg-primary) !important;
+}
+
+/* ضمان التطبيق على العناصر المحددة من المستخدم */
+.enhanced-dashboard-container .bg-white,
+.enhanced-dashboard-container .shadow-lg,
+.enhanced-dashboard-container .rounded-xl {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
