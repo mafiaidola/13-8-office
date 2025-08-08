@@ -3314,7 +3314,7 @@ api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(settings_router)
 api_router.include_router(activity_router)
-api_router.include_router(debt_router)
+# api_router.include_router(debt_router)  # Temporarily disabled due to financial model issues
 api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
 api_router.include_router(analytics_router)
