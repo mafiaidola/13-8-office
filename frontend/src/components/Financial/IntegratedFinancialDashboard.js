@@ -2,7 +2,6 @@
 // Medical Management System - Integrated Financial Dashboard
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
   const [loading, setLoading] = useState(true);
