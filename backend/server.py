@@ -3314,18 +3314,20 @@ api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(settings_router)
 api_router.include_router(activity_router)
-# api_router.include_router(debt_router)  # Temporarily disabled due to financial model issues
+api_router.include_router(debt_router)
 api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
 api_router.include_router(analytics_router)
+api_router.include_router(financial_router)
 
-# تسجيل الموجه المالي المتكامل
+# تسجيل الموجه المالي المتكامل (احتياطي)
 if FINANCIAL_SYSTEM_AVAILABLE:
     try:
-        api_router.include_router(financial_router)
+        from routers.integrated_financial_router import router as integrated_financial_router
+        api_router.include_router(integrated_financial_router)
         print("✅ Integrated Financial Router registered successfully")
     except Exception as e:
-        print(f"⚠️ Error registering financial router: {e}")
+        print(f"⚠️ Error registering integrated financial router: {e}")
 
 app.include_router(api_router)
 
