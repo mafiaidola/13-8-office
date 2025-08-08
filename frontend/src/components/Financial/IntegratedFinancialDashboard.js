@@ -235,19 +235,19 @@ const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="financial-dashboard-container space-y-6">
       {/* العنوان وأزرار الفترة */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{t.title}</h2>
+        <h2 className="text-2xl font-bold text-white">{t.title}</h2>
         <div className="flex space-x-2">
           {['today', 'week', 'month'].map((period) => (
             <button
               key={period}
               onClick={() => setSelectedPeriod(period)}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
                 selectedPeriod === period
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
               }`}
             >
               {t[period === 'week' ? 'thisWeek' : period === 'month' ? 'thisMonth' : 'today']}
@@ -256,106 +256,106 @@ const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
         </div>
       </div>
 
-      {/* البطاقات المالية الرئيسية */}
+      {/* البطاقات المالية الرئيسية - محسنة للرؤية */}
       {financialOverview && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+          <div className="financial-card bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm">{t.totalInvoiced}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-blue-100 text-sm font-medium">{t.totalInvoiced}</p>
+                <p className="text-3xl font-bold text-white">
                   {formatCurrency(financialOverview.monthly_summary?.total_invoices_amount?.amount || 0)}
                 </p>
-                <p className="text-blue-100 text-xs">{t.currency}</p>
+                <p className="text-blue-100 text-xs font-medium">{t.currency}</p>
               </div>
-              <div className="text-4xl opacity-80">📄</div>
+              <div className="text-5xl opacity-80">📄</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
+          <div className="financial-card bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm">{t.totalCollected}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-green-100 text-sm font-medium">{t.totalCollected}</p>
+                <p className="text-3xl font-bold text-white">
                   {formatCurrency(financialOverview.monthly_summary?.total_payments_amount?.amount || 0)}
                 </p>
-                <p className="text-green-100 text-xs">{t.currency}</p>
+                <p className="text-green-100 text-xs font-medium">{t.currency}</p>
               </div>
-              <div className="text-4xl opacity-80">💰</div>
+              <div className="text-5xl opacity-80">💰</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white">
+          <div className="financial-card bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm">{t.totalOutstanding}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-orange-100 text-sm font-medium">{t.totalOutstanding}</p>
+                <p className="text-3xl font-bold text-white">
                   {formatCurrency(financialOverview.aging_overview?.total_outstanding || 0)}
                 </p>
-                <p className="text-orange-100 text-xs">{t.currency}</p>
+                <p className="text-orange-100 text-xs font-medium">{t.currency}</p>
               </div>
-              <div className="text-4xl opacity-80">⏰</div>
+              <div className="text-5xl opacity-80">⏰</div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
+          <div className="financial-card bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm">{t.collectionRate}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-purple-100 text-sm font-medium">{t.collectionRate}</p>
+                <p className="text-3xl font-bold text-white">
                   {formatCurrency(financialOverview.monthly_summary?.collection_rate || 0)}%
                 </p>
-                <p className="text-purple-100 text-xs">معدل</p>
+                <p className="text-purple-100 text-xs font-medium">معدل</p>
               </div>
-              <div className="text-4xl opacity-80">📊</div>
+              <div className="text-5xl opacity-80">📊</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* أزرار العمليات السريعة */}
+      {/* أزرار العمليات السريعة - محسنة للرؤية */}
       <div className="flex flex-wrap gap-4">
-        <button className="flex-1 min-w-48 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-          <span className="text-lg ml-2">➕</span>
+        <button className="financial-action-btn flex-1 min-w-48 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-medium transition-all shadow-lg border border-white/20">
+          <span className="text-xl ml-2">➕</span>
           {t.createInvoice}
         </button>
-        <button className="flex-1 min-w-48 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-          <span className="text-lg ml-2">💳</span>
+        <button className="financial-action-btn flex-1 min-w-48 bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg font-medium transition-all shadow-lg border border-white/20">
+          <span className="text-xl ml-2">💳</span>
           {t.processPayment}
         </button>
-        <button className="flex-1 min-w-48 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-          <span className="text-lg ml-2">📋</span>
+        <button className="financial-action-btn flex-1 min-w-48 bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg font-medium transition-all shadow-lg border border-white/20">
+          <span className="text-xl ml-2">📋</span>
           {t.generateReport}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* تحليل تقادم الديون */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
+        {/* تحليل تقادم الديون - محسن للرؤية */}
+        <div className="financial-section bg-white/10 backdrop-blur-lg rounded-xl shadow-xl p-6 border border-white/20">
+          <h3 className="text-xl font-semibold mb-4 flex items-center text-white">
             <span className="text-2xl ml-3">📈</span>
             {t.agingAnalysis}
           </h3>
           
           <div className="space-y-3">
             {agingAnalysis.slice(0, 5).map((analysis, index) => (
-              <div key={analysis.clinic_id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={analysis.clinic_id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-white">
                     {analysis.clinic_name}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-white/80">
                     المتبقي: {formatCurrency(analysis.total_outstanding?.amount || 0)} {t.currency}
                   </div>
                   <div className="flex space-x-2 mt-2">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getRiskLevelColor(analysis.risk_level)}`}>
+                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${getRiskLevelColor(analysis.risk_level)}`}>
                       {t[analysis.risk_level] || analysis.risk_level}
                     </span>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <div className="text-sm text-gray-500 space-y-1">
+                  <div className="text-sm text-white/70 space-y-1">
                     <div>{t.current}: {formatCurrency(analysis.current?.amount || 0)}</div>
                     <div>{t.days30}: {formatCurrency(analysis.days_30?.amount || 0)}</div>
                     <div>{t.over90}: {formatCurrency(analysis.over_90?.amount || 0)}</div>
@@ -366,15 +366,15 @@ const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
           </div>
           
           {agingAnalysis.length > 5 && (
-            <button className="w-full mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
+            <button className="w-full mt-4 text-blue-300 hover:text-blue-200 text-sm font-medium">
               عرض المزيد ({agingAnalysis.length - 5} عميل إضافي)
             </button>
           )}
         </div>
 
-        {/* العملاء عالي المخاطر */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
+        {/* العملاء عالي المخاطر - محسن للرؤية */}
+        <div className="financial-section bg-white/10 backdrop-blur-lg rounded-xl shadow-xl p-6 border border-white/20">
+          <h3 className="text-xl font-semibold mb-4 flex items-center text-white">
             <span className="text-2xl ml-3">⚠️</span>
             {t.highRiskClients}
           </h3>
@@ -383,61 +383,70 @@ const IntegratedFinancialDashboard = ({ user, language = 'ar' }) => {
             {financialOverview?.top_risk_clients?.filter(client => 
               client.risk_level === 'high' || client.risk_level === 'critical'
             ).slice(0, 5).map((client, index) => (
-              <div key={client.clinic_id} className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+              <div key={client.clinic_id} className="flex items-center justify-between p-4 border border-red-300/30 rounded-lg bg-red-500/10">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-white">
                     {client.clinic_name}
                   </div>
-                  <div className="text-sm text-red-600">
+                  <div className="text-sm text-red-300">
                     دين متأخر: {formatCurrency(client.over_90?.amount || 0)} {t.currency}
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-xs text-white/70 mt-1">
                     {client.recommended_action}
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <span className={`px-3 py-1 text-sm rounded-full ${getRiskLevelColor(client.risk_level)}`}>
+                  <span className={`px-3 py-1 text-sm rounded-full font-medium ${getRiskLevelColor(client.risk_level)}`}>
                     {t[client.risk_level] || client.risk_level}
                   </span>
-                  <div className="text-sm text-gray-600 mt-2">
+                  <div className="text-sm text-white/70 mt-2">
                     إجمالي: {formatCurrency(client.total_outstanding?.amount || 0)}
                   </div>
                 </div>
               </div>
             ))}
+            
+            {/* إضافة بيانات تجريبية إذا لم توجد بيانات */}
+            {(!financialOverview?.top_risk_clients || financialOverview.top_risk_clients.length === 0) && (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">✅</div>
+                <p className="text-white/80">لا توجد عملاء عالي المخاطر حالياً</p>
+                <p className="text-white/60 text-sm">جميع الحسابات في وضع جيد</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ملخص سريع */}
+      {/* ملخص سريع - محسن للرؤية */}
       {financialOverview?.aging_overview && (
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4">ملخص الوضع المالي</h3>
+        <div className="financial-section bg-white/10 backdrop-blur-lg rounded-xl shadow-xl p-6 border border-white/20">
+          <h3 className="text-xl font-semibold mb-4 text-white">ملخص الوضع المالي</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="text-3xl font-bold text-blue-400">
                 {financialOverview.monthly_summary?.total_invoices_count || 0}
               </div>
-              <div className="text-sm text-gray-600">فاتورة هذا الشهر</div>
+              <div className="text-sm text-white/80 font-medium">فاتورة هذا الشهر</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="text-3xl font-bold text-green-400">
                 {financialOverview.monthly_summary?.total_payments_count || 0}
               </div>
-              <div className="text-sm text-gray-600">عملية دفع</div>
+              <div className="text-sm text-white/80 font-medium">عملية دفع</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="text-3xl font-bold text-orange-400">
                 {financialOverview.aging_overview?.total_clients_with_debts || 0}
               </div>
-              <div className="text-sm text-gray-600">عميل لديه ديون</div>
+              <div className="text-sm text-white/80 font-medium">عميل لديه ديون</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-red-600">
+            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div className="text-3xl font-bold text-red-400">
                 {financialOverview.aging_overview?.high_risk_clients_count || 0}
               </div>
-              <div className="text-sm text-gray-600">عميل عالي المخاطر</div>
+              <div className="text-sm text-white/80 font-medium">عميل عالي المخاطر</div>
             </div>
           </div>
         </div>
