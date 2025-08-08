@@ -1,5 +1,5 @@
-// EP Group System - Main Application (Reorganized & Centralized)
-// النظام الرئيسي لمجموعة EP - منظم ومركزي
+// Medical Management System - Main Application (Reorganized & Centralized)
+// النظام الرئيسي لإدارة المؤسسات الطبية - منظم ومركزي
 
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import './App.css';
