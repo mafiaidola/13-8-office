@@ -14,8 +14,8 @@ from models.financial_models import (
     FinancialSummary, AgingAnalysis
 )
 from services.financial_service import IntegratedFinancialService
-from models.user_models import User, UserRole
-from auth.auth_handler import get_current_user
+from models.all_models import User, UserRole
+from routes.auth_routes import get_current_user
 
 # إنشاء الموجه
 router = APIRouter(prefix="/api/financial", tags=["Integrated Financial System"])
