@@ -188,8 +188,9 @@ const ProfessionalHeader = ({
                       key={themeKey}
                       onClick={() => handleThemeChange(themeKey)}
                       className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 ${
-                        theme === themeKey ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        theme === themeKey ? 'bg-blue-50' : ''
                       }`}
+                      style={{color: theme === themeKey ? 'var(--primary-color)' : 'var(--text-primary)'}}
                     >
                       <span className="text-lg">{themeData.icon}</span>
                       <div>
