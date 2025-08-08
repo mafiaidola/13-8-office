@@ -623,9 +623,9 @@ const LoginForm = () => {
           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <span className="text-3xl">🏥</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">EP Group System</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">نظام الإدارة الطبية المتكامل</h1>
           <p className="text-white/70">
-            {language === 'ar' ? 'نظام إدارة شامل للمؤسسات الطبية' : 'Comprehensive Medical Institution Management'}
+            {language === 'ar' ? 'نظام إدارة شامل للمؤسسات الطبية والصيدليات' : 'Comprehensive Medical & Pharmaceutical Management System'}
           </p>
         </div>
 
