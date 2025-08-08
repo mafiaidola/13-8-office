@@ -8,7 +8,7 @@ const Settings = ({ user, language, isRTL }) => {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     system: {
-      app_name: 'EP Group System',
+      app_name: 'نظام الإدارة الطبية المتكامل',
       app_version: '2.0.0',
       company_logo: '', // Logo base64 or URL
       max_login_attempts: 3,
