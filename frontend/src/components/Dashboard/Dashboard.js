@@ -610,7 +610,7 @@ const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
           </div>
         </div>
         <div style="text-align: center; margin-top: 30px; border-top: 1px solid #E5E7EB; padding-top: 20px;">
-          <p>🏥 نظام EP Group - الملخص اليومي</p>
+          <p>🏥 النظام الطبي المتكامل - الملخص اليومي</p>
         </div>
       </body>
       </html>
