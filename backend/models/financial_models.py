@@ -600,23 +600,5 @@ class FinancialReportRequest(BaseModel):
 # VALIDATORS - المدققات
 # ============================================================================
 
-@validator('due_date')
-def validate_due_date(cls, v, values):
-    """التأكد من أن تاريخ الاستحقاق في المستقبل"""
-    if 'issue_date' in values and v < values['issue_date']:
-        raise ValueError('تاريخ الاستحقاق يجب أن يكون بعد تاريخ الإصدار')
-    return v
-
-@validator('outstanding_amount')
-def validate_outstanding_amount(cls, v, values):
-    """التأكد من صحة المبلغ المتبقي"""
-    if 'total_amount' in values and 'paid_amount' in values:
-        expected = values['total_amount'].subtract(values['paid_amount'])
-        if abs(v.amount - expected.amount) > Decimal('0.01'):
-            raise ValueError('المبلغ المتبقي غير صحيح')
-    return v
-
-# إضافة المدققات للنماذج
-IntegratedInvoice.__validators__ = {
-    'validate_due_date': validator('due_date', allow_reuse=True)(validate_due_date)
-}
+# Note: Validators have been removed to eliminate dependency on pydantic.validator
+# Custom validation can be implemented using Pydantic v2 field validators if needed
