@@ -19,7 +19,7 @@ import base64
 import uuid
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://39bfa0e9-57ce-4da8-b444-8d148da868a0.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://0f89e653-23a1-4222-bcbe-a4908839f7c6.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class DailyLoginTester:
