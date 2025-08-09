@@ -477,10 +477,10 @@ async def process_payment(
 
 @router.get("/reports/comprehensive")
 async def get_comprehensive_financial_report(
-    start_date: date,
-    end_date: date,
-    clinic_ids: Optional[str] = Query(None),
-    sales_rep_ids: Optional[str] = Query(None),
+    start_date: date = Query(..., description="تاريخ البداية (مطلوب)"),
+    end_date: date = Query(..., description="تاريخ النهاية (مطلوب)"),
+    clinic_ids: Optional[str] = Query(None, description="معرفات العيادات مفصولة بفواصل"),
+    sales_rep_ids: Optional[str] = Query(None, description="معرفات المناديب مفصولة بفواصل"),
     current_user: User = Depends(get_current_user)
 ):
     """تقرير مالي شامل موحد"""
