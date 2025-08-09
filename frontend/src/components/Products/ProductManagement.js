@@ -275,10 +275,10 @@ const ProductManagement = ({ user, language, isRTL }) => {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
+    const matchesBrand = filterBrand === 'all' || product.brand === filterBrand;
     const matchesLine = filterLine === 'all' || product.line_id === filterLine;
     
-    return matchesSearch && matchesCategory && matchesLine;
+    return matchesSearch && matchesBrand && matchesLine;
   });
 
   // Get unique categories
