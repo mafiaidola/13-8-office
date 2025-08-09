@@ -470,5 +470,20 @@ async def get_dashboard_widgets(role_type: str, current_user: dict = Depends(get
     
     return widgets_config.get(role_type, [])
 
+@app.get("/api/clinics")
+async def get_clinics(current_user: dict = Depends(get_current_user)):
+    """Get all clinics - Fixed endpoint"""
+    try:
+        # Get clinics from database
+        clinics = []
+        cursor = db.clinics.find({"is_active": {"$ne": False}}, {"_id": 0})
+        async for clinic in cursor:
+            clinics.append(clinic)
+        
+        return clinics
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching clinics: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
