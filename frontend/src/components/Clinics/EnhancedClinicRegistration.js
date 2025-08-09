@@ -195,29 +195,28 @@ const EnhancedClinicRegistration = () => {
   };
 
   // دالة محسنة للحصول على الموقع الحالي مع معالجة أفضل للأخطاء
+  // دالة تحسين خيارات الـ geolocation
+  const getLocationOptions = () => {
+    // خيارات محسنة حسب نوع الجهاز ودقة المطلوبة
+    return {
+      enableHighAccuracy: true,
+      timeout: 20000, // زيادة المهلة الزمنية إلى 20 ثانية
+      maximumAge: 60000 // تقليل cache إلى دقيقة واحدة للحصول على موقع أحدث
+    };
+  };
+
   const getCurrentLocation = () => {
-    console.log('🎯 محاولة الحصول على الموقع الحالي...');
-    
     if (!navigator.geolocation) {
       console.warn('⚠️ الجهاز لا يدعم تحديد الموقع');
       useDefaultLocation();
       return;
     }
 
-    // تسجيل معلومات الأمان للمتصفح
-    console.log('🔒 معلومات البروتوكول:', {
-      protocol: window.location.protocol,
-      isSecureContext: window.isSecureContext,
-      hostname: window.location.hostname
-    });
-
-    // خيارات محسنة لـ Geolocation
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 15000, // زيادة المهلة الزمنية
-      maximumAge: 300000 // 5 دقائق cache
-    };
-
+    console.log('🔍 محاولة الحصول على الموقع الحالي...');
+    
+    // محاولة أولى بخيارات عالية الدقة
+    const highAccuracyOptions = getLocationOptions();
+    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const userLoc = {
@@ -228,9 +227,10 @@ const EnhancedClinicRegistration = () => {
         
         setUserLocation(userLoc);
         console.log('✅ تم الحصول على الموقع الحالي بنجاح:', {
-          lat: userLoc.lat,
-          lng: userLoc.lng,
-          accuracy: userLoc.accuracy + ' متر'
+          lat: userLoc.lat.toFixed(6),
+          lng: userLoc.lng.toFixed(6),
+          accuracy: Math.round(userLoc.accuracy) + ' متر',
+          timestamp: new Date().toLocaleTimeString('ar-EG')
         });
         
         // تسجيل موقع المندوب
@@ -240,14 +240,15 @@ const EnhancedClinicRegistration = () => {
           rep_longitude: userLoc.lng,
           rep_location_accuracy: userLoc.accuracy,
           device_info: navigator.userAgent,
-          location_obtained_at: new Date().toISOString()
+          location_obtained_at: new Date().toISOString(),
+          location_source: 'gps'
         }));
 
         // إذا كانت الخريطة محملة، حديث موقعها
         if (mapInstanceRef.current && markerRef.current) {
           console.log('🗺️ تحديث موقع الخريطة للموقع الحالي...');
           mapInstanceRef.current.setCenter(userLoc);
-          mapInstanceRef.current.setZoom(17);
+          mapInstanceRef.current.setZoom(18); // زيادة التكبير للموقع الحالي
           markerRef.current.setPosition(userLoc);
           
           // إضافة دائرة دقة الموقع
@@ -256,34 +257,104 @@ const EnhancedClinicRegistration = () => {
           }
           
           accuracyCircleRef.current = new window.google.maps.Circle({
-            strokeColor: '#4285f4',
-            strokeOpacity: 0.8,
+            strokeColor: '#10b981',
+            strokeOpacity: 1.0,
             strokeWeight: 2,
-            fillColor: '#4285f4',
-            fillOpacity: 0.15,
+            fillColor: '#10b981',
+            fillOpacity: 0.2,
             map: mapInstanceRef.current,
             center: userLoc,
-            radius: userLoc.accuracy || 100
+            radius: Math.max(userLoc.accuracy || 50, 20) // الحد الأدنى 20 متر
           });
+          
+          // إضافة معلومات الدقة
+          const infoWindow = new window.google.maps.InfoWindow({
+            content: `
+              <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif;">
+                <strong>موقعك الحالي</strong><br>
+                <small>دقة الموقع: ${Math.round(userLoc.accuracy)} متر</small>
+              </div>
+            `,
+            position: userLoc
+          });
+          
+          // عرض النافذة لثواني قليلة
+          infoWindow.open(mapInstanceRef.current);
+          setTimeout(() => {
+            infoWindow.close();
+          }, 3000);
         }
+        
+        // إزالة أي رسائل خطأ سابقة
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.location;
+          return newErrors;
+        });
       },
       (error) => {
-        console.error('❌ خطأ في الحصول على الموقع:', {
-          code: error.code,
-          message: error.message,
-          details: getLocationErrorDetails(error)
-        });
+        console.warn('⚠️ فشلت المحاولة الأولى، جاري المحاولة بخيارات أقل دقة...');
         
-        // إظهار رسالة للمستخدم حسب نوع الخطأ
-        const errorMessage = getLocationErrorMessage(error);
-        setErrors(prev => ({
-          ...prev,
-          location: errorMessage
-        }));
+        // محاولة ثانية بخيارات أقل دقة
+        const lowAccuracyOptions = {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000
+        };
         
-        useDefaultLocation();
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userLoc = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+              accuracy: position.coords.accuracy
+            };
+            
+            setUserLocation(userLoc);
+            console.log('✅ تم الحصول على الموقع (دقة منخفضة):', {
+              lat: userLoc.lat.toFixed(6),
+              lng: userLoc.lng.toFixed(6),
+              accuracy: Math.round(userLoc.accuracy) + ' متر'
+            });
+            
+            // تسجيل موقع المندوب
+            setLocationData(prev => ({
+              ...prev,
+              rep_latitude: userLoc.lat,
+              rep_longitude: userLoc.lng,
+              rep_location_accuracy: userLoc.accuracy,
+              device_info: navigator.userAgent,
+              location_obtained_at: new Date().toISOString(),
+              location_source: 'network'
+            }));
+
+            // تحديث الخريطة إذا كانت متاحة
+            if (mapInstanceRef.current && markerRef.current) {
+              mapInstanceRef.current.setCenter(userLoc);
+              mapInstanceRef.current.setZoom(16);
+              markerRef.current.setPosition(userLoc);
+            }
+          },
+          (finalError) => {
+            console.error('❌ فشل في الحصول على الموقع نهائياً:', {
+              code: finalError.code,
+              message: finalError.message,
+              details: getLocationErrorDetails(finalError)
+            });
+            
+            // إظهار رسالة للمستخدم حسب نوع الخطأ
+            const errorMessage = getLocationErrorMessage(finalError);
+            setErrors(prev => ({
+              ...prev,
+              location: errorMessage + ' - يرجى تحديد موقع العيادة يدوياً على الخريطة'
+            }));
+            
+            useDefaultLocation();
+          },
+          lowAccuracyOptions
+        );
       },
-      options
+      highAccuracyOptions
     );
   };
 
