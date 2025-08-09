@@ -1735,6 +1735,100 @@ button:not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-red"]):n
 .user-menu,
 .user-menu *,
 .theme-selector,
+/* ============================================================================ */
+/* ADDITIONAL MOBILE IMPROVEMENTS - تحسينات إضافية للموبايل */
+/* ============================================================================ */
+
+/* Mobile menu button styling */
+.mobile-menu-button {
+  display: none !important;
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.mobile-menu-button:hover {
+  background: var(--bg-secondary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+@media (max-width: 767px) {
+  .mobile-menu-button {
+    display: block !important;
+  }
+}
+
+/* Backdrop for mobile sidebar */
+.sidebar-backdrop {
+  display: none !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  z-index: calc(var(--z-modal) - 1) !important;
+}
+
+@media (max-width: 767px) {
+  .sidebar-backdrop.show {
+    display: block !important;
+  }
+}
+
+/* Improved scrolling for all devices */
+.main-content {
+  scroll-behavior: smooth !important;
+}
+
+/* Fix for grid layouts on small screens */
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .dashboard-card,
+  .enhanced-stat-card {
+    padding: 12px !important;
+    min-height: 90px !important;
+  }
+  
+  .dashboard-card .card-value,
+  .enhanced-stat-card .text-3xl {
+    font-size: 1.25rem !important;
+  }
+  
+  .dashboard-card .card-title,
+  .enhanced-stat-card .text-sm {
+    font-size: 0.6875rem !important;
+  }
+}
+
+/* Extra small devices improvements */
+@media (max-width: 360px) {
+  .main-content {
+    padding: 12px 8px !important;
+  }
+  
+  .enhanced-dashboard-container {
+    padding: 8px !important;
+  }
+  
+  .metrics-grid {
+    gap: 8px !important;
+  }
+  
+  .dashboard-card,
+  .enhanced-stat-card {
+    padding: 10px !important;
+    min-height: 80px !important;
+  }
+}
 .theme-selector * {
   color: var(--text-primary) !important;
 }
