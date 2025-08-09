@@ -348,3 +348,76 @@ async def delete_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting user: {str(e)}"
         )
+
+@router.get("/users/{user_id}/comprehensive-profile")
+async def get_user_comprehensive_profile(
+    user_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive user profile with extended data"""
+    try:
+        # Users can view their own profile
+        # Admins and managers can view their team members
+        if user_id != current_user.id and current_user.role not in ["admin", "gm", "manager", "line_manager", "area_manager"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to view this user profile"
+            )
+        
+        # Get basic user data
+        user_data = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Get additional comprehensive data
+        comprehensive_data = {
+            "assigned_clinics": [],
+            "recent_visits": [],
+            "performance_metrics": {},
+            "team_members": []
+        }
+        
+        # Get assigned clinics if user is a representative
+        if user_data.get("role") in ["medical_rep", "sales_rep"]:
+            try:
+                assigned_clinics = []
+                async for clinic in db.clinics.find(
+                    {"assigned_rep_id": user_id}, 
+                    {"_id": 0, "clinic_name": 1, "id": 1, "clinic_address": 1}
+                ):
+                    assigned_clinics.append(clinic)
+                comprehensive_data["assigned_clinics"] = assigned_clinics
+            except:
+                comprehensive_data["assigned_clinics"] = []
+        
+        # Get team members if user is a manager
+        if user_data.get("role") in ["manager", "line_manager", "area_manager", "gm"]:
+            try:
+                team_members = []
+                async for member in db.users.find(
+                    {"manager_id": user_id}, 
+                    {"_id": 0, "password_hash": 0, "id": 1, "full_name": 1, "role": 1, "is_active": 1}
+                ):
+                    team_members.append(member)
+                comprehensive_data["team_members"] = team_members
+            except:
+                comprehensive_data["team_members"] = []
+        
+        return {
+            "success": True,
+            "user_profile": {
+                **user_data,
+                "comprehensive_data": comprehensive_data
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving comprehensive profile: {str(e)}"
+        )
