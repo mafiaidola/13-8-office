@@ -1,7 +1,6 @@
-// Enhanced Dashboard Component - لوحة التحكم المحسنة - Phase 3
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from '../../localization/translations.js';
-import { activityLogger } from '../../utils/activityLogger.js';
+// Enhanced Dashboard Component - لوحة التحكم المحسنة
+import React from 'react';
+import RoleBasedDashboard from './RoleBasedDashboard';
 
 // Utility function for activity icons
 const getActivityIcon = (type) => {
