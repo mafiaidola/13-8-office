@@ -110,20 +110,22 @@ async def health_check():
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/auth/login")
-async def login(login_data: dict):
+async def login(credentials: dict):
     try:
-        username = login_data.get("username")
-        password = login_data.get("password")
+        username = credentials.get("username")
+        password = credentials.get("password")
+        geolocation = credentials.get("geolocation")  # البيانات الجغرافية الاختيارية
+        device_info = credentials.get("device_info")  # معلومات الجهاز
+        ip_address = credentials.get("ip_address")  # عنوان IP
         
         if not username or not password:
             raise HTTPException(status_code=400, detail="Username and password required")
-        
-        # Check for admin user
+
         if username == "admin" and password == "admin123":
-            # Create or get admin user
+            # Admin login
             admin_user = await db.users.find_one({"username": "admin"})
             if not admin_user:
-                # Create admin user
+                # Create admin user if not exists
                 admin_user = {
                     "id": "admin-001",
                     "username": "admin",
@@ -135,7 +137,6 @@ async def login(login_data: dict):
                 }
                 await db.users.insert_one(admin_user)
             
-            # Create JWT token
             token = create_jwt_token({
                 "id": admin_user.get("id", "admin-001"),
                 "username": admin_user["username"],
@@ -143,15 +144,20 @@ async def login(login_data: dict):
                 "full_name": admin_user.get("full_name", "System Administrator")
             })
             
+            user_info = {
+                "id": admin_user.get("id", "admin-001"),
+                "username": admin_user["username"],
+                "full_name": admin_user.get("full_name", "System Administrator"),
+                "role": admin_user["role"]
+            }
+            
+            # تسجيل عملية الدخول
+            await log_user_login(user_info, geolocation, device_info, ip_address)
+            
             return {
                 "access_token": token,
                 "token_type": "bearer",
-                "user": {
-                    "id": admin_user.get("id", "admin-001"),
-                    "username": admin_user["username"],
-                    "full_name": admin_user.get("full_name", "System Administrator"),
-                    "role": admin_user["role"]
-                }
+                "user": user_info
             }
         else:
             # Check database for user
@@ -166,21 +172,66 @@ async def login(login_data: dict):
                 "full_name": user.get("full_name", "")
             })
             
+            user_info = {
+                "id": user.get("id", str(user.get("_id"))),
+                "username": user["username"],
+                "full_name": user.get("full_name", ""),
+                "role": user["role"]
+            }
+            
+            # تسجيل عملية الدخول
+            await log_user_login(user_info, geolocation, device_info, ip_address)
+            
             return {
                 "access_token": token,
                 "token_type": "bearer",
-                "user": {
-                    "id": user.get("id", str(user.get("_id"))),
-                    "username": user["username"],
-                    "full_name": user.get("full_name", ""),
-                    "role": user["role"]
-                }
+                "user": user_info
             }
             
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Login error: {str(e)}")
+
+async def log_user_login(user_info: dict, geolocation: dict = None, device_info: str = None, ip_address: str = None):
+    """تسجيل عملية دخول المستخدم مع الموقع الجغرافي"""
+    try:
+        login_log = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_info["id"],
+            "username": user_info["username"],
+            "full_name": user_info["full_name"],
+            "role": user_info["role"],
+            "login_time": datetime.utcnow().isoformat(),
+            "device_info": device_info or "Unknown Device",
+            "ip_address": ip_address or "Unknown IP",
+            "geolocation": geolocation or {},
+            "session_id": str(uuid.uuid4()),
+            "login_method": "web_portal",
+            "is_active_session": True
+        }
+        
+        # إضافة معلومات الموقع إذا كانت متوفرة
+        if geolocation:
+            login_log.update({
+                "latitude": geolocation.get("latitude"),
+                "longitude": geolocation.get("longitude"),
+                "location_accuracy": geolocation.get("accuracy"),
+                "location_timestamp": geolocation.get("timestamp"),
+                "city": geolocation.get("city", "Unknown"),
+                "country": geolocation.get("country", "Unknown"),
+                "address": geolocation.get("address", "")
+            })
+        
+        # حفظ سجل الدخول في قاعدة البيانات
+        await db.login_logs.insert_one(login_log)
+        
+        print(f"✅ تم تسجيل عملية دخول المستخدم: {user_info['username']} في {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+    except Exception as e:
+        print(f"❌ خطأ في تسجيل عملية الدخول: {str(e)}")
+        # لا نقف التطبيق إذا فشل التسجيل
+        pass
 
 @app.get("/api/dashboard/stats/{role_type}")
 async def get_dashboard_stats(role_type: str, time_filter: str = "today", current_user: dict = Depends(get_current_user)):
