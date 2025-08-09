@@ -51,7 +51,8 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
           line: profile.line || '', // إضافة الخط
           monthly_sales_target: profile.monthly_sales_target || 50000,
           is_active: profile.is_active !== false,
-          assigned_clinic_ids: profile.comprehensive_data?.assigned_clinics?.map(c => c.id) || []
+          assigned_clinic_ids: profile.comprehensive_data?.assigned_clinics?.map(c => c.id) || [],
+          password: '' // إضافة حقل كلمة المرور
         });
         
         console.log('✅ Comprehensive profile loaded successfully');
