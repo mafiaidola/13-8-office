@@ -315,48 +315,48 @@ const AdminDashboard = ({
 
       {/* الملخص المالي */}
       {dashboardData.financial_overview && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <span className="text-green-600 mr-3">💰</span>
+        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
+            <span className="text-green-600 mr-3 text-3xl">💰</span>
             الملخص المالي الشامل
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-green-800">إجمالي الديون</h4>
-                <span className="text-green-600 text-2xl">💳</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-green-400 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-xl font-bold text-gray-900">إجمالي الديون</h4>
+                <span className="text-green-600 text-4xl">💳</span>
               </div>
-              <p className="text-3xl font-bold text-green-600 mb-2">
+              <p className="text-4xl font-black text-green-700 mb-3">
                 {(dashboardData.financial_overview.total_outstanding || 0).toLocaleString()} ج.م
               </p>
-              <p className="text-sm text-green-600">
+              <p className="text-base font-semibold text-gray-800">
                 {dashboardData.financial_overview.total_debts || 0} دين نشط
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-blue-800">المبلغ المحصل</h4>
-                <span className="text-blue-600 text-2xl">💰</span>
+            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-blue-400 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-xl font-bold text-gray-900">المبلغ المحصل</h4>
+                <span className="text-blue-600 text-4xl">💰</span>
               </div>
-              <p className="text-3xl font-bold text-blue-600 mb-2">
+              <p className="text-4xl font-black text-blue-700 mb-3">
                 {(dashboardData.financial_overview.total_settled || 0).toLocaleString()} ج.م
               </p>
-              <p className="text-sm text-blue-600">تم تحصيله بنجاح</p>
+              <p className="text-base font-semibold text-gray-800">تم تحصيله بنجاح</p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-6 border border-purple-200">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-purple-800">معدل التحصيل</h4>
-                <span className="text-purple-600 text-2xl">📊</span>
+            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-purple-400 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-xl font-bold text-gray-900">معدل التحصيل</h4>
+                <span className="text-purple-600 text-4xl">📊</span>
               </div>
-              <p className="text-3xl font-bold text-purple-600 mb-2">
+              <p className="text-4xl font-black text-purple-700 mb-3">
                 {dashboardData.financial_overview.total_outstanding > 0 ? 
                   Math.round((dashboardData.financial_overview.total_settled / 
                     (dashboardData.financial_overview.total_outstanding + dashboardData.financial_overview.total_settled)) * 100) : 0}%
               </p>
-              <p className="text-sm text-purple-600">من إجمالي المبلغ</p>
+              <p className="text-base font-semibold text-gray-800">من إجمالي المبلغ</p>
             </div>
           </div>
         </div>
