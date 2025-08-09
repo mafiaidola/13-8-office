@@ -763,25 +763,71 @@ const EnhancedClinicRegistration = () => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* قسم الخريطة التفاعلية */}
+        {/* قسم الخريطة والموقع - محسن */}
         <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
-          <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center">
-            🗺️ تحديد موقع العيادة على الخريطة
+          <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center">
+            🗺️ تحديد الموقع على الخريطة
           </h3>
           
-          {/* مربع البحث */}
+          {/* رسالة خطأ الموقع */}
+          {errors.location && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-yellow-800 text-sm">
+                    {errors.location}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* أزرار التحكم في الموقع */}
+          <div className="mb-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={getCurrentLocation}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            >
+              📍 الحصول على موقعي الحالي
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => {
+                if (mapInstanceRef.current && markerRef.current) {
+                  const center = mapInstanceRef.current.getCenter();
+                  markerRef.current.setPosition(center);
+                  
+                  setLocationData(prev => ({
+                    ...prev,
+                    clinic_latitude: center.lat(),
+                    clinic_longitude: center.lng()
+                  }));
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+            >
+              🎯 وضع الدبوس في المنتصف
+            </button>
+          </div>
+
+          {/* حقل البحث في العنوان */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-blue-800 mb-2">
-              🔍 البحث عن العنوان (اختياري)
+              البحث عن عنوان أو مكان
             </label>
             <input
               id="address-search"
               type="text"
-              placeholder="ابحث عن عنوان العيادة هنا..."
-              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+              placeholder="اكتب اسم المكان أو العنوان للبحث..."
             />
-            <p className="text-xs text-blue-600 mt-1">
-              💡 يمكنك البحث بالاسم أو العنوان، أو النقر مباشرة على الخريطة، أو سحب الدبوس الأحمر
+            <p className="mt-1 text-xs text-blue-600">
+              مثال: مستشفى القاهرة، شارع التحرير، أو اسم المنطقة
             </p>
           </div>
 
@@ -789,38 +835,74 @@ const EnhancedClinicRegistration = () => {
           <div className="relative">
             <div 
               ref={mapRef}
-              style={{ height: '400px', width: '100%' }}
-              className="rounded-lg border-2 border-gray-300 bg-gray-100"
-            >
-              {!mapLoaded && (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">جاري تحميل الخريطة...</p>
-                  </div>
+              className="w-full h-96 rounded-lg border border-blue-300 shadow-lg"
+              style={{ minHeight: '400px' }}
+            />
+            {/* مؤشر التحميل */}
+            {!window.google && (
+              <div className="absolute inset-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-blue-600 text-sm">جاري تحميل الخريطة...</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* معلومات الموقع المحدد */}
+          <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              معلومات الموقع المحدد:
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">خط الطول:</span>
+                <span className="ml-2 text-blue-600">
+                  {locationData.clinic_longitude ? locationData.clinic_longitude.toFixed(6) : 'غير محدد'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">خط العرض:</span>
+                <span className="ml-2 text-blue-600">
+                  {locationData.clinic_latitude ? locationData.clinic_latitude.toFixed(6) : 'غير محدد'}
+                </span>
+              </div>
+              {locationData.clinic_address && (
+                <div className="md:col-span-2">
+                  <span className="font-medium text-gray-600">العنوان:</span>
+                  <span className="ml-2 text-gray-800">{locationData.clinic_address}</span>
+                </div>
+              )}
+              {userLocation && userLocation.accuracy && (
+                <div className="md:col-span-2">
+                  <span className="font-medium text-gray-600">دقة الموقع:</span>
+                  <span className="ml-2 text-green-600">
+                    ±{Math.round(userLocation.accuracy)} متر
+                  </span>
                 </div>
               )}
             </div>
             
-            {/* معلومات الموقع */}
-            {locationData.clinic_latitude && locationData.clinic_longitude && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-sm text-green-800">
-                  ✅ <strong>تم تحديد الموقع:</strong><br/>
-                  خط العرض: {locationData.clinic_latitude.toFixed(6)}<br/>
-                  خط الطول: {locationData.clinic_longitude.toFixed(6)}
-                  {locationData.location_accuracy && (
-                    <><br/>دقة الموقع: {locationData.location_accuracy} متر</>
-                  )}
+            {(!locationData.clinic_latitude || !locationData.clinic_longitude) && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-amber-800 text-sm">
+                  ⚡ يرجى تحديد موقع العيادة على الخريطة بسحب الدبوس أو النقر على الموقع المطلوب
                 </p>
               </div>
             )}
+          </div>
 
-            {errors.location && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">❌ {errors.location}</p>
-              </div>
-            )}
+          {/* إرشادات الاستخدام */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">إرشادات تحديد الموقع:</h4>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>• اضغط على "الحصول على موقعي الحالي" لتحديد موقعك الحالي تلقائياً</li>
+              <li>• يمكنك البحث عن العنوان في مربع البحث أعلاه</li>
+              <li>• اسحب الدبوس الأحمر لتحديد الموقع الدقيق للعيادة</li>
+              <li>• انقر في أي مكان على الخريطة لنقل الدبوس إلى ذلك الموقع</li>
+              <li>• استخدم أزرار التكبير والتصغير للحصول على دقة أفضل</li>
+            </ul>
           </div>
         </div>
 
