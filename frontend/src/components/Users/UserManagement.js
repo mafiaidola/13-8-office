@@ -242,6 +242,17 @@ const UserManagement = ({ user, language, isRTL }) => {
         </div>
       </div>
 
+      {/* Excel Management Section */}
+      <ExcelManager
+        dataType="users"
+        title="المستخدمين"
+        icon="👥"
+        onImportComplete={() => {
+          loadUsers(); // إعادة تحميل البيانات بعد الاستيراد
+        }}
+        className="mb-6"
+      />
+
       {/* Users Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
