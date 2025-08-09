@@ -203,8 +203,8 @@ async def register_clinic(
             "district_name": None,
             
             # التصنيفات الافتراضية
-            "classification": ClinicClassification.AVERAGE,
-            "credit_classification": CreditClassification.B,
+            "classification": ClinicClassification.CLASS_B,
+            "credit_classification": CreditClassification.YELLOW,
             "classification_notes": "تصنيف افتراضي للعيادة الجديدة",
             
             # معلومات التخصيص
