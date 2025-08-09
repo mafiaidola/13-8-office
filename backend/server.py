@@ -66,6 +66,7 @@ app.include_router(visits_router)
 app.include_router(activities_router)
 app.include_router(invoice_router)
 app.include_router(debt_router)
+app.include_router(clinic_router)
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
