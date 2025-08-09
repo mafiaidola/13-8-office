@@ -9,6 +9,8 @@ const VisitsManagement = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateVisitModal, setShowCreateVisitModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
+  const [loginLogs, setLoginLogs] = useState([]);  // إضافة حالة سجل الدخول
+  const [loginLogsLoading, setLoginLogsLoading] = useState(false);  // حالة التحميل
   
   // Form states
   const [newVisit, setNewVisit] = useState({
