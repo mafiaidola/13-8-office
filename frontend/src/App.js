@@ -712,16 +712,6 @@ const LoginForm = () => {
             />
           </div>
 
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={handleDemoCredentials}
-              className="text-blue-300 hover:text-blue-200 text-sm"
-            >
-              {t('auth', 'demoCredentials')}
-            </button>
-          </div>
-
           <button
             type="submit"
             disabled={loading}
