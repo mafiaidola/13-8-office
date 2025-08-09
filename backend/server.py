@@ -2956,35 +2956,60 @@ async def create_debt(debt_data: dict, current_user: User = Depends(get_current_
     """إضافة دين جديد - Create new debt"""
     try:
         # Validate required fields
-        required_fields = ["clinic_id", "sales_rep_id", "amount", "description"]
+        required_fields = ["clinic_id", "amount", "description"]
         for field in required_fields:
             if field not in debt_data:
                 raise HTTPException(status_code=400, detail=f"الحقل '{field}' مطلوب")
 
-        # Get clinic and rep info
+        # Get clinic info
         clinic = await db.clinics.find_one({"id": debt_data["clinic_id"]})
         if not clinic:
             raise HTTPException(status_code=404, detail="العيادة غير موجودة")
         
-        sales_rep = await db.users.find_one({"id": debt_data["sales_rep_id"], "role": "medical_rep"})
-        if not sales_rep:
-            raise HTTPException(status_code=404, detail="المندوب غير موجود")
+        # Get sales_rep_id from debt_data or use assigned rep from clinic or current user
+        sales_rep_id = debt_data.get("sales_rep_id")
+        sales_rep_name = "غير محدد"
+        area = ""
+        
+        if sales_rep_id:
+            # Use provided sales rep
+            sales_rep = await db.users.find_one({"id": sales_rep_id, "role": "medical_rep"})
+            if sales_rep:
+                sales_rep_name = sales_rep.get("full_name", "")
+                area = sales_rep.get("area", "")
+        elif clinic.get("assigned_rep_id"):
+            # Use clinic's assigned rep
+            sales_rep_id = clinic.get("assigned_rep_id")
+            sales_rep = await db.users.find_one({"id": sales_rep_id, "role": "medical_rep"})
+            if sales_rep:
+                sales_rep_name = sales_rep.get("full_name", "")
+                area = sales_rep.get("area", "")
+        else:
+            # Use current user if they are a medical rep
+            if current_user.get("role") == "medical_rep":
+                sales_rep_id = current_user.get("id")
+                sales_rep_name = current_user.get("full_name", "")
+                area = current_user.get("area", "")
+            else:
+                # Default to system
+                sales_rep_id = "system"
+                sales_rep_name = "النظام"
 
         debt_id = str(uuid.uuid4())
         debt_record = {
             "id": debt_id,
             "clinic_id": debt_data["clinic_id"],
             "clinic_name": clinic.get("name", ""),
-            "sales_rep_id": debt_data["sales_rep_id"],
-            "sales_rep_name": sales_rep.get("full_name", ""),
-            "area": sales_rep.get("area", ""),
+            "sales_rep_id": sales_rep_id,
+            "sales_rep_name": sales_rep_name,
+            "area": area,
             "amount": float(debt_data["amount"]),
             "paid_amount": 0.0,
             "remaining_amount": float(debt_data["amount"]),
             "description": debt_data["description"],
             "status": "outstanding",
             "created_at": datetime.utcnow(),
-            "created_by": current_user.id,
+            "created_by": current_user.get("id", ""),
             "payments": []
         }
 
