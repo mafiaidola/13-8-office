@@ -1,556 +1,270 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
-اختبار شامل للنظام الجديد المحسن بعد تطبيق جميع التحديثات
-Comprehensive Testing for Enhanced System After All Updates Applied
-
-المطلوب اختبار:
-1. إدارة المخازن والمنتجات المُصلحة
-2. نظام العيادات المحسن  
-3. نظام إدارة الزيارات
-4. النظام المالي الموحد
-
-الهدف: التأكد من عمل جميع التحديثات والإصلاحات المطبقة وعدم وجود مشاكل في APIs الجديدة
+Quick comprehensive test for updated dashboard system
+Arabic Review: اختبار شامل سريع للتأكد من أن نظام لوحة التحكم المحدث يعمل بشكل صحيح مع التحسينات الجديدة
 """
 
 import requests
 import json
 import time
 from datetime import datetime
-import sys
 
-class ComprehensiveArabicSystemTester:
+# Configuration
+BACKEND_URL = "https://27f64219-57e1-4ae7-9f08-6723a4a751d3.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
+
+class DashboardSystemTester:
     def __init__(self):
-        # استخدام الـ URL من متغيرات البيئة
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('REACT_APP_BACKEND_URL='):
-                    self.base_url = line.split('=')[1].strip()
-                    break
-        
-        if not self.base_url.endswith('/api'):
-            self.base_url += '/api'
-            
         self.session = requests.Session()
         self.jwt_token = None
         self.test_results = []
         self.start_time = time.time()
         
-        print(f"🚀 بدء اختبار شامل للنظام المحسن")
-        print(f"📡 Backend URL: {self.base_url}")
-        print("=" * 80)
-
-    def make_request(self, method, endpoint, data=None, headers=None):
-        """إجراء طلب HTTP مع معالجة الأخطاء"""
-        url = f"{self.base_url}{endpoint}"
-        
-        if headers is None:
-            headers = {}
-        
-        if self.jwt_token:
-            headers['Authorization'] = f'Bearer {self.jwt_token}'
-        
+    def log_test(self, test_name, success, response_time, details=""):
+        """Log test results"""
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "response_time": response_time,
+            "details": details
+        })
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {response_time:.2f}ms - {details}")
+    
+    def test_admin_login(self):
+        """Test admin login with admin/admin123"""
+        start_time = time.time()
         try:
-            start_time = time.time()
+            response = self.session.post(f"{API_BASE}/auth/login", json={
+                "username": "admin",
+                "password": "admin123"
+            })
+            response_time = (time.time() - start_time) * 1000
             
-            if method.upper() == 'GET':
-                response = self.session.get(url, headers=headers)
-            elif method.upper() == 'POST':
-                headers['Content-Type'] = 'application/json'
-                response = self.session.post(url, json=data, headers=headers)
-            elif method.upper() == 'PUT':
-                headers['Content-Type'] = 'application/json'
-                response = self.session.put(url, json=data, headers=headers)
-            elif method.upper() == 'DELETE':
-                response = self.session.delete(url, headers=headers)
+            if response.status_code == 200:
+                data = response.json()
+                self.jwt_token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.jwt_token}"})
+                
+                user_info = data.get("user", {})
+                details = f"User: {user_info.get('full_name')}, Role: {user_info.get('role')}"
+                self.log_test("Admin Login (admin/admin123)", True, response_time, details)
+                return True
             else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+                self.log_test("Admin Login (admin/admin123)", False, response_time, f"HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Admin Login (admin/admin123)", False, response_time, f"Error: {str(e)}")
+            return False
+    
+    def test_dashboard_stats_admin(self):
+        """Test GET /api/dashboard/stats/admin - Admin statistics"""
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{API_BASE}/dashboard/stats/admin")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check for essential admin statistics
+                required_fields = ["total_users", "total_clinics", "total_products", "user_role", "dashboard_type"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    stats_summary = f"Users: {data.get('total_users')}, Clinics: {data.get('total_clinics')}, Products: {data.get('total_products')}"
+                    self.log_test("Dashboard Stats Admin", True, response_time, stats_summary)
+                    return data
+                else:
+                    self.log_test("Dashboard Stats Admin", False, response_time, f"Missing fields: {missing_fields}")
+                    return None
+            else:
+                self.log_test("Dashboard Stats Admin", False, response_time, f"HTTP {response.status_code}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Dashboard Stats Admin", False, response_time, f"Error: {str(e)}")
+            return None
+    
+    def test_dashboard_widgets_admin(self):
+        """Test GET /api/dashboard/widgets/admin - Admin widgets"""
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{API_BASE}/dashboard/widgets/admin")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if isinstance(data, list) and len(data) > 0:
+                    # Check widget structure
+                    widget_count = len(data)
+                    valid_widgets = 0
+                    
+                    for widget in data:
+                        if all(key in widget for key in ["id", "title", "type", "size"]):
+                            valid_widgets += 1
+                    
+                    details = f"{widget_count} widgets, {valid_widgets} valid"
+                    success = valid_widgets == widget_count
+                    self.log_test("Dashboard Widgets Admin", success, response_time, details)
+                    return data
+                else:
+                    self.log_test("Dashboard Widgets Admin", False, response_time, "Empty or invalid widget list")
+                    return None
+            else:
+                self.log_test("Dashboard Widgets Admin", False, response_time, f"HTTP {response.status_code}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Dashboard Widgets Admin", False, response_time, f"Error: {str(e)}")
+            return None
+    
+    def test_data_consistency(self, stats_data, widgets_data):
+        """Test data consistency between stats and widgets"""
+        start_time = time.time()
+        try:
+            if not stats_data or not widgets_data:
+                self.log_test("Data Consistency Check", False, 0, "Missing data for comparison")
+                return False
+            
+            # Check if dashboard_type matches role
+            dashboard_type = stats_data.get("dashboard_type")
+            user_role = stats_data.get("user_role")
+            
+            # Check if widgets are appropriate for admin role
+            admin_widget_ids = [w.get("id") for w in widgets_data if w.get("id")]
+            expected_admin_widgets = ["system_overview", "user_management", "financial_summary"]
+            
+            has_expected_widgets = any(widget in admin_widget_ids for widget in expected_admin_widgets)
             
             response_time = (time.time() - start_time) * 1000
             
-            return {
-                'status_code': response.status_code,
-                'data': response.json() if response.content else {},
-                'response_time': response_time,
-                'success': 200 <= response.status_code < 300
-            }
-            
-        except requests.exceptions.RequestException as e:
-            return {
-                'status_code': 0,
-                'data': {'error': str(e)},
-                'response_time': 0,
-                'success': False
-            }
-        except json.JSONDecodeError:
-            return {
-                'status_code': response.status_code,
-                'data': {'error': 'Invalid JSON response'},
-                'response_time': 0,
-                'success': False
-            }
-
-    def test_admin_login(self):
-        """اختبار تسجيل دخول admin/admin123"""
-        print("🔐 اختبار تسجيل دخول admin/admin123...")
-        
-        login_data = {
-            "username": "admin",
-            "password": "admin123"
-        }
-        
-        result = self.make_request('POST', '/auth/login', login_data)
-        
-        if result['success'] and 'access_token' in result['data']:
-            self.jwt_token = result['data']['access_token']
-            user_info = result['data'].get('user', {})
-            
-            self.test_results.append({
-                'test': 'تسجيل دخول admin/admin123',
-                'status': 'نجح ✅',
-                'details': f"المستخدم: {user_info.get('full_name', 'غير محدد')} | الدور: {user_info.get('role', 'غير محدد')}",
-                'response_time': f"{result['response_time']:.2f}ms"
-            })
-            return True
-        else:
-            self.test_results.append({
-                'test': 'تسجيل دخول admin/admin123',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{result['response_time']:.2f}ms"
-            })
+            if dashboard_type == "admin" and user_role == "admin" and has_expected_widgets:
+                details = f"Dashboard type: {dashboard_type}, User role: {user_role}, Admin widgets: {len(admin_widget_ids)}"
+                self.log_test("Data Consistency Check", True, response_time, details)
+                return True
+            else:
+                details = f"Inconsistent data - Dashboard: {dashboard_type}, Role: {user_role}"
+                self.log_test("Data Consistency Check", False, response_time, details)
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Data Consistency Check", False, response_time, f"Error: {str(e)}")
             return False
-
-    def test_warehouse_management_fixed(self):
-        """اختبار إدارة المخازن والمنتجات المُصلحة"""
-        print("🏭 اختبار إدارة المخازن والمنتجات المُصلحة...")
-        
-        # 1. GET /api/warehouses - جلب المخازن
-        print("  📦 اختبار GET /api/warehouses...")
-        result = self.make_request('GET', '/warehouses')
-        
-        if result['success']:
-            warehouses = result['data']
-            warehouse_count = len(warehouses) if isinstance(warehouses, list) else 0
+    
+    def test_response_speed(self):
+        """Test response speed for dashboard APIs"""
+        start_time = time.time()
+        try:
+            # Test multiple quick requests to check performance
+            speeds = []
             
-            self.test_results.append({
-                'test': 'GET /api/warehouses - جلب المخازن',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {warehouse_count} مخزن",
-                'response_time': f"{result['response_time']:.2f}ms"
-            })
-            
-            # 2. اختبار GET /api/warehouses/{id}/products للتأكد من عدم وجود بيانات وهمية
-            if warehouse_count > 0:
-                first_warehouse = warehouses[0]
-                warehouse_id = first_warehouse.get('id')
+            for i in range(3):
+                req_start = time.time()
+                response = self.session.get(f"{API_BASE}/dashboard/stats/admin")
+                req_time = (time.time() - req_start) * 1000
                 
-                print(f"  🔍 اختبار GET /api/warehouses/{warehouse_id}/products...")
-                products_result = self.make_request('GET', f'/warehouses/{warehouse_id}/products')
+                if response.status_code == 200:
+                    speeds.append(req_time)
+            
+            if speeds:
+                avg_speed = sum(speeds) / len(speeds)
+                max_speed = max(speeds)
+                min_speed = min(speeds)
                 
-                if products_result['success']:
-                    products = products_result['data']
-                    products_count = len(products) if isinstance(products, list) else 0
-                    
-                    # فحص البيانات الوهمية
-                    dummy_data_found = False
-                    if isinstance(products, list):
-                        for product in products:
-                            product_name = product.get('name', '').lower()
-                            product_id = product.get('id', '').lower()
-                            if ('منتج' in product_name and any(char.isdigit() for char in product_name)) or \
-                               ('prod-' in product_id and product_id.replace('prod-', '').isdigit()):
-                                dummy_data_found = True
-                                break
-                    
-                    status = 'فشل ❌' if dummy_data_found else 'نجح ✅'
-                    details = f"تم العثور على بيانات وهمية!" if dummy_data_found else f"لا توجد بيانات وهمية - {products_count} منتج حقيقي"
-                    
-                    self.test_results.append({
-                        'test': f'GET /api/warehouses/{warehouse_id}/products - فحص البيانات الوهمية',
-                        'status': status,
-                        'details': details,
-                        'response_time': f"{products_result['response_time']:.2f}ms"
-                    })
-                else:
-                    self.test_results.append({
-                        'test': f'GET /api/warehouses/{warehouse_id}/products',
-                        'status': 'فشل ❌',
-                        'details': f"خطأ: {products_result['data'].get('detail', 'خطأ غير معروف')}",
-                        'response_time': f"{products_result['response_time']:.2f}ms"
-                    })
-            
-            # 3. POST /api/warehouses - إنشاء مخزن جديد
-            print("  ➕ اختبار POST /api/warehouses - إنشاء مخزن جديد...")
-            new_warehouse_data = {
-                "name": "مخزن اختبار النظام المحسن",
-                "location": "القاهرة - منطقة الاختبار",
-                "manager_name": "مدير الاختبار",
-                "manager_phone": "01234567890",
-                "capacity": 1000,
-                "description": "مخزن تم إنشاؤه لاختبار النظام المحسن"
-            }
-            
-            create_result = self.make_request('POST', '/warehouses', new_warehouse_data)
-            
-            if create_result['success']:
-                self.test_results.append({
-                    'test': 'POST /api/warehouses - إنشاء مخزن جديد',
-                    'status': 'نجح ✅',
-                    'details': f"تم إنشاء مخزن جديد بنجاح",
-                    'response_time': f"{create_result['response_time']:.2f}ms"
-                })
-            else:
-                self.test_results.append({
-                    'test': 'POST /api/warehouses - إنشاء مخزن جديد',
-                    'status': 'فشل ❌',
-                    'details': f"خطأ: {create_result['data'].get('detail', 'خطأ غير معروف')}",
-                    'response_time': f"{create_result['response_time']:.2f}ms"
-                })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/warehouses - جلب المخازن',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{result['response_time']:.2f}ms"
-            })
-        
-        # 4. GET /api/products - جلب المنتجات الحقيقية
-        print("  📋 اختبار GET /api/products - جلب المنتجات الحقيقية...")
-        products_result = self.make_request('GET', '/products')
-        
-        if products_result['success']:
-            products = products_result['data']
-            products_count = len(products) if isinstance(products, list) else 0
-            
-            self.test_results.append({
-                'test': 'GET /api/products - جلب المنتجات الحقيقية',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {products_count} منتج حقيقي",
-                'response_time': f"{products_result['response_time']:.2f}ms"
-            })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/products - جلب المنتجات الحقيقية',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {products_result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{products_result['response_time']:.2f}ms"
-            })
-
-    def test_enhanced_clinic_system(self):
-        """اختبار نظام العيادات المحسن"""
-        print("🏥 اختبار نظام العيادات المحسن...")
-        
-        # 1. GET /api/enhanced-clinics/registration/form-data - جلب بيانات النموذج الجديدة
-        print("  📋 اختبار GET /api/enhanced-clinics/registration/form-data...")
-        result = self.make_request('GET', '/enhanced-clinics/registration/form-data')
-        
-        if result['success']:
-            form_data = result['data']
-            
-            # التحقق من وجود التصنيفات الجديدة
-            classifications = form_data.get('classifications', [])
-            expected_classifications = ['Class A star', 'Class A', 'Class B', 'Class C', 'Class D']
-            found_classifications = [c.get('name', '') for c in classifications if isinstance(classifications, list)]
-            
-            # التحقق من وجود التصنيف الائتماني الجديد
-            credit_ratings = form_data.get('credit_ratings', [])
-            expected_credit_ratings = ['أخضر', 'أصفر', 'أحمر']
-            found_credit_ratings = [c.get('name', '') for c in credit_ratings if isinstance(credit_ratings, list)]
-            
-            # التحقق من وجود الخطين الجديدين
-            lines = form_data.get('lines', [])
-            expected_lines = ['الخط الأول', 'الخط الثاني']
-            found_lines = [l.get('name', '') for l in lines if isinstance(lines, list)]
-            
-            # التحقق من وجود المناطق المرتبطة بالخطوط
-            areas = form_data.get('areas', [])
-            areas_count = len(areas) if isinstance(areas, list) else 0
-            
-            classifications_found = any(cls in found_classifications for cls in expected_classifications)
-            credit_ratings_found = any(cr in found_credit_ratings for cr in expected_credit_ratings)
-            lines_found = any(line in found_lines for line in expected_lines)
-            
-            details = f"التصنيفات: {len(found_classifications)} | التصنيف الائتماني: {len(found_credit_ratings)} | الخطوط: {len(found_lines)} | المناطق: {areas_count}"
-            
-            if classifications_found and credit_ratings_found and lines_found and areas_count > 0:
-                status = 'نجح ✅'
-            else:
-                status = 'جزئي ⚠️'
-            
-            self.test_results.append({
-                'test': 'GET /api/enhanced-clinics/registration/form-data',
-                'status': status,
-                'details': details,
-                'response_time': f"{result['response_time']:.2f}ms"
-            })
-        else:
-            # إذا لم يكن endpoint متاحاً، نجرب الـ endpoints العادية
-            print("  📋 اختبار endpoints العيادات العادية...")
-            
-            # اختبار GET /api/clinics
-            clinics_result = self.make_request('GET', '/clinics')
-            if clinics_result['success']:
-                clinics = clinics_result['data']
-                clinics_count = len(clinics) if isinstance(clinics, list) else 0
+                # Consider good if average response is under 100ms
+                is_fast = avg_speed < 100
                 
-                self.test_results.append({
-                    'test': 'GET /api/clinics (بديل)',
-                    'status': 'نجح ✅',
-                    'details': f"تم جلب {clinics_count} عيادة",
-                    'response_time': f"{clinics_result['response_time']:.2f}ms"
-                })
+                details = f"Avg: {avg_speed:.2f}ms, Min: {min_speed:.2f}ms, Max: {max_speed:.2f}ms"
+                self.log_test("Response Speed Test", is_fast, avg_speed, details)
+                return is_fast
             else:
-                self.test_results.append({
-                    'test': 'نظام العيادات المحسن',
-                    'status': 'فشل ❌',
-                    'details': f"خطأ: {result['data'].get('detail', 'خطأ غير معروف')}",
-                    'response_time': f"{result['response_time']:.2f}ms"
-                })
-
-    def test_visit_management_system(self):
-        """اختبار نظام إدارة الزيارات"""
-        print("🚶 اختبار نظام إدارة الزيارات...")
-        
-        # 1. GET /api/visits/dashboard/overview - نظرة عامة على الزيارات
-        print("  📊 اختبار GET /api/visits/dashboard/overview...")
-        overview_result = self.make_request('GET', '/visits/dashboard/overview')
-        
-        if overview_result['success']:
-            overview_data = overview_result['data']
-            
-            self.test_results.append({
-                'test': 'GET /api/visits/dashboard/overview',
-                'status': 'نجح ✅',
-                'details': f"تم جلب نظرة عامة على الزيارات",
-                'response_time': f"{overview_result['response_time']:.2f}ms"
-            })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/visits/dashboard/overview',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {overview_result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{overview_result['response_time']:.2f}ms"
-            })
-        
-        # 2. GET /api/visits/available-clinics - العيادات المتاحة للمندوب
-        print("  🏥 اختبار GET /api/visits/available-clinics...")
-        clinics_result = self.make_request('GET', '/visits/available-clinics')
-        
-        if clinics_result['success']:
-            available_clinics = clinics_result['data']
-            clinics_count = len(available_clinics) if isinstance(available_clinics, list) else 0
-            
-            self.test_results.append({
-                'test': 'GET /api/visits/available-clinics',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {clinics_count} عيادة متاحة للزيارة",
-                'response_time': f"{clinics_result['response_time']:.2f}ms"
-            })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/visits/available-clinics',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {clinics_result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{clinics_result['response_time']:.2f}ms"
-            })
-        
-        # 3. GET /api/visits/ - قائمة الزيارات
-        print("  📋 اختبار GET /api/visits/...")
-        visits_result = self.make_request('GET', '/visits/')
-        
-        if visits_result['success']:
-            visits = visits_result['data']
-            visits_count = len(visits) if isinstance(visits, list) else 0
-            
-            self.test_results.append({
-                'test': 'GET /api/visits/ - قائمة الزيارات',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {visits_count} زيارة",
-                'response_time': f"{visits_result['response_time']:.2f}ms"
-            })
-        else:
-            # جرب endpoint بديل
-            visits_alt_result = self.make_request('GET', '/visits')
-            if visits_alt_result['success']:
-                visits = visits_alt_result['data']
-                visits_count = len(visits) if isinstance(visits, list) else 0
+                self.log_test("Response Speed Test", False, 0, "No successful requests")
+                return False
                 
-                self.test_results.append({
-                    'test': 'GET /api/visits - قائمة الزيارات (بديل)',
-                    'status': 'نجح ✅',
-                    'details': f"تم جلب {visits_count} زيارة",
-                    'response_time': f"{visits_alt_result['response_time']:.2f}ms"
-                })
-            else:
-                self.test_results.append({
-                    'test': 'GET /api/visits/ - قائمة الزيارات',
-                    'status': 'فشل ❌',
-                    'details': f"خطأ: {visits_result['data'].get('detail', 'خطأ غير معروف')}",
-                    'response_time': f"{visits_result['response_time']:.2f}ms"
-                })
-
-    def test_unified_financial_system(self):
-        """اختبار النظام المالي الموحد"""
-        print("💰 اختبار النظام المالي الموحد...")
-        
-        # 1. GET /api/unified-financial/dashboard - النظام المالي
-        print("  📊 اختبار GET /api/unified-financial/dashboard...")
-        dashboard_result = self.make_request('GET', '/unified-financial/dashboard')
-        
-        if dashboard_result['success']:
-            dashboard_data = dashboard_result['data']
-            
-            self.test_results.append({
-                'test': 'GET /api/unified-financial/dashboard',
-                'status': 'نجح ✅',
-                'details': f"تم جلب لوحة تحكم النظام المالي الموحد",
-                'response_time': f"{dashboard_result['response_time']:.2f}ms"
-            })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/unified-financial/dashboard',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {dashboard_result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{dashboard_result['response_time']:.2f}ms"
-            })
-        
-        # 2. GET /api/unified-financial/invoices - الفواتير
-        print("  🧾 اختبار GET /api/unified-financial/invoices...")
-        invoices_result = self.make_request('GET', '/unified-financial/invoices')
-        
-        if invoices_result['success']:
-            invoices = invoices_result['data']
-            invoices_count = len(invoices) if isinstance(invoices, list) else 0
-            
-            self.test_results.append({
-                'test': 'GET /api/unified-financial/invoices',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {invoices_count} فاتورة",
-                'response_time': f"{invoices_result['response_time']:.2f}ms"
-            })
-        else:
-            self.test_results.append({
-                'test': 'GET /api/unified-financial/invoices',
-                'status': 'فشل ❌',
-                'details': f"خطأ: {invoices_result['data'].get('detail', 'خطأ غير معروف')}",
-                'response_time': f"{invoices_result['response_time']:.2f}ms"
-            })
-        
-        # 3. GET /api/unified-financial/debts - الديون
-        print("  💳 اختبار GET /api/unified-financial/debts...")
-        debts_result = self.make_request('GET', '/unified-financial/debts')
-        
-        if debts_result['success']:
-            debts = debts_result['data']
-            debts_count = len(debts) if isinstance(debts, list) else 0
-            
-            self.test_results.append({
-                'test': 'GET /api/unified-financial/debts',
-                'status': 'نجح ✅',
-                'details': f"تم جلب {debts_count} دين",
-                'response_time': f"{debts_result['response_time']:.2f}ms"
-            })
-        else:
-            # جرب endpoint الديون العادي
-            debts_alt_result = self.make_request('GET', '/debts')
-            if debts_alt_result['success']:
-                debts = debts_alt_result['data']
-                debts_count = len(debts) if isinstance(debts, list) else 0
-                
-                self.test_results.append({
-                    'test': 'GET /api/debts - الديون (بديل)',
-                    'status': 'نجح ✅',
-                    'details': f"تم جلب {debts_count} دين",
-                    'response_time': f"{debts_alt_result['response_time']:.2f}ms"
-                })
-            else:
-                self.test_results.append({
-                    'test': 'GET /api/unified-financial/debts',
-                    'status': 'فشل ❌',
-                    'details': f"خطأ: {debts_result['data'].get('detail', 'خطأ غير معروف')}",
-                    'response_time': f"{debts_result['response_time']:.2f}ms"
-                })
-
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("Response Speed Test", False, response_time, f"Error: {str(e)}")
+            return False
+    
     def run_comprehensive_test(self):
-        """تشغيل الاختبار الشامل"""
-        print("🎯 بدء الاختبار الشامل للنظام المحسن...")
-        print("=" * 80)
+        """Run all dashboard system tests"""
+        print("🎯 **QUICK COMPREHENSIVE DASHBOARD SYSTEM TEST STARTING**")
+        print("=" * 70)
         
-        # 1. تسجيل الدخول
+        # Test 1: Admin Login
         if not self.test_admin_login():
-            print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
-            return
+            print("❌ Login failed - cannot continue with other tests")
+            return self.generate_report()
         
-        print()
+        # Test 2: Dashboard Stats
+        stats_data = self.test_dashboard_stats_admin()
         
-        # 2. اختبار إدارة المخازن والمنتجات المُصلحة
-        self.test_warehouse_management_fixed()
-        print()
+        # Test 3: Dashboard Widgets  
+        widgets_data = self.test_dashboard_widgets_admin()
         
-        # 3. اختبار نظام العيادات المحسن
-        self.test_enhanced_clinic_system()
-        print()
+        # Test 4: Data Consistency
+        self.test_data_consistency(stats_data, widgets_data)
         
-        # 4. اختبار نظام إدارة الزيارات
-        self.test_visit_management_system()
-        print()
+        # Test 5: Response Speed
+        self.test_response_speed()
         
-        # 5. اختبار النظام المالي الموحد
-        self.test_unified_financial_system()
-        print()
-        
-        # عرض النتائج النهائية
-        self.display_final_results()
-
-    def display_final_results(self):
-        """عرض النتائج النهائية"""
-        total_time = time.time() - self.start_time
+        return self.generate_report()
+    
+    def generate_report(self):
+        """Generate comprehensive test report"""
         total_tests = len(self.test_results)
-        passed_tests = len([t for t in self.test_results if '✅' in t['status']])
-        failed_tests = len([t for t in self.test_results if '❌' in t['status']])
-        partial_tests = len([t for t in self.test_results if '⚠️' in t['status']])
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
         
-        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
         
-        print("=" * 80)
-        print("📊 النتائج النهائية للاختبار الشامل")
-        print("=" * 80)
+        print("\n" + "=" * 70)
+        print("🎯 **DASHBOARD SYSTEM TEST RESULTS**")
+        print("=" * 70)
         
         for result in self.test_results:
-            print(f"🔸 {result['test']}")
-            print(f"   الحالة: {result['status']}")
-            print(f"   التفاصيل: {result['details']}")
-            print(f"   وقت الاستجابة: {result['response_time']}")
-            print()
+            status = "✅" if result["success"] else "❌"
+            print(f"{status} {result['test']}: {result['response_time']:.2f}ms - {result['details']}")
         
-        print("=" * 80)
-        print("📈 ملخص الإحصائيات:")
-        print(f"   إجمالي الاختبارات: {total_tests}")
-        print(f"   نجح: {passed_tests} ✅")
-        print(f"   فشل: {failed_tests} ❌")
-        print(f"   جزئي: {partial_tests} ⚠️")
-        print(f"   معدل النجاح: {success_rate:.1f}%")
-        print(f"   إجمالي وقت التنفيذ: {total_time:.2f} ثانية")
-        print("=" * 80)
+        print("\n📊 **SUMMARY**")
+        print(f"Success Rate: {success_rate:.1f}% ({successful_tests}/{total_tests} tests passed)")
+        print(f"Average Response Time: {avg_response_time:.2f}ms")
+        print(f"Total Execution Time: {total_time:.2f}s")
         
-        # تقييم النتيجة النهائية
-        if success_rate >= 90:
-            print("🎉 ممتاز! النظام يعمل بشكل مثالي")
-        elif success_rate >= 75:
-            print("👍 جيد! النظام يعمل بشكل جيد مع بعض التحسينات المطلوبة")
-        elif success_rate >= 50:
-            print("⚠️ متوسط! النظام يحتاج تحسينات")
+        if success_rate >= 80:
+            print("🎉 **DASHBOARD SYSTEM STATUS: EXCELLENT** - All core functionality working!")
+        elif success_rate >= 60:
+            print("⚠️ **DASHBOARD SYSTEM STATUS: GOOD** - Minor issues detected")
         else:
-            print("❌ ضعيف! النظام يحتاج إصلاحات جذرية")
+            print("❌ **DASHBOARD SYSTEM STATUS: NEEDS ATTENTION** - Critical issues found")
         
-        print("=" * 80)
+        return {
+            "success_rate": success_rate,
+            "total_tests": total_tests,
+            "successful_tests": successful_tests,
+            "avg_response_time": avg_response_time,
+            "total_time": total_time,
+            "test_results": self.test_results
+        }
 
 def main():
-    """الدالة الرئيسية"""
-    tester = ComprehensiveArabicSystemTester()
-    tester.run_comprehensive_test()
+    """Main test execution"""
+    print("🚀 Starting Quick Comprehensive Dashboard System Test")
+    print("Arabic Review: اختبار شامل سريع لنظام لوحة التحكم المحدث")
+    print("=" * 70)
+    
+    tester = DashboardSystemTester()
+    results = tester.run_comprehensive_test()
+    
+    return results
 
 if __name__ == "__main__":
     main()
