@@ -14,6 +14,10 @@ const EnhancedClinicRegistration = () => {
     line_id: '',
     area_id: '',
     district_id: '',
+    // إضافة التصنيفات المطلوبة
+    classification: 'class_b', // تصنيف العيادة الافتراضي
+    credit_classification: 'yellow', // التصنيف الائتماني الافتراضي
+    classification_notes: '',
     registration_notes: ''
   });
   
@@ -38,6 +42,7 @@ const EnhancedClinicRegistration = () => {
   const [errors, setErrors] = useState({});
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
   
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -48,6 +53,14 @@ const EnhancedClinicRegistration = () => {
     loadGoogleMaps();
     getCurrentLocation();
   }, []);
+
+  // تهيئة الخريطة عند تحميل Google Maps
+  useEffect(() => {
+    if (mapLoaded && !mapInitialized) {
+      initializeMap();
+      setMapInitialized(true);
+    }
+  }, [mapLoaded, userLocation]);
 
   const loadFormData = async () => {
     try {
@@ -60,27 +73,34 @@ const EnhancedClinicRegistration = () => {
       
       if (response.data.success) {
         setFormOptions(response.data.data);
+        console.log('✅ تم تحميل بيانات النموذج:', response.data.data);
       }
     } catch (error) {
-      console.error('Error loading form data:', error);
+      console.error('❌ خطأ في تحميل بيانات النموذج:', error);
       setErrors({general: 'خطأ في تحميل بيانات النموذج'});
     }
   };
 
   const loadGoogleMaps = () => {
+    // التحقق إذا كانت مكتبة Google Maps محملة بالفعل
     if (window.google && window.google.maps) {
       setMapLoaded(true);
       return;
     }
 
+    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    console.log('🗺️ تحميل خرائط جوجل مع المفتاح:', apiKey ? 'موجود' : 'مفقود');
+
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_GOOGLE_MAPS_API_KEY'}&libraries=places&language=ar&region=EG`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=ar&region=EG`;
     script.async = true;
     script.onload = () => {
+      console.log('✅ تم تحميل خرائط جوجل بنجاح');
       setMapLoaded(true);
     };
     script.onerror = () => {
-      setErrors({map: 'فشل في تحميل خرائط جوجل'});
+      console.error('❌ فشل في تحميل خرائط جوجل');
+      setErrors({map: 'فشل في تحميل خرائط جوجل - يرجى التأكد من مفتاح API'});
     };
     document.head.appendChild(script);
   };
@@ -95,9 +115,412 @@ const EnhancedClinicRegistration = () => {
             accuracy: position.coords.accuracy
           };
           setUserLocation(userLoc);
+          console.log('📍 تم الحصول على الموقع الحالي:', userLoc);
           
           // تسجيل موقع المندوب
           setLocationData(prev => ({
+            ...prev,
+            rep_latitude: userLoc.lat,
+            rep_longitude: userLoc.lng,
+            rep_location_accuracy: userLoc.accuracy,
+            device_info: navigator.userAgent
+          }));
+        },
+        (error) => {
+          console.error('❌ خطأ في الحصول على الموقع:', error);
+          // استخدام موقع افتراضي (القاهرة)
+          const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
+          setUserLocation(defaultLocation);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      console.warn('⚠️ الجهاز لا يدعم تحديد الموقع');
+      // استخدام موقع افتراضي (القاهرة)
+      const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
+      setUserLocation(defaultLocation);
+    }
+  };
+
+  const initializeMap = () => {
+    if (!window.google || !window.google.maps || !mapRef.current) {
+      console.error('❌ Google Maps غير متاح أو عنصر الخريطة غير موجود');
+      return;
+    }
+
+    try {
+      // إعداد الموقع الافتراضي
+      const defaultCenter = userLocation || { lat: 30.0444, lng: 31.2357 }; // القاهرة
+      
+      console.log('🗺️ تهيئة الخريطة في الموقع:', defaultCenter);
+
+      // إنشاء الخريطة
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: defaultCenter,
+        zoom: 15,
+        mapTypeId: 'roadmap',
+        streetViewControl: false,
+        mapTypeControl: true,
+        zoomControl: true,
+        fullscreenControl: true,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#6b7280" }]
+          }
+        ]
+      });
+
+      // إنشاء دبوس قابل للسحب
+      const marker = new window.google.maps.Marker({
+        position: defaultCenter,
+        map: map,
+        title: 'موقع العيادة - يمكنك سحبه لتحديد الموقع الدقيق',
+        draggable: true,
+        animation: window.google.maps.Animation.DROP,
+        icon: {
+          url: 'data:image/svg+xml;base64,' + btoa(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#dc2626">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="2.5" fill="white"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(32, 32),
+          anchor: new window.google.maps.Point(16, 32)
+        }
+      });
+
+      // حفظ المراجع
+      mapInstanceRef.current = map;
+      markerRef.current = marker;
+
+      // معالجة سحب الدبوس
+      marker.addListener('dragend', (event) => {
+        const lat = event.latLng.lat();
+        const lng = event.latLng.lng();
+        
+        console.log('📍 تم تحديد موقع جديد:', { lat, lng });
+        
+        setLocationData(prev => ({
+          ...prev,
+          clinic_latitude: lat,
+          clinic_longitude: lng,
+          location_accuracy: 10 // دقة عالية للموقع المحدد يدوياً
+        }));
+
+        // الحصول على العنوان من الإحداثيات
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            const address = results[0].formatted_address;
+            setFormData(prev => ({
+              ...prev,
+              clinic_address: address
+            }));
+            console.log('🏠 تم تحديث العنوان:', address);
+          }
+        });
+      });
+
+      // إضافة مربع البحث
+      const searchInput = document.getElementById('address-search');
+      if (searchInput) {
+        const searchBox = new window.google.maps.places.SearchBox(searchInput);
+        map.controls[window.google.maps.ControlPosition.TOP_LEFT].push(searchInput);
+
+        // التحديث عند البحث
+        searchBox.addListener('places_changed', () => {
+          const places = searchBox.getPlaces();
+          if (places.length === 0) return;
+
+          const place = places[0];
+          if (!place.geometry || !place.geometry.location) return;
+
+          const location = place.geometry.location;
+          const lat = location.lat();
+          const lng = location.lng();
+
+          console.log('🔍 تم العثور على المكان:', { lat, lng, name: place.name });
+
+          // تحديث الخريطة والدبوس
+          map.setCenter({ lat, lng });
+          map.setZoom(17);
+          marker.setPosition({ lat, lng });
+          
+          setLocationData(prev => ({
+            ...prev,
+            clinic_latitude: lat,
+            clinic_longitude: lng,
+            location_accuracy: 5 // دقة عالية للبحث
+          }));
+
+          setFormData(prev => ({
+            ...prev,
+            clinic_address: place.formatted_address || place.name
+          }));
+        });
+      }
+
+      // النقر على الخريطة لتحديد الموقع
+      map.addListener('click', (event) => {
+        const lat = event.latLng.lat();
+        const lng = event.latLng.lng();
+        
+        console.log('🖱️ تم النقر على الخريطة:', { lat, lng });
+        
+        marker.setPosition({ lat, lng });
+        
+        setLocationData(prev => ({
+          ...prev,
+          clinic_latitude: lat,
+          clinic_longitude: lng,
+          location_accuracy: 10
+        }));
+
+        // الحصول على العنوان
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            const address = results[0].formatted_address;
+            setFormData(prev => ({
+              ...prev,
+              clinic_address: address
+            }));
+          }
+        });
+      });
+
+      console.log('✅ تم تهيئة الخريطة بنجاح');
+
+    } catch (error) {
+      console.error('❌ خطأ في تهيئة الخريطة:', error);
+      setErrors({map: 'خطأ في تهيئة الخريطة'});
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // إزالة رسالة الخطأ عند التعديل
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const getFilteredAreas = () => {
+    if (!formData.line_id) return [];
+    return formOptions.areas.filter(area => area.parent_line_id === formData.line_id);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // التحقق من الحقول المطلوبة
+    if (!formData.clinic_name.trim()) newErrors.clinic_name = 'اسم العيادة مطلوب';
+    if (!formData.doctor_name.trim()) newErrors.doctor_name = 'اسم الطبيب مطلوب';
+    if (!formData.doctor_specialty.trim()) newErrors.doctor_specialty = 'التخصص مطلوب';
+    if (!formData.line_id) newErrors.line_id = 'يجب اختيار الخط';
+    if (!formData.area_id) newErrors.area_id = 'يجب اختيار المنطقة';
+    if (!formData.clinic_address.trim()) newErrors.clinic_address = 'عنوان العيادة مطلوب';
+    
+    // التحقق من الموقع
+    if (!locationData.clinic_latitude || !locationData.clinic_longitude) {
+      newErrors.location = 'يجب تحديد موقع العيادة على الخريطة';
+    }
+    
+    // التحقق من رقم الهاتف
+    if (formData.clinic_phone && !/^[0-9+\-\s()]+$/.test(formData.clinic_phone)) {
+      newErrors.clinic_phone = 'رقم الهاتف غير صحيح';
+    }
+    
+    // التحقق من البريد الإلكتروني
+    if (formData.clinic_email && !/\S+@\S+\.\S+/.test(formData.clinic_email)) {
+      newErrors.clinic_email = 'البريد الإلكتروني غير صحيح';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+      
+      const requestData = {
+        ...formData,
+        ...locationData
+      };
+
+      console.log('📤 إرسال بيانات تسجيل العيادة:', requestData);
+
+      const response = await axios.post(
+        `${backendUrl}/api/enhanced-clinics/register`,
+        requestData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        alert(`✅ تم تسجيل العيادة بنجاح!\n\nرقم التسجيل: ${response.data.registration_number}\nالحالة: ${response.data.status}\n\nتصنيف العيادة: ${getClassificationLabel(formData.classification)}\nالتصنيف الائتماني: ${getCreditClassificationLabel(formData.credit_classification)}`);
+        
+        // إعادة تعيين النموذج
+        setFormData({
+          clinic_name: '',
+          clinic_phone: '',
+          clinic_email: '',
+          doctor_name: '',
+          doctor_specialty: '',
+          doctor_phone: '',
+          clinic_address: '',
+          line_id: '',
+          area_id: '',
+          district_id: '',
+          classification: 'class_b',
+          credit_classification: 'yellow',
+          classification_notes: '',
+          registration_notes: ''
+        });
+        
+        setLocationData({
+          clinic_latitude: null,
+          clinic_longitude: null,
+          location_accuracy: null,
+          rep_latitude: userLocation?.lat || null,
+          rep_longitude: userLocation?.lng || null,
+          rep_location_accuracy: userLocation?.accuracy || null,
+          device_info: navigator.userAgent
+        });
+
+        // إعادة تعيين الخريطة للموقع الحالي
+        if (mapInstanceRef.current && markerRef.current && userLocation) {
+          mapInstanceRef.current.setCenter(userLocation);
+          markerRef.current.setPosition(userLocation);
+        }
+      }
+    } catch (error) {
+      console.error('❌ خطأ في تسجيل العيادة:', error);
+      if (error.response?.data?.detail) {
+        setErrors({general: error.response.data.detail});
+      } else {
+        setErrors({general: 'حدث خطأ أثناء تسجيل العيادة'});
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // دوال مساعدة للحصول على تسميات التصنيفات
+  const getClassificationLabel = (value) => {
+    const classification = formOptions.classifications.find(c => c.value === value);
+    return classification ? classification.label : value;
+  };
+
+  const getCreditClassificationLabel = (value) => {
+    const classification = formOptions.credit_classifications.find(c => c.value === value);
+    return classification ? classification.label : value;
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          🏥 تسجيل عيادة جديدة
+        </h1>
+        <p className="text-gray-600">
+          يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة
+        </p>
+      </div>
+
+      {errors.general && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 rounded-md">
+          <p className="text-red-700">❌ {errors.general}</p>
+        </div>
+      )}
+
+      {errors.map && (
+        <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+          <p className="text-yellow-700">⚠️ {errors.map}</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* قسم الخريطة التفاعلية */}
+        <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+          <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center">
+            🗺️ تحديد موقع العيادة على الخريطة
+          </h3>
+          
+          {/* مربع البحث */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-blue-800 mb-2">
+              🔍 البحث عن العنوان (اختياري)
+            </label>
+            <input
+              id="address-search"
+              type="text"
+              placeholder="ابحث عن عنوان العيادة هنا..."
+              className="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="text-xs text-blue-600 mt-1">
+              💡 يمكنك البحث بالاسم أو العنوان، أو النقر مباشرة على الخريطة، أو سحب الدبوس الأحمر
+            </p>
+          </div>
+
+          {/* الخريطة */}
+          <div className="relative">
+            <div 
+              ref={mapRef}
+              style={{ height: '400px', width: '100%' }}
+              className="rounded-lg border-2 border-gray-300 bg-gray-100"
+            >
+              {!mapLoaded && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">جاري تحميل الخريطة...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* معلومات الموقع */}
+            {locationData.clinic_latitude && locationData.clinic_longitude && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">
+                  ✅ <strong>تم تحديد الموقع:</strong><br/>
+                  خط العرض: {locationData.clinic_latitude.toFixed(6)}<br/>
+                  خط الطول: {locationData.clinic_longitude.toFixed(6)}
+                  {locationData.location_accuracy && (
+                    <><br/>دقة الموقع: {locationData.location_accuracy} متر</>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {errors.location && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">❌ {errors.location}</p>
+              </div>
+            )}
+          </div>
+        </div>
             ...prev,
             rep_latitude: userLoc.lat,
             rep_longitude: userLoc.lng,
