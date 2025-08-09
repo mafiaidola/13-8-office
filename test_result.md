@@ -14,7 +14,7 @@
 # Main and testing agents must follow this exact format to maintain testing data. 
 # The testing data must be entered in yaml format Below is the data structure:
 # 
-## user_problem_statement: {problem_statement}
+## user_problem_statement: "إكمال تطوير نظام لوحة التحكم القائم على الأدوار - إنشاء مكونات جديدة لـ ManagerDashboard، SalesRepresentativeDashboard، MedicalRepresentativeDashboard، CommonDashboardComponents، DashboardWrapper، ActivityLog، SalesPerformance، وLineCharts، وربطها بـ APIs الخلفية لجلب البيانات الحقيقية بدلاً من البيانات الوهمية"
 ## backend:
   - task: "Enhanced User Management System Comprehensive Testing"
     implemented: true
