@@ -606,14 +606,14 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الفئة *</label>
+                <label className="block text-sm font-medium mb-2">العلامة التجارية *</label>
                 <input
                   type="text"
-                  name="category"
-                  value={formData.category}
+                  name="brand"
+                  value={formData.brand}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="مضادات حيوية، فيتامينات، إلخ"
+                  placeholder="GSK، Pfizer، Novartis، إلخ"
                   required
                 />
               </div>
