@@ -287,6 +287,12 @@ export const COMPONENT_REGISTRY = {
   LineCharts: createLazyComponent(
     () => import('../Dashboard/LineCharts'),
     'جاري تحميل الرسوم البيانية...'
+  ),
+  
+  // Excel Management System
+  ExcelManager: createLazyComponent(
+    () => import('../Excel/ExcelManager'),
+    'جاري تحميل نظام إدارة Excel...'
   )
 };
 
