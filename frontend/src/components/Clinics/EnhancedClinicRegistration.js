@@ -742,7 +742,6 @@ const EnhancedClinicRegistration = () => {
                   <option 
                     key={classification.value} 
                     value={classification.value}
-                    style={{ color: classification.color }}
                   >
                     {classification.label}
                   </option>
@@ -767,7 +766,6 @@ const EnhancedClinicRegistration = () => {
                   <option 
                     key={classification.value} 
                     value={classification.value}
-                    style={{ color: classification.color }}
                   >
                     {classification.label}
                   </option>
