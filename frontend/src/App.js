@@ -1261,17 +1261,9 @@ const AppContent = () => {
     return <LoadingSpinner />;
   }
 
-  // Debug: temporary bypass login for theme testing
+  // Debug: authentication decision
   console.log('🎯 App rendering decision:', isAuthenticated ? 'DashboardLayout' : 'LoginForm');
-  
-  // TEMPORARY: Skip login to test themes as requested by user
-  // Remove this after theme testing is complete
-  const SKIP_LOGIN_FOR_THEME_TESTING = true;  // Set back to true for theme testing
-  
-  if (SKIP_LOGIN_FOR_THEME_TESTING) {
-    console.log('⚠️ TEMPORARY: Skipping login for theme testing');
-    return <DashboardLayout />;
-  }
+  console.log('🔐 Authentication status:', { isAuthenticated, user: user?.username });
   
   return isAuthenticated ? <DashboardLayout /> : <LoginForm />;
 };
