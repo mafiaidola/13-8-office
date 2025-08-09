@@ -278,21 +278,39 @@ const EnhancedClinicRegistration = () => {
     
     // محاولة متعددة المراحل للحصول على أدق موقع ممكن
     const attemptLocationRetrieval = (attemptNumber = 1, maxAttempts = 3) => {
-      const options = {
-        enableHighAccuracy: true,
-        timeout: attemptNumber === 1 ? 15000 : (attemptNumber === 2 ? 10000 : 5000),
-        maximumAge: attemptNumber === 1 ? 30000 : (attemptNumber === 2 ? 60000 : 120000)
-      };
+      // فحص إمكانيات الجهاز في المحاولة الأولى
+      if (attemptNumber === 1) {
+        const capabilities = checkGeolocationCapabilities();
+        console.log('🔧 إمكانيات الجهاز:', capabilities);
+        
+        if (!capabilities.isSecureContext) {
+          console.warn('⚠️ الموقع غير آمن (HTTP) - قد يؤثر على دقة تحديد الموقع');
+          setErrors(prev => ({
+            ...prev,
+            location: '⚠️ لضمان أفضل دقة للموقع، يفضل استخدام اتصال آمن (HTTPS)'
+          }));
+        }
+      }
+      
+      const options = getLocationOptions(attemptNumber);
 
       console.log(`🎯 المحاولة ${attemptNumber} من ${maxAttempts} للحصول على الموقع`);
       
+      // إضافة timeout مخصص للمحاولة
+      const timeoutId = setTimeout(() => {
+        console.warn(`⏰ انتهت مهلة المحاولة ${attemptNumber} (${options.timeout/1000}s)`);
+      }, options.timeout);
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          clearTimeout(timeoutId);
+          
           const { latitude, longitude, accuracy } = position.coords;
           
-          // فحص دقة الموقع
-          const isAccurate = accuracy <= 100; // دقة أقل من 100 متر تعتبر مقبولة
-          const isVeryAccurate = accuracy <= 50; // دقة أقل من 50 متر تعتبر ممتازة
+          // فحص جودة الموقع المحصل عليه
+          const isVeryAccurate = accuracy <= 30; // دقة ممتازة
+          const isAccurate = accuracy <= 100; // دقة جيدة
+          const isAcceptable = accuracy <= 500; // دقة مقبولة
           
           const userLoc = {
             lat: latitude,
@@ -302,14 +320,30 @@ const EnhancedClinicRegistration = () => {
             altitude: position.coords.altitude,
             altitudeAccuracy: position.coords.altitudeAccuracy,
             heading: position.coords.heading,
-            speed: position.coords.speed
+            speed: position.coords.speed,
+            attemptNumber: attemptNumber
           };
           
-          // إذا كانت الدقة منخفضة جداً وما زال لدينا محاولات، جرب مرة أخرى
-          if (!isAccurate && attemptNumber < maxAttempts) {
-            console.log(`⚠️ دقة الموقع منخفضة (${Math.round(accuracy)} متر)، محاولة ${attemptNumber + 1}...`);
+          // إذا كانت الدقة ضعيفة جداً وما زال لدينا محاولات، جرب مرة أخرى
+          if (!isAcceptable && attemptNumber < maxAttempts) {
+            console.log(`⚠️ دقة الموقع ضعيفة جداً (${Math.round(accuracy)} متر > 500م)، محاولة ${attemptNumber + 1}...`);
             setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), 2000);
             return;
+          }
+          
+          // إذا كانت الدقة منخفضة ولكن مقبولة، أعطي المستخدم خيار المحاولة مرة أخرى
+          if (!isAccurate && attemptNumber < maxAttempts) {
+            const shouldRetry = window.confirm(
+              `تم الحصول على موقعك بدقة ${Math.round(accuracy)} متر.\n` +
+              `هل تريد المحاولة مرة أخرى للحصول على دقة أفضل؟\n` +
+              `(اختر "موافق" للمحاولة مرة أخرى، أو "إلغاء" للاستمرار بهذا الموقع)`
+            );
+            
+            if (shouldRetry) {
+              console.log(`🔄 المستخدم اختار إعادة المحاولة للحصول على دقة أفضل...`);
+              setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), 1000);
+              return;
+            }
           }
           
           setUserLocation(userLoc);
@@ -317,10 +351,13 @@ const EnhancedClinicRegistration = () => {
             lat: latitude.toFixed(6),
             lng: longitude.toFixed(6),
             accuracy: Math.round(accuracy) + ' متر',
-            quality: isVeryAccurate ? 'ممتازة' : (isAccurate ? 'جيدة' : 'مقبولة'),
+            quality: isVeryAccurate ? '🌟 ممتازة' : (isAccurate ? '✅ جيدة' : (isAcceptable ? '⚠️ مقبولة' : '❌ ضعيفة')),
             attempt: attemptNumber,
             timestamp: new Date(position.timestamp).toLocaleTimeString('ar-EG')
           });
+          
+          // تحديد مستوى الدقة للتسجيل
+          const accuracyLevel = isVeryAccurate ? 'high' : (isAccurate ? 'medium' : 'low');
           
           // تحديث بيانات الموقع
           setLocationData(prev => ({
@@ -330,11 +367,12 @@ const EnhancedClinicRegistration = () => {
             rep_location_accuracy: accuracy,
             device_info: navigator.userAgent,
             location_obtained_at: new Date().toISOString(),
-            location_source: isVeryAccurate ? 'gps_high_accuracy' : (isAccurate ? 'gps_good_accuracy' : 'gps_low_accuracy'),
+            location_source: `gps_${accuracyLevel}_accuracy`,
             location_attempts: attemptNumber,
             altitude: position.coords.altitude,
             heading: position.coords.heading,
-            speed: position.coords.speed
+            speed: position.coords.speed,
+            location_quality_score: isVeryAccurate ? 100 : (isAccurate ? 75 : (isAcceptable ? 50 : 25))
           }));
 
           // تحديث الخريطة إذا كانت متاحة
@@ -349,22 +387,28 @@ const EnhancedClinicRegistration = () => {
             return newErrors;
           });
           
-          // إظهار رسالة نجاح مؤقتة
+          // إظهار رسالة نجاح مفصلة
+          const qualityText = isVeryAccurate ? 'دقة ممتازة' : (isAccurate ? 'دقة جيدة' : 'دقة مقبولة');
+          const qualityIcon = isVeryAccurate ? '🎯' : (isAccurate ? '✅' : '⚠️');
+          
           setErrors(prev => ({
             ...prev,
-            location_success: `✅ تم تحديد موقعك بنجاح (دقة: ${Math.round(accuracy)} متر)`
+            location_success: `${qualityIcon} تم تحديد موقعك بنجاح! ${qualityText} (±${Math.round(accuracy)} متر) - المحاولة ${attemptNumber}`
           }));
           
-          // إزالة رسالة النجاح بعد 5 ثواني
+          // إزالة رسالة النجاح بعد وقت يناسب جودة النتيجة
+          const displayTime = isVeryAccurate ? 4000 : (isAccurate ? 6000 : 8000);
           setTimeout(() => {
             setErrors(prev => {
               const newErrors = { ...prev };
               delete newErrors.location_success;
               return newErrors;
             });
-          }, 5000);
+          }, displayTime);
         },
         (error) => {
+          clearTimeout(timeoutId);
+          
           console.error(`❌ فشلت المحاولة ${attemptNumber}:`, {
             code: error.code,
             message: error.message,
@@ -373,8 +417,16 @@ const EnhancedClinicRegistration = () => {
           
           // إذا كانت هناك محاولات متبقية، جرب بإعدادات مختلفة
           if (attemptNumber < maxAttempts) {
-            console.log(`🔄 جاري المحاولة مرة أخرى بإعدادات مختلفة...`);
-            setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), 1500);
+            const nextAttemptDelay = attemptNumber === 1 ? 2000 : 1500; // تأخير أطول بعد المحاولة الأولى
+            console.log(`🔄 جاري المحاولة ${attemptNumber + 1} بإعدادات مختلفة خلال ${nextAttemptDelay/1000} ثانية...`);
+            
+            // تحديث رسالة الحالة للمستخدم
+            setErrors(prev => ({
+              ...prev,
+              location: `🔄 المحاولة ${attemptNumber} فشلت، جاري المحاولة ${attemptNumber + 1}/${maxAttempts}...`
+            }));
+            
+            setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), nextAttemptDelay);
             return;
           }
           
@@ -384,7 +436,7 @@ const EnhancedClinicRegistration = () => {
           const errorMessage = getLocationErrorMessage(error);
           setErrors(prev => ({
             ...prev,
-            location: errorMessage + ' - يرجى تحديد موقع العيادة يدوياً على الخريطة أو تفعيل خدمة الموقع'
+            location: `❌ ${errorMessage} (فشلت ${maxAttempts} محاولات) - يرجى تحديد موقع العيادة يدوياً على الخريطة أو التأكد من تفعيل خدمة الموقع`
           }));
           
           useDefaultLocation();
