@@ -71,7 +71,8 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
           line: user.line || '',
           monthly_sales_target: user.monthly_sales_target || 50000,
           is_active: user.is_active !== false,
-          assigned_clinic_ids: []
+          assigned_clinic_ids: [],
+          password: '' // إضافة حقل كلمة المرور
         });
       }
     } catch (error) {
