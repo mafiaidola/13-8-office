@@ -1,7 +1,7 @@
 // Medical Management System - Main Application (Reorganized & Centralized)
 // النظام الرئيسي لإدارة المؤسسات الطبية - منظم ومركزي
 
-import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback, useMemo } from 'react';
 import './App.css';
 import axios from 'axios';
 
