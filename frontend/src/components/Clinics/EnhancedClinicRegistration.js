@@ -195,13 +195,65 @@ const EnhancedClinicRegistration = () => {
   };
 
   // دالة محسنة للحصول على الموقع الحالي مع معالجة أفضل للأخطاء
-  // دالة تحسين خيارات الـ geolocation
-  const getLocationOptions = () => {
-    // خيارات محسنة حسب نوع الجهاز ودقة المطلوبة
+  // دالة محسنة لإعدادات الموقع الجغرافي
+  const getLocationOptions = (attemptNumber = 1) => {
+    // إعدادات متدرجة الدقة حسب المحاولة
+    const optionSets = {
+      1: {
+        // المحاولة الأولى: أعلى دقة ممكنة
+        enableHighAccuracy: true,
+        timeout: 20000, // 20 ثانية
+        maximumAge: 0 // لا تستخدم cache قديم
+      },
+      2: {
+        // المحاولة الثانية: دقة متوسطة مع timeout أقل
+        enableHighAccuracy: true,
+        timeout: 15000, // 15 ثانية
+        maximumAge: 30000 // استخدم cache إذا كان عمره أقل من 30 ثانية
+      },
+      3: {
+        // المحاولة الثالثة: استخدم network location
+        enableHighAccuracy: false,
+        timeout: 10000, // 10 ثوان
+        maximumAge: 60000 // استخدم cache إذا كان عمره أقل من دقيقة
+      }
+    };
+
+    const options = optionSets[attemptNumber] || optionSets[3];
+    
+    console.log(`⚙️ إعدادات الموقع للمحاولة ${attemptNumber}:`, {
+      highAccuracy: options.enableHighAccuracy,
+      timeout: options.timeout / 1000 + 's',
+      maxAge: options.maximumAge / 1000 + 's'
+    });
+    
+    return options;
+  };
+
+  // دالة للتحقق من إمكانيات الجهاز
+  const checkGeolocationCapabilities = () => {
+    if (!navigator.geolocation) {
+      return { supported: false, reason: 'Geolocation not supported' };
+    }
+    
+    // فحص إضافي للمتصفحات المختلفة
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    
     return {
-      enableHighAccuracy: true,
-      timeout: 20000, // زيادة المهلة الزمنية إلى 20 ثانية
-      maximumAge: 60000 // تقليل cache إلى دقيقة واحدة للحصول على موقع أحدث
+      supported: true,
+      isSecureContext,
+      browser: {
+        chrome: userAgent.includes('chrome'),
+        firefox: userAgent.includes('firefox'),
+        safari: userAgent.includes('safari') && !userAgent.includes('chrome'),
+        edge: userAgent.includes('edge')
+      },
+      permissions: navigator.permissions ? true : false,
+      capabilities: {
+        watchPosition: typeof navigator.geolocation.watchPosition === 'function',
+        getCurrentPosition: typeof navigator.geolocation.getCurrentPosition === 'function'
+      }
     };
   };
 
