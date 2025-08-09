@@ -153,7 +153,7 @@ async def login(login_data: dict):
         else:
             # Check database for user
             user = await db.users.find_one({"username": username})
-            if not user or user.get("password") != hash_password(password):
+            if not user or user.get("password_hash") != hash_password(password):
                 raise HTTPException(status_code=401, detail="Invalid credentials")
             
             token = create_jwt_token({
