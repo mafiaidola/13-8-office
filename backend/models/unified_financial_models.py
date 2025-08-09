@@ -346,7 +346,7 @@ class CreateVisitRequest(BaseModel):
     visit_type: VisitType = VisitType.ROUTINE
     scheduled_date: datetime
     visit_purpose: str = Field(min_length=1, description="الغرض من الزيارة (مطلوب)")
-    doctor_id: Optional[str] = None
+    doctor_id: Optional[str] = Field(default=None, description="معرف الطبيب (اختياري)")
 
 class VisitCheckInRequest(BaseModel):
     """طلب تسجيل دخول للزيارة"""
