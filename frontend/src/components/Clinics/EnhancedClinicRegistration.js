@@ -746,63 +746,192 @@ const EnhancedClinicRegistration = () => {
           </div>
         </div>
 
-        {/* قسم التقسيم الإداري */}
+        {/* قسم التقسيم الإداري - محسن مع التكامل الكامل */}
         <div className="bg-purple-50 p-6 rounded-lg">
-          <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center">
+          <h3 className="text-xl font-bold text-purple-900 mb-6 flex items-center">
             🗂️ التقسيم الإداري والجغرافي
+            <span className="ml-2 px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs">
+              متكامل مع النظام
+            </span>
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-purple-800 mb-2">
-                الخط *
+            {/* الخط - بطاقات تفاعلية */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-purple-800 mb-4">
+                <span className="flex items-center">
+                  🚀 اختيار الخط *
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    {formOptions.lines.length} خط متاح
+                  </span>
+                </span>
               </label>
-              <select
-                value={formData.line_id}
-                onChange={(e) => handleInputChange('line_id', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  errors.line_id ? 'border-red-500' : 'border-purple-300'
-                }`}
-              >
-                <option value="">اختر الخط</option>
-                {formOptions.lines.map((line) => (
-                  <option key={line.id} value={line.id}>
-                    {line.name}
-                  </option>
-                ))}
-              </select>
+              
+              {formOptions.lines.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {formOptions.lines.map((line) => (
+                    <button
+                      key={line.id}
+                      type="button"
+                      onClick={() => {
+                        handleInputChange('line_id', line.id);
+                        // إعادة تعيين المنطقة عند تغيير الخط
+                        handleInputChange('area_id', '');
+                      }}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg text-right ${
+                        formData.line_id === line.id
+                          ? 'border-purple-500 bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-lg scale-105'
+                          : 'border-purple-200 bg-white hover:border-purple-400 text-gray-700'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl">🚀</span>
+                          <span className="text-xs font-mono opacity-60">
+                            {line.code || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="font-bold text-sm">
+                          {line.name}
+                        </div>
+                        {line.description && (
+                          <div className="text-xs opacity-75 leading-tight">
+                            {line.description}
+                          </div>
+                        )}
+                        {line.manager_name && (
+                          <div className="text-xs opacity-60">
+                            👨‍💼 مدير: {line.manager_name}
+                          </div>
+                        )}
+                        {formData.line_id === line.id && (
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse mx-auto"></div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ لا توجد خطوط متاحة. يرجى التواصل مع الإدارة لإعداد الخطوط الجغرافية.
+                  </p>
+                </div>
+              )}
+              
               {errors.line_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.line_id}</p>
+                <p className="mt-2 text-sm text-red-600">{errors.line_id}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-purple-800 mb-2">
-                المنطقة *
+            {/* المنطقة - بطاقات تفاعلية مفلترة */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-purple-800 mb-4">
+                <span className="flex items-center">
+                  🌍 اختيار المنطقة *
+                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                    {getFilteredAreas().length} منطقة متاحة
+                  </span>
+                  {!formData.line_id && (
+                    <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                      يجب اختيار الخط أولاً
+                    </span>
+                  )}
+                </span>
               </label>
-              <select
-                value={formData.area_id}
-                onChange={(e) => handleInputChange('area_id', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                  errors.area_id ? 'border-red-500' : 'border-purple-300'
-                }`}
-                disabled={!formData.line_id}
-              >
-                <option value="">اختر المنطقة</option>
-                {getFilteredAreas().map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.name}
-                  </option>
-                ))}
-              </select>
-              {errors.area_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.area_id}</p>
+              
+              {formData.line_id ? (
+                getFilteredAreas().length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getFilteredAreas().map((area) => (
+                      <button
+                        key={area.id}
+                        type="button"
+                        onClick={() => handleInputChange('area_id', area.id)}
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg text-right ${
+                          formData.area_id === area.id
+                            ? 'border-purple-500 bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg scale-105'
+                            : 'border-purple-200 bg-white hover:border-purple-400 text-gray-700'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl">🌍</span>
+                            <span className="text-xs font-mono opacity-60">
+                              {area.code || 'N/A'}
+                            </span>
+                          </div>
+                          <div className="font-bold text-sm">
+                            {area.name}
+                          </div>
+                          {area.description && (
+                            <div className="text-xs opacity-75 leading-tight">
+                              {area.description}
+                            </div>
+                          )}
+                          {area.manager_id && (
+                            <div className="text-xs opacity-60">
+                              👨‍💼 مدير المنطقة
+                            </div>
+                          )}
+                          {formData.area_id === area.id && (
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse mx-auto"></div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-yellow-800 text-sm">
+                      ⚠️ لا توجد مناطق متاحة للخط المختار. يرجى اختيار خط آخر أو التواصل مع الإدارة.
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-gray-600 text-sm flex items-center">
+                    👆 يرجى اختيار الخط أولاً لعرض المناطق المرتبطة به
+                  </p>
+                </div>
               )}
-              {!formData.line_id && (
-                <p className="mt-1 text-xs text-purple-600">يجب اختيار الخط أولاً</p>
+              
+              {errors.area_id && (
+                <p className="mt-2 text-sm text-red-600">{errors.area_id}</p>
               )}
             </div>
           </div>
+
+          {/* ملخص الاختيار */}
+          {(formData.line_id || formData.area_id) && (
+            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-200 shadow-inner">
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                ملخص التقسيم الإداري المختار:
+              </h4>
+              <div className="space-y-2">
+                {formData.line_id && (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500 to-blue-600 text-white">
+                      🚀 {formOptions.lines.find(l => l.id === formData.line_id)?.name || 'خط غير محدد'}
+                    </span>
+                  </div>
+                )}
+                {formData.area_id && (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-green-500 to-teal-600 text-white">
+                      🌍 {getFilteredAreas().find(a => a.id === formData.area_id)?.name || 'منطقة غير محددة'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {formData.line_id && formData.area_id && (
+                <p className="text-xs text-green-600 mt-2 flex items-center">
+                  ✅ تم اختيار التقسيم الإداري بنجاح - مرتبط بنظام إدارة الخطوط والمناطق
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* قسم تصنيفات العيادة - محسن مع البطاقات التفاعلية */}
