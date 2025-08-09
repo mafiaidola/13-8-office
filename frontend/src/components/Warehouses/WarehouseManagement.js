@@ -275,11 +275,12 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
         }
       ]);
 
-      setProducts(availableProducts);
+      // Use database products instead of hardcoded ones
+      const databaseProducts = await fetchProductsFromDatabase();
 
       // Calculate enhanced stats
       const totalWarehouses = 3;
-      const totalProducts = availableProducts.length;
+      const totalProducts = databaseProducts.length;
       const activeWarehouses = 2;
       
       setWarehouseStats({
