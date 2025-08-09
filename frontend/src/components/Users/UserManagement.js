@@ -4,6 +4,7 @@ import { useTranslation } from '../../localization/translations.js';
 import axios from 'axios';
 import ComprehensiveUserModal from './ComprehensiveUserModal';
 import AddUserModal from './AddUserModal';
+import ExcelManager from '../Excel/ExcelManager.js';
 import { activityLogger } from '../../utils/activityLogger.js';
 
 const UserManagement = ({ user, language, isRTL }) => {
