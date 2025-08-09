@@ -119,16 +119,7 @@ export const SYSTEM_TABS = {
     priority: 10
   },
 
-  visit_management: {
-    id: 'visit_management',
-    path: '/visit-management',
-    icon: '📋',
-    name: { ar: 'إدارة الزيارات وسجل الدخول', en: 'Visit & Login Management' },
-    component: 'VisitManagement',
-    description: { ar: 'إدارة شاملة للزيارات وسجلات الدخول مع تحميل التقارير', en: 'Comprehensive visit and login management with report downloads' },
-    permissions: ['admin'], // Admin only as requested
-    priority: 11
-  },
+
 
   activity_tracking: {
     id: 'activity_tracking',
