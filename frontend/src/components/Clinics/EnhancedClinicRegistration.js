@@ -526,12 +526,17 @@ const EnhancedClinicRegistration = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <div className="mb-6">
+      {/* العنوان الرئيسي المحسن */}
+      <div className="mb-8 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
+          <span className="text-3xl">🏥</span>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          🏥 تسجيل عيادة جديدة
+          تسجيل عيادة جديدة - نظام محسن
         </h1>
-        <p className="text-gray-600">
-          يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة. 
+          النظام متكامل مع إدارة الخطوط والمناطق لضمان التوافق الكامل.
         </p>
       </div>
 
