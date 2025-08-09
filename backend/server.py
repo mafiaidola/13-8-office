@@ -3373,6 +3373,30 @@ if FINANCIAL_SYSTEM_AVAILABLE:
     except Exception as e:
         print(f"⚠️ Error registering integrated financial router: {e}")
 
+# Add health endpoint
+@api_router.get("/health")
+async def health_check():
+    """فحص صحة النظام"""
+    try:
+        # Test database connection
+        await db.command('ping')
+        
+        # Basic statistics
+        users_count = await db.users.count_documents({})
+        clinics_count = await db.clinics.count_documents({})
+        
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "statistics": {
+                "users": users_count,
+                "clinics": clinics_count
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"System unhealthy: {str(e)}")
+
 app.include_router(api_router)
 
 @app.get("/")
