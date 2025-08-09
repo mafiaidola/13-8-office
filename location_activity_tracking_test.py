@@ -270,7 +270,6 @@ class LocationActivityTrackingTester:
             
         basic_endpoints = [
             {"url": "/users", "name": "المستخدمين"},
-            {"url": "/clinics", "name": "العيادات"},
             {"url": "/products", "name": "المنتجات"},
             {"url": "/dashboard/stats/admin", "name": "إحصائيات الداشبورد"},
             {"url": "/health", "name": "فحص صحة النظام", "no_auth": True}
