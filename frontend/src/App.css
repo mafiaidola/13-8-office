@@ -1026,30 +1026,51 @@ button:disabled {
   .professional-header {
     padding: 16px 20px !important;
     height: 68px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: var(--z-header) !important;
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
   }
   
   .main-layout {
     padding-top: 68px !important;
+    display: flex !important;
+    flex-direction: row !important;
   }
   
   .sidebar {
+    position: fixed !important;
     width: 260px !important;
     top: 68px !important;
+    left: 0 !important;
     height: calc(100vh - 68px) !important;
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    z-index: var(--z-sticky) !important;
+    overflow-y: auto !important;
+    transform: none !important;
   }
   
   .main-content {
-    margin-right: 260px !important;
-    padding: 20px !important;
+    margin-left: 260px !important;
+    margin-right: 0 !important;
+    padding: 24px !important;
+    width: calc(100% - 260px) !important;
+    min-height: calc(100vh - 68px) !important;
+    overflow-x: auto !important;
   }
   
   .professional-header .search-container {
     max-width: 320px !important;
+    min-width: 250px !important;
   }
   
   .metrics-grid {
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 16px !important;
+    gap: 18px !important;
   }
   
   .performance-section .grid {
