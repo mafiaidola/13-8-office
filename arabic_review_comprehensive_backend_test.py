@@ -391,7 +391,7 @@ class ArabicReviewComprehensiveTestSuite:
         
         basic_endpoints = [
             {"endpoint": "/users", "name": "المستخدمين"},
-            {"endpoint": "/clinics", "name": "العيادات"},
+            {"endpoint": "/visits/dashboard/overview", "name": "نظرة عامة على الزيارات"},
             {"endpoint": "/products", "name": "المنتجات"},
             {"endpoint": "/dashboard/stats/admin", "name": "إحصائيات الداشبورد"},
             {"endpoint": "/health", "name": "صحة النظام"}
