@@ -177,12 +177,17 @@ async def get_visits_dashboard_overview(
 async def get_available_clinics(
     current_user: User = Depends(get_current_user)
 ):
-    """الحصول على العيادات المتاحة للمندوب"""
+    """الحصول على العيادات المتاحة للمستخدم المسجل"""
     try:
         from server import db
         
-        if current_user.get("role") != "medical_rep":
-            raise HTTPException(status_code=403, detail="هذه الخدمة متاحة للمناديب فقط")
+        # السماح للمناديب والمديرين والأدمن بالوصول
+        allowed_roles = ["medical_rep", "admin", "manager"]
+        if current_user.get("role") not in allowed_roles:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"هذه الخدمة متاحة للمناديب والمديرين فقط. دورك الحالي: {current_user.get('role')}"
+            )
         
         rep_id = current_user.get("id")
         
