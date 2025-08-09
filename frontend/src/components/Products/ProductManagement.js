@@ -453,7 +453,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
-                        {product.category || '-'}
+                        {product.brand || '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
