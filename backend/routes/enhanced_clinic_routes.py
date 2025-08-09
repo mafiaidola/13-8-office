@@ -112,21 +112,16 @@ async def get_registration_form_data(
                 "lines": lines,
                 "areas": areas,
                 "classifications": [
-                    {"value": "excellent", "label": "ممتاز", "color": "#10B981"},
-                    {"value": "very_good", "label": "جيد جداً", "color": "#3B82F6"},
-                    {"value": "good", "label": "جيد", "color": "#F59E0B"},
-                    {"value": "average", "label": "متوسط", "color": "#EF4444"},
-                    {"value": "poor", "label": "ضعيف", "color": "#DC2626"}
+                    {"value": "class_a_star", "label": "Class A star", "color": "#10B981", "priority": 5},
+                    {"value": "class_a", "label": "Class A", "color": "#059669", "priority": 4},
+                    {"value": "class_b", "label": "Class B", "color": "#0891B2", "priority": 3},
+                    {"value": "class_c", "label": "Class C", "color": "#EAB308", "priority": 2},
+                    {"value": "class_d", "label": "Class D", "color": "#DC2626", "priority": 1}
                 ],
                 "credit_classifications": [
-                    {"value": "aaa", "label": "AAA - ممتاز جداً", "color": "#059669"},
-                    {"value": "aa", "label": "AA - ممتاز", "color": "#0891B2"},
-                    {"value": "a", "label": "A - جيد جداً", "color": "#2563EB"},
-                    {"value": "bbb", "label": "BBB - جيد", "color": "#7C3AED"},
-                    {"value": "bb", "label": "BB - مقبول", "color": "#DC2626"},
-                    {"value": "b", "label": "B - ضعيف", "color": "#991B1B"},
-                    {"value": "ccc", "label": "CCC - خطر عالي", "color": "#7F1D1D"},
-                    {"value": "default", "label": "متعثر", "color": "#450A0A"}
+                    {"value": "green", "label": "أخضر - تصنيف ائتماني جيد", "color": "#10B981"},
+                    {"value": "yellow", "label": "أصفر - تصنيف ائتماني مقبول", "color": "#EAB308"},
+                    {"value": "red", "label": "أحمر - يحتاج مراجعة الحسابات", "color": "#DC2626"}
                 ]
             }
         }
