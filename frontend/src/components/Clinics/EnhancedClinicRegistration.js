@@ -194,45 +194,142 @@ const EnhancedClinicRegistration = () => {
     document.head.appendChild(script);
   };
 
+  // دالة محسنة للحصول على الموقع الحالي مع معالجة أفضل للأخطاء
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLoc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          };
-          setUserLocation(userLoc);
-          console.log('📍 تم الحصول على الموقع الحالي:', userLoc);
-          
-          // تسجيل موقع المندوب
-          setLocationData(prev => ({
-            ...prev,
-            rep_latitude: userLoc.lat,
-            rep_longitude: userLoc.lng,
-            rep_location_accuracy: userLoc.accuracy,
-            device_info: navigator.userAgent
-          }));
-        },
-        (error) => {
-          console.error('❌ خطأ في الحصول على الموقع:', error);
-          // استخدام موقع افتراضي (القاهرة)
-          const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
-          setUserLocation(defaultLocation);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
+    console.log('🎯 محاولة الحصول على الموقع الحالي...');
+    
+    if (!navigator.geolocation) {
       console.warn('⚠️ الجهاز لا يدعم تحديد الموقع');
-      // استخدام موقع افتراضي (القاهرة)
-      const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
-      setUserLocation(defaultLocation);
+      useDefaultLocation();
+      return;
     }
+
+    // تسجيل معلومات الأمان للمتصفح
+    console.log('🔒 معلومات البروتوكول:', {
+      protocol: window.location.protocol,
+      isSecureContext: window.isSecureContext,
+      hostname: window.location.hostname
+    });
+
+    // خيارات محسنة لـ Geolocation
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 15000, // زيادة المهلة الزمنية
+      maximumAge: 300000 // 5 دقائق cache
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLoc = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        
+        setUserLocation(userLoc);
+        console.log('✅ تم الحصول على الموقع الحالي بنجاح:', {
+          lat: userLoc.lat,
+          lng: userLoc.lng,
+          accuracy: userLoc.accuracy + ' متر'
+        });
+        
+        // تسجيل موقع المندوب
+        setLocationData(prev => ({
+          ...prev,
+          rep_latitude: userLoc.lat,
+          rep_longitude: userLoc.lng,
+          rep_location_accuracy: userLoc.accuracy,
+          device_info: navigator.userAgent,
+          location_obtained_at: new Date().toISOString()
+        }));
+
+        // إذا كانت الخريطة محملة، حديث موقعها
+        if (mapInstanceRef.current && markerRef.current) {
+          console.log('🗺️ تحديث موقع الخريطة للموقع الحالي...');
+          mapInstanceRef.current.setCenter(userLoc);
+          mapInstanceRef.current.setZoom(17);
+          markerRef.current.setPosition(userLoc);
+          
+          // إضافة دائرة دقة الموقع
+          if (accuracyCircleRef.current) {
+            accuracyCircleRef.current.setMap(null);
+          }
+          
+          accuracyCircleRef.current = new window.google.maps.Circle({
+            strokeColor: '#4285f4',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#4285f4',
+            fillOpacity: 0.15,
+            map: mapInstanceRef.current,
+            center: userLoc,
+            radius: userLoc.accuracy || 100
+          });
+        }
+      },
+      (error) => {
+        console.error('❌ خطأ في الحصول على الموقع:', {
+          code: error.code,
+          message: error.message,
+          details: getLocationErrorDetails(error)
+        });
+        
+        // إظهار رسالة للمستخدم حسب نوع الخطأ
+        const errorMessage = getLocationErrorMessage(error);
+        setErrors(prev => ({
+          ...prev,
+          location: errorMessage
+        }));
+        
+        useDefaultLocation();
+      },
+      options
+    );
+  };
+
+  // دالة مساعدة لتوضيح تفاصيل الخطأ
+  const getLocationErrorDetails = (error) => {
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        return "المستخدم رفض طلب الوصول للموقع";
+      case error.POSITION_UNAVAILABLE:
+        return "معلومات الموقع غير متاحة";
+      case error.TIMEOUT:
+        return "انتهت مهلة طلب الموقع";
+      default:
+        return "خطأ غير معروف";
+    }
+  };
+
+  // دالة لإرجاع رسالة خطأ للمستخدم
+  const getLocationErrorMessage = (error) => {
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        return "يرجى السماح للموقع بالوصول للموقع الجغرافي من إعدادات المتصفح";
+      case error.POSITION_UNAVAILABLE:
+        return "تعذر تحديد موقعك الحالي، يرجى تحديد الموقع يدوياً على الخريطة";
+      case error.TIMEOUT:
+        return "تم تجاوز الوقت المحدد للحصول على الموقع، يرجى المحاولة مرة أخرى";
+      default:
+        return "خطأ في تحديد الموقع، يرجى تحديد الموقع يدوياً على الخريطة";
+    }
+  };
+
+  // دالة لاستخدام الموقع الافتراضي
+  const useDefaultLocation = () => {
+    const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
+    setUserLocation(defaultLocation);
+    console.log('📍 استخدام الموقع الافتراضي (القاهرة):', defaultLocation);
+    
+    setLocationData(prev => ({
+      ...prev,
+      rep_latitude: defaultLocation.lat,
+      rep_longitude: defaultLocation.lng,
+      rep_location_accuracy: null,
+      device_info: navigator.userAgent,
+      location_obtained_at: new Date().toISOString(),
+      location_source: 'default'
+    }));
   };
 
   const initializeMap = () => {
