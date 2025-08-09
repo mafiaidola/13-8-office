@@ -654,7 +654,7 @@ async def get_debt_statistics(
             collector_stats = {}
             for rep_data in stats["by_assigned_rep"]:
                 rep_id = rep_data["rep_id"]
-                rep_name = rep_data["rep_name"]
+                rep_name = rep_data["rep_name"] 
                 amount = rep_data["amount"]
                 
                 if rep_id not in collector_stats:
@@ -665,7 +665,8 @@ async def get_debt_statistics(
             
             # Sort by performance
             top_collectors = sorted(
-                [{"rep_id": k, **v} for k, v in collector_stats.items()],
+                [{"rep_name": v["name"], "rep_id": k, "total_assigned": v["total_assigned"], "debt_count": v["count"]} 
+                 for k, v in collector_stats.items()],
                 key=lambda x: x["total_assigned"],
                 reverse=True
             )[:10]
