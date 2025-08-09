@@ -115,7 +115,7 @@ async def get_users(current_user: User = Depends(get_current_user)):
         # Admin and GM can see all users
         if current_user.role in ["admin", "gm"]:
             users = []
-            async for user in db.users.find({}, {"_id": 0, "password_hash": 0}):
+            async for user in db.users.find({}, {"_id": 0, "password_hash": 0, "password": 0}):
                 users.append(user)
             return users
         
