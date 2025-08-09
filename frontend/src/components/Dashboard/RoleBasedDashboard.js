@@ -163,12 +163,20 @@ const RoleBasedDashboard = ({ user, language = 'ar', isRTL = true }) => {
     case 'medical_rep':
       return <MedicalRepDashboard {...commonProps} />;
     
+    case 'medical_representative':
+      return <MedicalRepresentativeDashboard {...commonProps} />;
+    
+    case 'sales_rep':
+      return <SalesRepresentativeDashboard {...commonProps} />;
+    
     case 'accounting':
     case 'finance':
       return <AccountingDashboard {...commonProps} />;
     
+    case 'line_manager':
+    case 'area_manager':
     case 'manager':
-      return <GMDashboard {...commonProps} />; // المدراء يستخدمون نفس واجهة المدير العام
+      return <ManagerDashboard {...commonProps} />;
     
     default:
       return (
