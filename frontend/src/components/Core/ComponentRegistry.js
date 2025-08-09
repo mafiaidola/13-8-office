@@ -240,6 +240,10 @@ export const COMPONENT_REGISTRY = {
     () => import('../GPS/GPSTracking'),
     'جاري تحميل تتبع المواقع...'
   ),
+  LocationTracking: createLazyComponent(
+    () => import('../Location/LocationTracking'),
+    'جاري تحميل تتبع المواقع المتقدم...'
+  ),
 
   // Settings
   Settings: createLazyComponent(
