@@ -98,7 +98,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
           id: 'prod-003',
           name: 'أنسولين طويل المفعول',
           description: 'علاج السكري النوع الأول والثاني',
-          category: 'هرمونات',
+          brand: 'Novartis',
           unit: 'قلم',
           line_id: 'line-001',
           line_name: 'خط القاهرة الكبرى',
