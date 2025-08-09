@@ -661,7 +661,6 @@ const EnhancedClinicRegistration = () => {
           clinic_phone: '',
           clinic_email: '',
           doctor_name: '',
-          doctor_specialty: '',
           doctor_phone: '',
           clinic_address: '',
           line_id: '',
