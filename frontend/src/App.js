@@ -609,10 +609,6 @@ const LoginForm = () => {
   const { language } = useTheme();
   const { t } = useTranslation(language);
 
-  const handleDemoCredentials = () => {
-    setCredentials({ username: 'admin', password: 'admin123' });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
