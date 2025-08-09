@@ -11,7 +11,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterBrand, setFilterBrand] = useState('all');
   const [filterLine, setFilterLine] = useState('all');
   
   const { t } = useTranslation(language);
