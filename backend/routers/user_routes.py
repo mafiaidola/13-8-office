@@ -288,7 +288,7 @@ async def update_user(
             )
         
         # Return updated user data
-        updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0, "password": 0})
         updated_user["message"] = "User updated successfully"
         
         return updated_user
