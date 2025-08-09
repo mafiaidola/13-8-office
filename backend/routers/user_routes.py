@@ -208,7 +208,7 @@ async def get_user_by_id(
                 detail="Insufficient permissions to view this user"
             )
         
-        user_data = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+        user_data = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0, "password": 0})
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
