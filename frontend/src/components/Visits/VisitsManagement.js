@@ -708,9 +708,24 @@ const VisitsManagement = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {log.geolocation && log.latitude && log.longitude ? (
-                                  <div className="space-y-1">
-                                    <div className="text-xs">
-                                      📍 {log.city || 'Unknown'}, {log.country || 'Unknown'}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="text-xs">
+                                        📍 {log.city || 'Unknown'}, {log.country || 'Unknown'}
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          // فتح خريطة Google Maps بالموقع
+                                          const lat = parseFloat(log.latitude).toFixed(6);
+                                          const lng = parseFloat(log.longitude).toFixed(6);
+                                          const url = `https://www.google.com/maps?q=${lat},${lng}&z=15`;
+                                          window.open(url, '_blank');
+                                        }}
+                                        className="text-blue-600 hover:text-blue-800 text-xs underline"
+                                        title="عرض على الخريطة"
+                                      >
+                                        🗺️ عرض
+                                      </button>
                                     </div>
                                     <div className="text-xs text-gray-500">
                                       ({parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)})
@@ -720,6 +735,18 @@ const VisitsManagement = () => {
                                         دقة: {Math.round(log.location_accuracy)}م
                                       </div>
                                     )}
+                                    {/* خريطة مصغرة مدمجة */}
+                                    <div className="w-24 h-16 bg-gray-100 rounded border overflow-hidden">
+                                      <iframe
+                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'YOUR_API_KEY'}&q=${log.latitude},${log.longitude}&zoom=15`}
+                                        width="100%"
+                                        height="100%"
+                                        frameBorder="0"
+                                        style={{ border: 0 }}
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        title={`موقع تسجيل الدخول - ${log.username}`}
+                                      />
+                                    </div>
                                   </div>
                                 ) : (
                                   <span className="text-gray-400">لا يوجد موقع</span>
