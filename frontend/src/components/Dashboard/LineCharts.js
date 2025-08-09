@@ -413,56 +413,58 @@ const LineCharts = ({
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* رأس المكون مع الإجراءات السريعة */}
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <span className="text-purple-600 mr-2">📈</span>
-              {title}
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              رسم بياني تفاعلي مع {chartData.length} نقطة بيانات
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <select
-              value={chartType}
-              onChange={(e) => setChartType(e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="line">📈 خطي</option>
-              <option value="area">📊 مساحي</option>
-              <option value="bar">📊 عمودي</option>
-            </select>
+      {title && (
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <span className="text-purple-600 mr-2 text-2xl">📈</span>
+                {title}
+              </h3>
+              <p className="text-base font-medium text-gray-700 mt-1">
+                رسم بياني تفاعلي مع {chartData.length} نقطة بيانات
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <select
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value)}
+                className="bg-white border-2 border-gray-300 rounded-lg px-4 py-2 font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="line">📈 خطي</option>
+                <option value="area">📊 مساحي</option>
+                <option value="bar">📊 عمودي</option>
+              </select>
 
-            <select
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="chart">📊 رسم بياني</option>
-              <option value="data">📋 جدول البيانات</option>
-            </select>
+              <select
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value)}
+                className="bg-white border-2 border-gray-300 rounded-lg px-4 py-2 font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="chart">📊 رسم بياني</option>
+                <option value="data">📋 جدول البيانات</option>
+              </select>
+            </div>
+          </div>
+
+          {/* الإجراءات السريعة */}
+          <div className="flex flex-wrap gap-3">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold transition-all border-2 ${action.color} shadow-sm hover:shadow-md`}
+              >
+                <span className="mr-2 text-lg">{action.icon}</span>
+                {action.label}
+              </button>
+            ))}
           </div>
         </div>
-
-        {/* الإجراءات السريعة */}
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={action.onClick}
-              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${action.color}`}
-            >
-              <span className="mr-1">{action.icon}</span>
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* المحتوى */}
       <div className="p-6">
@@ -471,38 +473,38 @@ const LineCharts = ({
 
       {/* الإحصائيات السريعة المحسنة */}
       {chartData.length > 0 && (
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-lg font-bold text-blue-600 flex items-center justify-center">
-                <span className="mr-2">📊</span>
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="text-2xl font-black text-blue-700 flex items-center justify-center mb-2">
+                <span className="mr-2 text-2xl">📊</span>
                 {chartData.length}
               </div>
-              <div className="text-xs text-gray-600">نقاط البيانات</div>
+              <div className="font-bold text-gray-900">نقاط البيانات</div>
             </div>
             
-            <div className="text-center">
-              <div className="text-lg font-bold text-green-600 flex items-center justify-center">
-                <span className="mr-2">📈</span>
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="text-2xl font-black text-green-700 flex items-center justify-center mb-2">
+                <span className="mr-2 text-2xl">📈</span>
                 {Math.max(...chartData.map(item => item.y)).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600">أعلى قيمة</div>
+              <div className="font-bold text-gray-900">أعلى قيمة</div>
             </div>
             
-            <div className="text-center">
-              <div className="text-lg font-bold text-orange-600 flex items-center justify-center">
-                <span className="mr-2">📉</span>
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="text-2xl font-black text-orange-700 flex items-center justify-center mb-2">
+                <span className="mr-2 text-2xl">📉</span>
                 {Math.min(...chartData.map(item => item.y)).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600">أقل قيمة</div>
+              <div className="font-bold text-gray-900">أقل قيمة</div>
             </div>
             
-            <div className="text-center">
-              <div className="text-lg font-bold text-purple-600 flex items-center justify-center">
-                <span className="mr-2">📊</span>
+            <div className="text-center bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="text-2xl font-black text-purple-700 flex items-center justify-center mb-2">
+                <span className="mr-2 text-2xl">📊</span>
                 {Math.round(chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600">المتوسط</div>
+              <div className="font-bold text-gray-900">المتوسط</div>
             </div>
           </div>
         </div>
