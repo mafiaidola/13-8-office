@@ -25,6 +25,7 @@ from routers.lines_areas_routes import router as lines_areas_router
 from routers.excel_routes import router as excel_router
 from routers.products_routes import router as products_router
 from routers.visits_routes import router as visits_router
+from routers.activities_routes import router as activities_router
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
