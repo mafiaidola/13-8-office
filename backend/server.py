@@ -3286,6 +3286,103 @@ async def update_warehouse(warehouse_id: str, warehouse_data: dict, current_user
         raise HTTPException(status_code=500, detail="خطأ في تحديث المخزن")
 
 
+@api_router.post("/warehouses")
+async def create_warehouse(warehouse_data: dict, current_user: User = Depends(get_current_user)):
+    """إنشاء مخزن جديد - Create new warehouse"""
+    try:
+        # Check permissions - only admin and warehouse managers can create warehouses
+        if current_user.role not in ["admin", "warehouse_manager", "gm", "accounting"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بإنشاء مخازن")
+        
+        # Validate required fields
+        required_fields = ["name", "location"]
+        for field in required_fields:
+            if field not in warehouse_data or not warehouse_data[field]:
+                raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+        
+        # Create new warehouse
+        new_warehouse = {
+            "id": str(uuid.uuid4()),
+            "name": warehouse_data["name"],
+            "location": warehouse_data["location"],
+            "manager_name": warehouse_data.get("manager_name", ""),
+            "manager_id": warehouse_data.get("manager_id", ""),
+            "region": warehouse_data.get("region", ""),
+            "line_id": warehouse_data.get("line_id", ""),
+            "capacity": warehouse_data.get("capacity", 1000),
+            "is_active": warehouse_data.get("is_active", True),
+            "products_inventory": warehouse_data.get("products_inventory", {}),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "created_by": current_user.id
+        }
+        
+        await db.warehouses.insert_one(new_warehouse)
+        
+        # Return clean response
+        response_warehouse = {
+            "id": new_warehouse["id"],
+            "name": new_warehouse["name"],
+            "location": new_warehouse["location"],
+            "manager_name": new_warehouse["manager_name"],
+            "region": new_warehouse["region"],
+            "capacity": new_warehouse["capacity"],
+            "is_active": new_warehouse["is_active"]
+        }
+        
+        return {"success": True, "message": "تم إنشاء المخزن بنجاح", "warehouse": response_warehouse}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error creating warehouse: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إنشاء المخزن")
+
+
+@api_router.delete("/warehouses/{warehouse_id}")
+async def delete_warehouse(warehouse_id: str, current_user: User = Depends(get_current_user)):
+    """حذف مخزن - Delete warehouse"""
+    try:
+        # Check permissions - only admin can delete warehouses
+        if current_user.role not in ["admin", "gm"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بحذف مخازن")
+        
+        # Check if warehouse exists
+        existing_warehouse = await db.warehouses.find_one({"id": warehouse_id})
+        if not existing_warehouse:
+            raise HTTPException(status_code=404, detail="المخزن غير موجود")
+        
+        # Check if warehouse has active inventory
+        inventory = existing_warehouse.get("products_inventory", {})
+        total_stock = sum(item.get("quantity", 0) for item in inventory.values())
+        
+        if total_stock > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"لا يمكن حذف المخزن - يحتوي على مخزون بكمية {total_stock}. يرجى إفراغ المخزون أولاً"
+            )
+        
+        # Soft delete - mark as inactive instead of hard delete
+        await db.warehouses.update_one(
+            {"id": warehouse_id}, 
+            {
+                "$set": {
+                    "is_active": False,
+                    "deleted_at": datetime.utcnow(),
+                    "deleted_by": current_user.id
+                }
+            }
+        )
+        
+        return {"success": True, "message": "تم حذف المخزن بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting warehouse: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في حذف المخزن")
+
+
 # ============================================================================
 # AREAS MANAGEMENT FIXES - إصلاحات إدارة المناطق
 # ============================================================================
