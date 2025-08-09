@@ -584,6 +584,10 @@ const EnhancedClinicRegistration = () => {
       rep_latitude: defaultLocation.lat,
       rep_longitude: defaultLocation.lng,
       rep_location_accuracy: null,
+      // إضافة موقع العيادة أيضاً
+      clinic_latitude: defaultLocation.lat,
+      clinic_longitude: defaultLocation.lng,
+      clinic_address: `ميدان التحرير، القاهرة (${defaultLocation.lat.toFixed(6)}, ${defaultLocation.lng.toFixed(6)})`,
       device_info: navigator.userAgent,
       location_obtained_at: new Date().toISOString(),
       location_source: 'default_cairo_center',
