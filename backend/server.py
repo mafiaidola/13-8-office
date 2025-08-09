@@ -3627,10 +3627,14 @@ try:
     from routes.enhanced_clinic_routes import router as enhanced_clinic_router
     api_router.include_router(enhanced_clinic_router)
     print("✅ Enhanced Clinic Management Router registered successfully")
+    print(f"✅ Enhanced Clinic routes prefix: {enhanced_clinic_router.prefix}")
+    print(f"✅ Enhanced Clinic routes count: {len(enhanced_clinic_router.routes)}")
 except ImportError as e:
     print(f"⚠️ Warning: Could not import enhanced clinic router: {e}")
 except Exception as e:
     print(f"⚠️ Error registering enhanced clinic router: {e}")
+    import traceback
+    print(f"⚠️ Full error traceback: {traceback.format_exc()}")
 
 # Keep legacy financial router for backward compatibility (but avoid duplication)
 if not ENHANCED_ROUTERS_AVAILABLE:
