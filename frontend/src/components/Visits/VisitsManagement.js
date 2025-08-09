@@ -51,7 +51,6 @@ const VisitsManagement = () => {
     loadDashboardData();
     loadVisits();
     loadAvailableClinics();
-    loadLoginLogs();  // إضافة تحميل سجل الدخول
   }, []);
 
   // دالة تحميل سجل الدخول
