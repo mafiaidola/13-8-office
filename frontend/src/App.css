@@ -1170,16 +1170,27 @@ button:disabled {
 /* Landscape Orientation - الاتجاه الأفقي */
 @media (max-width: 767px) and (orientation: landscape) {
   .sidebar {
-    width: 280px !important;
-    left: -280px !important;
+    width: 260px !important;
+    left: -260px !important;
   }
   
   .sidebar.open {
     left: 0 !important;
   }
   
+  .main-content {
+    padding: 12px !important;
+  }
+  
   .metrics-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  .dashboard-card,
+  .enhanced-stat-card {
+    padding: 16px !important;
+    min-height: 90px !important;
   }
 }
 
