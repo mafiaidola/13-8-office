@@ -157,8 +157,8 @@ async def get_invoices(
         if clinic_id:
             query_filter["clinic_id"] = clinic_id
         
-        if current_user.role == "medical_rep":
-            query_filter["assigned_rep_id"] = current_user.id
+        if current_user.get("role") == "medical_rep":
+            query_filter["assigned_rep_id"] = current_user.get("id")
         
         # جلب الطلبات كبديل للفواتير
         orders = []
