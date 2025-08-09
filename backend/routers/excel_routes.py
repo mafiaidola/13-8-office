@@ -223,7 +223,49 @@ async def export_data(data_type: str, current_user: dict = Depends(get_current_u
             data.append(item)
         
         if not data:
-            raise HTTPException(status_code=404, detail=f"No {data_type} data found")
+            # Return empty Excel file with headers only
+            wb = Workbook()
+            ws = wb.active
+            
+            # Arabic sheet names
+            sheet_names = {
+                "clinics": "بيانات العيادات",
+                "users": "بيانات المستخدمين", 
+                "orders": "بيانات الطلبات",
+                "debts": "بيانات المديونية",
+                "payments": "بيانات التحصيل"
+            }
+            
+            ws.title = sheet_names.get(data_type, data_type)
+            
+            # Add a message indicating no data
+            ws.cell(row=1, column=1, value=f"لا توجد بيانات {data_type} متاحة للتصدير")
+            
+            # Save to memory
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            # URL-safe filenames without Arabic characters
+            filename_mapping = {
+                "clinics": "clinics_export",
+                "users": "users_export",
+                "orders": "orders_export", 
+                "debts": "debts_export",
+                "payments": "payments_export"
+            }
+            
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{filename_mapping.get(data_type, data_type)}_{timestamp}.xlsx"
+            
+            # Get the content as bytes
+            content = output.getvalue()
+            
+            return StreamingResponse(
+                io.BytesIO(content),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename={filename}"}
+            )
         
         # Create workbook
         wb = Workbook()
