@@ -325,10 +325,12 @@ class CreateFinancialRecordRequest(BaseModel):
     """طلب إنشاء سجل مالي"""
     record_type: TransactionType
     clinic_id: str
-    original_amount: Decimal
+    original_amount: Decimal = Field(gt=0, description="المبلغ الأصلي (يجب أن يكون أكبر من صفر)")
     due_date: date
     description: Optional[str] = None
     order_id: Optional[str] = None
+    discount_amount: Optional[Decimal] = Field(default=Decimal("0.00"), ge=0, description="مبلغ الخصم")
+    tax_amount: Optional[Decimal] = Field(default=Decimal("0.00"), ge=0, description="مبلغ الضريبة")
 
 class ProcessPaymentRequest(BaseModel):
     """طلب معالجة دفعة"""
