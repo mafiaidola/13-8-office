@@ -49,6 +49,11 @@ const EnhancedClinicRegistration = () => {
   const mapInstanceRef = useRef(null);
 
   useEffect(() => {
+    console.log('🏥 EnhancedClinicRegistration component mounted');
+    console.log('📊 Current formOptions:', formOptions);
+    console.log('📍 Current formData:', formData);
+    console.log('🗺️ Current locationData:', locationData);
+    
     loadFormData();
     loadGoogleMaps();
     getCurrentLocation();
