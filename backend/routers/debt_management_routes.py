@@ -614,7 +614,7 @@ async def get_debt_statistics(
                 "average_days_overdue": {"$avg": "$days_overdue"},
                 "by_status": {"$push": "$status"},
                 "by_aging": {"$push": "$aging_category"},
-                "by_assigned_rep": {"$push": {"rep_id": "$assigned_to_id", "rep_name": "$assigned_to_name", "amount": "$remaining_amount"}}
+                "by_assigned_rep": {"$push": {"rep_id": "$sales_rep_id", "rep_name": "$sales_rep_name", "amount": "$remaining_amount"}}
             }}
         ]
         
