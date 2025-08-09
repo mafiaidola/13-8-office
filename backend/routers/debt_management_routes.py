@@ -635,8 +635,8 @@ async def get_debt_statistics(
         stats = stats[0]
         
         # Calculate rates
-        collection_rate = (stats["total_collected"] / stats["total_original"] * 100) if stats["total_original"] > 0 else 0
-        overdue_rate = (stats["overdue_count"] / stats["total_debts"] * 100) if stats["total_debts"] > 0 else 0
+        collection_rate = (stats["total_collected"] / stats["total_original"] * 100) if stats["total_original"] and stats["total_original"] > 0 else 0
+        overdue_rate = (stats["overdue_count"] / stats["total_debts"] * 100) if stats["total_debts"] and stats["total_debts"] > 0 else 0
         
         # Process status distribution
         status_counts = {}
