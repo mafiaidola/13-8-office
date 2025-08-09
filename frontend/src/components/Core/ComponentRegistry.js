@@ -211,10 +211,6 @@ export const COMPONENT_REGISTRY = {
   ),
 
   // Debt Collection Management
-  DebtCollection: createLazyComponent(
-    () => import('../Financial/DebtCollection'),
-    'جاري تحميل تحصيل الديون...'
-  ),
   DebtCollectionManagement: createLazyComponent(
     () => import('../DebtCollection/DebtCollectionManagement'),
     'جاري تحميل إدارة الديون والتحصيل...'
