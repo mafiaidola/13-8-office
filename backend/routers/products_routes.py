@@ -544,12 +544,18 @@ async def get_products_stats(current_user: dict = Depends(get_current_user)):
 async def get_product_brands(current_user: dict = Depends(get_current_user)):
     """Get unique list of product brands"""
     try:
-        # Get distinct brands
-        brands = await db.products.distinct("brand", {"is_active": True})
+        # Get distinct brands (check both 'brand' and 'category' fields for compatibility)
+        brands_new = await db.products.distinct("brand", {"is_active": True})
+        brands_old = await db.products.distinct("category", {"is_active": True})
+        
+        # Combine and deduplicate
+        all_brands = list(set(brands_new + brands_old))
+        # Filter out None values
+        all_brands = [brand for brand in all_brands if brand]
         
         return {
-            "brands": sorted(brands),
-            "total_brands": len(brands)
+            "brands": sorted(all_brands),
+            "total_brands": len(all_brands)
         }
         
     except Exception as e:
