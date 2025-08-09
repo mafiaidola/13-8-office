@@ -241,34 +241,37 @@ const AdminDashboard = ({
 
       {/* توزيع المستخدمين والأدوار */}
       {dashboardData.user_roles_distribution && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <span className="text-blue-600 mr-3">👥</span>
+        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
+            <span className="text-blue-600 mr-3 text-3xl">👥</span>
             توزيع المستخدمين حسب الأدوار
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {dashboardData.user_roles_distribution.map((role, index) => (
-              <div key={role._id || index} className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
+              <div key={role._id || index} className="bg-white rounded-xl p-6 border-2 border-gray-300 shadow-lg hover:shadow-xl transition-all hover:border-blue-400">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 capitalize">
+                    <p className="text-lg font-bold text-gray-900 capitalize mb-2">
                       {role._id === 'admin' ? '👨‍💼 مدير' :
                        role._id === 'medical_rep' ? '👨‍⚕️ مندوب طبي' :
                        role._id === 'accounting' ? '💰 محاسب' :
                        role._id === 'manager' ? '👨‍💼 مدير فرع' :
                        `👤 ${role._id}`}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900">{role.count}</p>
+                    <p className="text-3xl font-black text-gray-900">{role.count}</p>
                   </div>
                   <CommonDashboardComponents.CircularProgress 
                     percentage={(role.count / dashboardData.total_users) * 100}
-                    size={50}
-                    strokeWidth={6}
+                    size={60}
+                    strokeWidth={8}
                     showPercentage={false}
                     color="#3b82f6"
                   />
                 </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  {((role.count / dashboardData.total_users) * 100).toFixed(1)}% من المستخدمين
+                </p>
               </div>
             ))}
           </div>
