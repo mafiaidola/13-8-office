@@ -271,13 +271,13 @@ async def export_data(data_type: str, current_user: dict = Depends(get_current_u
         wb.save(output)
         output.seek(0)
         
-        # Arabic filenames
+        # URL-safe filenames without Arabic characters
         filename_mapping = {
-            "clinics": "تصدير_العيادات",
-            "users": "تصدير_المستخدمين",
-            "orders": "تصدير_الطلبات", 
-            "debts": "تصدير_المديونية",
-            "payments": "تصدير_التحصيل"
+            "clinics": "clinics_export",
+            "users": "users_export",
+            "orders": "orders_export", 
+            "debts": "debts_export",
+            "payments": "payments_export"
         }
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
