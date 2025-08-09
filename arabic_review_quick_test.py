@@ -302,12 +302,13 @@ class ArabicReviewQuickTest:
         # Test multiple endpoints to verify database connectivity
         endpoints_to_test = [
             ("/products", "المنتجات"),
-            ("/warehouses", "المخازن"),
-            ("/clinics", "العيادات"),
-            ("/users", "المستخدمين")
+            ("/users", "المستخدمين"),
+            ("/lines", "الخطوط"),
+            ("/areas", "المناطق")
         ]
         
         connectivity_results = []
+        working_endpoints = 0
         
         for endpoint, name in endpoints_to_test:
             result = await self.make_request("GET", endpoint, token=self.admin_token)
@@ -316,6 +317,7 @@ class ArabicReviewQuickTest:
                 data = result["data"]
                 count = len(data) if isinstance(data, list) else "غير محدد"
                 connectivity_results.append(f"{name}: {count} سجل")
+                working_endpoints += 1
             else:
                 connectivity_results.append(f"{name}: خطأ ({result['status_code']})")
         
@@ -327,14 +329,18 @@ class ArabicReviewQuickTest:
             db_status = health_data.get("database", "غير محدد")
             
             details = f"حالة قاعدة البيانات: {db_status}, " + ", ".join(connectivity_results)
+            details += f" - يعمل {working_endpoints}/{len(endpoints_to_test)} endpoints"
+            
+            # Success if database is connected and at least half the endpoints work
+            success = db_status == "connected" and working_endpoints >= len(endpoints_to_test) // 2
             
             self.log_test_result(
                 "ربط قاعدة البيانات",
-                True,
+                success,
                 details,
                 health_result["response_time"]
             )
-            return True
+            return success
         else:
             self.log_test_result(
                 "ربط قاعدة البيانات",
