@@ -247,8 +247,16 @@ export const hasPermission = (userRole, tabId) => {
 export const getAvailableTabs = (userRole) => {
   const normalizedRole = normalizeRole(userRole);
   
+  // Return all tabs for admin, or filter by permissions for other roles
   return Object.values(SYSTEM_TABS)
     .filter(tab => {
+      // Skip tabs without permissions defined (safety check)
+      if (!tab.permissions || !Array.isArray(tab.permissions)) {
+        console.warn(`Tab ${tab.id} missing permissions array, skipping`);
+        return false;
+      }
+      
+      // Allow access if permissions include '*' or the user's role
       if (tab.permissions.includes('*')) return true;
       return tab.permissions.includes(normalizedRole);
     })
