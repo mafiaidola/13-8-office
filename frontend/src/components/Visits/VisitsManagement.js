@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const VisitsManagement = () => {
+  // تحديد API URL
+  const API = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({});
   const [visits, setVisits] = useState([]);
