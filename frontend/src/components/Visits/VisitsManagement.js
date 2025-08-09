@@ -11,8 +11,6 @@ const VisitsManagement = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateVisitModal, setShowCreateVisitModal] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
-
-  
   // Form states
   const [newVisit, setNewVisit] = useState({
     clinic_id: '',
