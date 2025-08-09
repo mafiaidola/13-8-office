@@ -24,7 +24,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 def print_test_header(test_name):

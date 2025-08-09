@@ -486,7 +486,7 @@ class FinancialSystemIntegrationTester:
 def main():
     """الدالة الرئيسية لتشغيل الاختبار"""
     # Use the backend URL from environment
-    backend_url = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+    backend_url = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
     
     print("🏥💰 اختبار النظام المالي المتكامل المدمج في النظام الطبي")
     print("🏥💰 Testing Integrated Financial System in Medical Management System")

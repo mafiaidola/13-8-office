@@ -1141,7 +1141,7 @@ class IntegratedFinancialSystemTester:
 def main():
     """الدالة الرئيسية لتشغيل الاختبار"""
     # Use the backend URL from environment
-    backend_url = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+    backend_url = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
     
     print("🏥 اختبار النظام المالي المتكامل المدمج في النظام الطبي")
     print("🏥 Testing Integrated Financial System in Medical Management System")
@@ -1164,7 +1164,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -1429,7 +1429,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -1848,7 +1848,7 @@ from datetime import datetime
 import os
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -2508,7 +2508,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -3199,7 +3199,7 @@ import sys
 import os
 
 # Configuration
-BACKEND_URL = "https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com/api"
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -3965,7 +3965,7 @@ import sys
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://66d69312-5e01-4e91-9ce7-79fad17528d1.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class BackendTester:
