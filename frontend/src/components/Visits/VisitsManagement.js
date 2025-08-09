@@ -155,8 +155,7 @@ const VisitsManagement = () => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
-            const response = await axios.post(`${backendUrl}/api/visits/check-in`, {
+            const response = await axios.post(`${API_BASE}/api/visits/check-in`, {
               visit_id: visitId,
               gps_latitude: lat,
               gps_longitude: lng,
