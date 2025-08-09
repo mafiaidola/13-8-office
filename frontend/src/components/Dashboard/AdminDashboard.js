@@ -381,27 +381,37 @@ const AdminDashboard = ({
       )}
 
       {/* سجل الأنشطة المحسن */}
-      <ActivityLog 
-        activities={dashboardData.recent_activities || []}
-        title="سجل أنشطة النظام الحديثة"
-        showFilters={true}
-        showRefresh={true}
-        onRefresh={onRefresh}
-        quickActions={[
-          {
-            label: 'تصدير السجل الكامل',
-            icon: '📋💾',
-            onClick: () => console.log('تصدير السجل الكامل'),
-            color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
-          },
-          {
-            label: 'إعدادات التنبيهات',
-            icon: '🔔⚙️',
-            onClick: () => console.log('إعدادات التنبيهات'),
-            color: 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200'
-          }
-        ]}
-      />
+      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-2">
+        <div className="p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+            <span className="text-indigo-600 mr-3 text-3xl">📊</span>
+            سجل أنشطة النظام الحديثة
+          </h3>
+          <p className="text-gray-700 font-medium mb-6">متابعة شاملة لجميع الأنشطة والعمليات في النظام</p>
+        </div>
+        
+        <ActivityLog 
+          activities={dashboardData.recent_activities || []}
+          title=""
+          showFilters={true}
+          showRefresh={true}
+          onRefresh={onRefresh}
+          quickActions={[
+            {
+              label: 'تصدير السجل الكامل',
+              icon: '📋💾',
+              onClick: () => console.log('تصدير السجل الكامل'),
+              color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+            },
+            {
+              label: 'إعدادات التنبيهات',
+              icon: '🔔⚙️',
+              onClick: () => console.log('إعدادات التنبيهات'),
+              color: 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200'
+            }
+          ]}
+        />
+      </div>
     </div>
   );
 };
