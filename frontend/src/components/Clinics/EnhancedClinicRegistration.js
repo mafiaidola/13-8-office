@@ -599,7 +599,6 @@ const EnhancedClinicRegistration = () => {
     // التحقق من الحقول المطلوبة
     if (!formData.clinic_name.trim()) newErrors.clinic_name = 'اسم العيادة مطلوب';
     if (!formData.doctor_name.trim()) newErrors.doctor_name = 'اسم الطبيب مطلوب';
-    if (!formData.doctor_specialty.trim()) newErrors.doctor_specialty = 'التخصص مطلوب';
     if (!formData.line_id) newErrors.line_id = 'يجب اختيار الخط';
     if (!formData.area_id) newErrors.area_id = 'يجب اختيار المنطقة';
     if (!formData.clinic_address.trim()) newErrors.clinic_address = 'عنوان العيادة مطلوب';
