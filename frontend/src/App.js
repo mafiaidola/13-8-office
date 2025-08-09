@@ -613,22 +613,15 @@ const LoginForm = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    console.log('🔐 Attempting login with credentials:', credentials.username);
-    console.log('🔄 API URL:', `${API}/api/auth/login`);
     
     const result = await login(credentials);
     
     if (result.success) {
-      console.log('✅ Login successful, user:', result.user);
-      console.log('✅ Authentication state should be updated now');
-      
       // Force immediate re-render by updating a dummy state
       setLoading(false);
       
       // Double-check authentication state
       setTimeout(() => {
-        console.log('🔍 Post-login auth check - forcing app re-render');
         // Use a more aggressive approach to force UI update
         window.dispatchEvent(new Event('login-success'));
         
@@ -637,7 +630,6 @@ const LoginForm = () => {
           if (!localStorage.getItem('access_token')) {
             console.warn('⚠️ Token not found after login - something went wrong');
           } else {
-            console.log('✅ Token confirmed in localStorage');
             // Force a location change to trigger React router
             window.history.pushState({}, '', '/dashboard');
             window.location.reload();
@@ -646,7 +638,6 @@ const LoginForm = () => {
       }, 500);
       
     } else {
-      console.error('❌ Login failed:', result.error);
       setError(result.error);
       setLoading(false);
     }
