@@ -3353,7 +3353,11 @@ api_router.include_router(activity_router)
 api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
 api_router.include_router(analytics_router)
-api_router.include_router(financial_router)
+
+# Register financial router conditionally
+if not ENHANCED_ROUTERS_AVAILABLE:
+    api_router.include_router(financial_router)
+    print("✅ Legacy financial router registered")
 
 # Include enhanced routers if available
 if ENHANCED_ROUTERS_AVAILABLE:
