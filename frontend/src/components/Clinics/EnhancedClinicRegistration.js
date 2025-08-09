@@ -396,6 +396,33 @@ const EnhancedClinicRegistration = () => {
     }
   };
 
+  // دالة حساب نسبة إكمال النموذج
+  const getFormCompletionPercentage = () => {
+    const requiredFields = [
+      'clinic_name', 'doctor_name', 'doctor_specialty', 
+      'clinic_address', 'line_id', 'area_id', 
+      'classification', 'credit_classification'
+    ];
+    const locationRequired = locationData.clinic_latitude && locationData.clinic_longitude;
+    
+    let completed = 0;
+    const total = requiredFields.length + (locationRequired ? 1 : 0);
+    
+    // فحص الحقول المطلوبة
+    requiredFields.forEach(field => {
+      if (formData[field] && formData[field].trim() !== '') {
+        completed++;
+      }
+    });
+    
+    // فحص الموقع
+    if (locationRequired) {
+      completed++;
+    }
+    
+    return Math.round((completed / (requiredFields.length + 1)) * 100);
+  };
+
   const getFilteredAreas = () => {
     if (!formData.line_id) return [];
     // فلترة المناطق حسب الخط المختار من APIs النظام الأساسية
