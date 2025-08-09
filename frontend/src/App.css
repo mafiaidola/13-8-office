@@ -1595,14 +1595,7 @@ button, .btn {
   opacity: 1 !important;
 }
 
-/* Ensure modals are always on top */
-.modal-overlay {
-  z-index: 999999 !important;
-}
-
-.modal {
-  z-index: 1000000 !important;
-}
+/* Modal z-index override - already handled above */
 
 /* Loading and transition states */
 .loading {
