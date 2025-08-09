@@ -96,8 +96,7 @@ const VisitsManagement = () => {
 
   const loadAvailableClinics = async () => {
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
-      const response = await axios.get(`${backendUrl}/api/visits/available-clinics`, {
+      const response = await axios.get(`${API_BASE}/api/visits/available-clinics`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
