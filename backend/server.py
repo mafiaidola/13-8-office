@@ -2986,10 +2986,10 @@ async def create_debt(debt_data: dict, current_user: User = Depends(get_current_
                 area = sales_rep.get("area", "")
         else:
             # Use current user if they are a medical rep
-            if current_user.get("role") == "medical_rep":
-                sales_rep_id = current_user.get("id")
-                sales_rep_name = current_user.get("full_name", "")
-                area = current_user.get("area", "")
+            if current_user.role == "medical_rep":
+                sales_rep_id = current_user.id
+                sales_rep_name = current_user.full_name
+                area = getattr(current_user, 'area', "")
             else:
                 # Default to system
                 sales_rep_id = "system"
@@ -3009,7 +3009,7 @@ async def create_debt(debt_data: dict, current_user: User = Depends(get_current_
             "description": debt_data["description"],
             "status": "outstanding",
             "created_at": datetime.utcnow(),
-            "created_by": current_user.get("id", ""),
+            "created_by": current_user.id,
             "payments": []
         }
 
