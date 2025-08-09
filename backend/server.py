@@ -29,6 +29,9 @@ from routers.activities_routes import router as activities_router
 from routers.invoice_management_routes import router as invoice_router
 from routers.debt_management_routes import router as debt_router
 
+# Import clinic routes from routes directory
+from routes.enhanced_clinic_routes import router as clinic_router
+
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
