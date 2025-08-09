@@ -1088,25 +1088,50 @@ button:disabled {
   .professional-header {
     padding: 16px 24px !important;
     height: 72px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: var(--z-header) !important;
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
   }
   
   .main-layout {
     padding-top: 72px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    min-height: 100vh !important;
   }
   
   .sidebar {
+    position: fixed !important;
     width: 280px !important;
     top: 72px !important;
+    left: 0 !important;
     height: calc(100vh - 72px) !important;
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    z-index: var(--z-sticky) !important;
+    overflow-y: auto !important;
+    transform: none !important;
   }
   
   .main-content {
-    margin-right: 280px !important;
-    padding: 24px !important;
+    margin-left: 280px !important;
+    margin-right: 0 !important;
+    padding: 28px !important;
+    width: calc(100% - 280px) !important;
+    min-height: calc(100vh - 72px) !important;
+    overflow-x: auto !important;
   }
   
   .professional-header .search-container {
     max-width: 400px !important;
+    min-width: 300px !important;
   }
   
   .metrics-grid {
