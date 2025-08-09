@@ -137,7 +137,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
           price: productData.price,
           unit: productData.unit,
           line_id: productData.line_id,
-          category: productData.category,
+          brand: productData.brand,
           stock_quantity: productData.stock_quantity || 0,
           created_by_role: user?.role
         }
