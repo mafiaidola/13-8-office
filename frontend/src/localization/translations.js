@@ -102,7 +102,6 @@ export const TRANSLATIONS = {
       role: 'Role',
       rememberMe: 'Remember Me',
       forgotPassword: 'Forgot Password?',
-      demoCredentials: 'Demo Credentials',
       welcomeBack: 'Welcome Back',
       loginSuccess: 'Login Successful',
       loginError: 'Login Error',
