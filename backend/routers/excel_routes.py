@@ -283,13 +283,16 @@ async def export_data(data_type: str, current_user: dict = Depends(get_current_u
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{filename_mapping.get(data_type, data_type)}_{timestamp}.xlsx"
         
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{filename_mapping.get(data_type, data_type)}_{timestamp}.xlsx"
+        
         # Get the content as bytes
         content = output.getvalue()
         
         return StreamingResponse(
             io.BytesIO(content),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
         
     except Exception as e:
