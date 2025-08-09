@@ -340,15 +340,16 @@ const EnhancedClinicRegistration = () => {
     }
 
     try {
-      // إعداد الموقع الافتراضي
+      // إعداد الموقع الافتراضي - استخدام الموقع الحالي إذا كان متاحاً
       const defaultCenter = userLocation || { lat: 30.0444, lng: 31.2357 }; // القاهرة
+      const initialZoom = userLocation ? 17 : 13; // zoom أعلى إذا كان الموقع الحالي متاحاً
       
       console.log('🗺️ تهيئة الخريطة في الموقع:', defaultCenter);
 
       // إنشاء الخريطة
       const map = new window.google.maps.Map(mapRef.current, {
         center: defaultCenter,
-        zoom: 15,
+        zoom: initialZoom,
         mapTypeId: 'roadmap',
         streetViewControl: false,
         mapTypeControl: true,
@@ -359,11 +360,22 @@ const EnhancedClinicRegistration = () => {
             featureType: "poi",
             elementType: "labels.text.fill",
             stylers: [{ color: "#6b7280" }]
+          },
+          {
+            featureType: "poi.business",
+            stylers: [{ visibility: "on" }]
+          },
+          {
+            featureType: "poi.medical",
+            stylers: [{ visibility: "on" }]
           }
         ]
       });
 
-      // إنشاء دبوس قابل للسحب
+      // حفظ مرجع الخريطة
+      mapInstanceRef.current = map;
+
+      // إنشاء دبوس قابل للسحب مع icon محسن
       const marker = new window.google.maps.Marker({
         position: defaultCenter,
         map: map,
@@ -372,21 +384,115 @@ const EnhancedClinicRegistration = () => {
         animation: window.google.maps.Animation.DROP,
         icon: {
           url: 'data:image/svg+xml;base64,' + btoa(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#dc2626">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#dc2626">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
               <circle cx="12" cy="9" r="2.5" fill="white"/>
             </svg>
           `),
-          scaledSize: new window.google.maps.Size(32, 32),
-          anchor: new window.google.maps.Point(16, 32)
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 40)
         }
       });
 
-      // حفظ المراجع
-      mapInstanceRef.current = map;
+      // حفظ مرجع الدبوس
       markerRef.current = marker;
 
-      // معالجة سحب الدبوس
+      // إذا كان الموقع الحالي متاحاً، أضف دائرة الدقة
+      if (userLocation && userLocation.accuracy) {
+        accuracyCircleRef.current = new window.google.maps.Circle({
+          strokeColor: '#4285f4',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#4285f4',
+          fillOpacity: 0.15,
+          map: map,
+          center: userLocation,
+          radius: userLocation.accuracy
+        });
+        
+        console.log(`📍 تم إضافة دائرة دقة الموقع بنصف قطر ${userLocation.accuracy} متر`);
+      }
+
+      // إضافة زر "موقعي الحالي" مخصص
+      const locationButton = document.createElement('button');
+      locationButton.textContent = '📍 موقعي الحالي';
+      locationButton.classList.add('custom-location-button');
+      locationButton.style.cssText = `
+        background-color: white;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        cursor: pointer;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 16px;
+        margin: 10px;
+        padding: 8px 12px;
+        text-align: center;
+        transition: all 0.2s ease;
+      `;
+      
+      locationButton.addEventListener('mouseenter', () => {
+        locationButton.style.backgroundColor = '#f0f0f0';
+        locationButton.style.transform = 'scale(1.05)';
+      });
+      
+      locationButton.addEventListener('mouseleave', () => {
+        locationButton.style.backgroundColor = 'white';
+        locationButton.style.transform = 'scale(1)';
+      });
+
+      locationButton.addEventListener('click', () => {
+        locationButton.textContent = '⏳ جاري التحديد...';
+        locationButton.disabled = true;
+        getCurrentLocation();
+        
+        setTimeout(() => {
+          locationButton.textContent = '📍 موقعي الحالي';
+          locationButton.disabled = false;
+        }, 3000);
+      });
+
+      map.controls[window.google.maps.ControlPosition.TOP_RIGHT].push(locationButton);
+
+      // إعداد البحث في الخريطة
+      if (window.google.maps.places) {
+        const searchInput = document.getElementById('address-search');
+        if (searchInput) {
+          const searchBox = new window.google.maps.places.SearchBox(searchInput);
+          map.controls[window.google.maps.ControlPosition.TOP_LEFT].push(searchInput);
+
+          // البحث عند الكتابة
+          searchBox.addListener('places_changed', () => {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
+
+            const place = places[0];
+            if (!place.geometry || !place.geometry.location) return;
+
+            const location = place.geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+
+            console.log('🔍 تم العثور على المكان:', { lat, lng, name: place.name });
+
+            // تحديث الخريطة والدبوس
+            map.setCenter({ lat, lng });
+            map.setZoom(17);
+            marker.setPosition({ lat, lng });
+            
+            setLocationData(prev => ({
+              ...prev,
+              clinic_latitude: lat,
+              clinic_longitude: lng,
+              clinic_address: place.formatted_address || place.name || `${lat}, ${lng}`,
+              search_query: searchInput.value
+            }));
+          });
+        }
+      }
+
+      // معالج حدث سحب الدبوس
       marker.addListener('dragend', (event) => {
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
@@ -397,96 +503,50 @@ const EnhancedClinicRegistration = () => {
           ...prev,
           clinic_latitude: lat,
           clinic_longitude: lng,
-          location_accuracy: 10 // دقة عالية للموقع المحدد يدوياً
+          clinic_address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
         }));
 
-        // الحصول على العنوان من الإحداثيات
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            const address = results[0].formatted_address;
-            setFormData(prev => ({
-              ...prev,
-              clinic_address: address
-            }));
-            console.log('🏠 تم تحديث العنوان:', address);
-          }
-        });
+        // Reverse Geocoding للحصول على العنوان
+        if (window.google.maps.Geocoder) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              const address = results[0].formatted_address;
+              console.log('🏠 العنوان المحول:', address);
+              
+              setLocationData(prev => ({
+                ...prev,
+                clinic_address: address
+              }));
+            }
+          });
+        }
       });
 
-      // إضافة مربع البحث
-      const searchInput = document.getElementById('address-search');
-      if (searchInput) {
-        const searchBox = new window.google.maps.places.SearchBox(searchInput);
-        map.controls[window.google.maps.ControlPosition.TOP_LEFT].push(searchInput);
-
-        // التحديث عند البحث
-        searchBox.addListener('places_changed', () => {
-          const places = searchBox.getPlaces();
-          if (places.length === 0) return;
-
-          const place = places[0];
-          if (!place.geometry || !place.geometry.location) return;
-
-          const location = place.geometry.location;
-          const lat = location.lat();
-          const lng = location.lng();
-
-          console.log('🔍 تم العثور على المكان:', { lat, lng, name: place.name });
-
-          // تحديث الخريطة والدبوس
-          map.setCenter({ lat, lng });
-          map.setZoom(17);
-          marker.setPosition({ lat, lng });
-          
-          setLocationData(prev => ({
-            ...prev,
-            clinic_latitude: lat,
-            clinic_longitude: lng,
-            location_accuracy: 5 // دقة عالية للبحث
-          }));
-
-          setFormData(prev => ({
-            ...prev,
-            clinic_address: place.formatted_address || place.name
-          }));
-        });
-      }
-
-      // النقر على الخريطة لتحديد الموقع
+      // النقر على الخريطة لتحديد موقع جديد
       map.addListener('click', (event) => {
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
-        
-        console.log('🖱️ تم النقر على الخريطة:', { lat, lng });
         
         marker.setPosition({ lat, lng });
         
         setLocationData(prev => ({
           ...prev,
           clinic_latitude: lat,
-          clinic_longitude: lng,
-          location_accuracy: 10
+          clinic_longitude: lng
         }));
-
-        // الحصول على العنوان
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            const address = results[0].formatted_address;
-            setFormData(prev => ({
-              ...prev,
-              clinic_address: address
-            }));
-          }
-        });
+        
+        console.log('🖱️ تم النقر على موقع جديد:', { lat, lng });
       });
 
       console.log('✅ تم تهيئة الخريطة بنجاح');
-
+      
     } catch (error) {
       console.error('❌ خطأ في تهيئة الخريطة:', error);
-      setErrors({map: 'خطأ في تهيئة الخريطة'});
+      setErrors(prev => ({
+        ...prev,
+        map: 'خطأ في تحميل الخريطة، يرجى إعادة تحميل الصفحة'
+      }));
     }
   };
 
