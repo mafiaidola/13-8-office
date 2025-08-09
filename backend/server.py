@@ -3368,6 +3368,16 @@ if ENHANCED_ROUTERS_AVAILABLE:
     except Exception as e:
         print(f"⚠️ Error registering enhanced routers: {e}")
 
+# Enhanced Clinic Management Router
+try:
+    from routes.enhanced_clinic_routes import router as enhanced_clinic_router
+    api_router.include_router(enhanced_clinic_router)
+    print("✅ Enhanced Clinic Management Router registered successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import enhanced clinic router: {e}")
+except Exception as e:
+    print(f"⚠️ Error registering enhanced clinic router: {e}")
+
 # Keep legacy financial router for backward compatibility (but avoid duplication)
 if not ENHANCED_ROUTERS_AVAILABLE:
     api_router.include_router(financial_router)
