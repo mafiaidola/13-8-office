@@ -72,14 +72,13 @@ const VisitsManagement = () => {
   const loadVisits = async () => {
     try {
       setLoading(true);
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
       const params = new URLSearchParams();
       
       Object.entries(visitFilters).forEach(([key, value]) => {
         if (value) params.append(key, value);
       });
       
-      const response = await axios.get(`${backendUrl}/api/visits/?${params}`, {
+      const response = await axios.get(`${API_BASE}/api/visits/?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
