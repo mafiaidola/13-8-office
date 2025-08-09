@@ -561,7 +561,7 @@ const EnhancedClinicRegistration = () => {
   // دالة حساب نسبة إكمال النموذج
   const getFormCompletionPercentage = () => {
     const requiredFields = [
-      'clinic_name', 'doctor_name', 'doctor_specialty', 
+      'clinic_name', 'doctor_name', 
       'clinic_address', 'line_id', 'area_id', 
       'classification', 'credit_classification'
     ];
