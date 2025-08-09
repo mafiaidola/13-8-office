@@ -3310,6 +3310,16 @@ from routes.crm_routes import router as crm_router
 from routes.analytics_routes import router as analytics_router
 from routes.financial_routes import router as financial_router
 
+# Enhanced routers (new unified system)
+try:
+    from routes.unified_financial_routes import router as unified_financial_router
+    from routes.visit_management_routes import router as visit_management_router
+    print("✅ Enhanced routers imported successfully")
+    ENHANCED_ROUTERS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import enhanced routers: {e}")
+    ENHANCED_ROUTERS_AVAILABLE = False
+
 api_router.include_router(auth_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(settings_router)
@@ -3319,6 +3329,15 @@ api_router.include_router(simple_notification_router)
 api_router.include_router(crm_router)
 api_router.include_router(analytics_router)
 api_router.include_router(financial_router)
+
+# Include enhanced routers if available
+if ENHANCED_ROUTERS_AVAILABLE:
+    try:
+        api_router.include_router(unified_financial_router)
+        api_router.include_router(visit_management_router)
+        print("✅ Enhanced routers registered successfully")
+    except Exception as e:
+        print(f"⚠️ Error registering enhanced routers: {e}")
 
 # تسجيل الموجه المالي المتكامل (احتياطي)
 if FINANCIAL_SYSTEM_AVAILABLE:
