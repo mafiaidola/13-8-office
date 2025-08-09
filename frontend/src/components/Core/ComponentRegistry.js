@@ -168,8 +168,8 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل تتبع الأنشطة والحركات...'
   ),
 
-  // Visit Management
-  VisitManagement: createLazyComponent(
+  // Visits Management
+  VisitsManagement: createLazyComponent(
     () => import('../Visits/VisitsManagement'),
     'جاري تحميل إدارة الزيارات المحسنة...'
   ),
