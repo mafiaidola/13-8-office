@@ -125,7 +125,7 @@ async def get_users(current_user: User = Depends(get_current_user)):
             # Managers can see their team members
             async for user in db.users.find(
                 {"manager_id": current_user.id}, 
-                {"_id": 0, "password_hash": 0}
+                {"_id": 0, "password_hash": 0, "password": 0}
             ):
                 users.append(user)
         
