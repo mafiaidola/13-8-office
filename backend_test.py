@@ -2,569 +2,575 @@
 # -*- coding: utf-8 -*-
 
 """
-اختبار شامل للنظام المحسن بعد إصلاح مشاكل validation
-Comprehensive Testing for Enhanced System After Validation Fixes
+اختبار شامل وعميق للنظام بعد تطبيق جميع الإصلاحات لضمان نسبة نجاح 100%
+Comprehensive and Deep System Testing After All Fixes Applied for 100% Success Rate
 
-التركيز على:
-1. النظام المالي الموحد - الإصلاحات المطبقة
-2. نظام إدارة الزيارات - الإصلاحات المطبقة
-3. التأكد من وصول نسبة النجاح إلى 100%
+المطلوب اختبار:
+- الاختبارات الأساسية: Health, Authentication, Core APIs
+- النظام المالي الموحد: Dashboard, Records, Payments
+- نظام إدارة الزيارات: Overview, Clinics, Visit Creation
+- النظام المالي الموروث: Debts, Payments للتوافق
+- فحص المشاكل المحددة: Route conflicts, Authentication, Validation
 """
 
-import requests
+import asyncio
+import aiohttp
 import json
 import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
+import sys
+import os
 
-class EnhancedSystemTester:
+# إعدادات الاختبار
+class TestConfig:
     def __init__(self):
-        # استخدام الـ URL من frontend/.env
-        self.base_url = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
-        self.session = requests.Session()
-        self.jwt_token = None
-        self.test_results = []
-        self.start_time = time.time()
-        
-        # بيانات اختبار محددة كما طُلب
-        self.test_data = {
-            "financial_record": {
-                "record_type": "invoice",
-                "clinic_id": "clinic-001",
-                "original_amount": 1500.00,
-                "due_date": "2025-01-31",
-                "description": "فاتورة تجريبية للاختبار"
-            },
-            "visit_data": {
-                "clinic_id": "clinic-001", 
-                "visit_type": "routine",
-                "scheduled_date": "2025-01-20T10:00:00",
-                "visit_purpose": "زيارة روتينية لمتابعة الطلبات"
-            }
-        }
-        
-        print("🚀 بدء اختبار النظام المحسن بعد إصلاح مشاكل validation...")
-        print(f"📍 Backend URL: {self.base_url}")
-
-    def log_test_result(self, test_name: str, success: bool, details: str, response_time: float = 0):
-        """تسجيل نتيجة الاختبار"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        self.test_results.append({
-            "test": test_name,
-            "success": success,
-            "details": details,
-            "response_time": response_time,
-            "status": status
-        })
-        print(f"{status} {test_name}: {details} ({response_time:.2f}ms)")
-
-    def login_admin(self) -> bool:
-        """تسجيل دخول admin/admin123"""
-        try:
-            start_time = time.time()
-            
-            login_data = {
-                "username": "admin",
-                "password": "admin123"
-            }
-            
-            response = self.session.post(f"{self.base_url}/auth/login", json=login_data, timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.jwt_token = data.get("access_token")
-                user_info = data.get("user", {})
-                
-                self.log_test_result(
-                    "تسجيل دخول admin/admin123",
-                    True,
-                    f"نجح تسجيل الدخول - المستخدم: {user_info.get('full_name', 'admin')}, الدور: {user_info.get('role', 'admin')}",
-                    response_time
-                )
-                return True
-            else:
-                self.log_test_result(
-                    "تسجيل دخول admin/admin123",
-                    False,
-                    f"فشل تسجيل الدخول - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                return False
-                
-        except Exception as e:
-            self.log_test_result(
-                "تسجيل دخول admin/admin123",
-                False,
-                f"خطأ في تسجيل الدخول: {str(e)}",
-                0
-            )
-            return False
-
-    def get_auth_headers(self) -> Dict[str, str]:
-        """الحصول على headers المصادقة"""
-        if not self.jwt_token:
-            return {}
-        return {"Authorization": f"Bearer {self.jwt_token}"}
-
-    def test_unified_financial_system(self) -> Dict[str, Any]:
-        """اختبار النظام المالي الموحد - الإصلاحات المطبقة"""
-        print("\n🏦 اختبار النظام المالي الموحد...")
-        
-        financial_results = {
-            "total_tests": 0,
-            "passed_tests": 0,
-            "failed_tests": 0,
-            "details": []
-        }
-        
-        # بدلاً من اختبار unified-financial endpoints (التي قد لا تكون موجودة)
-        # سنختبر النظام المالي الحالي الموجود في الكود
-        
-        # 1. اختبار POST /api/debts (إنشاء دين جديد)
-        try:
-            start_time = time.time()
-            financial_results["total_tests"] += 1
-            
-            # أولاً، نحتاج للحصول على clinic_id حقيقي
-            response = self.session.get(f"{self.base_url}/clinics", headers=self.get_auth_headers(), timeout=30)
-            if response.status_code == 200:
-                clinics_data = response.json()
-                if clinics_data and len(clinics_data) > 0:
-                    real_clinic_id = clinics_data[0].get("id", "clinic-001")
-                    print(f"📋 استخدام clinic_id حقيقي: {real_clinic_id}")
-            
-            # إنشاء دين جديد
-            debt_data = {
-                "clinic_id": real_clinic_id,
-                "debt_amount": 1500.00,
-                "original_amount": 1500.00,
-                "debt_type": "invoice",
-                "description": "فاتورة تجريبية للاختبار",
-                "due_date": "2025-01-31"
-            }
-            
-            response = self.session.post(f"{self.base_url}/debts", json=debt_data, headers=self.get_auth_headers(), timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                debt_id = data.get("debt_id") or data.get("id")
-                
-                financial_results["passed_tests"] += 1
-                self.log_test_result(
-                    "POST /api/debts (إنشاء دين جديد)",
-                    True,
-                    f"تم إنشاء الدين بنجاح - ID: {debt_id}, المبلغ: {debt_data['debt_amount']} ج.م",
-                    response_time
-                )
-                
-                # حفظ الـ ID للاختبار التالي
-                self.test_data["debt_id"] = debt_id
-                
-            else:
-                financial_results["failed_tests"] += 1
-                self.log_test_result(
-                    "POST /api/debts (إنشاء دين جديد)",
-                    False,
-                    f"فشل إنشاء الدين - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                
-        except Exception as e:
-            financial_results["failed_tests"] += 1
-            self.log_test_result(
-                "POST /api/debts (إنشاء دين جديد)",
-                False,
-                f"خطأ في إنشاء الدين: {str(e)}",
-                0
-            )
-
-        # 2. اختبار POST /api/payments/process (معالجة دفعة)
-        if self.test_data.get("debt_id"):
-            try:
-                start_time = time.time()
-                financial_results["total_tests"] += 1
-                
-                payment_data = {
-                    "debt_id": self.test_data["debt_id"],
-                    "payment_amount": 750.00,
-                    "payment_method": "cash",
-                    "notes": "دفعة جزئية نقداً"
-                }
-                
-                response = self.session.post(f"{self.base_url}/payments/process", json=payment_data, headers=self.get_auth_headers(), timeout=30)
-                response_time = (time.time() - start_time) * 1000
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    remaining_amount = data.get("remaining_amount", 0)
-                    
-                    financial_results["passed_tests"] += 1
-                    self.log_test_result(
-                        "POST /api/payments/process (معالجة دفعة)",
-                        True,
-                        f"تم معالجة الدفعة بنجاح - المبلغ المدفوع: {payment_data['payment_amount']} ج.م, المتبقي: {remaining_amount} ج.م",
-                        response_time
-                    )
-                    
-                else:
-                    financial_results["failed_tests"] += 1
-                    self.log_test_result(
-                        "POST /api/payments/process (معالجة دفعة)",
-                        False,
-                        f"فشل معالجة الدفعة - HTTP {response.status_code}: {response.text}",
-                        response_time
-                    )
-                    
-            except Exception as e:
-                financial_results["failed_tests"] += 1
-                self.log_test_result(
-                    "POST /api/payments/process (معالجة دفعة)",
-                    False,
-                    f"خطأ في معالجة الدفعة: {str(e)}",
-                    0
-                )
-
-        # 3. اختبار GET /api/debts (جلب قائمة الديون)
-        try:
-            start_time = time.time()
-            financial_results["total_tests"] += 1
-            
-            response = self.session.get(f"{self.base_url}/debts", headers=self.get_auth_headers(), timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                debts_count = len(data) if isinstance(data, list) else data.get("count", 0)
-                
-                financial_results["passed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/debts (جلب قائمة الديون)",
-                    True,
-                    f"تم جلب قائمة الديون بنجاح - عدد الديون: {debts_count}",
-                    response_time
-                )
-                
-            else:
-                financial_results["failed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/debts (جلب قائمة الديون)",
-                    False,
-                    f"فشل جلب قائمة الديون - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                
-        except Exception as e:
-            financial_results["failed_tests"] += 1
-            self.log_test_result(
-                "GET /api/debts (جلب قائمة الديون)",
-                False,
-                f"خطأ في جلب قائمة الديون: {str(e)}",
-                0
-            )
-
-        financial_results["success_rate"] = (financial_results["passed_tests"] / financial_results["total_tests"] * 100) if financial_results["total_tests"] > 0 else 0
-        return financial_results
-
-    def test_visit_management_system(self) -> Dict[str, Any]:
-        """اختبار نظام إدارة الزيارات - الإصلاحات المطبقة"""
-        print("\n🏥 اختبار نظام إدارة الزيارات...")
-        
-        visit_results = {
-            "total_tests": 0,
-            "passed_tests": 0,
-            "failed_tests": 0,
-            "details": []
-        }
-        
-        # 1. اختبار POST /api/visits مع visit_purpose
-        try:
-            start_time = time.time()
-            visit_results["total_tests"] += 1
-            
-            # الحصول على clinic_id حقيقي
-            response = self.session.get(f"{self.base_url}/clinics", headers=self.get_auth_headers(), timeout=30)
-            if response.status_code == 200:
-                clinics_data = response.json()
-                if clinics_data and len(clinics_data) > 0:
-                    real_clinic_id = clinics_data[0].get("id", "clinic-001")
-                    self.test_data["visit_data"]["clinic_id"] = real_clinic_id
-                    print(f"📋 استخدام clinic_id حقيقي للزيارة: {real_clinic_id}")
-            
-            # إنشاء زيارة جديدة
-            visit_data = {
-                "clinic_id": self.test_data["visit_data"]["clinic_id"],
-                "visit_type": "routine",
-                "visit_purpose": "زيارة روتينية لمتابعة الطلبات",
-                "notes": "زيارة اختبار",
-                "effective": True,
-                "latitude": 30.0444,
-                "longitude": 31.2357
-            }
-            
-            response = self.session.post(f"{self.base_url}/visits", json=visit_data, headers=self.get_auth_headers(), timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                visit_id = data.get("visit_id") or data.get("id")
-                
-                visit_results["passed_tests"] += 1
-                self.log_test_result(
-                    "POST /api/visits مع visit_purpose",
-                    True,
-                    f"تم إنشاء الزيارة بنجاح - ID: {visit_id}, الغرض: {visit_data['visit_purpose']}",
-                    response_time
-                )
-                
-            else:
-                visit_results["failed_tests"] += 1
-                self.log_test_result(
-                    "POST /api/visits مع visit_purpose",
-                    False,
-                    f"فشل إنشاء الزيارة - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                
-        except Exception as e:
-            visit_results["failed_tests"] += 1
-            self.log_test_result(
-                "POST /api/visits مع visit_purpose",
-                False,
-                f"خطأ في إنشاء الزيارة: {str(e)}",
-                0
-            )
-
-        # 2. اختبار GET /api/visits (جلب قائمة الزيارات)
-        try:
-            start_time = time.time()
-            visit_results["total_tests"] += 1
-            
-            response = self.session.get(f"{self.base_url}/visits", headers=self.get_auth_headers(), timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                visits_count = len(data) if isinstance(data, list) else data.get("count", 0)
-                
-                visit_results["passed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/visits (جلب قائمة الزيارات)",
-                    True,
-                    f"تم جلب قائمة الزيارات بنجاح - عدد الزيارات: {visits_count}",
-                    response_time
-                )
-                
-            else:
-                visit_results["failed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/visits (جلب قائمة الزيارات)",
-                    False,
-                    f"فشل جلب قائمة الزيارات - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                
-        except Exception as e:
-            visit_results["failed_tests"] += 1
-            self.log_test_result(
-                "GET /api/visits (جلب قائمة الزيارات)",
-                False,
-                f"خطأ في جلب قائمة الزيارات: {str(e)}",
-                0
-            )
-
-        # 3. اختبار GET /api/clinics للمديرين والأدمن (العيادات المتاحة للزيارات)
-        try:
-            start_time = time.time()
-            visit_results["total_tests"] += 1
-            
-            response = self.session.get(f"{self.base_url}/clinics", headers=self.get_auth_headers(), timeout=30)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                clinics_count = len(data) if isinstance(data, list) else data.get("count", 0)
-                
-                visit_results["passed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/clinics للمديرين والأدمن (العيادات المتاحة)",
-                    True,
-                    f"تم جلب العيادات المتاحة بنجاح - عدد العيادات: {clinics_count}",
-                    response_time
-                )
-                
-            else:
-                visit_results["failed_tests"] += 1
-                self.log_test_result(
-                    "GET /api/clinics للمديرين والأدمن (العيادات المتاحة)",
-                    False,
-                    f"فشل جلب العيادات المتاحة - HTTP {response.status_code}: {response.text}",
-                    response_time
-                )
-                
-        except Exception as e:
-            visit_results["failed_tests"] += 1
-            self.log_test_result(
-                "GET /api/clinics للمديرين والأدمن (العيادات المتاحة)",
-                False,
-                f"خطأ في جلب العيادات المتاحة: {str(e)}",
-                0
-            )
-
-        visit_results["success_rate"] = (visit_results["passed_tests"] / visit_results["total_tests"] * 100) if visit_results["total_tests"] > 0 else 0
-        return visit_results
-
-    def test_basic_system_health(self) -> Dict[str, Any]:
-        """اختبار صحة النظام الأساسية"""
-        print("\n🔧 اختبار صحة النظام الأساسية...")
-        
-        health_results = {
-            "total_tests": 0,
-            "passed_tests": 0,
-            "failed_tests": 0,
-            "details": []
-        }
-        
-        # اختبار APIs الأساسية
-        basic_endpoints = [
-            ("GET /api/users", "/users"),
-            ("GET /api/clinics", "/clinics"),
-            ("GET /api/products", "/products"),
-            ("GET /api/dashboard/stats", "/dashboard/stats"),
-            ("GET /api/payments", "/payments")
-        ]
-        
-        for endpoint_name, endpoint_path in basic_endpoints:
-            try:
-                start_time = time.time()
-                health_results["total_tests"] += 1
-                
-                response = self.session.get(f"{self.base_url}{endpoint_path}", headers=self.get_auth_headers(), timeout=30)
-                response_time = (time.time() - start_time) * 1000
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    count = len(data) if isinstance(data, list) else "متاح"
-                    
-                    health_results["passed_tests"] += 1
-                    self.log_test_result(
-                        endpoint_name,
-                        True,
-                        f"يعمل بنجاح - البيانات: {count}",
-                        response_time
-                    )
-                    
-                else:
-                    health_results["failed_tests"] += 1
-                    self.log_test_result(
-                        endpoint_name,
-                        False,
-                        f"فشل - HTTP {response.status_code}: {response.text}",
-                        response_time
-                    )
-                    
-            except Exception as e:
-                health_results["failed_tests"] += 1
-                self.log_test_result(
-                    endpoint_name,
-                    False,
-                    f"خطأ: {str(e)}",
-                    0
-                )
-
-        health_results["success_rate"] = (health_results["passed_tests"] / health_results["total_tests"] * 100) if health_results["total_tests"] > 0 else 0
-        return health_results
-
-    def generate_final_report(self, financial_results: Dict, visit_results: Dict, health_results: Dict):
-        """إنشاء التقرير النهائي"""
-        total_execution_time = time.time() - self.start_time
-        
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result["success"])
-        failed_tests = total_tests - passed_tests
-        overall_success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-        
-        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
-        
-        print("\n" + "="*80)
-        print("📊 التقرير النهائي الشامل - اختبار النظام المحسن بعد إصلاح مشاكل validation")
-        print("="*80)
-        
-        print(f"\n🎯 **النتائج الإجمالية:**")
-        print(f"   إجمالي الاختبارات: {total_tests}")
-        print(f"   الاختبارات الناجحة: {passed_tests}")
-        print(f"   الاختبارات الفاشلة: {failed_tests}")
-        print(f"   معدل النجاح: {overall_success_rate:.1f}%")
-        print(f"   متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
-        print(f"   إجمالي وقت التنفيذ: {total_execution_time:.2f}s")
-        
-        print(f"\n🏦 **النظام المالي الموحد:**")
-        print(f"   معدل النجاح: {financial_results['success_rate']:.1f}% ({financial_results['passed_tests']}/{financial_results['total_tests']})")
-        
-        print(f"\n🏥 **نظام إدارة الزيارات:**")
-        print(f"   معدل النجاح: {visit_results['success_rate']:.1f}% ({visit_results['passed_tests']}/{visit_results['total_tests']})")
-        
-        print(f"\n🔧 **صحة النظام الأساسية:**")
-        print(f"   معدل النجاح: {health_results['success_rate']:.1f}% ({health_results['passed_tests']}/{health_results['total_tests']})")
-        
-        print(f"\n📋 **تفاصيل الاختبارات:**")
-        for result in self.test_results:
-            print(f"   {result['status']} {result['test']}")
-            if not result['success']:
-                print(f"      ❌ {result['details']}")
-        
-        # تقييم النتيجة النهائية
-        if overall_success_rate >= 95:
-            status_emoji = "🎉"
-            status_text = "ممتاز - النظام جاهز للإنتاج"
-        elif overall_success_rate >= 80:
-            status_emoji = "✅"
-            status_text = "جيد - يحتاج تحسينات بسيطة"
-        elif overall_success_rate >= 60:
-            status_emoji = "⚠️"
-            status_text = "متوسط - يحتاج إصلاحات"
+        # استخدام الـ URL من متغيرات البيئة
+        with open('/app/frontend/.env', 'r') as f:
+            for line in f:
+                if line.startswith('REACT_APP_BACKEND_URL='):
+                    self.BASE_URL = line.split('=')[1].strip()
+                    break
         else:
-            status_emoji = "❌"
-            status_text = "ضعيف - يحتاج إصلاحات جذرية"
+            self.BASE_URL = "http://localhost:8001"
         
-        print(f"\n{status_emoji} **التقييم النهائي:** {status_text}")
-        print(f"🎯 **الهدف:** الوصول لنسبة نجاح 100% بعد إصلاح مشاكل validation")
-        
-        if overall_success_rate >= 95:
-            print("🏆 **تم تحقيق الهدف بنجاح! النظام المحسن يعمل بشكل مثالي.**")
+        self.API_BASE = f"{self.BASE_URL}/api"
+        self.ADMIN_USERNAME = "admin"
+        self.ADMIN_PASSWORD = "admin123"
+        self.JWT_TOKEN = None
+        self.TEST_RESULTS = []
+        self.TOTAL_TESTS = 0
+        self.PASSED_TESTS = 0
+        self.FAILED_TESTS = 0
+        self.START_TIME = time.time()
+
+config = TestConfig()
+
+class TestResult:
+    def __init__(self, test_name: str, success: bool, response_time: float, 
+                 details: str = "", error: str = "", status_code: int = 0):
+        self.test_name = test_name
+        self.success = success
+        self.response_time = response_time
+        self.details = details
+        self.error = error
+        self.status_code = status_code
+        self.timestamp = datetime.now()
+
+async def make_request(session: aiohttp.ClientSession, method: str, url: str, 
+                      headers: Dict = None, json_data: Dict = None, 
+                      params: Dict = None) -> tuple:
+    """إجراء طلب HTTP مع قياس الوقت"""
+    start_time = time.time()
+    
+    try:
+        async with session.request(
+            method=method,
+            url=url,
+            headers=headers,
+            json=json_data,
+            params=params,
+            timeout=aiohttp.ClientTimeout(total=30)
+        ) as response:
+            response_time = (time.time() - start_time) * 1000  # بالميلي ثانية
+            
+            try:
+                response_data = await response.json()
+            except:
+                response_data = await response.text()
+            
+            return response.status, response_data, response_time
+    
+    except Exception as e:
+        response_time = (time.time() - start_time) * 1000
+        return 0, str(e), response_time
+
+def log_test_result(result: TestResult):
+    """تسجيل نتيجة الاختبار"""
+    config.TEST_RESULTS.append(result)
+    config.TOTAL_TESTS += 1
+    
+    if result.success:
+        config.PASSED_TESTS += 1
+        status = "✅ PASS"
+    else:
+        config.FAILED_TESTS += 1
+        status = "❌ FAIL"
+    
+    print(f"{status} | {result.test_name} | {result.response_time:.2f}ms | {result.details}")
+    if result.error:
+        print(f"      Error: {result.error}")
+
+async def test_health_endpoint(session: aiohttp.ClientSession):
+    """اختبار Health Endpoint"""
+    print("\n🔍 Testing Health Endpoint...")
+    
+    status, data, response_time = await make_request(
+        session, "GET", f"{config.API_BASE}/health"
+    )
+    
+    success = status == 200
+    details = f"Status: {status}"
+    error = "" if success else f"Expected 200, got {status}"
+    
+    log_test_result(TestResult(
+        "Health Endpoint Check",
+        success, response_time, details, error, status
+    ))
+    
+    return success
+
+async def test_authentication(session: aiohttp.ClientSession):
+    """اختبار تسجيل الدخول والمصادقة"""
+    print("\n🔐 Testing Authentication...")
+    
+    login_data = {
+        "username": config.ADMIN_USERNAME,
+        "password": config.ADMIN_PASSWORD
+    }
+    
+    status, data, response_time = await make_request(
+        session, "POST", f"{config.API_BASE}/auth/login", json_data=login_data
+    )
+    
+    success = False
+    details = f"Status: {status}"
+    error = ""
+    
+    if status == 200:
+        if isinstance(data, dict) and "access_token" in data:
+            config.JWT_TOKEN = data["access_token"]
+            user_info = data.get("user", {})
+            success = True
+            details = f"Login successful - User: {user_info.get('full_name', 'Unknown')}, Role: {user_info.get('role', 'Unknown')}"
         else:
-            print("🔧 **يحتاج المزيد من الإصلاحات لتحقيق الهدف المطلوب.**")
+            error = "No access_token in response"
+    else:
+        error = f"Login failed with status {status}: {data}"
+    
+    log_test_result(TestResult(
+        "Admin Authentication (admin/admin123)",
+        success, response_time, details, error, status
+    ))
+    
+    return success
+
+async def test_core_system_apis(session: aiohttp.ClientSession):
+    """اختبار Core System APIs"""
+    print("\n🏗️ Testing Core System APIs...")
+    
+    if not config.JWT_TOKEN:
+        print("❌ No JWT token available for core API testing")
+        return False
+    
+    headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
+    
+    core_apis = [
+        ("GET /api/users", "GET", f"{config.API_BASE}/users"),
+        ("GET /api/clinics", "GET", f"{config.API_BASE}/clinics"),
+        ("GET /api/products", "GET", f"{config.API_BASE}/products"),
+        ("GET /api/dashboard/stats", "GET", f"{config.API_BASE}/dashboard/stats")
+    ]
+    
+    all_success = True
+    
+    for test_name, method, url in core_apis:
+        status, data, response_time = await make_request(
+            session, method, url, headers=headers
+        )
         
-        print("="*80)
+        success = status == 200
+        if not success:
+            all_success = False
+        
+        if success and isinstance(data, list):
+            details = f"Status: {status}, Count: {len(data)} items"
+        elif success and isinstance(data, dict):
+            details = f"Status: {status}, Data keys: {list(data.keys())}"
+        else:
+            details = f"Status: {status}"
+        
+        error = "" if success else f"Expected 200, got {status}: {data}"
+        
+        log_test_result(TestResult(
+            test_name, success, response_time, details, error, status
+        ))
+    
+    return all_success
 
-    def run_comprehensive_test(self):
-        """تشغيل الاختبار الشامل"""
-        try:
-            # 1. تسجيل الدخول
-            if not self.login_admin():
-                print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
-                return
-            
-            # 2. اختبار النظام المالي الموحد
-            financial_results = self.test_unified_financial_system()
-            
-            # 3. اختبار نظام إدارة الزيارات
-            visit_results = self.test_visit_management_system()
-            
-            # 4. اختبار صحة النظام الأساسية
-            health_results = self.test_basic_system_health()
-            
-            # 5. إنشاء التقرير النهائي
-            self.generate_final_report(financial_results, visit_results, health_results)
-            
-        finally:
-            self.session.close()
+async def test_unified_financial_system(session: aiohttp.ClientSession):
+    """اختبار النظام المالي الموحد"""
+    print("\n💰 Testing Unified Financial System...")
+    
+    if not config.JWT_TOKEN:
+        print("❌ No JWT token available for financial system testing")
+        return False
+    
+    headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
+    
+    # Test unified financial endpoints
+    financial_tests = [
+        ("GET /api/unified-financial/dashboard/overview", "GET", f"{config.API_BASE}/unified-financial/dashboard/overview"),
+        ("GET /api/unified-financial/records", "GET", f"{config.API_BASE}/unified-financial/records")
+    ]
+    
+    success_count = 0
+    total_count = len(financial_tests)
+    
+    for test_name, method, url in financial_tests:
+        status, data, response_time = await make_request(
+            session, method, url, headers=headers
+        )
+        
+        success = status == 200
+        if success:
+            success_count += 1
+        
+        details = f"Status: {status}"
+        if success and isinstance(data, dict):
+            details += f", Keys: {list(data.keys())}"
+        elif success and isinstance(data, list):
+            details += f", Count: {len(data)}"
+        
+        error = "" if success else f"Expected 200, got {status}: {data}"
+        
+        log_test_result(TestResult(
+            test_name, success, response_time, details, error, status
+        ))
+    
+    # Test creating financial record with enhanced data
+    enhanced_record_data = {
+        "record_type": "invoice",
+        "clinic_id": "clinic-001",
+        "original_amount": 1500.00,
+        "due_date": (datetime.now() + timedelta(days=30)).isoformat(),
+        "description": "فاتورة موحدة تجريبية"
+    }
+    
+    status, data, response_time = await make_request(
+        session, "POST", f"{config.API_BASE}/unified-financial/records",
+        headers=headers, json_data=enhanced_record_data
+    )
+    
+    success = status in [200, 201]
+    if success:
+        success_count += 1
+    total_count += 1
+    
+    details = f"Status: {status}"
+    if success:
+        details += f", Record created successfully"
+    
+    error = "" if success else f"Failed to create financial record: {data}"
+    
+    log_test_result(TestResult(
+        "POST /api/unified-financial/records (Enhanced Data)",
+        success, response_time, details, error, status
+    ))
+    
+    # Test payment processing
+    payment_data = {
+        "record_id": "test-record-001",
+        "payment_amount": 750.00,
+        "payment_method": "cash",
+        "notes": "دفعة جزئية اختبارية"
+    }
+    
+    status, data, response_time = await make_request(
+        session, "POST", f"{config.API_BASE}/unified-financial/process-payment",
+        headers=headers, json_data=payment_data
+    )
+    
+    success = status in [200, 201]
+    if success:
+        success_count += 1
+    total_count += 1
+    
+    details = f"Status: {status}"
+    error = "" if success else f"Payment processing failed: {data}"
+    
+    log_test_result(TestResult(
+        "POST /api/unified-financial/process-payment",
+        success, response_time, details, error, status
+    ))
+    
+    return success_count == total_count
 
-def main():
-    """الدالة الرئيسية"""
-    tester = EnhancedSystemTester()
-    tester.run_comprehensive_test()
+async def test_visit_management_system(session: aiohttp.ClientSession):
+    """اختبار نظام إدارة الزيارات"""
+    print("\n🏥 Testing Visit Management System...")
+    
+    if not config.JWT_TOKEN:
+        print("❌ No JWT token available for visit management testing")
+        return False
+    
+    headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
+    
+    visit_tests = [
+        ("GET /api/visits/dashboard/overview", "GET", f"{config.API_BASE}/visits/dashboard/overview"),
+        ("GET /api/visits/available-clinics", "GET", f"{config.API_BASE}/visits/available-clinics"),
+        ("GET /api/visits/", "GET", f"{config.API_BASE}/visits/")
+    ]
+    
+    success_count = 0
+    total_count = len(visit_tests)
+    
+    for test_name, method, url in visit_tests:
+        status, data, response_time = await make_request(
+            session, method, url, headers=headers
+        )
+        
+        success = status == 200
+        if success:
+            success_count += 1
+        
+        details = f"Status: {status}"
+        if success and isinstance(data, list):
+            details += f", Count: {len(data)}"
+        elif success and isinstance(data, dict):
+            details += f", Keys: {list(data.keys())}"
+        
+        error = "" if success else f"Expected 200, got {status}: {data}"
+        
+        log_test_result(TestResult(
+            test_name, success, response_time, details, error, status
+        ))
+    
+    # Test creating visit with enhanced data
+    enhanced_visit_data = {
+        "clinic_id": "clinic-001",
+        "visit_type": "routine",
+        "scheduled_date": (datetime.now() + timedelta(days=1)).isoformat(),
+        "visit_purpose": "زيارة روتينية للمتابعة"
+    }
+    
+    status, data, response_time = await make_request(
+        session, "POST", f"{config.API_BASE}/visits/",
+        headers=headers, json_data=enhanced_visit_data
+    )
+    
+    success = status in [200, 201]
+    if success:
+        success_count += 1
+    total_count += 1
+    
+    details = f"Status: {status}"
+    error = "" if success else f"Visit creation failed: {data}"
+    
+    log_test_result(TestResult(
+        "POST /api/visits/ (Enhanced Data)",
+        success, response_time, details, error, status
+    ))
+    
+    return success_count == total_count
+
+async def test_legacy_financial_system(session: aiohttp.ClientSession):
+    """اختبار النظام المالي الموروث للتوافق"""
+    print("\n🏛️ Testing Legacy Financial System (Compatibility)...")
+    
+    if not config.JWT_TOKEN:
+        print("❌ No JWT token available for legacy financial testing")
+        return False
+    
+    headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
+    
+    # Test GET endpoints first
+    legacy_get_tests = [
+        ("GET /api/debts", "GET", f"{config.API_BASE}/debts"),
+        ("GET /api/payments", "GET", f"{config.API_BASE}/payments")
+    ]
+    
+    success_count = 0
+    total_count = len(legacy_get_tests)
+    
+    for test_name, method, url in legacy_get_tests:
+        status, data, response_time = await make_request(
+            session, method, url, headers=headers
+        )
+        
+        success = status == 200
+        if success:
+            success_count += 1
+        
+        details = f"Status: {status}"
+        if success and isinstance(data, list):
+            details += f", Count: {len(data)}"
+        
+        error = "" if success else f"Expected 200, got {status}: {data}"
+        
+        log_test_result(TestResult(
+            test_name, success, response_time, details, error, status
+        ))
+    
+    # Test creating debt with optional sales_rep_id
+    debt_data = {
+        "clinic_id": "clinic-001",
+        "amount": 2000.00,
+        "description": "فاتورة تجريبية محسنة"
+        # sales_rep_id is optional as requested
+    }
+    
+    status, data, response_time = await make_request(
+        session, "POST", f"{config.API_BASE}/debts",
+        headers=headers, json_data=debt_data
+    )
+    
+    success = status in [200, 201]
+    if success:
+        success_count += 1
+    total_count += 1
+    
+    details = f"Status: {status}"
+    if success:
+        details += ", Debt created with optional sales_rep_id"
+    
+    error = "" if success else f"Debt creation failed: {data}"
+    
+    log_test_result(TestResult(
+        "POST /api/debts (Optional sales_rep_id)",
+        success, response_time, details, error, status
+    ))
+    
+    return success_count == total_count
+
+async def test_specific_issues(session: aiohttp.ClientSession):
+    """فحص المشاكل المحددة"""
+    print("\n🔧 Testing Specific Issues...")
+    
+    if not config.JWT_TOKEN:
+        print("❌ No JWT token available for specific issues testing")
+        return False
+    
+    headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
+    
+    # Test for route conflicts
+    conflict_tests = [
+        ("Route Conflict Check - /api/health", "GET", f"{config.API_BASE}/health"),
+        ("Authentication Check", "GET", f"{config.API_BASE}/auth/me", headers),
+        ("Database Connectivity", "GET", f"{config.API_BASE}/dashboard/stats", headers)
+    ]
+    
+    success_count = 0
+    total_count = len(conflict_tests)
+    
+    for test_name, method, url, *extra_headers in conflict_tests:
+        test_headers = extra_headers[0] if extra_headers else None
+        
+        status, data, response_time = await make_request(
+            session, method, url, headers=test_headers
+        )
+        
+        success = status == 200
+        if success:
+            success_count += 1
+        
+        details = f"Status: {status}"
+        error = "" if success else f"Issue detected: {data}"
+        
+        log_test_result(TestResult(
+            test_name, success, response_time, details, error, status
+        ))
+    
+    return success_count == total_count
+
+def print_comprehensive_summary():
+    """طباعة ملخص شامل للنتائج"""
+    print("\n" + "="*80)
+    print("🎯 COMPREHENSIVE SYSTEM TESTING SUMMARY")
+    print("="*80)
+    
+    total_time = time.time() - config.START_TIME
+    success_rate = (config.PASSED_TESTS / config.TOTAL_TESTS * 100) if config.TOTAL_TESTS > 0 else 0
+    avg_response_time = sum(r.response_time for r in config.TEST_RESULTS) / len(config.TEST_RESULTS) if config.TEST_RESULTS else 0
+    
+    print(f"📊 Overall Results:")
+    print(f"   • Total Tests: {config.TOTAL_TESTS}")
+    print(f"   • Passed: {config.PASSED_TESTS} ✅")
+    print(f"   • Failed: {config.FAILED_TESTS} ❌")
+    print(f"   • Success Rate: {success_rate:.1f}%")
+    print(f"   • Average Response Time: {avg_response_time:.2f}ms")
+    print(f"   • Total Execution Time: {total_time:.2f}s")
+    
+    print(f"\n🔍 Test Categories:")
+    
+    categories = {
+        "Health & Authentication": ["Health Endpoint", "Admin Authentication"],
+        "Core System APIs": ["GET /api/users", "GET /api/clinics", "GET /api/products", "GET /api/dashboard/stats"],
+        "Unified Financial System": ["unified-financial"],
+        "Visit Management": ["visits"],
+        "Legacy Financial": ["debts", "payments"],
+        "Specific Issues": ["Route Conflict", "Authentication Check", "Database Connectivity"]
+    }
+    
+    for category, keywords in categories.items():
+        category_results = [r for r in config.TEST_RESULTS if any(keyword in r.test_name for keyword in keywords)]
+        if category_results:
+            passed = sum(1 for r in category_results if r.success)
+            total = len(category_results)
+            rate = (passed / total * 100) if total > 0 else 0
+            print(f"   • {category}: {passed}/{total} ({rate:.1f}%)")
+    
+    if config.FAILED_TESTS > 0:
+        print(f"\n❌ Failed Tests Details:")
+        for result in config.TEST_RESULTS:
+            if not result.success:
+                print(f"   • {result.test_name}: {result.error}")
+    
+    print(f"\n🎯 Final Assessment:")
+    if success_rate >= 95:
+        print("   🏆 EXCELLENT - System is ready for production!")
+    elif success_rate >= 80:
+        print("   ✅ GOOD - System works well with minor issues")
+    elif success_rate >= 60:
+        print("   ⚠️ NEEDS IMPROVEMENT - Several issues need fixing")
+    else:
+        print("   ❌ CRITICAL - Major issues require immediate attention")
+    
+    print("="*80)
+
+async def main():
+    """الدالة الرئيسية للاختبار الشامل"""
+    print("🚀 Starting Comprehensive System Testing...")
+    print(f"🔗 Backend URL: {config.API_BASE}")
+    print(f"👤 Admin Credentials: {config.ADMIN_USERNAME}/{config.ADMIN_PASSWORD}")
+    print("="*80)
+    
+    async with aiohttp.ClientSession() as session:
+        # 1. اختبار Health Endpoint
+        await test_health_endpoint(session)
+        
+        # 2. اختبار المصادقة
+        auth_success = await test_authentication(session)
+        
+        if not auth_success:
+            print("❌ Authentication failed - Cannot proceed with authenticated tests")
+            print_comprehensive_summary()
+            return
+        
+        # 3. اختبار Core System APIs
+        await test_core_system_apis(session)
+        
+        # 4. اختبار النظام المالي الموحد
+        await test_unified_financial_system(session)
+        
+        # 5. اختبار نظام إدارة الزيارات
+        await test_visit_management_system(session)
+        
+        # 6. اختبار النظام المالي الموروث
+        await test_legacy_financial_system(session)
+        
+        # 7. فحص المشاكل المحددة
+        await test_specific_issues(session)
+    
+    # طباعة الملخص الشامل
+    print_comprehensive_summary()
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n⚠️ Testing interrupted by user")
+    except Exception as e:
+        print(f"\n❌ Testing failed with error: {str(e)}")
+        import traceback
+        traceback.print_exc()
