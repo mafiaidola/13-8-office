@@ -257,13 +257,13 @@ async def update_user(
         if current_user.role in ["admin", "gm"]:
             allowed_fields.extend(["role", "is_active"])
         
-        # Handle password update
-        if "password" in user_request:
+        # Handle password update - only if password is provided and not empty
+        if "password" in user_request and user_request["password"].strip():
             update_data["password_hash"] = hash_password(user_request["password"])
         
         # Update allowed fields
         for field in allowed_fields:
-            if field in user_request:
+            if field in user_request and field != "password":  # Skip password as it's handled above
                 update_data[field] = user_request[field]
         
         if not update_data:
