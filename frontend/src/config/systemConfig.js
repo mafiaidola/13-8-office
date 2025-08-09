@@ -108,17 +108,6 @@ export const SYSTEM_TABS = {
     priority: 8
   },
 
-  location_tracking: {
-    id: 'location_tracking',
-    path: '/location-tracking',
-    icon: '📍',  
-    name: { ar: 'تتبع المواقع', en: 'Location Tracking' },
-    component: 'LocationTracking',
-    description: { ar: 'تتبع مواقع المندوبين والزيارات', en: 'Track representative locations and visits' },
-    permissions: ['admin', 'gm', 'line_manager'],
-    priority: 9
-  },
-
   system_management: {
     id: 'system_management',
     path: '/system-management',
