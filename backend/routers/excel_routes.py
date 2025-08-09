@@ -185,10 +185,13 @@ async def download_template(data_type: str, current_user: dict = Depends(get_cur
         
         filename = f"{filename_mapping.get(data_type, data_type)}_template.xlsx"
         
+        # Get the content as bytes
+        content = output.getvalue()
+        
         return StreamingResponse(
-            io.BytesIO(output.read()),
+            io.BytesIO(content),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
         )
         
     except Exception as e:
