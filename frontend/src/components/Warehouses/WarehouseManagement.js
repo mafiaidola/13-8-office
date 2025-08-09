@@ -45,17 +45,23 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
     { id: 'sinai', name: 'سيناء', cities: ['شمال سيناء', 'جنوب سيناء'] }
   ];
 
-  // Sample products for warehouse inventory
-  const availableProducts = [
-    { id: 'prod-001', name: 'أموكسيسيلين 500mg', unit: 'ڤايل', category: 'مضادات حيوية' },
-    { id: 'prod-002', name: 'فيتامين د3', unit: 'علبة', category: 'فيتامينات' },
-    { id: 'prod-003', name: 'أنسولين طويل المفعول', unit: 'قلم', category: 'هرمونات' },
-    { id: 'prod-004', name: 'مسكن للألم', unit: 'شريط', category: 'مسكنات' },
-    { id: 'prod-005', name: 'مضاد التهاب', unit: 'علبة', category: 'مضادات التهاب' },
-    { id: 'prod-006', name: 'شراب السعال', unit: 'زجاجة', category: 'أدوية الجهاز التنفسي' },
-    { id: 'prod-007', name: 'كريم موضعي', unit: 'أنبوبة', category: 'أدوية موضعية' },
-    { id: 'prod-008', name: 'قطرة للعين', unit: 'عبوة', category: 'أدوية العيون' }
-  ];
+  // Fetch products from database instead of using hardcoded data
+  const fetchProductsFromDatabase = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('✅ تم جلب المنتجات من قاعدة البيانات:', response.data.length);
+      setProducts(response.data || []);
+      return response.data || [];
+    } catch (error) {
+      console.error('❌ خطأ في جلب المنتجات من قاعدة البيانات:', error);
+      setError('فشل في جلب المنتجات من قاعدة البيانات');
+      return [];
+    }
+  };
 
   useEffect(() => {
     fetchWarehouseData();
