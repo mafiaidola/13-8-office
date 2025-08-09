@@ -208,154 +208,226 @@ const EnhancedClinicRegistration = () => {
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       console.warn('⚠️ الجهاز لا يدعم تحديد الموقع');
+      setErrors(prev => ({
+        ...prev,
+        location: 'جهازك لا يدعم تحديد الموقع الجغرافي'
+      }));
       useDefaultLocation();
       return;
     }
 
-    console.log('🔍 محاولة الحصول على الموقع الحالي...');
+    console.log('🔍 محاولة الحصول على الموقع الحالي مع إعدادات محسنة...');
     
-    // محاولة أولى بخيارات عالية الدقة
-    const highAccuracyOptions = getLocationOptions();
+    // إظهار رسالة تحميل للمستخدم
+    setErrors(prev => ({
+      ...prev,
+      location: '📡 جاري تحديد موقعك الحالي، يرجى الانتظار...'
+    }));
     
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLoc = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        };
-        
-        setUserLocation(userLoc);
-        console.log('✅ تم الحصول على الموقع الحالي بنجاح:', {
-          lat: userLoc.lat.toFixed(6),
-          lng: userLoc.lng.toFixed(6),
-          accuracy: Math.round(userLoc.accuracy) + ' متر',
-          timestamp: new Date().toLocaleTimeString('ar-EG')
-        });
-        
-        // تسجيل موقع المندوب
-        setLocationData(prev => ({
-          ...prev,
-          rep_latitude: userLoc.lat,
-          rep_longitude: userLoc.lng,
-          rep_location_accuracy: userLoc.accuracy,
-          device_info: navigator.userAgent,
-          location_obtained_at: new Date().toISOString(),
-          location_source: 'gps'
-        }));
+    // محاولة متعددة المراحل للحصول على أدق موقع ممكن
+    const attemptLocationRetrieval = (attemptNumber = 1, maxAttempts = 3) => {
+      const options = {
+        enableHighAccuracy: true,
+        timeout: attemptNumber === 1 ? 15000 : (attemptNumber === 2 ? 10000 : 5000),
+        maximumAge: attemptNumber === 1 ? 30000 : (attemptNumber === 2 ? 60000 : 120000)
+      };
 
-        // إذا كانت الخريطة محملة، حديث موقعها
-        if (mapInstanceRef.current && markerRef.current) {
-          console.log('🗺️ تحديث موقع الخريطة للموقع الحالي...');
-          mapInstanceRef.current.setCenter(userLoc);
-          mapInstanceRef.current.setZoom(18); // زيادة التكبير للموقع الحالي
-          markerRef.current.setPosition(userLoc);
+      console.log(`🎯 المحاولة ${attemptNumber} من ${maxAttempts} للحصول على الموقع`);
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
           
-          // إضافة دائرة دقة الموقع
-          if (accuracyCircleRef.current) {
-            accuracyCircleRef.current.setMap(null);
+          // فحص دقة الموقع
+          const isAccurate = accuracy <= 100; // دقة أقل من 100 متر تعتبر مقبولة
+          const isVeryAccurate = accuracy <= 50; // دقة أقل من 50 متر تعتبر ممتازة
+          
+          const userLoc = {
+            lat: latitude,
+            lng: longitude,
+            accuracy: accuracy,
+            timestamp: position.timestamp,
+            altitude: position.coords.altitude,
+            altitudeAccuracy: position.coords.altitudeAccuracy,
+            heading: position.coords.heading,
+            speed: position.coords.speed
+          };
+          
+          // إذا كانت الدقة منخفضة جداً وما زال لدينا محاولات، جرب مرة أخرى
+          if (!isAccurate && attemptNumber < maxAttempts) {
+            console.log(`⚠️ دقة الموقع منخفضة (${Math.round(accuracy)} متر)، محاولة ${attemptNumber + 1}...`);
+            setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), 2000);
+            return;
           }
           
-          accuracyCircleRef.current = new window.google.maps.Circle({
-            strokeColor: '#10b981',
-            strokeOpacity: 1.0,
-            strokeWeight: 2,
-            fillColor: '#10b981',
-            fillOpacity: 0.2,
-            map: mapInstanceRef.current,
-            center: userLoc,
-            radius: Math.max(userLoc.accuracy || 50, 20) // الحد الأدنى 20 متر
+          setUserLocation(userLoc);
+          console.log('✅ تم الحصول على الموقع بنجاح:', {
+            lat: latitude.toFixed(6),
+            lng: longitude.toFixed(6),
+            accuracy: Math.round(accuracy) + ' متر',
+            quality: isVeryAccurate ? 'ممتازة' : (isAccurate ? 'جيدة' : 'مقبولة'),
+            attempt: attemptNumber,
+            timestamp: new Date(position.timestamp).toLocaleTimeString('ar-EG')
           });
           
-          // إضافة معلومات الدقة
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: `
-              <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif;">
-                <strong>موقعك الحالي</strong><br>
-                <small>دقة الموقع: ${Math.round(userLoc.accuracy)} متر</small>
-              </div>
-            `,
-            position: userLoc
-          });
-          
-          // عرض النافذة لثواني قليلة
-          infoWindow.open(mapInstanceRef.current);
-          setTimeout(() => {
-            infoWindow.close();
-          }, 3000);
-        }
-        
-        // إزالة أي رسائل خطأ سابقة
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors.location;
-          return newErrors;
-        });
-      },
-      (error) => {
-        console.warn('⚠️ فشلت المحاولة الأولى، جاري المحاولة بخيارات أقل دقة...');
-        
-        // محاولة ثانية بخيارات أقل دقة
-        const lowAccuracyOptions = {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000
-        };
-        
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const userLoc = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              accuracy: position.coords.accuracy
-            };
-            
-            setUserLocation(userLoc);
-            console.log('✅ تم الحصول على الموقع (دقة منخفضة):', {
-              lat: userLoc.lat.toFixed(6),
-              lng: userLoc.lng.toFixed(6),
-              accuracy: Math.round(userLoc.accuracy) + ' متر'
-            });
-            
-            // تسجيل موقع المندوب
-            setLocationData(prev => ({
-              ...prev,
-              rep_latitude: userLoc.lat,
-              rep_longitude: userLoc.lng,
-              rep_location_accuracy: userLoc.accuracy,
-              device_info: navigator.userAgent,
-              location_obtained_at: new Date().toISOString(),
-              location_source: 'network'
-            }));
+          // تحديث بيانات الموقع
+          setLocationData(prev => ({
+            ...prev,
+            rep_latitude: latitude,
+            rep_longitude: longitude,
+            rep_location_accuracy: accuracy,
+            device_info: navigator.userAgent,
+            location_obtained_at: new Date().toISOString(),
+            location_source: isVeryAccurate ? 'gps_high_accuracy' : (isAccurate ? 'gps_good_accuracy' : 'gps_low_accuracy'),
+            location_attempts: attemptNumber,
+            altitude: position.coords.altitude,
+            heading: position.coords.heading,
+            speed: position.coords.speed
+          }));
 
-            // تحديث الخريطة إذا كانت متاحة
-            if (mapInstanceRef.current && markerRef.current) {
-              mapInstanceRef.current.setCenter(userLoc);
-              mapInstanceRef.current.setZoom(16);
-              markerRef.current.setPosition(userLoc);
-            }
-          },
-          (finalError) => {
-            console.error('❌ فشل في الحصول على الموقع نهائياً:', {
-              code: finalError.code,
-              message: finalError.message,
-              details: getLocationErrorDetails(finalError)
+          // تحديث الخريطة إذا كانت متاحة
+          if (mapInstanceRef.current) {
+            updateMapLocation(userLoc, isVeryAccurate);
+          }
+          
+          // إزالة رسائل الخطأ/التحميل
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.location;
+            return newErrors;
+          });
+          
+          // إظهار رسالة نجاح مؤقتة
+          setErrors(prev => ({
+            ...prev,
+            location_success: `✅ تم تحديد موقعك بنجاح (دقة: ${Math.round(accuracy)} متر)`
+          }));
+          
+          // إزالة رسالة النجاح بعد 5 ثواني
+          setTimeout(() => {
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.location_success;
+              return newErrors;
             });
-            
-            // إظهار رسالة للمستخدم حسب نوع الخطأ
-            const errorMessage = getLocationErrorMessage(finalError);
-            setErrors(prev => ({
-              ...prev,
-              location: errorMessage + ' - يرجى تحديد موقع العيادة يدوياً على الخريطة'
-            }));
-            
-            useDefaultLocation();
-          },
-          lowAccuracyOptions
-        );
-      },
-      highAccuracyOptions
-    );
+          }, 5000);
+        },
+        (error) => {
+          console.error(`❌ فشلت المحاولة ${attemptNumber}:`, {
+            code: error.code,
+            message: error.message,
+            details: getLocationErrorDetails(error)
+          });
+          
+          // إذا كانت هناك محاولات متبقية، جرب بإعدادات مختلفة
+          if (attemptNumber < maxAttempts) {
+            console.log(`🔄 جاري المحاولة مرة أخرى بإعدادات مختلفة...`);
+            setTimeout(() => attemptLocationRetrieval(attemptNumber + 1, maxAttempts), 1500);
+            return;
+          }
+          
+          // إذا فشلت جميع المحاولات
+          console.error('❌ فشل في الحصول على الموقع نهائياً بعد جميع المحاولات');
+          
+          const errorMessage = getLocationErrorMessage(error);
+          setErrors(prev => ({
+            ...prev,
+            location: errorMessage + ' - يرجى تحديد موقع العيادة يدوياً على الخريطة أو تفعيل خدمة الموقع'
+          }));
+          
+          useDefaultLocation();
+        },
+        options
+      );
+    };
+    
+    // بدء المحاولات
+    attemptLocationRetrieval();
+  };
+
+  // دالة محسنة لتحديث موقع الخريطة
+  const updateMapLocation = (location, isHighAccuracy) => {
+    if (!mapInstanceRef.current) return;
+    
+    console.log('🗺️ تحديث موقع الخريطة...');
+    
+    // تحديد مستوى التكبير حسب دقة الموقع
+    const zoomLevel = isHighAccuracy ? 19 : (location.accuracy <= 100 ? 18 : 16);
+    
+    // تحريك الخريطة بسلاسة إلى الموقع الجديد
+    mapInstanceRef.current.panTo(location);
+    mapInstanceRef.current.setZoom(zoomLevel);
+    
+    // تحديث موقع العلامة
+    if (markerRef.current) {
+      markerRef.current.setPosition(location);
+      
+      // إضافة أنيميشن للعلامة
+      markerRef.current.setAnimation(window.google.maps.Animation.BOUNCE);
+      setTimeout(() => {
+        if (markerRef.current) {
+          markerRef.current.setAnimation(null);
+        }
+      }, 2000);
+    }
+    
+    // إزالة الدائرة السابقة
+    if (accuracyCircleRef.current) {
+      accuracyCircleRef.current.setMap(null);
+    }
+    
+    // إضافة دائرة دقة محسنة
+    const radiusColor = isHighAccuracy ? '#10b981' : (location.accuracy <= 100 ? '#f59e0b' : '#ef4444');
+    accuracyCircleRef.current = new window.google.maps.Circle({
+      strokeColor: radiusColor,
+      strokeOpacity: 1.0,
+      strokeWeight: 2,
+      fillColor: radiusColor,
+      fillOpacity: 0.1,
+      map: mapInstanceRef.current,
+      center: location,
+      radius: Math.max(location.accuracy || 50, 10) // الحد الأدنى 10 أمتار
+    });
+    
+    // إنشاء نافذة معلومات محسنة
+    const accuracyText = location.accuracy <= 50 ? 'دقة عالية جداً' : 
+                        (location.accuracy <= 100 ? 'دقة جيدة' : 'دقة مقبولة');
+    
+    const infoContent = `
+      <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px; border-radius: 8px 8px 0 0; margin: -8px -8px 8px -8px;">
+          <strong>📍 موقعك الحالي</strong>
+        </div>
+        <div style="padding: 4px 0;">
+          <div style="color: ${radiusColor}; font-weight: bold; margin-bottom: 4px;">
+            ${accuracyText}
+          </div>
+          <small style="color: #666;">
+            دقة الموقع: ±${Math.round(location.accuracy)} متر<br>
+            الإحداثيات: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}
+          </small>
+        </div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+          <small style="color: #999;">
+            ${new Date().toLocaleTimeString('ar-EG')}
+          </small>
+        </div>
+      </div>
+    `;
+    
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: infoContent,
+      position: location,
+      pixelOffset: new window.google.maps.Size(0, -10)
+    });
+    
+    // عرض النافذة مؤقتاً
+    infoWindow.open(mapInstanceRef.current);
+    setTimeout(() => {
+      if (infoWindow) {
+        infoWindow.close();
+      }
+    }, 6000); // عرض لمدة 6 ثواني لإعطاء وقت أكثر للقراءة
   };
 
   // دالة مساعدة لتوضيح تفاصيل الخطأ
