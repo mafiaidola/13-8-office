@@ -53,7 +53,7 @@ class ComponentRegistryAuditor:
             for file in files:
                 if file.endswith('.js') and not file.startswith('.'):
                     file_path = Path(root) / file
-                    component_name = file.stem
+                    component_name = Path(file).stem  # Fix: use Path(file) instead of file
                     relative_path = file_path.relative_to(self.components_dir)
                     existing_components[component_name] = str(relative_path)
         
