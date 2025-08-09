@@ -440,31 +440,31 @@ class ArabicReviewComprehensiveTestSuite:
         
         # Get actual counts
         users_result = await self.make_request("GET", "/users", token=self.admin_token)
-        clinics_result = await self.make_request("GET", "/clinics", token=self.admin_token)
+        visits_result = await self.make_request("GET", "/visits/dashboard/overview", token=self.admin_token)
         
-        if dashboard_result["success"] and users_result["success"] and clinics_result["success"]:
+        if dashboard_result["success"] and users_result["success"] and visits_result["success"]:
             dashboard_stats = dashboard_result["data"]
             actual_users = len(users_result["data"]) if isinstance(users_result["data"], list) else users_result["data"].get("total", 0)
-            actual_clinics = len(clinics_result["data"]) if isinstance(clinics_result["data"], list) else clinics_result["data"].get("total", 0)
+            actual_visits = visits_result["data"].get("stats", {}).get("total_visits", 0)
             
             dashboard_users = dashboard_stats.get("total_users", 0)
-            dashboard_clinics = dashboard_stats.get("total_clinics", 0)
+            dashboard_visits = dashboard_stats.get("visits_in_period", 0)
             
             # Check accuracy (allow small differences due to timing)
             users_accurate = abs(dashboard_users - actual_users) <= 2
-            clinics_accurate = abs(dashboard_clinics - actual_clinics) <= 2
+            visits_accurate = abs(dashboard_visits - actual_visits) <= 2
             
             details = f"دقة البيانات - المستخدمين: {dashboard_users} (داشبورد) vs {actual_users} (فعلي)"
-            details += f", العيادات: {dashboard_clinics} (داشبورد) vs {actual_clinics} (فعلي)"
+            details += f", الزيارات: {dashboard_visits} (داشبورد) vs {actual_visits} (فعلي)"
             
-            accuracy_score = sum([users_accurate, clinics_accurate])
+            accuracy_score = sum([users_accurate, visits_accurate])
             success = accuracy_score >= 1  # At least one metric is accurate
             
             self.log_test_result(
                 "Data Accuracy and Interconnection",
                 success,
                 details + f" - دقة {accuracy_score}/2 مقياس",
-                (dashboard_result["response_time"] + users_result["response_time"] + clinics_result["response_time"]) / 3
+                (dashboard_result["response_time"] + users_result["response_time"] + visits_result["response_time"]) / 3
             )
             return success
         else:
