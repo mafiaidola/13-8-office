@@ -47,6 +47,7 @@ const EnhancedClinicRegistration = () => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const accuracyCircleRef = useRef(null);
 
   useEffect(() => {
     console.log('🏥 EnhancedClinicRegistration component mounted');
