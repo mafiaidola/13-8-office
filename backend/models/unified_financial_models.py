@@ -343,9 +343,9 @@ class ProcessPaymentRequest(BaseModel):
 class CreateVisitRequest(BaseModel):
     """طلب إنشاء زيارة"""
     clinic_id: str
-    visit_type: VisitType
+    visit_type: VisitType = VisitType.ROUTINE
     scheduled_date: datetime
-    visit_purpose: str
+    visit_purpose: str = Field(min_length=1, description="الغرض من الزيارة (مطلوب)")
     doctor_id: Optional[str] = None
 
 class VisitCheckInRequest(BaseModel):
