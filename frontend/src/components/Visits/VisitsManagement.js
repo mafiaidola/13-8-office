@@ -342,7 +342,8 @@ const VisitsManagement = () => {
             {[
               { id: 'dashboard', label: 'لوحة التحكم', icon: '📊' },
               { id: 'visits', label: 'الزيارات', icon: '🏥' },
-              { id: 'clinics', label: 'العيادات المتاحة', icon: '🏢' }
+              { id: 'clinics', label: 'العيادات المتاحة', icon: '🏢' },
+              { id: 'login_logs', label: 'سجل تسجيل الدخول', icon: '🔐' }
             ].map((tab) => (
               <button
                 key={tab.id}
