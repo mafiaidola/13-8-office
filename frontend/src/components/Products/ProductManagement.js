@@ -395,15 +395,15 @@ const ProductManagement = ({ user, language, isRTL }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">الفئة</label>
+            <label className="block text-sm font-medium mb-2">العلامة التجارية</label>
             <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
+              value={filterBrand}
+              onChange={(e) => setFilterBrand(e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="all">جميع الفئات</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
+              <option value="all">جميع العلامات التجارية</option>
+              {brands.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
               ))}
             </select>
           </div>
