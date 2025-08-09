@@ -682,7 +682,7 @@ async def get_debt_statistics(
                 "overdue_count": stats["overdue_count"],
                 "overdue_rate": round(overdue_rate, 2),
                 "fully_collected_count": stats["fully_collected_count"],
-                "average_days_overdue": round(stats["average_days_overdue"], 1),
+                "average_days_overdue": round(stats["average_days_overdue"] or 0, 1),
                 "status_distribution": status_counts,
                 "aging_distribution": aging_counts,
                 "top_collectors": top_collectors
