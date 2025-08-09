@@ -176,7 +176,7 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
       setAnalyticsData({
         totalWarehouses: warehouses.length,
         activeWarehouses: warehouses.filter(w => w.status === 'active').length,
-        totalProducts: availableProducts.length,
+        totalProducts: products.length,
         totalStock: 2500,
         lowStockItems: 12,
         monthlyMovements: 45,
