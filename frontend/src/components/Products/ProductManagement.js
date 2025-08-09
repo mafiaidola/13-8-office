@@ -544,7 +544,7 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
-    category: product?.category || '',
+    brand: product?.brand || '',
     unit: product?.unit || 'ڤايل',
     line_id: product?.line_id || '',
     price: product?.price || '',
