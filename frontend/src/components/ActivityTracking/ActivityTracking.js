@@ -88,18 +88,56 @@ const ActivityTracking = () => {
       setLoginLogsLoading(true);
       const token = localStorage.getItem('access_token');
       
-      const response = await axios.get(`${API_BASE}/api/visits/login-logs`, {
+      // استخدام endpoint صحيح لسجلات تسجيل الدخول الحقيقية
+      const response = await axios.get(`${API_BASE}/api/activities?activity_type=login&limit=100`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      console.log('✅ Login logs loaded:', response.data);
-      setLoginLogs(response.data.logs || []);
+      console.log('✅ Login logs loaded from activities:', response.data);
+      
+      // معالجة البيانات لتحويلها من activities إلى login logs format
+      const loginActivities = response.data.activities || [];
+      const formattedLogs = loginActivities
+        .filter(activity => activity.activity_type === 'login')
+        .map(activity => ({
+          id: activity.id,
+          username: activity.user_name,
+          full_name: activity.user_name,
+          role: activity.user_role,
+          login_time: activity.timestamp,
+          ip_address: activity.ip_address || 'Unknown IP',
+          device_info: activity.device_info || 'Unknown Device',
+          location: activity.location || 'Unknown Location',
+          latitude: activity.geolocation?.latitude,
+          longitude: activity.geolocation?.longitude,
+          city: activity.geolocation?.city,
+          country: activity.geolocation?.country,
+          location_accuracy: activity.geolocation?.accuracy,
+          geolocation: activity.geolocation
+        }));
+      
+      setLoginLogs(formattedLogs);
     } catch (error) {
       console.error('❌ Error loading login logs:', error);
-      setLoginLogs([]);
+      
+      // إذا فشل الاستدعاء، جرب من endpoint سجلات الدخول المباشر
+      try {
+        const fallbackResponse = await axios.get(`${API_BASE}/api/visits/login-logs`, {
+          headers: { 
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('✅ Fallback login logs loaded:', fallbackResponse.data);
+        setLoginLogs(fallbackResponse.data.logs || []);
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        setLoginLogs([]);
+      }
     } finally {
       setLoginLogsLoading(false);
     }
