@@ -162,16 +162,16 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل التحليلات المتقدمة...'
   ),
 
-  // Visit Management
-  VisitManagement: createLazyComponent(
-    () => import('../Visits/EnhancedVisitManagement'),
-    'جاري تحميل إدارة الزيارات المحسنة...'
-  ),
-
   // Activity Tracking
   ActivityTracking: createLazyComponent(
     () => import('../ActivityTracking/ActivityTracking'),
     'جاري تحميل تتبع الأنشطة والحركات...'
+  ),
+
+  // Visit Management
+  VisitManagement: createLazyComponent(
+    () => import('../Visits/VisitsManagement'),
+    'جاري تحميل إدارة الزيارات المحسنة...'
   ),
 
   // Visit Management
