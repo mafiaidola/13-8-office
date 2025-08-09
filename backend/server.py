@@ -3166,38 +3166,77 @@ async def get_dashboard_collections(current_user: User = Depends(get_current_use
 async def get_warehouse_products(warehouse_id: str, current_user: User = Depends(get_current_user)):
     """الحصول على منتجات المخزن - Get warehouse products"""
     try:
-        # Debug logging
         print(f"DEBUG: Fetching products for warehouse_id: {warehouse_id}")
-        print(f"DEBUG: Current user: {current_user.id if current_user else 'None'}")
         
+        # Find the warehouse first
         warehouse = await db.warehouses.find_one({"id": warehouse_id})
         if not warehouse:
-            print(f"DEBUG: Warehouse not found: {warehouse_id}")
             raise HTTPException(status_code=404, detail="المخزن غير موجود")
 
         print(f"DEBUG: Found warehouse: {warehouse.get('name', 'Unknown')}")
 
-        # Get products associated with this warehouse - simplified version
-        try:
-            products = []
-            for i in range(1, 11):  # Reduced from 21 to 11 to avoid potential issues
-                product = {
-                    "id": f"prod-{i}",
-                    "name": f"منتج {i}",
-                    "category": "أدوية" if i % 2 == 0 else "مستحضرات",
-                    "quantity": 100 + (i * 10),
-                    "price": 25.50 + (i * 5),
-                    "expiry_date": (datetime.utcnow() + timedelta(days=365)).isoformat(),
-                    "supplier": f"مورد {i}",
-                    "batch_number": f"BATCH-{i}-2024"
+        # Get real products from database and filter by warehouse assignment
+        # First, get all real products
+        all_products = await db.products.find({"is_active": True}, {"_id": 0}).to_list(1000)
+        print(f"DEBUG: Found {len(all_products)} total products in database")
+        
+        # Get warehouse inventory/assignment - check if warehouse has inventory field
+        warehouse_products = []
+        
+        # Option 1: If warehouse has products_inventory field with product assignments
+        if warehouse.get("products_inventory"):
+            inventory = warehouse.get("products_inventory", {})
+            for product_id, stock_info in inventory.items():
+                # Find the actual product details
+                product = next((p for p in all_products if p.get("id") == product_id), None)
+                if product:
+                    warehouse_product = {
+                        "id": product.get("id"),
+                        "name": product.get("name"),
+                        "category": product.get("category", "غير محدد"),
+                        "unit": product.get("unit", "وحدة"),
+                        "price": product.get("price", 0),
+                        "quantity": stock_info.get("quantity", 0),
+                        "min_quantity": stock_info.get("min_quantity", 10),
+                        "max_quantity": stock_info.get("max_quantity", 100),
+                        "description": product.get("description", ""),
+                        "line_name": product.get("line_name", "غير محدد"),
+                        "supplier": f"المورد الرئيسي - {product.get('line_name', 'خط غير محدد')}",
+                        "batch_number": f"BATCH-{product_id[-3:]}-2024"
+                    }
+                    warehouse_products.append(warehouse_product)
+        
+        # Option 2: If no specific inventory, show a subset of products assigned to this warehouse region
+        else:
+            # Get products based on warehouse region/line assignment
+            warehouse_region = warehouse.get("region")
+            warehouse_line = warehouse.get("line_id")
+            
+            # Filter products by line if warehouse has a line
+            if warehouse_line:
+                filtered_products = [p for p in all_products if p.get("line_id") == warehouse_line]
+            else:
+                # Take first 10 products as default assignment
+                filtered_products = all_products[:10]
+            
+            for product in filtered_products:
+                warehouse_product = {
+                    "id": product.get("id"),
+                    "name": product.get("name"),
+                    "category": product.get("category", "غير محدد"),
+                    "unit": product.get("unit", "وحدة"),
+                    "price": product.get("price", 0),
+                    "quantity": 50,  # Default stock quantity
+                    "min_quantity": 10,
+                    "max_quantity": 200,
+                    "description": product.get("description", ""),
+                    "line_name": product.get("line_name", "غير محدد"),
+                    "supplier": f"المورد الرئيسي - {product.get('line_name', 'خط غير محدد')}",
+                    "batch_number": f"BATCH-{product.get('id', 'UNK')[-3:]}-2024"
                 }
-                products.append(product)
-            
-            print(f"DEBUG: Generated {len(products)} products")
-            
-        except Exception as product_error:
-            print(f"DEBUG: Error generating products: {str(product_error)}")
-            products = []
+                warehouse_products.append(warehouse_product)
+
+        print(f"DEBUG: Prepared {len(warehouse_products)} real products for warehouse")
 
         result = {
             "success": True,
@@ -3206,11 +3245,11 @@ async def get_warehouse_products(warehouse_id: str, current_user: User = Depends
                 "name": warehouse.get("name"),
                 "location": warehouse.get("location")
             },
-            "products": products,
-            "total_products": len(products)
+            "products": warehouse_products,
+            "total_products": len(warehouse_products)
         }
         
-        print(f"DEBUG: Returning result with {len(products)} products")
+        print(f"DEBUG: Returning result with {len(warehouse_products)} real products")
         return result
 
     except HTTPException as http_error:
@@ -3218,7 +3257,6 @@ async def get_warehouse_products(warehouse_id: str, current_user: User = Depends
         raise
     except Exception as e:
         print(f"DEBUG: Unexpected error in get_warehouse_products: {str(e)}")
-        print(f"DEBUG: Error type: {type(e)}")
         import traceback
         print(f"DEBUG: Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"خطأ في جلب منتجات المخزن: {str(e)}")
