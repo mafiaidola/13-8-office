@@ -50,7 +50,32 @@ const VisitsManagement = () => {
     loadDashboardData();
     loadVisits();
     loadAvailableClinics();
+    loadLoginLogs();  // إضافة تحميل سجل الدخول
   }, []);
+
+  // دالة تحميل سجل الدخول
+  const loadLoginLogs = async () => {
+    try {
+      setLoginLogsLoading(true);
+      const response = await axios.get(`${API}/visits/login-logs`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        }
+      });
+
+      if (response.data.success) {
+        setLoginLogs(response.data.login_logs || []);
+      }
+    } catch (error) {
+      console.error('Error loading login logs:', error);
+      // في حالة الخطأ، عرض رسالة للمستخدم
+      if (error.response?.status === 403) {
+        console.warn('Access denied to login logs - user may not have admin privileges');
+      }
+    } finally {
+      setLoginLogsLoading(false);
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
