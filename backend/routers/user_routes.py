@@ -179,11 +179,11 @@ async def create_user(
         # Insert user into database
         result = await db.users.insert_one(user_data)
         
-        # Return user data without password
-        user_data.pop("password_hash")
-        user_data["message"] = "User created successfully"
+        # Return user data without password and MongoDB ObjectId
+        response_data = {k: v for k, v in user_data.items() if k not in ["password_hash", "_id"]}
+        response_data["message"] = "User created successfully"
         
-        return user_data
+        return response_data
         
     except HTTPException:
         raise
