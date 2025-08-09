@@ -22,6 +22,7 @@ load_dotenv()
 from routers.user_routes import router as user_router
 from routers.lines_areas_routes import router as lines_areas_router
 from routers.excel_routes import router as excel_router
+from routers.products_routes import router as products_router
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
