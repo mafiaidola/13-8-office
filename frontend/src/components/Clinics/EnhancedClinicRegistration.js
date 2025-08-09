@@ -540,6 +540,26 @@ const EnhancedClinicRegistration = () => {
         </p>
       </div>
 
+      {/* شريط التقدم */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">مدى اكتمال النموذج</span>
+          <span className="text-sm text-gray-500">{getFormCompletionPercentage()}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${getFormCompletionPercentage()}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>معلومات أساسية</span>
+          <span>موقع وخريطة</span>
+          <span>تصنيفات</span>
+          <span>مكتمل</span>
+        </div>
+      </div>
+
       {errors.general && (
         <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 rounded-md">
           <p className="text-red-700">❌ {errors.general}</p>
