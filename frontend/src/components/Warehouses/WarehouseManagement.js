@@ -119,7 +119,7 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
       warehousesData.forEach(warehouse => {
         if (warehouse.inventory) {
           warehouse.inventory.forEach(item => {
-            const productName = availableProducts.find(p => p.id === item.product_id)?.name || item.product_id;
+            const productName = products.find(p => p.id === item.product_id || p._id === item.product_id)?.name || item.product_id;
             productStockMap[productName] = (productStockMap[productName] || 0) + item.quantity;
           });
         }
