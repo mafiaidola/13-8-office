@@ -1012,24 +1012,6 @@ const EnhancedClinicRegistration = () => {
 
             <div>
               <label className="block text-sm font-medium text-green-800 mb-2">
-                التخصص *
-              </label>
-              <input
-                type="text"
-                value={formData.doctor_specialty}
-                onChange={(e) => handleInputChange('doctor_specialty', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.doctor_specialty ? 'border-red-500' : 'border-green-300'
-                }`}
-                placeholder="طب عام، باطنة، أطفال..."
-              />
-              {errors.doctor_specialty && (
-                <p className="mt-1 text-sm text-red-600">{errors.doctor_specialty}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-green-800 mb-2">
                 رقم هاتف الطبيب
               </label>
               <input
