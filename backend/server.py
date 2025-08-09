@@ -51,6 +51,7 @@ app.add_middleware(
 # Include routers
 app.include_router(user_router)
 app.include_router(lines_areas_router)
+app.include_router(excel_router)
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
