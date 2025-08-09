@@ -265,6 +265,28 @@ export const COMPONENT_REGISTRY = {
   Settings: createLazyComponent(
     () => import('../Settings/Settings'),
     'جاري تحميل الإعدادات...'
+  ),
+
+  // Dashboard Support Components
+  CommonDashboardComponents: createLazyComponent(
+    () => import('../Dashboard/CommonDashboardComponents'),
+    'جاري تحميل مكونات لوحة التحكم المشتركة...'
+  ),
+  DashboardWrapper: createLazyComponent(
+    () => import('../Dashboard/DashboardWrapper'),
+    'جاري تحميل غلاف لوحة التحكم...'
+  ),
+  ActivityLog: createLazyComponent(
+    () => import('../Dashboard/ActivityLog'),
+    'جاري تحميل سجل الأنشطة...'
+  ),
+  SalesPerformance: createLazyComponent(
+    () => import('../Dashboard/SalesPerformance'),
+    'جاري تحميل أداء المبيعات...'
+  ),
+  LineCharts: createLazyComponent(
+    () => import('../Dashboard/LineCharts'),
+    'جاري تحميل الرسوم البيانية...'
   )
 };
 
