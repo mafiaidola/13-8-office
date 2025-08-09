@@ -365,6 +365,10 @@ const EnhancedClinicRegistration = () => {
             rep_latitude: latitude,
             rep_longitude: longitude,
             rep_location_accuracy: accuracy,
+            // تحديث موقع العيادة أيضاً عند تحديد الموقع الحالي
+            clinic_latitude: latitude,
+            clinic_longitude: longitude,
+            clinic_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
             device_info: navigator.userAgent,
             location_obtained_at: new Date().toISOString(),
             location_source: `gps_${accuracyLevel}_accuracy`,
