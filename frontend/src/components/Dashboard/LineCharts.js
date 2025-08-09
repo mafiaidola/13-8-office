@@ -1,5 +1,5 @@
-// Line Charts Component - مكون الرسوم البيانية الخطية
-import React, { useState, useEffect } from 'react';
+// Line Charts Component - مكون الرسوم البيانية الخطية المحسن
+import React, { useState, useEffect, useRef } from 'react';
 import CommonDashboardComponents from './CommonDashboardComponents';
 
 const LineCharts = ({ 
@@ -11,11 +11,15 @@ const LineCharts = ({
   showPoints = true,
   height = 300,
   colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-  chartType = 'line' // line, area, bar
+  chartType = 'line', // line, area, bar
+  interactive = true,
+  onDataPointClick
 }) => {
   const [chartData, setChartData] = useState([]);
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [viewMode, setViewMode] = useState('chart'); // chart, data
+  const [selectedSeries, setSelectedSeries] = useState([]);
+  const chartRef = useRef(null);
 
   // معالجة البيانات
   useEffect(() => {
@@ -38,7 +42,8 @@ const LineCharts = ({
         x: item.x || item.date || item.period || item.label || `نقطة ${index + 1}`,
         y: item.y || item.value || item.amount || item.count || 0,
         label: item.label || item.description || '',
-        color: item.color || colors[index % colors.length]
+        color: item.color || colors[index % colors.length],
+        category: item.category || 'default'
       }));
     }
 
@@ -48,7 +53,8 @@ const LineCharts = ({
         x: `نقطة ${index + 1}`,
         y: value,
         label: `القيمة: ${value}`,
-        color: colors[index % colors.length]
+        color: colors[index % colors.length],
+        category: 'default'
       }));
     }
 
@@ -114,7 +120,9 @@ const LineCharts = ({
 
   // معالج التمرير فوق النقطة
   const handlePointHover = (item, index) => {
-    setHoveredPoint({ item, index });
+    if (interactive) {
+      setHoveredPoint({ item, index });
+    }
   };
 
   // معالج إزالة التمرير
@@ -122,7 +130,78 @@ const LineCharts = ({
     setHoveredPoint(null);
   };
 
-  // الرسم البياني
+  // معالج النقر على النقطة
+  const handlePointClick = (item, index) => {
+    if (onDataPointClick) {
+      onDataPointClick(item, index);
+    }
+  };
+
+  // الإجراءات السريعة
+  const quickActions = [
+    {
+      label: 'تصدير PNG',
+      icon: '🖼️',
+      onClick: () => {
+        const svg = chartRef.current;
+        if (svg) {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const data = new XMLSerializer().serializeToString(svg);
+          const img = new Image();
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const link = document.createElement('a');
+            link.download = `chart_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+          };
+          img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
+        }
+      },
+      color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+    },
+    {
+      label: 'تصدير CSV',
+      icon: '📄',
+      onClick: () => {
+        const csvContent = chartData.map(item => 
+          `"${item.x}","${item.y}","${item.label}"`
+        ).join('\n');
+        const blob = new Blob([`"${xAxisLabel}","${yAxisLabel}","الوصف"\n${csvContent}`], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chart_data_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+      },
+      color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+    },
+    {
+      label: 'ملء الشاشة',
+      icon: '🔍',
+      onClick: () => {
+        if (chartRef.current) {
+          chartRef.current.requestFullscreen?.();
+        }
+      },
+      color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
+    },
+    {
+      label: 'إعادة تعيين',
+      icon: '🔄',
+      onClick: () => {
+        setHoveredPoint(null);
+        setSelectedSeries([]);
+        setViewMode('chart');
+      },
+      color: 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200'
+    }
+  ];
+
+  // الرسم البياني المحسن
   const Chart = () => {
     if (chartData.length === 0) {
       return (
@@ -130,27 +209,51 @@ const LineCharts = ({
           icon="📊"
           title="لا توجد بيانات"
           description="لا توجد بيانات كافية لعرض الرسم البياني"
+          suggestions={[
+            {
+              label: 'إضافة بيانات تجريبية',
+              onClick: () => console.log('إضافة بيانات تجريبية')
+            }
+          ]}
         />
       );
     }
 
     return (
-      <div className="relative">
+      <div className="relative bg-white rounded-lg p-4">
         <svg
+          ref={chartRef}
           width="100%"
           height={height}
           viewBox="0 0 100 100"
-          className="overflow-visible"
+          className="overflow-visible border border-gray-100 rounded-lg"
           preserveAspectRatio="none"
         >
-          {/* الشبكة */}
-          {showGrid && (
-            <defs>
+          {/* الخلفية المتدرجة */}
+          <defs>
+            <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f8fafc" stopOpacity="1"/>
+              <stop offset="100%" stopColor="#f1f5f9" stopOpacity="1"/>
+            </linearGradient>
+            
+            {/* الشبكة */}
+            {showGrid && (
               <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.5"/>
               </pattern>
-            </defs>
-          )}
+            )}
+
+            {/* تدرجات للرسم البياني */}
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors[0]} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={colors[0]} stopOpacity="0.1"/>
+            </linearGradient>
+          </defs>
+
+          {/* الخلفية */}
+          <rect width="100" height="100" fill="url(#backgroundGradient)" />
+          
+          {/* الشبكة */}
           {showGrid && (
             <rect width="100" height="100" fill="url(#grid)" />
           )}
@@ -159,8 +262,7 @@ const LineCharts = ({
           {chartType === 'area' && (
             <path
               d={createAreaPath()}
-              fill={colors[0]}
-              fillOpacity="0.2"
+              fill="url(#areaGradient)"
               stroke="none"
             />
           )}
@@ -174,6 +276,7 @@ const LineCharts = ({
               strokeWidth="2"
               strokeLinejoin="round"
               strokeLinecap="round"
+              className="drop-shadow-sm"
             />
           )}
 
@@ -188,10 +291,11 @@ const LineCharts = ({
                 y={point.y}
                 width={barWidth}
                 height={100 - point.y}
-                fill={colors[index % colors.length]}
-                opacity="0.8"
+                fill={`url(#barGradient-${index})`}
+                className="hover:opacity-80 transition-opacity cursor-pointer"
                 onMouseEnter={() => handlePointHover(item, index)}
                 onMouseLeave={handlePointLeave}
+                onClick={() => handlePointClick(item, index)}
               />
             );
           })}
@@ -199,131 +303,207 @@ const LineCharts = ({
           {/* النقاط */}
           {showPoints && (chartType === 'line' || chartType === 'area') && chartData.map((item, index) => {
             const point = getPoint(item, index);
+            const isHovered = hoveredPoint?.index === index;
             return (
-              <circle
-                key={index}
-                cx={point.x}
-                cy={point.y}
-                r="3"
-                fill={item.color || colors[0]}
-                stroke="white"
-                strokeWidth="2"
-                className="cursor-pointer hover:r-4 transition-all"
-                onMouseEnter={() => handlePointHover(item, index)}
-                onMouseLeave={handlePointLeave}
-              />
+              <g key={index}>
+                {/* دائرة الخلفية */}
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={isHovered ? "5" : "3"}
+                  fill="white"
+                  stroke={item.color || colors[0]}
+                  strokeWidth="2"
+                  className={`transition-all cursor-pointer drop-shadow-sm ${
+                    interactive ? 'hover:r-6' : ''
+                  }`}
+                  onMouseEnter={() => handlePointHover(item, index)}
+                  onMouseLeave={handlePointLeave}
+                  onClick={() => handlePointClick(item, index)}
+                />
+                
+                {/* نقطة داخلية */}
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={isHovered ? "2" : "1"}
+                  fill={item.color || colors[0]}
+                  className="pointer-events-none"
+                />
+              </g>
             );
           })}
         </svg>
 
-        {/* تسميات المحاور */}
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
+        {/* تسميات المحاور المحسنة */}
+        <div className="flex justify-between mt-4 px-2 text-xs text-gray-600">
           {chartData.map((item, index) => (
-            <span key={index} className="text-center" style={{ 
-              width: `${100/chartData.length}%`,
-              fontSize: chartData.length > 10 ? '10px' : '12px'
-            }}>
+            <span 
+              key={index} 
+              className={`text-center transition-colors ${
+                hoveredPoint?.index === index ? 'text-blue-600 font-medium' : ''
+              }`}
+              style={{ 
+                width: `${100/chartData.length}%`,
+                fontSize: chartData.length > 10 ? '10px' : '12px'
+              }}
+            >
               {item.x}
             </span>
           ))}
         </div>
 
-        {/* tooltip عند التمرير */}
+        {/* tooltip محسن عند التمرير */}
         {hoveredPoint && (
-          <div className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg text-sm shadow-lg pointer-events-none z-10"
-               style={{
-                 left: `${(hoveredPoint.index / Math.max(chartData.length - 1, 1)) * 100}%`,
-                 top: '10px',
-                 transform: 'translateX(-50%)'
-               }}>
-            <div className="font-medium">{hoveredPoint.item.x}</div>
-            <div>القيمة: {hoveredPoint.item.y.toLocaleString()}</div>
+          <div 
+            className="absolute bg-gray-900 text-white px-4 py-3 rounded-lg text-sm shadow-xl pointer-events-none z-20 transform -translate-x-1/2 transition-all duration-200"
+            style={{
+              left: `${(hoveredPoint.index / Math.max(chartData.length - 1, 1)) * 100}%`,
+              top: '-10px'
+            }}
+          >
+            <div className="font-semibold">{hoveredPoint.item.x}</div>
+            <div className="text-blue-300">
+              {yAxisLabel}: {hoveredPoint.item.y.toLocaleString()}
+            </div>
             {hoveredPoint.item.label && (
-              <div className="text-xs text-gray-300">{hoveredPoint.item.label}</div>
+              <div className="text-gray-300 text-xs mt-1">
+                {hoveredPoint.item.label}
+              </div>
             )}
+            {/* سهم صغير */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
           </div>
         )}
       </div>
     );
   };
 
-  // جدول البيانات
+  // جدول البيانات المحسن
   const DataTable = () => {
-    const headers = [xAxisLabel, yAxisLabel, 'الوصف'];
+    const headers = [xAxisLabel, yAxisLabel, 'الوصف', 'الفئة'];
     const tableData = chartData.map(item => ({
       x: item.x,
       y: item.y.toLocaleString(),
-      label: item.label || '-'
+      label: item.label || '-',
+      category: item.category || '-'
     }));
 
     return (
       <CommonDashboardComponents.DataTable 
         headers={headers}
         data={tableData}
+        searchable={true}
+        sortable={true}
+        pagination={true}
+        itemsPerPage={10}
+        actions={[
+          {
+            label: 'تمييز',
+            icon: '📍',
+            onClick: (row, index) => {
+              setHoveredPoint({ item: chartData[index], index });
+              setViewMode('chart');
+            },
+            className: 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+          }
+        ]}
       />
     );
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      {/* رأس المكون */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        
-        <div className="flex items-center space-x-2 space-x-reverse">
-          <select
-            value={chartType}
-            onChange={(e) => setChartType(e.target.value)}
-            className="bg-white border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="line">خطي</option>
-            <option value="area">مساحي</option>
-            <option value="bar">عمودي</option>
-          </select>
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 overflow-hidden">
+      {/* رأس المكون مع الإجراءات السريعة */}
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="text-purple-600 mr-2">📈</span>
+              {title}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              رسم بياني تفاعلي مع {chartData.length} نقطة بيانات
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <select
+              value={chartType}
+              onChange={(e) => setChartType(e.target.value)}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="line">📈 خطي</option>
+              <option value="area">📊 مساحي</option>
+              <option value="bar">📊 عمودي</option>
+            </select>
 
-          <select
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value)}
-            className="bg-white border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="chart">رسم بياني</option>
-            <option value="data">جدول البيانات</option>
-          </select>
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="chart">📊 رسم بياني</option>
+              <option value="data">📋 جدول البيانات</option>
+            </select>
+          </div>
+        </div>
+
+        {/* الإجراءات السريعة */}
+        <div className="flex flex-wrap gap-2">
+          {quickActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
+              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${action.color}`}
+            >
+              <span className="mr-1">{action.icon}</span>
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* المحتوى */}
-      {viewMode === 'chart' ? <Chart /> : <DataTable />}
+      <div className="p-6">
+        {viewMode === 'chart' ? <Chart /> : <DataTable />}
+      </div>
 
-      {/* الإحصائيات السريعة */}
+      {/* الإحصائيات السريعة المحسنة */}
       {chartData.length > 0 && (
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
-          <div className="text-center">
-            <div className="text-lg font-bold text-blue-600">
-              {chartData.length}
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-600 flex items-center justify-center">
+                <span className="mr-2">📊</span>
+                {chartData.length}
+              </div>
+              <div className="text-xs text-gray-600">نقاط البيانات</div>
             </div>
-            <div className="text-xs text-gray-500">نقاط البيانات</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-lg font-bold text-green-600">
-              {Math.max(...chartData.map(item => item.y)).toLocaleString()}
+            
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-600 flex items-center justify-center">
+                <span className="mr-2">📈</span>
+                {Math.max(...chartData.map(item => item.y)).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-600">أعلى قيمة</div>
             </div>
-            <div className="text-xs text-gray-500">أعلى قيمة</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-lg font-bold text-orange-600">
-              {Math.min(...chartData.map(item => item.y)).toLocaleString()}
+            
+            <div className="text-center">
+              <div className="text-lg font-bold text-orange-600 flex items-center justify-center">
+                <span className="mr-2">📉</span>
+                {Math.min(...chartData.map(item => item.y)).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-600">أقل قيمة</div>
             </div>
-            <div className="text-xs text-gray-500">أقل قيمة</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-lg font-bold text-purple-600">
-              {Math.round(chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length).toLocaleString()}
+            
+            <div className="text-center">
+              <div className="text-lg font-bold text-purple-600 flex items-center justify-center">
+                <span className="mr-2">📊</span>
+                {Math.round(chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length).toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-600">المتوسط</div>
             </div>
-            <div className="text-xs text-gray-500">المتوسط</div>
           </div>
         </div>
       )}
