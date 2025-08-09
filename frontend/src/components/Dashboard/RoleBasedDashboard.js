@@ -21,9 +21,13 @@ const RoleBasedDashboard = ({ user, language = 'ar', isRTL = true }) => {
     const roleMapping = {
       'admin': 'admin',
       'gm': 'gm', 
-      'line_manager': 'manager',
-      'area_manager': 'manager',
+      'line_manager': 'line_manager',
+      'area_manager': 'area_manager',
+      'district_manager': 'manager',
       'medical_rep': 'medical_rep',
+      'medical_representative': 'medical_representative',
+      'sales_rep': 'sales_rep',
+      'key_account': 'sales_rep',
       'accounting': 'accounting',
       'finance': 'finance'
     };
