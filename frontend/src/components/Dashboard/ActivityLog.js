@@ -168,60 +168,62 @@ const ActivityLog = ({
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* رأس السجل مع الإجراءات السريعة */}
-      <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-100">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <span className="text-blue-600 mr-2">📊</span>
-              {title}
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              {filteredActivities.length} من أصل {activities.length} نشاط
-            </p>
+      {title && (
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <span className="text-blue-600 mr-2 text-2xl">📊</span>
+                {title}
+              </h3>
+              <p className="text-base font-medium text-gray-700 mt-1">
+                {filteredActivities.length} من أصل {activities.length} نشاط
+              </p>
+            </div>
+            
+            {showRefresh && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-800 font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-all shadow-sm"
+                title="تحديث سجل الأنشطة"
+              >
+                <span className={`mr-2 text-lg ${loading ? 'animate-spin' : ''}`}>
+                  {loading ? '⏳' : '🔄'}
+                </span>
+                {loading ? 'جاري التحديث...' : 'تحديث'}
+              </button>
+            )}
           </div>
-          
-          {showRefresh && (
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="flex items-center px-3 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg border border-gray-200 transition-colors text-sm font-medium disabled:opacity-50"
-              title="تحديث سجل الأنشطة"
-            >
-              <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>
-                {loading ? '⏳' : '🔄'}
-              </span>
-              {loading ? 'جاري التحديث...' : 'تحديث'}
-            </button>
-          )}
-        </div>
 
-        {/* الإجراءات السريعة */}
-        <div className="flex flex-wrap gap-2">
-          {[...defaultQuickActions, ...quickActions].map((action, index) => (
-            <button
-              key={index}
-              onClick={action.onClick}
-              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${action.color}`}
-            >
-              <span className="mr-1">{action.icon}</span>
-              {action.label}
-            </button>
-          ))}
+          {/* الإجراءات السريعة */}
+          <div className="flex flex-wrap gap-3">
+            {[...defaultQuickActions, ...quickActions].map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold transition-all border-2 ${action.color} shadow-sm hover:shadow-md`}
+              >
+                <span className="mr-2 text-lg">{action.icon}</span>
+                {action.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* المرشحات */}
       {showFilters && (
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+        <div className="bg-white px-6 py-4 border-b border-gray-200">
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center space-x-2 space-x-reverse">
-              <span className="text-sm font-medium text-gray-700">نوع النشاط:</span>
+              <span className="font-bold text-gray-900">نوع النشاط:</span>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="bg-white border-2 border-gray-300 rounded-lg px-4 py-2 font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {activityTypes.map(type => (
                   <option key={type.value} value={type.value}>
@@ -232,11 +234,11 @@ const ActivityLog = ({
             </div>
 
             <div className="flex items-center space-x-2 space-x-reverse">
-              <span className="text-sm font-medium text-gray-700">الفترة الزمنية:</span>
+              <span className="font-bold text-gray-900">الفترة الزمنية:</span>
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="bg-white border-2 border-gray-300 rounded-lg px-4 py-2 font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {timeFilterOptions.map(time => (
                   <option key={time.value} value={time.value}>
@@ -252,7 +254,7 @@ const ActivityLog = ({
                   setTypeFilter('all');
                   setTimeFilter('all');
                 }}
-                className="text-sm text-red-600 hover:text-red-800 font-medium bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg border border-red-200 transition-colors"
+                className="font-bold bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg border-2 border-red-300 hover:border-red-400 transition-all"
               >
                 مسح المرشحات ✕
               </button>
@@ -262,29 +264,29 @@ const ActivityLog = ({
       )}
 
       {/* قائمة الأنشطة */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-96 overflow-y-auto custom-scrollbar">
         {loading ? (
           <CommonDashboardComponents.LoadingSpinner message="جاري تحميل الأنشطة..." />
         ) : filteredActivities.length > 0 ? (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-200">
             {filteredActivities.map((activity, index) => (
-              <div key={activity.id || index} className="group p-4 hover:bg-gray-50 transition-colors duration-150">
+              <div key={activity.id || index} className="group p-6 hover:bg-gray-50 transition-colors duration-150">
                 <div className="flex items-start space-x-4 space-x-reverse">
                   {/* أيقونة النشاط */}
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border ${getActivityColor(activity.type)}`}>
-                    <span className="text-lg">
+                  <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 ${getActivityColor(activity.type)} shadow-sm`}>
+                    <span className="text-2xl">
                       {getActivityIcon(activity.type)}
                     </span>
                   </div>
 
                   {/* تفاصيل النشاط */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
                         {activity.description || 'نشاط غير محدد'}
                       </p>
-                      <p className="text-xs text-gray-500 flex items-center">
-                        <span className="mr-1">⏰</span>
+                      <p className="text-sm font-medium text-gray-600 flex items-center">
+                        <span className="mr-2 text-lg">⏰</span>
                         {activity.timestamp ? 
                           new Date(activity.timestamp).toLocaleString('ar-EG', {
                             month: 'short',
@@ -298,19 +300,19 @@ const ActivityLog = ({
 
                     {/* معلومات إضافية */}
                     {activity.details && (
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-600 mb-2">
+                      <div className="flex flex-wrap gap-3 mb-3">
                         {activity.details.amount && (
-                          <span className="inline-flex items-center bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                          <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold border border-green-300">
                             💰 {activity.details.amount.toLocaleString()} ج.م
                           </span>
                         )}
                         {activity.details.clinic_name && (
-                          <span className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                          <span className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold border border-blue-300">
                             🏥 {activity.details.clinic_name}
                           </span>
                         )}
                         {activity.user_id && (
-                          <span className="inline-flex items-center bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
+                          <span className="inline-flex items-center bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-semibold border border-purple-300">
                             👤 {activity.user_id}
                           </span>
                         )}
@@ -319,23 +321,23 @@ const ActivityLog = ({
 
                     {/* تصنيف النشاط */}
                     <div className="flex items-center justify-between">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${getActivityColor(activity.type)}`}>
+                      <span className={`inline-flex items-center px-3 py-1 font-bold rounded-full border-2 ${getActivityColor(activity.type)}`}>
                         {activityTypes.find(t => t.value === activity.type)?.label || 'نشاط عام'}
                       </span>
                       
                       {/* إجراءات سريعة للنشاط */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1 space-x-reverse">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-2 space-x-reverse">
                         <button 
-                          className="w-6 h-6 rounded-full bg-gray-100 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                          className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 border border-blue-300 flex items-center justify-center transition-colors"
                           title="عرض التفاصيل"
                         >
-                          <span className="text-xs">👁️</span>
+                          <span className="text-sm">👁️</span>
                         </button>
                         <button 
-                          className="w-6 h-6 rounded-full bg-gray-100 hover:bg-green-100 flex items-center justify-center transition-colors"
+                          className="w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 border border-green-300 flex items-center justify-center transition-colors"
                           title="نسخ"
                         >
-                          <span className="text-xs">📋</span>
+                          <span className="text-sm">📋</span>
                         </button>
                       </div>
                     </div>
@@ -370,8 +372,8 @@ const ActivityLog = ({
 
       {/* عرض المزيد */}
       {activities.length > maxItems && (
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 text-center">
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors">
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 text-center">
+          <button className="font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-6 py-3 rounded-lg border-2 border-blue-300 hover:border-blue-400 transition-all shadow-sm hover:shadow-md">
             عرض المزيد من الأنشطة ({activities.length - maxItems} نشاط إضافي) ↓
           </button>
         </div>
