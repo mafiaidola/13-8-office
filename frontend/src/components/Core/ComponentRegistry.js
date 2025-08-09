@@ -293,6 +293,10 @@ export const COMPONENT_REGISTRY = {
   ExcelManager: createLazyComponent(
     () => import('../Excel/ExcelManager'),
     'جاري تحميل نظام إدارة Excel...'
+  ),
+  ExcelDashboard: createLazyComponent(
+    () => import('../Excel/ExcelDashboard'),
+    'جاري تحميل لوحة تحكم Excel...'
   )
 };
 
