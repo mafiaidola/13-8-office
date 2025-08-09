@@ -174,13 +174,13 @@ async def download_template(data_type: str, current_user: dict = Depends(get_cur
         wb.save(output)
         output.seek(0)
         
-        # Arabic names for files
+        # URL-safe filenames without Arabic characters
         filename_mapping = {
-            "clinics": "مثال_استيراد_العيادات",
-            "users": "مثال_استيراد_المستخدمين", 
-            "orders": "مثال_استيراد_الطلبات",
-            "debts": "مثال_استيراد_المديونية",
-            "payments": "مثال_استيراد_التحصيل"
+            "clinics": "clinics_template",
+            "users": "users_template", 
+            "orders": "orders_template",
+            "debts": "debts_template",
+            "payments": "payments_template"
         }
         
         filename = f"{filename_mapping.get(data_type, data_type)}_template.xlsx"
