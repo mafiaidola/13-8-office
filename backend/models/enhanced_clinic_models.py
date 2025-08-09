@@ -98,8 +98,8 @@ class EnhancedClinic(BaseModel):
     district_name: Optional[str] = Field(default=None, description="اسم المقاطعة")
     
     # التصنيفات
-    classification: ClinicClassification = Field(default=ClinicClassification.AVERAGE, description="تصنيف العيادة")
-    credit_classification: CreditClassification = Field(default=CreditClassification.B, description="التصنيف الائتماني")
+    classification: ClinicClassification = Field(default=ClinicClassification.CLASS_B, description="تصنيف العيادة")
+    credit_classification: CreditClassification = Field(default=CreditClassification.YELLOW, description="التصنيف الائتماني")
     classification_notes: Optional[str] = Field(default=None, description="ملاحظات التصنيف")
     classification_updated_at: Optional[datetime] = Field(default=None, description="تاريخ آخر تحديث للتصنيف")
     classification_updated_by: Optional[str] = Field(default=None, description="من حدث التصنيف")
