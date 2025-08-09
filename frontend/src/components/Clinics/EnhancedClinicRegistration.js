@@ -458,11 +458,18 @@ const EnhancedClinicRegistration = () => {
     }
   };
 
-  // دالة لاستخدام الموقع الافتراضي
+  // دالة محسنة لاستخدام الموقع الافتراضي
   const useDefaultLocation = () => {
-    const defaultLocation = { lat: 30.0444, lng: 31.2357, accuracy: null };
+    // إحداثيات أكثر دقة لوسط القاهرة (ميدان التحرير)
+    const defaultLocation = { 
+      lat: 30.0444, // خط العرض لميدان التحرير
+      lng: 31.2357, // خط الطول لميدان التحرير
+      accuracy: null,
+      isDefault: true
+    };
+    
     setUserLocation(defaultLocation);
-    console.log('📍 استخدام الموقع الافتراضي (القاهرة):', defaultLocation);
+    console.log('📍 استخدام الموقع الافتراضي المحسن (ميدان التحرير - القاهرة):', defaultLocation);
     
     setLocationData(prev => ({
       ...prev,
@@ -471,7 +478,74 @@ const EnhancedClinicRegistration = () => {
       rep_location_accuracy: null,
       device_info: navigator.userAgent,
       location_obtained_at: new Date().toISOString(),
-      location_source: 'default'
+      location_source: 'default_cairo_center',
+      location_note: 'تم استخدام الموقع الافتراضي (ميدان التحرير، القاهرة) - يرجى تحديد الموقع الصحيح يدوياً'
+    }));
+    
+    // إذا كانت الخريطة متاحة، اضبطها على الموقع الافتراضي
+    if (mapInstanceRef.current) {
+      console.log('🗺️ تحديث الخريطة للموقع الافتراضي...');
+      mapInstanceRef.current.setCenter(defaultLocation);
+      mapInstanceRef.current.setZoom(11); // zoom مناسب لعرض القاهرة
+      
+      if (markerRef.current) {
+        markerRef.current.setPosition(defaultLocation);
+        
+        // تغيير لون العلامة للإشارة لأنه موقع افتراضي
+        markerRef.current.setIcon({
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 0C7.031 0 3 4.031 3 9C3 14.25 12 24 12 24S21 14.25 21 9C21 4.031 16.969 0 12 0ZM12 12.5C10.069 12.5 8.5 10.931 8.5 9S10.069 5.5 12 5.5S15.5 7.069 15.5 9S13.931 12.5 12 12.5Z" fill="#FF6B35"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(32, 32)
+        });
+      }
+      
+      // إضافة نافذة معلومات تفسيرية
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
+            <div style="background: linear-gradient(135deg, #ff6b35 0%, #f7971e 100%); color: white; padding: 8px; border-radius: 8px 8px 0 0; margin: -8px -8px 8px -8px;">
+              <strong>📍 الموقع الافتراضي</strong>
+            </div>
+            <div style="padding: 8px 0;">
+              <div style="color: #ff6b35; font-weight: bold; margin-bottom: 8px;">
+                ميدان التحرير - وسط القاهرة
+              </div>
+              <div style="background: #fff3cd; padding: 8px; border-radius: 6px; margin: 8px 0;">
+                <small style="color: #856404;">
+                  ⚠️ هذا موقع افتراضي<br>
+                  يرجى تحديد الموقع الصحيح للعيادة
+                </small>
+              </div>
+              <div style="margin-top: 8px;">
+                <button onclick="document.querySelector('[onclick*=getCurrentLocation]').click()" 
+                        style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                  📱 تحديد موقعي الحالي
+                </button>
+              </div>
+            </div>
+          </div>
+        `,
+        position: defaultLocation
+      });
+      
+      // عرض النافذة لفترة أطول لأنها مهمة
+      if (infoWindow && mapInstanceRef.current) {
+        infoWindow.open(mapInstanceRef.current);
+        setTimeout(() => {
+          if (infoWindow) {
+            infoWindow.close();
+          }
+        }, 8000); // 8 ثوان لقراءة التحذير
+      }
+    }
+    
+    // إظهار تحذير للمستخدم
+    setErrors(prev => ({
+      ...prev,
+      location: '📍 تم استخدام الموقع الافتراضي (ميدان التحرير). يرجى الضغط على "تحديد موقعي الحالي" أو تحديد موقع العيادة يدوياً على الخريطة لضمان الدقة.'
     }));
   };
 
