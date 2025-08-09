@@ -611,6 +611,170 @@ const VisitsManagement = () => {
               )}
             </div>
           )}
+
+          {activeTab === 'login_logs' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-900">سجل تسجيل الدخول</h2>
+                <button
+                  onClick={loadLoginLogs}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  disabled={loginLogsLoading}
+                >
+                  {loginLogsLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      جاري التحديث...
+                    </>
+                  ) : (
+                    <>
+                      🔄
+                      تحديث
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {loginLogsLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="mr-3">جاري تحميل سجل تسجيل الدخول...</span>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg border overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            المستخدم
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            الدور
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            تاريخ ووقت الدخول
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            الموقع الجغرافي
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            معلومات الجهاز
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            عنوان IP
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {loginLogs.length > 0 ? (
+                          loginLogs.map((log) => (
+                            <tr key={log.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {log.full_name || log.username}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {log.username}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                  log.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                  log.role === 'gm' ? 'bg-purple-100 text-purple-800' :
+                                  log.role === 'medical_rep' ? 'bg-green-100 text-green-800' :
+                                  log.role === 'sales_rep' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {log.role === 'admin' ? 'أدمن' :
+                                   log.role === 'gm' ? 'مدير عام' :
+                                   log.role === 'medical_rep' ? 'مندوب طبي' :
+                                   log.role === 'sales_rep' ? 'مندوب مبيعات' :
+                                   log.role}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {new Date(log.login_time).toLocaleString('ar-EG', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {log.geolocation && log.latitude && log.longitude ? (
+                                  <div className="space-y-1">
+                                    <div className="text-xs">
+                                      📍 {log.city || 'Unknown'}, {log.country || 'Unknown'}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      ({parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)})
+                                    </div>
+                                    {log.location_accuracy && (
+                                      <div className="text-xs text-gray-400">
+                                        دقة: {Math.round(log.location_accuracy)}م
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">لا يوجد موقع</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                                {log.device_info ? (
+                                  <div className="truncate" title={log.device_info}>
+                                    {log.device_info.includes('Chrome') ? '🌐 Chrome' :
+                                     log.device_info.includes('Firefox') ? '🦊 Firefox' :
+                                     log.device_info.includes('Safari') ? '🧭 Safari' :
+                                     log.device_info.includes('Edge') ? '🔷 Edge' :
+                                     '💻 Unknown Browser'}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">غير محدد</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {log.ip_address && log.ip_address !== 'Unknown IP' ? 
+                                  log.ip_address : 
+                                  <span className="text-gray-400">غير محدد</span>
+                                }
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                              <div className="space-y-2">
+                                <div className="text-4xl">🔐</div>
+                                <div>لا توجد سجلات تسجيل دخول متاحة</div>
+                                <div className="text-sm text-gray-400">
+                                  قد تحتاج إلى صلاحيات أدمن لعرض هذه البيانات
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {loginLogs.length > 0 && (
+                    <div className="bg-gray-50 px-6 py-3 border-t">
+                      <div className="text-sm text-gray-600">
+                        📊 إجمالي السجلات: {loginLogs.length} | 
+                        آخر تحديث: {new Date().toLocaleString('ar-EG')}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
