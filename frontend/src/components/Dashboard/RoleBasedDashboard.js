@@ -4,6 +4,9 @@ import AdminDashboard from './AdminDashboard';
 import GMDashboard from './GMDashboard';
 import MedicalRepDashboard from './MedicalRepDashboard';
 import AccountingDashboard from './AccountingDashboard';
+import ManagerDashboard from './ManagerDashboard';
+import SalesRepresentativeDashboard from './SalesRepresentativeDashboard';
+import MedicalRepresentativeDashboard from './MedicalRepresentativeDashboard';
 
 const RoleBasedDashboard = ({ user, language = 'ar', isRTL = true }) => {
   const [dashboardData, setDashboardData] = useState({});
