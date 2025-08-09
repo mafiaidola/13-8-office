@@ -925,14 +925,19 @@ const EnhancedClinicRegistration = () => {
             </div>
           )}
 
-          {/* أزرار التحكم في الموقع */}
+          {/* أزرار التحكم في الموقع المحسنة */}
           <div className="mb-4 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={getCurrentLocation}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              disabled={loading}
+              className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
-              📍 الحصول على موقعي الحالي
+              <svg className="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              📍 تحديد موقعي الحالي بدقة عالية
             </button>
             
             <button
@@ -945,15 +950,78 @@ const EnhancedClinicRegistration = () => {
                   setLocationData(prev => ({
                     ...prev,
                     clinic_latitude: center.lat(),
-                    clinic_longitude: center.lng()
+                    clinic_longitude: center.lng(),
+                    location_source: 'manual_center'
                   }));
+                  
+                  // إظهار رسالة تأكيد
+                  setErrors(prev => ({
+                    ...prev,
+                    location_success: '✅ تم وضع دبوس العيادة في وسط الخريطة'
+                  }));
+                  
+                  setTimeout(() => {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.location_success;
+                      return newErrors;
+                    });
+                  }, 3000);
                 }
               }}
               className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
             >
               🎯 وضع الدبوس في المنتصف
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (mapInstanceRef.current) {
+                  // إعادة تعيين الخريطة لموقع القاهرة الافتراضي
+                  const defaultLocation = { lat: 30.0444, lng: 31.2357 };
+                  mapInstanceRef.current.setCenter(defaultLocation);
+                  mapInstanceRef.current.setZoom(11);
+                  
+                  if (markerRef.current) {
+                    markerRef.current.setPosition(defaultLocation);
+                  }
+                  
+                  setLocationData(prev => ({
+                    ...prev,
+                    clinic_latitude: defaultLocation.lat,
+                    clinic_longitude: defaultLocation.lng,
+                    location_source: 'default'
+                  }));
+                  
+                  setErrors(prev => ({
+                    ...prev,
+                    location_success: '🏙️ تم إعادة تعيين الخريطة للموقع الافتراضي (القاهرة)'
+                  }));
+                  
+                  setTimeout(() => {
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.location_success;
+                      return newErrors;
+                    });
+                  }, 3000);
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
+            >
+              🏙️ إعادة التعيين
+            </button>
           </div>
+          
+          {/* رسائل حالة الموقع */}
+          {errors.location_success && (
+            <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-400 rounded-md">
+              <p className="text-green-700 text-sm font-medium">
+                {errors.location_success}
+              </p>
+            </div>
+          )}
 
           {/* حقل البحث في العنوان */}
           <div className="mb-4">
