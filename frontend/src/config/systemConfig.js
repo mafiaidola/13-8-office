@@ -176,21 +176,27 @@ export const SYSTEM_TABS = {
 
   accounting: {
     id: 'accounting',
+    path: '/accounting',
     name: { ar: 'الحسابات', en: 'Accounting' },
     module: 'النظام المالي الموحد',
     icon: '💰',
     component: 'UnifiedFinancialDashboard',
     enabled: true,
-    description: 'إدارة شاملة للفواتير والديون والتحصيلات'
+    description: { ar: 'إدارة شاملة للفواتير والديون والتحصيلات', en: 'Comprehensive invoices, debts and collections management' },
+    permissions: ['admin', 'gm', 'accounting', 'finance'],
+    priority: 5
   },
   visits: {
     id: 'visits',
+    path: '/visits',
     name: { ar: 'إدارة الزيارات', en: 'Visits Management' },
     module: 'زيارات المناديب',
     icon: '🏥', 
     component: 'VisitsManagement',
     enabled: true,
-    description: 'إدارة وتتبع زيارات المناديب للعيادات'
+    description: { ar: 'إدارة وتتبع زيارات المناديب للعيادات', en: 'Manage and track medical rep visits to clinics' },
+    permissions: ['admin', 'gm', 'medical_rep', 'line_manager'],
+    priority: 4
   },
 
   analytics: {
