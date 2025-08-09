@@ -146,22 +146,102 @@ const AddUserModal = ({ onClose, onUserAdded, language = 'ar' }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content max-w-2xl">
-        <div className="modal-header">
-          <h3 className="text-2xl font-bold text-primary">
+    <div 
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(8px)',
+        zIndex: 999999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        className="modal-content"
+        style={{
+          background: 'var(--bg-card)',
+          borderRadius: '12px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          maxWidth: '800px',
+          width: '100%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          position: 'relative',
+          animation: 'slideInUp 0.3s ease-out'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div 
+          className="modal-header"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '24px 24px 16px 24px',
+            borderBottom: '1px solid var(--border-color)',
+            background: 'var(--bg-card)'
+          }}
+        >
+          <h3 style={{
+            margin: 0,
+            fontSize: '1.5rem',
+            fontWeight: '700',
+            color: 'var(--text-primary)'
+          }}>
             {language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User'}
           </h3>
           <button 
             onClick={onClose} 
-            className="modal-close text-muted hover:text-primary"
             disabled={loading}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '2rem',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              lineHeight: 1,
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.background = 'var(--bg-secondary)';
+              e.target.style.color = 'var(--text-primary)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = 'none';
+              e.target.style.color = 'var(--text-muted)';
+            }}
           >
             ×
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="modal-body">
+        <form onSubmit={handleSubmit}>
+          <div 
+            className="modal-body"
+            style={{
+              padding: '24px',
+              background: 'var(--bg-card)',
+              maxHeight: '60vh',
+              overflowY: 'auto'
+            }}
+          >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Username */}
             <div>
