@@ -68,7 +68,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
           id: 'prod-001',
           name: 'أموكسيسيلين 500mg',
           description: 'مضاد حيوي واسع المجال',
-          category: 'مضادات حيوية',
+          brand: 'GSK',
           unit: 'ڤايل',
           line_id: 'line-001',
           line_name: 'خط القاهرة الكبرى',
