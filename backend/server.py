@@ -18,6 +18,9 @@ import uvicorn
 from dotenv import load_dotenv
 load_dotenv()
 
+# Import routers
+from routers.user_routes import router as user_router
+
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
