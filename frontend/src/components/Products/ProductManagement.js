@@ -375,8 +375,8 @@ const ProductManagement = ({ user, language, isRTL }) => {
           <div className="text-sm opacity-75">مخزون حرج</div>
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
-          <div className="text-2xl font-bold">{categories.length}</div>
-          <div className="text-sm opacity-75">فئات المنتجات</div>
+          <div className="text-2xl font-bold">{brands.length}</div>
+          <div className="text-sm opacity-75">العلامات التجارية</div>
         </div>
       </div>
 
