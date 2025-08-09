@@ -58,11 +58,28 @@ async def get_registration_form_data(
         
         # إنشاء بيانات تجريبية إذا لم تكن موجودة
         if not lines:
+            # نظام الخطين المطلوب من المستخدم
             default_lines = [
-                {"id": str(uuid.uuid4()), "name": "خط القاهرة الكبرى", "code": "CGC", "description": "يغطي محافظات القاهرة والجيزة", "is_active": True, "priority": 1},
-                {"id": str(uuid.uuid4()), "name": "خط الإسكندرية", "code": "ALX", "description": "يغطي محافظة الإسكندرية والساحل الشمالي", "is_active": True, "priority": 2},
-                {"id": str(uuid.uuid4()), "name": "خط الدلتا", "code": "DLT", "description": "يغطي محافظات الدلتا", "is_active": True, "priority": 3},
-                {"id": str(uuid.uuid4()), "name": "خط الصعيد", "code": "UEG", "description": "يغطي محافظات الصعيد", "is_active": True, "priority": 4}
+                {
+                    "id": str(uuid.uuid4()), 
+                    "name": "الخط الأول", 
+                    "code": "LINE1", 
+                    "description": "الخط الأول - منتجات متخصصة ومخازن مخصصة", 
+                    "is_active": True, 
+                    "priority": 1,
+                    "has_dedicated_warehouses": True,
+                    "has_specialized_products": True
+                },
+                {
+                    "id": str(uuid.uuid4()), 
+                    "name": "الخط الثاني", 
+                    "code": "LINE2", 
+                    "description": "الخط الثاني - منتجات مختلفة ومخازن منفصلة", 
+                    "is_active": True, 
+                    "priority": 2,
+                    "has_dedicated_warehouses": True,
+                    "has_specialized_products": True
+                }
             ]
             
             for line_data in default_lines:
