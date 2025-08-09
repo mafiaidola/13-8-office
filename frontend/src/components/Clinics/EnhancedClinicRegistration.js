@@ -805,91 +805,129 @@ const EnhancedClinicRegistration = () => {
           </div>
         </div>
 
-        {/* قسم تصنيفات العيادة - الجديد */}
+        {/* قسم تصنيفات العيادة - محسن مع البطاقات التفاعلية */}
         <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
-          <h3 className="text-xl font-bold text-orange-900 mb-4 flex items-center">
+          <h3 className="text-xl font-bold text-orange-900 mb-6 flex items-center">
             ⭐ تصنيفات العيادة
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* تصنيف العيادة */}
-            <div>
-              <label className="block text-sm font-medium text-orange-800 mb-2">
-                تصنيف العيادة *
-              </label>
-              <select
-                value={formData.classification}
-                onChange={(e) => handleInputChange('classification', e.target.value)}
-                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                {formOptions.classifications.map((classification) => (
-                  <option 
-                    key={classification.value} 
-                    value={classification.value}
-                  >
-                    {classification.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-orange-600">
-                تصنيف العيادة حسب الأداء والجودة
-              </p>
+          {/* تصنيف العيادة - بطاقات تفاعلية */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-orange-800 mb-4">
+              تصنيف العيادة حسب الأداء والجودة *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {formOptions.classifications.map((classification) => (
+                <button
+                  key={classification.value}
+                  type="button"
+                  onClick={() => handleInputChange('classification', classification.value)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    formData.classification === classification.value
+                      ? `border-orange-500 bg-gradient-to-r ${classification.color} text-white shadow-lg scale-105`
+                      : 'border-orange-200 bg-white hover:border-orange-400 text-gray-700'
+                  }`}
+                >
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <span className="text-2xl">{classification.icon}</span>
+                    <span className="font-medium text-sm leading-tight">
+                      {classification.label}
+                    </span>
+                    {formData.classification === classification.value && (
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
-
-            {/* التصنيف الائتماني */}
-            <div>
-              <label className="block text-sm font-medium text-orange-800 mb-2">
-                التصنيف الائتماني *
-              </label>
-              <select
-                value={formData.credit_classification}
-                onChange={(e) => handleInputChange('credit_classification', e.target.value)}
-                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                {formOptions.credit_classifications.map((classification) => (
-                  <option 
-                    key={classification.value} 
-                    value={classification.value}
-                  >
-                    {classification.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-orange-600">
-                التصنيف الائتماني للعيادة (أخضر/أصفر/أحمر)
-              </p>
-            </div>
-
-            {/* ملاحظات التصنيف */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-orange-800 mb-2">
-                ملاحظات التصنيف
-              </label>
-              <textarea
-                value={formData.classification_notes}
-                onChange={(e) => handleInputChange('classification_notes', e.target.value)}
-                rows={3}
-                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="ملاحظات حول تصنيف العيادة (اختياري)..."
-              />
-            </div>
+            {formData.classification && (
+              <div className="mt-3 p-3 bg-orange-100 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  ✅ <strong>التصنيف المختار:</strong> {getClassificationLabel(formData.classification)}
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* عرض التصنيفات المختارة */}
-          <div className="mt-4 p-4 bg-white rounded-md border border-orange-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">التصنيفات المختارة:</h4>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  🏥 {getClassificationLabel(formData.classification)}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  💳 {getCreditClassificationLabel(formData.credit_classification)}
-                </span>
-              </div>
+          {/* التصنيف الائتماني - بطاقات تفاعلية */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-orange-800 mb-4">
+              التصنيف الائتماني للعيادة *
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {formOptions.credit_classifications.map((classification) => (
+                <button
+                  key={classification.value}
+                  type="button"
+                  onClick={() => handleInputChange('credit_classification', classification.value)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    formData.credit_classification === classification.value
+                      ? `border-orange-500 bg-gradient-to-r ${classification.color} text-white shadow-lg scale-105`
+                      : 'border-orange-200 bg-white hover:border-orange-400 text-gray-700'
+                  }`}
+                >
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <span className="text-3xl">{classification.icon}</span>
+                    <span className="font-medium text-sm leading-tight">
+                      {classification.label}
+                    </span>
+                    {formData.credit_classification === classification.value && (
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
+            {formData.credit_classification && (
+              <div className="mt-3 p-3 bg-orange-100 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  ✅ <strong>التصنيف الائتماني المختار:</strong> {getCreditClassificationLabel(formData.credit_classification)}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ملاحظات التصنيف */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-orange-800 mb-2">
+              ملاحظات التصنيف
+            </label>
+            <textarea
+              value={formData.classification_notes}
+              onChange={(e) => handleInputChange('classification_notes', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="ملاحظات حول تصنيف العيادة (اختياري)..."
+            />
+          </div>
+
+          {/* عرض التصنيفات المختارة - محسن */}
+          <div className="p-4 bg-white rounded-lg border border-orange-200 shadow-inner">
+            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+              <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+              ملخص التصنيفات المختارة:
+            </h4>
+            <div className="flex flex-wrap gap-3">
+              {formData.classification && (
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${getClassificationColor(formData.classification)} text-white shadow-md`}>
+                    {getClassificationIcon(formData.classification)} {getClassificationLabel(formData.classification)}
+                  </span>
+                </div>
+              )}
+              {formData.credit_classification && (
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${getCreditClassificationColor(formData.credit_classification)} text-white shadow-md`}>
+                    {getCreditClassificationIcon(formData.credit_classification)} {getCreditClassificationLabel(formData.credit_classification)}
+                  </span>
+                </div>
+              )}
+            </div>
+            {(!formData.classification || !formData.credit_classification) && (
+              <p className="text-xs text-gray-500 mt-2 italic">
+                يرجى اختيار التصنيفات المطلوبة أعلاه لإكمال التسجيل
+              </p>
+            )}
           </div>
         </div>
 
