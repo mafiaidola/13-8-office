@@ -2,20 +2,6 @@
 import React from 'react';
 import RoleBasedDashboard from './RoleBasedDashboard';
 
-// Utility function for activity icons
-const getActivityIcon = (type) => {
-  const icons = {
-    'order_created': '🛒',
-    'clinic_registered': '🏥',
-    'visit_completed': '👨‍⚕️',
-    'debt_collection': '💰',
-    'user_created': '👤',
-    'product_added': '📦',
-    'clinic_follow_up': '📞'
-  };
-  return icons[type] || '📋';
-};
-
 const Dashboard = ({ user, language, isRTL, setActiveTab }) => {
   const [stats, setStats] = useState({});
   const [recentActivities, setRecentActivities] = useState([]);
