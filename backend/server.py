@@ -225,15 +225,47 @@ async def log_user_login(user_info: dict, geolocation: dict = None, device_info:
                 "address": geolocation.get("address", "")
             })
         
-        # حفظ سجل الدخول في قاعدة البيانات
-        await db.login_logs.insert_one(login_log)
+        print(f"🔍 محاولة حفظ سجل دخول: {user_info['username']}")
+        print(f"📍 الموقع: {geolocation.get('city', 'Unknown') if geolocation else 'No location'}")
         
-        print(f"✅ تم تسجيل عملية دخول المستخدم: {user_info['username']} في {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+        # حفظ سجل الدخول في قاعدة البيانات مع معالجة أفضل للأخطاء
+        result = await db.login_logs.insert_one(login_log)
+        
+        if result.inserted_id:
+            print(f"✅ تم حفظ سجل الدخول بنجاح: {user_info['username']} - ID: {result.inserted_id}")
+            
+            # التحقق من الحفظ
+            saved_log = await db.login_logs.find_one({"id": login_log["id"]})
+            if saved_log:
+                print(f"🎯 تم التحقق من حفظ البيانات: session_id = {saved_log['session_id']}")
+            else:
+                print(f"⚠️ لم يتم العثور على السجل المحفوظ")
+        else:
+            print(f"❌ فشل في الحصول على inserted_id")
+        
+        # عرض إحصائيات سريعة
+        total_logs = await db.login_logs.count_documents({})
+        user_logs = await db.login_logs.count_documents({"username": user_info["username"]})
+        print(f"📊 إجمالي السجلات: {total_logs} | سجلات {user_info['username']}: {user_logs}")
         
     except Exception as e:
-        print(f"❌ خطأ في تسجيل عملية الدخول: {str(e)}")
-        # لا نقف التطبيق إذا فشل التسجيل
-        pass
+        print(f"❌ خطأ في تسجيل عملية الدخول لـ {user_info.get('username', 'Unknown')}: {str(e)}")
+        print(f"🔍 تفاصيل الخطأ: {type(e).__name__}: {e}")
+        
+        # محاولة بديلة للحفظ
+        try:
+            basic_log = {
+                "_id": str(uuid.uuid4()),
+                "username": user_info["username"],
+                "login_time": datetime.utcnow().isoformat(),
+                "role": user_info.get("role", "unknown")
+            }
+            await db.login_logs.insert_one(basic_log)
+            print(f"✅ تم حفظ سجل مبسط كحل بديل لـ {user_info['username']}")
+        except Exception as fallback_error:
+            print(f"❌ فشل حتى الحل البديل: {fallback_error}")
+            # لا نقف التطبيق إذا فشل التسجيل
+            pass
 
 @app.get("/api/dashboard/stats/{role_type}")
 async def get_dashboard_stats(role_type: str, time_filter: str = "today", current_user: dict = Depends(get_current_user)):
