@@ -281,8 +281,8 @@ const ProductManagement = ({ user, language, isRTL }) => {
     return matchesSearch && matchesBrand && matchesLine;
   });
 
-  // Get unique categories
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  // Get unique brands
+  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
 
   const getStockStatus = (product) => {
     if (product.current_stock <= product.min_stock) return 'critical';
