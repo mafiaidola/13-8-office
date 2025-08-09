@@ -706,7 +706,6 @@ const LoginForm = () => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
             onClick={(e) => {
-              console.log('🔥 Submit button clicked!');
               // Let form onSubmit handle it
             }}
           >
