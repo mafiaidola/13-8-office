@@ -257,17 +257,42 @@ async def get_products(
         # Get products from database
         products = []
         async for product in db.products.find(query, {"_id": 0}).skip(skip).limit(limit):
+            # Normalize product data for compatibility with both old and new structures
+            normalized_product = {
+                "id": product.get("id"),
+                "name": product.get("name"),
+                "code": product.get("code", product.get("id", "")[:8]),  # Use first 8 chars of ID if no code
+                "brand": product.get("brand", product.get("category", "Unknown")),  # Map category to brand
+                "description": product.get("description", ""),
+                "price": product.get("price", 0),
+                "cost": product.get("cost", 0),
+                "unit": product.get("unit", "قطعة"),
+                "stock_quantity": product.get("stock_quantity", product.get("current_stock", 0)),  # Map current_stock
+                "minimum_stock": product.get("minimum_stock", 10),
+                "maximum_stock": product.get("maximum_stock", 1000),
+                "is_active": product.get("is_active", True),
+                "created_at": product.get("created_at"),
+                "updated_at": product.get("updated_at"),
+                "created_by": product.get("created_by"),
+                "updated_by": product.get("updated_by"),
+                "expiry_date": product.get("expiry_date"),
+                "batch_number": product.get("batch_number"),
+                "supplier_info": product.get("supplier_info"),
+                "medical_category": product.get("medical_category"),
+                "requires_prescription": product.get("requires_prescription", False)
+            }
+            
             # Add stock status
-            product["stock_status"] = get_stock_status(
-                product.get("stock_quantity", 0),
-                product.get("minimum_stock", 10)
+            normalized_product["stock_status"] = get_stock_status(
+                normalized_product["stock_quantity"],
+                normalized_product["minimum_stock"]
             )
             
             # Filter by stock status if requested
-            if stock_status and product["stock_status"] != stock_status:
+            if stock_status and normalized_product["stock_status"] != stock_status:
                 continue
                 
-            products.append(product)
+            products.append(normalized_product)
         
         return products
         
