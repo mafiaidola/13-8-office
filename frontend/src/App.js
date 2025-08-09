@@ -792,8 +792,23 @@ const DashboardLayout = () => {
     ];
   };
 
-  // Get available tabs for current user
-  const availableTabs = getAvailableTabs(user?.role);
+  // Get available tabs for current user with fallback
+  const availableTabs = useMemo(() => {
+    if (!user || !user.role) {
+      console.warn('User or user.role is undefined, returning default dashboard tab');
+      // Return a safe default tab for unauthenticated users
+      return [SYSTEM_TABS.dashboard || { id: 'dashboard', name: { ar: 'لوحة التحكم' }, component: 'Dashboard' }];
+    }
+    
+    try {
+      return getAvailableTabs(user.role);
+    } catch (error) {
+      console.error('Error getting available tabs:', error);
+      // Return safe fallback
+      return [SYSTEM_TABS.dashboard || { id: 'dashboard', name: { ar: 'لوحة التحكم' }, component: 'Dashboard' }];
+    }
+  }, [user?.role]);
+  
   const currentThemeConfig = getCurrentTheme();
 
   // Global function for switching tabs - CRITICAL FOR QUICK ACTIONS
