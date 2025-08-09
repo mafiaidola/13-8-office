@@ -13,8 +13,7 @@ Comprehensive and Deep System Testing After All Fixes Applied for 100% Success R
 - فحص المشاكل المحددة: Route conflicts, Authentication, Validation
 """
 
-import asyncio
-import aiohttp
+import requests
 import json
 import time
 from datetime import datetime, timedelta
@@ -60,29 +59,28 @@ class TestResult:
         self.status_code = status_code
         self.timestamp = datetime.now()
 
-async def make_request(session: aiohttp.ClientSession, method: str, url: str, 
-                      headers: Dict = None, json_data: Dict = None, 
-                      params: Dict = None) -> tuple:
+def make_request(method: str, url: str, headers: Dict = None, json_data: Dict = None, 
+                params: Dict = None) -> tuple:
     """إجراء طلب HTTP مع قياس الوقت"""
     start_time = time.time()
     
     try:
-        async with session.request(
+        response = requests.request(
             method=method,
             url=url,
             headers=headers,
             json=json_data,
             params=params,
-            timeout=aiohttp.ClientTimeout(total=30)
-        ) as response:
-            response_time = (time.time() - start_time) * 1000  # بالميلي ثانية
-            
-            try:
-                response_data = await response.json()
-            except:
-                response_data = await response.text()
-            
-            return response.status, response_data, response_time
+            timeout=30
+        )
+        response_time = (time.time() - start_time) * 1000  # بالميلي ثانية
+        
+        try:
+            response_data = response.json()
+        except:
+            response_data = response.text
+        
+        return response.status_code, response_data, response_time
     
     except Exception as e:
         response_time = (time.time() - start_time) * 1000
@@ -104,13 +102,11 @@ def log_test_result(result: TestResult):
     if result.error:
         print(f"      Error: {result.error}")
 
-async def test_health_endpoint(session: aiohttp.ClientSession):
+def test_health_endpoint():
     """اختبار Health Endpoint"""
     print("\n🔍 Testing Health Endpoint...")
     
-    status, data, response_time = await make_request(
-        session, "GET", f"{config.API_BASE}/health"
-    )
+    status, data, response_time = make_request("GET", f"{config.API_BASE}/health")
     
     success = status == 200
     details = f"Status: {status}"
@@ -123,7 +119,7 @@ async def test_health_endpoint(session: aiohttp.ClientSession):
     
     return success
 
-async def test_authentication(session: aiohttp.ClientSession):
+def test_authentication():
     """اختبار تسجيل الدخول والمصادقة"""
     print("\n🔐 Testing Authentication...")
     
@@ -132,8 +128,8 @@ async def test_authentication(session: aiohttp.ClientSession):
         "password": config.ADMIN_PASSWORD
     }
     
-    status, data, response_time = await make_request(
-        session, "POST", f"{config.API_BASE}/auth/login", json_data=login_data
+    status, data, response_time = make_request(
+        "POST", f"{config.API_BASE}/auth/login", json_data=login_data
     )
     
     success = False
@@ -158,7 +154,7 @@ async def test_authentication(session: aiohttp.ClientSession):
     
     return success
 
-async def test_core_system_apis(session: aiohttp.ClientSession):
+def test_core_system_apis():
     """اختبار Core System APIs"""
     print("\n🏗️ Testing Core System APIs...")
     
@@ -178,9 +174,7 @@ async def test_core_system_apis(session: aiohttp.ClientSession):
     all_success = True
     
     for test_name, method, url in core_apis:
-        status, data, response_time = await make_request(
-            session, method, url, headers=headers
-        )
+        status, data, response_time = make_request(method, url, headers=headers)
         
         success = status == 200
         if not success:
@@ -201,7 +195,7 @@ async def test_core_system_apis(session: aiohttp.ClientSession):
     
     return all_success
 
-async def test_unified_financial_system(session: aiohttp.ClientSession):
+def test_unified_financial_system():
     """اختبار النظام المالي الموحد"""
     print("\n💰 Testing Unified Financial System...")
     
@@ -221,9 +215,7 @@ async def test_unified_financial_system(session: aiohttp.ClientSession):
     total_count = len(financial_tests)
     
     for test_name, method, url in financial_tests:
-        status, data, response_time = await make_request(
-            session, method, url, headers=headers
-        )
+        status, data, response_time = make_request(method, url, headers=headers)
         
         success = status == 200
         if success:
@@ -250,8 +242,8 @@ async def test_unified_financial_system(session: aiohttp.ClientSession):
         "description": "فاتورة موحدة تجريبية"
     }
     
-    status, data, response_time = await make_request(
-        session, "POST", f"{config.API_BASE}/unified-financial/records",
+    status, data, response_time = make_request(
+        "POST", f"{config.API_BASE}/unified-financial/records",
         headers=headers, json_data=enhanced_record_data
     )
     
@@ -279,8 +271,8 @@ async def test_unified_financial_system(session: aiohttp.ClientSession):
         "notes": "دفعة جزئية اختبارية"
     }
     
-    status, data, response_time = await make_request(
-        session, "POST", f"{config.API_BASE}/unified-financial/process-payment",
+    status, data, response_time = make_request(
+        "POST", f"{config.API_BASE}/unified-financial/process-payment",
         headers=headers, json_data=payment_data
     )
     
@@ -299,7 +291,7 @@ async def test_unified_financial_system(session: aiohttp.ClientSession):
     
     return success_count == total_count
 
-async def test_visit_management_system(session: aiohttp.ClientSession):
+def test_visit_management_system():
     """اختبار نظام إدارة الزيارات"""
     print("\n🏥 Testing Visit Management System...")
     
@@ -319,9 +311,7 @@ async def test_visit_management_system(session: aiohttp.ClientSession):
     total_count = len(visit_tests)
     
     for test_name, method, url in visit_tests:
-        status, data, response_time = await make_request(
-            session, method, url, headers=headers
-        )
+        status, data, response_time = make_request(method, url, headers=headers)
         
         success = status == 200
         if success:
@@ -347,8 +337,8 @@ async def test_visit_management_system(session: aiohttp.ClientSession):
         "visit_purpose": "زيارة روتينية للمتابعة"
     }
     
-    status, data, response_time = await make_request(
-        session, "POST", f"{config.API_BASE}/visits/",
+    status, data, response_time = make_request(
+        "POST", f"{config.API_BASE}/visits/",
         headers=headers, json_data=enhanced_visit_data
     )
     
@@ -367,7 +357,7 @@ async def test_visit_management_system(session: aiohttp.ClientSession):
     
     return success_count == total_count
 
-async def test_legacy_financial_system(session: aiohttp.ClientSession):
+def test_legacy_financial_system():
     """اختبار النظام المالي الموروث للتوافق"""
     print("\n🏛️ Testing Legacy Financial System (Compatibility)...")
     
@@ -387,9 +377,7 @@ async def test_legacy_financial_system(session: aiohttp.ClientSession):
     total_count = len(legacy_get_tests)
     
     for test_name, method, url in legacy_get_tests:
-        status, data, response_time = await make_request(
-            session, method, url, headers=headers
-        )
+        status, data, response_time = make_request(method, url, headers=headers)
         
         success = status == 200
         if success:
@@ -413,8 +401,8 @@ async def test_legacy_financial_system(session: aiohttp.ClientSession):
         # sales_rep_id is optional as requested
     }
     
-    status, data, response_time = await make_request(
-        session, "POST", f"{config.API_BASE}/debts",
+    status, data, response_time = make_request(
+        "POST", f"{config.API_BASE}/debts",
         headers=headers, json_data=debt_data
     )
     
@@ -436,7 +424,7 @@ async def test_legacy_financial_system(session: aiohttp.ClientSession):
     
     return success_count == total_count
 
-async def test_specific_issues(session: aiohttp.ClientSession):
+def test_specific_issues():
     """فحص المشاكل المحددة"""
     print("\n🔧 Testing Specific Issues...")
     
@@ -446,9 +434,9 @@ async def test_specific_issues(session: aiohttp.ClientSession):
     
     headers = {"Authorization": f"Bearer {config.JWT_TOKEN}"}
     
-    # Test for route conflicts
+    # Test for route conflicts and specific issues
     conflict_tests = [
-        ("Route Conflict Check - /api/health", "GET", f"{config.API_BASE}/health"),
+        ("Route Conflict Check - /api/health", "GET", f"{config.API_BASE}/health", None),
         ("Authentication Check", "GET", f"{config.API_BASE}/auth/me", headers),
         ("Database Connectivity", "GET", f"{config.API_BASE}/dashboard/stats", headers)
     ]
@@ -456,12 +444,8 @@ async def test_specific_issues(session: aiohttp.ClientSession):
     success_count = 0
     total_count = len(conflict_tests)
     
-    for test_name, method, url, *extra_headers in conflict_tests:
-        test_headers = extra_headers[0] if extra_headers else None
-        
-        status, data, response_time = await make_request(
-            session, method, url, headers=test_headers
-        )
+    for test_name, method, url, test_headers in conflict_tests:
+        status, data, response_time = make_request(method, url, headers=test_headers)
         
         success = status == 200
         if success:
@@ -531,46 +515,45 @@ def print_comprehensive_summary():
     
     print("="*80)
 
-async def main():
+def main():
     """الدالة الرئيسية للاختبار الشامل"""
     print("🚀 Starting Comprehensive System Testing...")
     print(f"🔗 Backend URL: {config.API_BASE}")
     print(f"👤 Admin Credentials: {config.ADMIN_USERNAME}/{config.ADMIN_PASSWORD}")
     print("="*80)
     
-    async with aiohttp.ClientSession() as session:
-        # 1. اختبار Health Endpoint
-        await test_health_endpoint(session)
-        
-        # 2. اختبار المصادقة
-        auth_success = await test_authentication(session)
-        
-        if not auth_success:
-            print("❌ Authentication failed - Cannot proceed with authenticated tests")
-            print_comprehensive_summary()
-            return
-        
-        # 3. اختبار Core System APIs
-        await test_core_system_apis(session)
-        
-        # 4. اختبار النظام المالي الموحد
-        await test_unified_financial_system(session)
-        
-        # 5. اختبار نظام إدارة الزيارات
-        await test_visit_management_system(session)
-        
-        # 6. اختبار النظام المالي الموروث
-        await test_legacy_financial_system(session)
-        
-        # 7. فحص المشاكل المحددة
-        await test_specific_issues(session)
+    # 1. اختبار Health Endpoint
+    test_health_endpoint()
+    
+    # 2. اختبار المصادقة
+    auth_success = test_authentication()
+    
+    if not auth_success:
+        print("❌ Authentication failed - Cannot proceed with authenticated tests")
+        print_comprehensive_summary()
+        return
+    
+    # 3. اختبار Core System APIs
+    test_core_system_apis()
+    
+    # 4. اختبار النظام المالي الموحد
+    test_unified_financial_system()
+    
+    # 5. اختبار نظام إدارة الزيارات
+    test_visit_management_system()
+    
+    # 6. اختبار النظام المالي الموروث
+    test_legacy_financial_system()
+    
+    # 7. فحص المشاكل المحددة
+    test_specific_issues()
     
     # طباعة الملخص الشامل
     print_comprehensive_summary()
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        main()
     except KeyboardInterrupt:
         print("\n⚠️ Testing interrupted by user")
     except Exception as e:
