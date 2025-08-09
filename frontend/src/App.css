@@ -950,28 +950,54 @@ button:disabled {
 
 /* Tablet Portrait - التابلت العمودي */
 @media (min-width: 768px) and (max-width: 1023px) {
+  html, body {
+    font-size: 15px !important;
+  }
+  
   .professional-header {
     padding: 12px 16px !important;
     height: 64px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: var(--z-header) !important;
+    background: var(--bg-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
   }
   
   .main-layout {
     padding-top: 64px !important;
+    display: flex !important;
+    flex-direction: row !important;
   }
   
   .sidebar {
+    position: fixed !important;
     width: 240px !important;
     top: 64px !important;
+    left: 0 !important;
     height: calc(100vh - 64px) !important;
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    z-index: var(--z-sticky) !important;
+    overflow-y: auto !important;
+    transform: none !important;
+    transition: none !important;
   }
   
   .main-content {
-    margin-right: 240px !important;
-    padding: 16px !important;
+    margin-left: 240px !important;
+    margin-right: 0 !important;
+    padding: 20px !important;
+    width: calc(100% - 240px) !important;
+    min-height: calc(100vh - 64px) !important;
+    overflow-x: auto !important;
   }
   
   .professional-header .search-container {
     max-width: 280px !important;
+    min-width: 200px !important;
   }
   
   .metrics-grid {
