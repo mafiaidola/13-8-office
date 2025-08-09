@@ -241,7 +241,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
       product.name?.toLowerCase().includes('demo') ||
       product.name?.includes('تجربة') ||
       product.description?.toLowerCase().includes('test') ||
-      product.category?.toLowerCase().includes('test')
+      product.brand?.toLowerCase().includes('test')
     );
 
     if (testProducts.length === 0) {
