@@ -157,18 +157,41 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.put(`${API}/users/${user.id}`, formData, {
+      
+      // التأكد من إرسال البيانات الصحيحة فقط
+      const updateData = { ...formData };
+      
+      // إزالة الحقول الفارغة غير الضرورية
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === '' && key !== 'password') {
+          delete updateData[key];
+        }
+      });
+      
+      // إذا كانت كلمة المرور فارغة، لا ترسلها
+      if (!updateData.password || updateData.password.trim() === '') {
+        delete updateData.password;
+      }
+      
+      console.log('🔄 Sending user update data:', { 
+        userId: user.id, 
+        hasPassword: !!updateData.password,
+        fieldsToUpdate: Object.keys(updateData) 
+      });
+      
+      const response = await axios.put(`${API}/users/${user.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.message) {
+        console.log('✅ User update successful:', response.data.message);
         alert('✅ تم تحديث بيانات المستخدم بنجاح');
         setIsEditing(false);
         loadComprehensiveProfile(); // Reload updated data
         if (onUserUpdated) onUserUpdated();
       }
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('❌ Error updating user:', error);
       const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث البيانات';
       alert(`❌ خطأ في التحديث: ${errorMessage}`);
     } finally {
