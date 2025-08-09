@@ -154,11 +154,11 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.put(`${API}/users/${user.id}/comprehensive-update`, formData, {
+      const response = await axios.put(`${API}/users/${user.id}`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.success) {
+      if (response.data.message) {
         alert('✅ تم تحديث بيانات المستخدم بنجاح');
         setIsEditing(false);
         loadComprehensiveProfile(); // Reload updated data
