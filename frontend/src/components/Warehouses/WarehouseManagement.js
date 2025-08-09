@@ -68,6 +68,7 @@ const WarehouseManagement = ({ user, language, isRTL }) => {
     fetchRegions();
     fetchAvailableManagers();
     fetchAnalytics();
+    fetchProductsFromDatabase(); // جلب المنتجات من قاعدة البيانات
   }, []);
 
   // Fetch Analytics Data for Warehouses
