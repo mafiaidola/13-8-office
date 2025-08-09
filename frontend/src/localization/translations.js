@@ -85,7 +85,6 @@ export const TRANSLATIONS = {
       role: 'الدور',
       rememberMe: 'تذكرني',
       forgotPassword: 'نسيت كلمة المرور؟',
-      demoCredentials: 'بيانات تجريبية',
       welcomeBack: 'أهلاً بعودتك',
       loginSuccess: 'تم تسجيل الدخول بنجاح',
       loginError: 'خطأ في تسجيل الدخول',
