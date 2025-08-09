@@ -193,6 +193,20 @@ export const COMPONENT_REGISTRY = {
     () => import('../Visits/VisitsManagement'),
     'جاري تحميل إدارة الزيارات...'
   ),
+  
+  // Enhanced Clinic Management System
+  EnhancedClinicRegistration: createLazyComponent(
+    () => import('../Clinics/EnhancedClinicRegistration'),
+    'جاري تحميل تسجيل العيادات المحسن...'
+  ),
+  AdminRegistrationLogs: createLazyComponent(
+    () => import('../Clinics/AdminRegistrationLogs'),
+    'جاري تحميل سجلات التسجيل الإدارية...'
+  ),
+  AvailableClinics: createLazyComponent(
+    () => import('../Clinics/AvailableClinics'),
+    'جاري تحميل العيادات المتاحة...'
+  ),
 
   GPSTracking: createLazyComponent(
     () => import('../GPS/GPSTracking'),
