@@ -10,6 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import jwt
 import hashlib
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import uvicorn
