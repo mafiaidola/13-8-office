@@ -99,6 +99,10 @@ export const COMPONENT_REGISTRY = {
     () => import('../Users/UserManagement'),
     'جاري تحميل إدارة المستخدمين...'
   ),
+  AddUserModal: createLazyComponent(
+    () => import('../Users/AddUserModal'),
+    'جاري تحميل نافذة إضافة مستخدم...'
+  ),
 
   // Clinic Management
   RepClinicRegistration: createLazyComponent(
