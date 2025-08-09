@@ -124,7 +124,7 @@ async def login(login_data: dict):
                 admin_user = {
                     "id": "admin-001",
                     "username": "admin",
-                    "password": hash_password("admin123"),
+                    "password_hash": hash_password("admin123"),
                     "full_name": "System Administrator",
                     "role": "admin",
                     "is_active": True,
