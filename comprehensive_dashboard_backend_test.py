@@ -1,26 +1,36 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Comprehensive Backend Testing for Dashboard and Theme Functionality
+اختبار شامل للباكند للتأكد من أن جميع APIs تعمل بشكل صحيح - Dashboard Focus
+Comprehensive Backend Testing for Dashboard APIs - Arabic Review
+تاريخ: 2025
+الهدف: اختبار شامل للباكند مع التركيز على dashboard stats و APIs الأساسية بعد إصلاح مشاكل الـ responsive design وإعادة تفعيل نظام المصادقة
+
 Focus Areas:
-1. Authentication System: Test admin/admin123 login
-2. Dashboard APIs: Test all endpoints used by dashboard for stats and metrics
-3. User Management APIs: Ensure users list is working correctly  
-4. Theme System: Verify no backend issues affecting theme switching
-5. Debt Collection APIs: Test debt summary statistics
-6. Product/Clinic/Visit APIs: Verify all core APIs are functional
-7. Export/Reports: Test any backend support for report generation
+1. تسجيل دخول admin/admin123 والحصول على JWT token
+2. اختبار GET /api/dashboard/stats - إحصائيات لوحة التحكم الأساسية
+3. اختبار GET /api/users - قائمة المستخدمين
+4. اختبار GET /api/clinics - قائمة العيادات 
+5. اختبار GET /api/products - قائمة المنتجات
+6. اختبار GET /api/orders - قائمة الطلبات
+7. التحقق من أن جميع APIs ترجع بيانات صحيحة ومنسقة
+8. التحقق من أن المستخدم admin لديه الصلاحيات اللازمة للوصول لجميع البيانات
 """
 
 import requests
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 import os
 
-# Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com')
+# إعدادات الاختبار - استخدام URL الصحيح من frontend/.env
+BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
+TEST_CREDENTIALS = {
+    "username": "admin",
+    "password": "admin123"
+}
 
 class ComprehensiveDashboardTester:
     def __init__(self):
