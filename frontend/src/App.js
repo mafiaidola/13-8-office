@@ -614,53 +614,105 @@ const LoginForm = () => {
     setLoading(true);
     setError('');
 
-    // محاولة الحصول على الموقع الجغرافي
+    console.log('🔑 بدء عملية تسجيل الدخول:', credentials.username);
+
+    // محاولة الحصول على الموقع الجغرافي مع معالجة محسنة
     let geolocationData = null;
     try {
       if (navigator.geolocation) {
+        console.log('📍 محاولة الحصول على الموقع الجغرافي...');
+        
         await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            console.log('⏰ انتهت مهلة الحصول على الموقع، الاستمرار بدون موقع');
+            resolve();
+          }, 3000); // مهلة 3 ثوان فقط
+
           navigator.geolocation.getCurrentPosition(
             (position) => {
+              clearTimeout(timeout);
               geolocationData = {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
                 accuracy: position.coords.accuracy,
                 timestamp: new Date().toISOString(),
-                // يمكن إضافة reverse geocoding هنا لاحقاً
-                city: "Unknown",
+                city: "Unknown", // يمكن إضافة reverse geocoding لاحقاً
                 country: "Unknown",
-                address: ""
+                address: "",
+                altitude: position.coords.altitude,
+                heading: position.coords.heading,
+                speed: position.coords.speed
               };
+              
+              console.log('✅ تم الحصول على الموقع الجغرافي:', {
+                lat: geolocationData.latitude.toFixed(6),
+                lng: geolocationData.longitude.toFixed(6),
+                accuracy: Math.round(geolocationData.accuracy) + 'm'
+              });
               resolve();
             },
             (error) => {
-              console.warn('⚠️ لم يتم الحصول على الموقع الجغرافي:', error.message);
+              clearTimeout(timeout);
+              console.warn('⚠️ فشل في الحصول على الموقع الجغرافي:', {
+                code: error.code,
+                message: error.message,
+                permission_denied: error.code === 1,
+                position_unavailable: error.code === 2,
+                timeout: error.code === 3
+              });
               resolve(); // نستمر حتى لو فشل الحصول على الموقع
             },
             {
               enableHighAccuracy: true,
-              timeout: 5000,
-              maximumAge: 60000
+              timeout: 2500,
+              maximumAge: 30000
             }
           );
         });
+      } else {
+        console.warn('⚠️ المتصفح لا يدعم تحديد الموقع الجغرافي');
       }
     } catch (error) {
-      console.warn('⚠️ خطأ في الحصول على الموقع الجغرافي:', error.message);
+      console.warn('⚠️ خطأ في معالجة الموقع الجغرافي:', error.message);
     }
 
-    // إضافة معلومات الجهاز وIP
+    // جمع معلومات إضافية عن الجلسة
+    const sessionInfo = {
+      user_agent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      screen_resolution: `${screen.width}x${screen.height}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      connection_type: navigator.connection ? navigator.connection.effectiveType : 'unknown'
+    };
+
+    // إضافة معلومات شاملة للطلب
     const enhancedCredentials = {
       ...credentials,
       geolocation: geolocationData,
       device_info: navigator.userAgent,
-      ip_address: "Unknown", // يمكن الحصول عليه من الخادم
-      login_timestamp: new Date().toISOString()
+      ip_address: "Unknown", // سيتم الحصول عليه من الخادم
+      login_timestamp: new Date().toISOString(),
+      session_info: sessionInfo,
+      browser_features: {
+        cookies_enabled: navigator.cookieEnabled,
+        java_enabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
+        online: navigator.onLine,
+        touch_support: 'ontouchstart' in window
+      }
     };
+    
+    console.log('📤 إرسال بيانات تسجيل الدخول:', {
+      username: enhancedCredentials.username,
+      has_geolocation: !!geolocationData,
+      device_info: enhancedCredentials.device_info.substring(0, 50) + '...'
+    });
     
     const result = await login(enhancedCredentials);
     
     if (result.success) {
+      console.log('✅ نجح تسجيل الدخول، سيتم توجيهك للوحة التحكم');
+      
       // Force immediate re-render by updating a dummy state
       setLoading(false);
       
@@ -682,6 +734,7 @@ const LoginForm = () => {
       }, 500);
       
     } else {
+      console.error('❌ فشل تسجيل الدخول:', result.error);
       setError(result.error);
       setLoading(false);
     }
