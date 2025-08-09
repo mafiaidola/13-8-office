@@ -93,6 +93,18 @@ export const COMPONENT_REGISTRY = {
     () => import('../Dashboard/AccountingDashboard'),
     'جاري تحميل لوحة تحكم المحاسبة...'
   ),
+  ManagerDashboard: createLazyComponent(
+    () => import('../Dashboard/ManagerDashboard'),
+    'جاري تحميل لوحة تحكم المدير...'
+  ),
+  SalesRepresentativeDashboard: createLazyComponent(
+    () => import('../Dashboard/SalesRepresentativeDashboard'),
+    'جاري تحميل لوحة تحكم المندوب التجاري...'
+  ),
+  MedicalRepresentativeDashboard: createLazyComponent(
+    () => import('../Dashboard/MedicalRepresentativeDashboard'),
+    'جاري تحميل لوحة تحكم المندوب الطبي...'
+  ),
 
   // User Management
   UserManagement: createLazyComponent(
