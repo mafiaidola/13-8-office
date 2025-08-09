@@ -279,38 +279,56 @@ const AdminDashboard = ({
       )}
 
       {/* الرسوم البيانية والتحليلات */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* أداء النظام */}
-        <SalesPerformance 
-          data={[
-            { period: 'اليوم', sales: 15000, target: 12000, orders: 45 },
-            { period: 'أمس', sales: 8500, target: 12000, orders: 32 },
-            { period: 'قبل يومين', sales: 22000, target: 12000, orders: 67 },
-            { period: 'قبل 3 أيام', sales: 18000, target: 12000, orders: 54 }
-          ]}
-          title="أداء النظام العام"
-          timeFilter={timeFilter}
-          onExport={(data) => console.log('تصدير بيانات الأداء:', data)}
-          onViewDetails={(data) => console.log('عرض تفاصيل الأداء:', data)}
-        />
+        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center">
+              <span className="text-blue-600 mr-3 text-2xl">📈</span>
+              أداء النظام العام
+            </h3>
+            <p className="text-gray-700 font-medium mt-2">تحليل شامل لأداء النظام والمبيعات</p>
+          </div>
+          <SalesPerformance 
+            data={[
+              { period: 'اليوم', sales: 15000, target: 12000, orders: 45 },
+              { period: 'أمس', sales: 8500, target: 12000, orders: 32 },
+              { period: 'قبل يومين', sales: 22000, target: 12000, orders: 67 },
+              { period: 'قبل 3 أيام', sales: 18000, target: 12000, orders: 54 }
+            ]}
+            title=""
+            timeFilter={timeFilter}
+            onExport={(data) => console.log('تصدير بيانات الأداء:', data)}
+            onViewDetails={(data) => console.log('عرض تفاصيل الأداء:', data)}
+          />
+        </div>
 
         {/* اتجاهات الاستخدام */}
-        <LineCharts 
-          data={[
-            { x: 'الإثنين', y: 120 },
-            { x: 'الثلاثاء', y: 150 },
-            { x: 'الأربعاء', y: 180 },
-            { x: 'الخميس', y: 165 },
-            { x: 'الجمعة', y: 200 },
-            { x: 'السبت', y: 145 },
-            { x: 'الأحد', y: 110 }
-          ]}
-          title="اتجاهات استخدام النظام"
-          xAxisLabel="أيام الأسبوع"
-          yAxisLabel="عدد المستخدمين النشطين"
-          interactive={true}
-          onDataPointClick={(item, index) => console.log('نقر على:', item)}
-        />
+        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center">
+              <span className="text-purple-600 mr-3 text-2xl">📊</span>
+              اتجاهات استخدام النظام
+            </h3>
+            <p className="text-gray-700 font-medium mt-2">معدل استخدام النظام خلال الأسبوع</p>
+          </div>
+          <LineCharts 
+            data={[
+              { x: 'الإثنين', y: 120 },
+              { x: 'الثلاثاء', y: 150 },
+              { x: 'الأربعاء', y: 180 },
+              { x: 'الخميس', y: 165 },
+              { x: 'الجمعة', y: 200 },
+              { x: 'السبت', y: 145 },
+              { x: 'الأحد', y: 110 }
+            ]}
+            title=""
+            xAxisLabel="أيام الأسبوع"
+            yAxisLabel="عدد المستخدمين النشطين"
+            interactive={true}
+            onDataPointClick={(item, index) => console.log('نقر على:', item)}
+          />
+        </div>
       </div>
 
       {/* الملخص المالي */}
