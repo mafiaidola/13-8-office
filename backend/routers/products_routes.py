@@ -246,7 +246,11 @@ async def get_products(
             ]
         
         if brand:
-            query["brand"] = {"$regex": brand, "$options": "i"}
+            # Search in both 'brand' and 'category' fields for compatibility
+            query["$or"] = query.get("$or", []) + [
+                {"brand": {"$regex": brand, "$options": "i"}},
+                {"category": {"$regex": brand, "$options": "i"}}
+            ]
         
         if medical_category:
             query["medical_category"] = {"$regex": medical_category, "$options": "i"}
