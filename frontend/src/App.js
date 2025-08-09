@@ -613,8 +613,52 @@ const LoginForm = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // محاولة الحصول على الموقع الجغرافي
+    let geolocationData = null;
+    try {
+      if (navigator.geolocation) {
+        await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              geolocationData = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString(),
+                // يمكن إضافة reverse geocoding هنا لاحقاً
+                city: "Unknown",
+                country: "Unknown",
+                address: ""
+              };
+              resolve();
+            },
+            (error) => {
+              console.warn('⚠️ لم يتم الحصول على الموقع الجغرافي:', error.message);
+              resolve(); // نستمر حتى لو فشل الحصول على الموقع
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 60000
+            }
+          );
+        });
+      }
+    } catch (error) {
+      console.warn('⚠️ خطأ في الحصول على الموقع الجغرافي:', error.message);
+    }
+
+    // إضافة معلومات الجهاز وIP
+    const enhancedCredentials = {
+      ...credentials,
+      geolocation: geolocationData,
+      device_info: navigator.userAgent,
+      ip_address: "Unknown", // يمكن الحصول عليه من الخادم
+      login_timestamp: new Date().toISOString()
+    };
     
-    const result = await login(credentials);
+    const result = await login(enhancedCredentials);
     
     if (result.success) {
       // Force immediate re-render by updating a dummy state
