@@ -410,20 +410,19 @@ async def get_login_logs(
     date_from: Optional[str] = Query(None, description="من تاريخ"),
     date_to: Optional[str] = Query(None, description="إلى تاريخ")
 ):
-    """Get login logs (Admin and GM only)"""
+    """Get login logs - Admins see all, others see their own"""
     try:
-        # Check permissions
-        if current_user.get("role") not in ["admin", "gm"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Only administrators and general managers can view login logs"
-            )
-        
         # Build query
         query = {}
         
-        if user_id:
-            query["user_id"] = user_id
+        # Role-based access control
+        if current_user.get("role") in ["admin", "gm"]:
+            # Admin and GM can see all logs or filter by user_id
+            if user_id:
+                query["user_id"] = user_id
+        else:
+            # Other users can only see their own logs
+            query["user_id"] = current_user.get("user_id")
         
         if date_from:
             query["login_time"] = {"$gte": date_from}
@@ -451,7 +450,9 @@ async def get_login_logs(
                 "limit": limit,
                 "total_count": total_count,
                 "total_pages": (total_count + limit - 1) // limit
-            }
+            },
+            "user_access_level": current_user.get("role"),
+            "viewing_own_logs": current_user.get("role") not in ["admin", "gm"]
         }
         
     except Exception as e:
