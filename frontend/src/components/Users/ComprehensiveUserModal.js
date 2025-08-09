@@ -445,8 +445,8 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
                           <label className="block text-sm font-medium text-gray-700 mb-2">كلمة المرور الجديدة</label>
                           <input
                             type="password"
-                            name="new_password"
-                            value={formData.new_password || ''}
+                            name="password"
+                            value={formData.password || ''}
                             onChange={handleInputChange}
                             placeholder="اتركها فارغة إذا كنت لا تريد تغييرها"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
