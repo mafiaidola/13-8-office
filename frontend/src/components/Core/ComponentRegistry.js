@@ -181,6 +181,18 @@ export const COMPONENT_REGISTRY = {
     () => import('../Financial/IntegratedFinancialDashboard'),
     'جاري تحميل النظام المالي المتكامل...'
   ),
+  
+  // Enhanced Financial System  
+  UnifiedFinancialDashboard: createLazyComponent(
+    () => import('../Financial/UnifiedFinancialDashboard'),
+    'جاري تحميل النظام المالي الموحد...'
+  ),
+  
+  // Visits Management
+  VisitsManagement: createLazyComponent(
+    () => import('../Visits/VisitsManagement'),
+    'جاري تحميل إدارة الزيارات...'
+  ),
 
   GPSTracking: createLazyComponent(
     () => import('../GPS/GPSTracking'),
