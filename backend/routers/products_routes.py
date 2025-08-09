@@ -514,16 +514,22 @@ async def get_products_stats(current_user: dict = Depends(get_current_user)):
         # Get active products
         active_products = await db.products.count_documents({"is_active": True})
         
-        # Get products with low stock
+        # Get products with low stock (check both field names for compatibility)
         low_stock_products = await db.products.count_documents({
             "is_active": True,
-            "$expr": {"$lte": ["$stock_quantity", "$minimum_stock"]}
+            "$or": [
+                {"$expr": {"$lte": ["$stock_quantity", "$minimum_stock"]}},
+                {"$expr": {"$lte": ["$current_stock", 10]}}  # Default minimum for old structure
+            ]
         })
         
-        # Get out of stock products
+        # Get out of stock products (check both field names)
         out_of_stock_products = await db.products.count_documents({
             "is_active": True,
-            "stock_quantity": 0
+            "$or": [
+                {"stock_quantity": 0},
+                {"current_stock": 0}
+            ]
         })
         
         # Get products requiring prescription
