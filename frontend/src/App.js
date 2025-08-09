@@ -675,7 +675,6 @@ const LoginForm = () => {
               id="username"
               value={credentials.username}
               onChange={(e) => {
-                console.log('👤 Username changed:', e.target.value);
                 setCredentials(prev => ({ ...prev, username: e.target.value }));
               }}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
