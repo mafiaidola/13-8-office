@@ -3364,6 +3364,10 @@ if ENHANCED_ROUTERS_AVAILABLE:
     except Exception as e:
         print(f"⚠️ Error registering enhanced routers: {e}")
 
+# Keep legacy financial router for backward compatibility (but avoid duplication)
+if not ENHANCED_ROUTERS_AVAILABLE:
+    api_router.include_router(financial_router)
+
 # تسجيل الموجه المالي المتكامل (احتياطي)
 if FINANCIAL_SYSTEM_AVAILABLE:
     try:
