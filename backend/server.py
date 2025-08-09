@@ -56,6 +56,7 @@ app.include_router(user_router)
 app.include_router(lines_areas_router)
 app.include_router(excel_router)
 app.include_router(products_router)
+app.include_router(visits_router)
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
