@@ -26,12 +26,15 @@ import os
 class TestConfig:
     def __init__(self):
         # استخدام الـ URL من متغيرات البيئة
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('REACT_APP_BACKEND_URL='):
-                    self.BASE_URL = line.split('=')[1].strip()
-                    break
-        else:
+        try:
+            with open('/app/frontend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        self.BASE_URL = line.split('=')[1].strip()
+                        break
+                else:
+                    self.BASE_URL = "http://localhost:8001"
+        except:
             self.BASE_URL = "http://localhost:8001"
         
         self.API_BASE = f"{self.BASE_URL}/api"
