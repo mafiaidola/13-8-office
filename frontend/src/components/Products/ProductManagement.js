@@ -431,7 +431,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
                 <th className="px-6 py-4 text-right text-sm font-medium">المنتج</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الفئة</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">العلامة التجارية</th>
                 <th className="px-6 py-4 text-right text-sm font-medium">الخط</th>
                 <th className="px-6 py-4 text-right text-sm font-medium">الوحدة</th>
                 {canSeePrices && (
