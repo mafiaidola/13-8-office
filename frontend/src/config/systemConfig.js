@@ -208,6 +208,17 @@ export const SYSTEM_TABS = {
     description: { ar: 'إدارة شاملة للديون والمديونيات ومعالجة المدفوعات مع ربط الفواتير والمستخدمين', en: 'Comprehensive debt and collection management with invoice and user integration' },
     permissions: ['admin', 'gm', 'accounting', 'manager'],
     priority: 16
+  },
+
+  excel_management: {
+    id: 'excel_management',
+    path: '/excel-management',
+    name: { ar: 'إدارة Excel', en: 'Excel Management' },
+    icon: '📊',
+    permissions: ['admin', 'gm', 'manager', 'accounting'],
+    component: 'ExcelDashboard',
+    description: { ar: 'تصدير واستيراد البيانات بصيغة Excel', en: 'Export and import data in Excel format' },
+    priority: 17
   }
 };
 
