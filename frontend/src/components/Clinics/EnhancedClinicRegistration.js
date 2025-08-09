@@ -519,14 +519,352 @@ const EnhancedClinicRegistration = () => {
                 <p className="text-sm text-red-600">❌ {errors.location}</p>
               </div>
             )}
+        </div>
+
+        {/* قسم بيانات العيادة الأساسية */}
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            🏥 بيانات العيادة الأساسية
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                اسم العيادة *
+              </label>
+              <input
+                type="text"
+                value={formData.clinic_name}
+                onChange={(e) => handleInputChange('clinic_name', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.clinic_name ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="أدخل اسم العيادة"
+              />
+              {errors.clinic_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.clinic_name}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                رقم هاتف العيادة
+              </label>
+              <input
+                type="tel"
+                value={formData.clinic_phone}
+                onChange={(e) => handleInputChange('clinic_phone', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.clinic_phone ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="01xxxxxxxxx"
+              />
+              {errors.clinic_phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.clinic_phone}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                البريد الإلكتروني للعيادة
+              </label>
+              <input
+                type="email"
+                value={formData.clinic_email}
+                onChange={(e) => handleInputChange('clinic_email', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.clinic_email ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="clinic@example.com"
+              />
+              {errors.clinic_email && (
+                <p className="mt-1 text-sm text-red-600">{errors.clinic_email}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                عنوان العيادة *
+              </label>
+              <input
+                type="text"
+                value={formData.clinic_address}
+                onChange={(e) => handleInputChange('clinic_address', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.clinic_address ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="سيتم ملؤه تلقائياً من الخريطة"
+                readOnly
+              />
+              {errors.clinic_address && (
+                <p className="mt-1 text-sm text-red-600">{errors.clinic_address}</p>
+              )}
+            </div>
           </div>
         </div>
-            ...prev,
-            rep_latitude: userLoc.lat,
-            rep_longitude: userLoc.lng,
-            rep_location_accuracy: userLoc.accuracy,
-            device_info: navigator.userAgent
-          }));
+
+        {/* قسم بيانات الطبيب */}
+        <div className="bg-green-50 p-6 rounded-lg">
+          <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center">
+            👨‍⚕️ بيانات الطبيب
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-green-800 mb-2">
+                اسم الطبيب *
+              </label>
+              <input
+                type="text"
+                value={formData.doctor_name}
+                onChange={(e) => handleInputChange('doctor_name', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.doctor_name ? 'border-red-500' : 'border-green-300'
+                }`}
+                placeholder="د. أحمد محمد"
+              />
+              {errors.doctor_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.doctor_name}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-green-800 mb-2">
+                التخصص *
+              </label>
+              <input
+                type="text"
+                value={formData.doctor_specialty}
+                onChange={(e) => handleInputChange('doctor_specialty', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.doctor_specialty ? 'border-red-500' : 'border-green-300'
+                }`}
+                placeholder="طب عام، باطنة، أطفال..."
+              />
+              {errors.doctor_specialty && (
+                <p className="mt-1 text-sm text-red-600">{errors.doctor_specialty}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-green-800 mb-2">
+                رقم هاتف الطبيب
+              </label>
+              <input
+                type="tel"
+                value={formData.doctor_phone}
+                onChange={(e) => handleInputChange('doctor_phone', e.target.value)}
+                className="w-full px-3 py-3 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="01xxxxxxxxx"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* قسم التقسيم الإداري */}
+        <div className="bg-purple-50 p-6 rounded-lg">
+          <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center">
+            🗂️ التقسيم الإداري والجغرافي
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-purple-800 mb-2">
+                الخط *
+              </label>
+              <select
+                value={formData.line_id}
+                onChange={(e) => handleInputChange('line_id', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                  errors.line_id ? 'border-red-500' : 'border-purple-300'
+                }`}
+              >
+                <option value="">اختر الخط</option>
+                {formOptions.lines.map((line) => (
+                  <option key={line.id} value={line.id}>
+                    {line.name}
+                  </option>
+                ))}
+              </select>
+              {errors.line_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.line_id}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-purple-800 mb-2">
+                المنطقة *
+              </label>
+              <select
+                value={formData.area_id}
+                onChange={(e) => handleInputChange('area_id', e.target.value)}
+                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                  errors.area_id ? 'border-red-500' : 'border-purple-300'
+                }`}
+                disabled={!formData.line_id}
+              >
+                <option value="">اختر المنطقة</option>
+                {getFilteredAreas().map((area) => (
+                  <option key={area.id} value={area.id}>
+                    {area.name}
+                  </option>
+                ))}
+              </select>
+              {errors.area_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.area_id}</p>
+              )}
+              {!formData.line_id && (
+                <p className="mt-1 text-xs text-purple-600">يجب اختيار الخط أولاً</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* قسم تصنيفات العيادة - الجديد */}
+        <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
+          <h3 className="text-xl font-bold text-orange-900 mb-4 flex items-center">
+            ⭐ تصنيفات العيادة
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* تصنيف العيادة */}
+            <div>
+              <label className="block text-sm font-medium text-orange-800 mb-2">
+                تصنيف العيادة *
+              </label>
+              <select
+                value={formData.classification}
+                onChange={(e) => handleInputChange('classification', e.target.value)}
+                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                {formOptions.classifications.map((classification) => (
+                  <option 
+                    key={classification.value} 
+                    value={classification.value}
+                    style={{ color: classification.color }}
+                  >
+                    {classification.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-orange-600">
+                تصنيف العيادة حسب الأداء والجودة
+              </p>
+            </div>
+
+            {/* التصنيف الائتماني */}
+            <div>
+              <label className="block text-sm font-medium text-orange-800 mb-2">
+                التصنيف الائتماني *
+              </label>
+              <select
+                value={formData.credit_classification}
+                onChange={(e) => handleInputChange('credit_classification', e.target.value)}
+                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                {formOptions.credit_classifications.map((classification) => (
+                  <option 
+                    key={classification.value} 
+                    value={classification.value}
+                    style={{ color: classification.color }}
+                  >
+                    {classification.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-orange-600">
+                التصنيف الائتماني للعيادة (أخضر/أصفر/أحمر)
+              </p>
+            </div>
+
+            {/* ملاحظات التصنيف */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-orange-800 mb-2">
+                ملاحظات التصنيف
+              </label>
+              <textarea
+                value={formData.classification_notes}
+                onChange={(e) => handleInputChange('classification_notes', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="ملاحظات حول تصنيف العيادة (اختياري)..."
+              />
+            </div>
+          </div>
+
+          {/* عرض التصنيفات المختارة */}
+          <div className="mt-4 p-4 bg-white rounded-md border border-orange-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">التصنيفات المختارة:</h4>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  🏥 {getClassificationLabel(formData.classification)}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  💳 {getCreditClassificationLabel(formData.credit_classification)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* قسم الملاحظات */}
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            📝 ملاحظات إضافية
+          </h3>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              ملاحظات التسجيل
+            </label>
+            <textarea
+              value={formData.registration_notes}
+              onChange={(e) => handleInputChange('registration_notes', e.target.value)}
+              rows={4}
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="أي ملاحظات إضافية حول العيادة أو عملية التسجيل..."
+            />
+          </div>
+        </div>
+
+        {/* أزرار التحكم */}
+        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            ⬅️ رجوع
+          </button>
+          
+          <button
+            type="submit"
+            disabled={loading || !mapLoaded}
+            className={`px-8 py-3 border border-transparent rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              loading || !mapLoaded
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                جاري التسجيل...
+              </span>
+            ) : (
+              '✅ تسجيل العيادة'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default EnhancedClinicRegistration;
 
           // إذا كانت الخريطة محملة، قم بتحديث موقع العيادة الافتراضي
           if (mapLoaded && !locationData.clinic_latitude) {
