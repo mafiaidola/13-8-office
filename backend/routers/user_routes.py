@@ -81,7 +81,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         payload = verify_jwt_token(token)
         
         # Get user from database
-        user_data = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0})
+        user_data = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0, "password": 0})
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
