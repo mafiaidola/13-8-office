@@ -11,7 +11,7 @@ const LineCharts = ({
   showPoints = true,
   height = 300,
   colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-  chartType = 'line', // line, area, bar
+  chartType: initialChartType = 'line', // line, area, bar
   interactive = true,
   onDataPointClick
 }) => {
@@ -19,6 +19,7 @@ const LineCharts = ({
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [viewMode, setViewMode] = useState('chart'); // chart, data
   const [selectedSeries, setSelectedSeries] = useState([]);
+  const [chartType, setChartType] = useState(initialChartType);
   const chartRef = useRef(null);
 
   // معالجة البيانات
