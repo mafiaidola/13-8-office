@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../localization/translations.js';
 import ClinicMiniProfile from './ClinicMiniProfile.js';
+import ExcelManager from '../Excel/ExcelManager.js';
 import axios from 'axios';
 import { activityLogger } from '../../utils/activityLogger.js';
 
