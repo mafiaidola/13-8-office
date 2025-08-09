@@ -335,7 +335,7 @@ class CreateFinancialRecordRequest(BaseModel):
 class ProcessPaymentRequest(BaseModel):
     """طلب معالجة دفعة"""
     financial_record_id: str
-    amount: Decimal
+    amount: Decimal = Field(gt=0, description="مبلغ الدفعة (يجب أن يكون أكبر من صفر)")
     payment_method: PaymentMethod
     reference_number: Optional[str] = None
     notes: Optional[str] = None
