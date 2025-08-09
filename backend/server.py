@@ -245,6 +245,29 @@ async def log_user_login(user_info: dict, geolocation: dict = None, device_info:
         else:
             print(f"❌ فشل في الحصول على inserted_id")
         
+        # تسجيل النشاط في مجموعة الأنشطة
+        activity_record = {
+            "_id": str(uuid.uuid4()),
+            "activity_type": "login",
+            "description": f"تسجيل دخول للنظام - {user_info['role']}",
+            "user_id": user_info["id"],
+            "user_name": user_info["full_name"] or user_info["username"],
+            "user_role": user_info["role"],
+            "ip_address": ip_address or "Unknown IP",
+            "location": f"{geolocation.get('city', 'Unknown')}, {geolocation.get('country', 'Unknown')}" if geolocation else "Unknown Location",
+            "device_info": device_info or "Unknown Device",
+            "details": f"جلسة جديدة: {login_log['session_id'][:8]}...",
+            "geolocation": geolocation,
+            "timestamp": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        try:
+            await db.activities.insert_one(activity_record)
+            print(f"✅ تم تسجيل نشاط تسجيل الدخول للمستخدم: {user_info['username']}")
+        except Exception as activity_error:
+            print(f"⚠️ خطأ في تسجيل النشاط: {activity_error}")
+        
         # عرض إحصائيات سريعة
         total_logs = await db.login_logs.count_documents({})
         user_logs = await db.login_logs.count_documents({"username": user_info["username"]})
