@@ -398,7 +398,10 @@ const EnhancedClinicRegistration = () => {
 
   const getFilteredAreas = () => {
     if (!formData.line_id) return [];
-    return formOptions.areas.filter(area => area.parent_line_id === formData.line_id);
+    // فلترة المناطق حسب الخط المختار من APIs النظام الأساسية
+    return formOptions.areas.filter(area => 
+      area.parent_line_id === formData.line_id || area.line_id === formData.line_id
+    );
   };
 
   const validateForm = () => {
