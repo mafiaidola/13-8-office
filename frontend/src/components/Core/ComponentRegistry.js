@@ -69,6 +69,30 @@ export const COMPONENT_REGISTRY = {
     () => import('../Dashboard/Dashboard'),
     'جاري تحميل لوحة التحكم...'  
   ),
+  EnhancedDashboard: createLazyComponent(
+    () => import('../Dashboard/EnhancedDashboard'),
+    'جاري تحميل لوحة التحكم المحسنة...'
+  ),
+  RoleBasedDashboard: createLazyComponent(
+    () => import('../Dashboard/RoleBasedDashboard'),
+    'جاري تحميل لوحة التحكم حسب الدور...'
+  ),
+  AdminDashboard: createLazyComponent(
+    () => import('../Dashboard/AdminDashboard'),
+    'جاري تحميل لوحة تحكم المدير...'
+  ),
+  GMDashboard: createLazyComponent(
+    () => import('../Dashboard/GMDashboard'),
+    'جاري تحميل لوحة تحكم المدير العام...'
+  ),
+  MedicalRepDashboard: createLazyComponent(
+    () => import('../Dashboard/MedicalRepDashboard'),
+    'جاري تحميل لوحة تحكم المندوب الطبي...'
+  ),
+  AccountingDashboard: createLazyComponent(
+    () => import('../Dashboard/AccountingDashboard'),
+    'جاري تحميل لوحة تحكم المحاسبة...'
+  ),
 
   // User Management
   UserManagement: createLazyComponent(
