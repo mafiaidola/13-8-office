@@ -491,6 +491,17 @@ const ClinicsManagement = ({ user, language, isRTL }) => {
         </div>
       </div>
 
+      {/* Excel Management Section */}
+      <ExcelManager
+        dataType="clinics"
+        title="العيادات"
+        icon="🏥"
+        onImportComplete={() => {
+          fetchClinics(); // إعادة تحميل البيانات بعد الاستيراد
+        }}
+        className="mb-6"
+      />
+
       {/* Filters */}
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
