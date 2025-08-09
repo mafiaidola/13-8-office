@@ -117,8 +117,7 @@ const VisitsManagement = () => {
         return;
       }
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
-      const response = await axios.post(`${backendUrl}/api/visits/`, {
+      const response = await axios.post(`${API_BASE}/api/visits/`, {
         ...newVisit,
         scheduled_date: new Date(newVisit.scheduled_date).toISOString()
       }, {
