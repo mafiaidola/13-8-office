@@ -208,16 +208,6 @@ export const SYSTEM_TABS = {
     description: { ar: 'إدارة شاملة للديون والمديونيات ومعالجة المدفوعات مع ربط الفواتير والمستخدمين', en: 'Comprehensive debt and collection management with invoice and user integration' },
     permissions: ['admin', 'gm', 'accounting', 'manager'],
     priority: 16
-  },
-
-  gamification: {
-    id: 'gamification',
-    path: '/gamification',
-    name: { ar: 'نظام التحفيز', en: 'Gamification' },
-    icon: '🎮',
-    permissions: ['admin', 'gm', 'line_manager'],
-    component: 'GamificationSystem',
-    priority: 17
   }
 };
 
