@@ -1,5 +1,378 @@
 #!/usr/bin/env python3
 """
+اختبار سريع لإصلاح النظام المالي - Arabic Review
+Quick test for financial system fixes
+
+المطلوب اختبار:
+1. التحقق من إصلاح endpoint العيادات: GET /api/clinics
+2. التحقق من إصلاح إحصائيات الديون: GET /api/debts/statistics/overview
+3. اختبار تدفق الفاتورة السريع إذا كانت العيادات تعمل
+
+الهدف: التأكد من أن الإصلاحات حلت المشاكل الأساسية والوصول لمعدل نجاح أعلى
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://3cea5fc2-9f6b-4b4e-9dbe-7a3c938a0e71.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
+
+class FinancialSystemQuickTest:
+    def __init__(self):
+        self.session = requests.Session()
+        self.token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    def log_test(self, test_name, success, response_time, details=""):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "response_time_ms": round(response_time * 1000, 2),
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {details} ({result['response_time_ms']}ms)")
+        
+    def login_admin(self):
+        """تسجيل دخول الأدمن"""
+        try:
+            start_time = time.time()
+            response = self.session.post(f"{API_BASE}/auth/login", json={
+                "username": "admin",
+                "password": "admin123"
+            })
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+                user_info = data.get("user", {})
+                self.log_test(
+                    "Admin Login", 
+                    True, 
+                    response_time,
+                    f"User: {user_info.get('full_name', 'Admin')}, Role: {user_info.get('role', 'admin')}"
+                )
+                return True
+            else:
+                self.log_test("Admin Login", False, response_time, f"HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Login", False, 0, f"Error: {str(e)}")
+            return False
+    
+    def test_clinics_endpoint(self):
+        """اختبار endpoint العيادات المُصلح"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{API_BASE}/clinics")
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                clinics_count = len(data) if isinstance(data, list) else data.get('total', 0)
+                self.log_test(
+                    "GET /api/clinics - Fixed Endpoint", 
+                    True, 
+                    response_time,
+                    f"Found {clinics_count} clinics - Endpoint working!"
+                )
+                return data
+            else:
+                self.log_test(
+                    "GET /api/clinics - Fixed Endpoint", 
+                    False, 
+                    response_time, 
+                    f"HTTP {response.status_code} - Still not working"
+                )
+                return None
+                
+        except Exception as e:
+            self.log_test("GET /api/clinics - Fixed Endpoint", False, 0, f"Error: {str(e)}")
+            return None
+    
+    def test_debt_statistics_fix(self):
+        """اختبار إصلاح إحصائيات الديون"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{API_BASE}/debts/statistics/overview")
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log_test(
+                    "GET /api/debts/statistics/overview - rep_id Fix", 
+                    True, 
+                    response_time,
+                    f"Statistics working - No rep_id error!"
+                )
+                return data
+            else:
+                error_msg = "Unknown error"
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get('detail', f"HTTP {response.status_code}")
+                except:
+                    error_msg = f"HTTP {response.status_code}"
+                    
+                self.log_test(
+                    "GET /api/debts/statistics/overview - rep_id Fix", 
+                    False, 
+                    response_time, 
+                    f"Still failing: {error_msg}"
+                )
+                return None
+                
+        except Exception as e:
+            self.log_test("GET /api/debts/statistics/overview - rep_id Fix", False, 0, f"Error: {str(e)}")
+            return None
+    
+    def test_invoice_flow_if_clinics_work(self, clinics_data):
+        """اختبار تدفق الفاتورة السريع إذا كانت العيادات تعمل"""
+        if not clinics_data:
+            self.log_test(
+                "Invoice Flow Test", 
+                False, 
+                0, 
+                "Skipped - Clinics endpoint not working"
+            )
+            return False
+            
+        try:
+            # Get first clinic for testing
+            clinic_id = None
+            if isinstance(clinics_data, list) and len(clinics_data) > 0:
+                clinic_id = clinics_data[0].get('id') or clinics_data[0].get('_id')
+            elif isinstance(clinics_data, dict) and 'data' in clinics_data:
+                if len(clinics_data['data']) > 0:
+                    clinic_id = clinics_data['data'][0].get('id') or clinics_data['data'][0].get('_id')
+            
+            if not clinic_id:
+                self.log_test(
+                    "Invoice Flow Test", 
+                    False, 
+                    0, 
+                    "No valid clinic ID found for testing"
+                )
+                return False
+            
+            # Test creating invoice
+            start_time = time.time()
+            invoice_data = {
+                "clinic_id": clinic_id,
+                "amount": 1500.00,
+                "description": "اختبار فاتورة سريع",
+                "due_date": "2025-02-15"
+            }
+            
+            response = self.session.post(f"{API_BASE}/invoices", json=invoice_data)
+            response_time = time.time() - start_time
+            
+            if response.status_code in [200, 201]:
+                invoice_result = response.json()
+                invoice_id = invoice_result.get('id') or invoice_result.get('invoice_id')
+                
+                self.log_test(
+                    "Create Invoice", 
+                    True, 
+                    response_time,
+                    f"Invoice created: {invoice_id}"
+                )
+                
+                # Test approving invoice
+                if invoice_id:
+                    return self.test_approve_invoice(invoice_id)
+                else:
+                    self.log_test(
+                        "Invoice Flow Test", 
+                        False, 
+                        0, 
+                        "No invoice ID returned"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "Create Invoice", 
+                    False, 
+                    response_time, 
+                    f"HTTP {response.status_code}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("Invoice Flow Test", False, 0, f"Error: {str(e)}")
+            return False
+    
+    def test_approve_invoice(self, invoice_id):
+        """اختبار اعتماد الفاتورة وتحويلها لدين"""
+        try:
+            start_time = time.time()
+            response = self.session.put(f"{API_BASE}/invoices/{invoice_id}/approve")
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                self.log_test(
+                    "Approve Invoice", 
+                    True, 
+                    response_time,
+                    f"Invoice {invoice_id} approved successfully"
+                )
+                
+                # Check if it converted to debt
+                return self.verify_debt_conversion(invoice_id)
+            else:
+                self.log_test(
+                    "Approve Invoice", 
+                    False, 
+                    response_time, 
+                    f"HTTP {response.status_code}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("Approve Invoice", False, 0, f"Error: {str(e)}")
+            return False
+    
+    def verify_debt_conversion(self, invoice_id):
+        """التحقق من تحويل الفاتورة إلى دين"""
+        try:
+            start_time = time.time()
+            response = self.session.get(f"{API_BASE}/debts")
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                debts = response.json()
+                # Look for debt related to this invoice
+                invoice_debt = None
+                if isinstance(debts, list):
+                    for debt in debts:
+                        if debt.get('invoice_id') == invoice_id or debt.get('source_id') == invoice_id:
+                            invoice_debt = debt
+                            break
+                
+                if invoice_debt:
+                    self.log_test(
+                        "Verify Debt Conversion", 
+                        True, 
+                        response_time,
+                        f"Invoice converted to debt: {invoice_debt.get('id', 'Unknown ID')}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "Verify Debt Conversion", 
+                        False, 
+                        response_time,
+                        "Invoice not found in debts list"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "Verify Debt Conversion", 
+                    False, 
+                    response_time, 
+                    f"HTTP {response.status_code}"
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("Verify Debt Conversion", False, 0, f"Error: {str(e)}")
+            return False
+    
+    def run_all_tests(self):
+        """تشغيل جميع الاختبارات"""
+        print("🚀 بدء اختبار سريع لإصلاح النظام المالي...")
+        print("=" * 80)
+        
+        # 1. Login
+        if not self.login_admin():
+            print("❌ فشل تسجيل الدخول - توقف الاختبار")
+            return
+        
+        # 2. Test clinics endpoint fix
+        print("\n📋 اختبار إصلاح endpoint العيادات...")
+        clinics_data = self.test_clinics_endpoint()
+        
+        # 3. Test debt statistics fix
+        print("\n💰 اختبار إصلاح إحصائيات الديون...")
+        debt_stats = self.test_debt_statistics_fix()
+        
+        # 4. Test invoice flow if clinics work
+        print("\n🧾 اختبار تدفق الفاتورة السريع...")
+        self.test_invoice_flow_if_clinics_work(clinics_data)
+        
+        # Generate summary
+        self.generate_summary()
+    
+    def generate_summary(self):
+        """إنشاء ملخص النتائج"""
+        total_tests = len(self.test_results)
+        successful_tests = len([t for t in self.test_results if t['success']])
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(t['response_time_ms'] for t in self.test_results) / total_tests if total_tests > 0 else 0
+        
+        print("\n" + "=" * 80)
+        print("📊 ملخص نتائج اختبار إصلاح النظام المالي")
+        print("=" * 80)
+        
+        print(f"🎯 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)")
+        print(f"⏱️ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        print(f"🕐 إجمالي وقت التنفيذ: {total_time:.2f}s")
+        
+        print("\n📋 تفاصيل النتائج:")
+        for result in self.test_results:
+            status = "✅" if result['success'] else "❌"
+            print(f"{status} {result['test']}: {result['details']} ({result['response_time_ms']}ms)")
+        
+        # Key findings
+        print("\n🔍 النتائج الرئيسية:")
+        
+        clinics_test = next((t for t in self.test_results if "clinics" in t['test'].lower()), None)
+        if clinics_test:
+            if clinics_test['success']:
+                print("✅ إصلاح endpoint العيادات: تم بنجاح")
+            else:
+                print("❌ إصلاح endpoint العيادات: لا يزال يحتاج إصلاح")
+        
+        debt_stats_test = next((t for t in self.test_results if "debt" in t['test'].lower() and "statistics" in t['test'].lower()), None)
+        if debt_stats_test:
+            if debt_stats_test['success']:
+                print("✅ إصلاح إحصائيات الديون: تم بنجاح")
+            else:
+                print("❌ إصلاح إحصائيات الديون: لا يزال يحتاج إصلاح")
+        
+        invoice_tests = [t for t in self.test_results if "invoice" in t['test'].lower() or "debt conversion" in t['test'].lower()]
+        if invoice_tests:
+            invoice_success = all(t['success'] for t in invoice_tests)
+            if invoice_success:
+                print("✅ تدفق الفاتورة: يعمل بشكل صحيح")
+            else:
+                print("❌ تدفق الفاتورة: يحتاج مراجعة")
+        
+        # Overall assessment
+        print(f"\n🎯 التقييم العام:")
+        if success_rate >= 80:
+            print("🟢 النظام المالي يعمل بشكل جيد - الإصلاحات نجحت!")
+        elif success_rate >= 50:
+            print("🟡 النظام المالي يحتاج تحسينات إضافية")
+        else:
+            print("🔴 النظام المالي يحتاج إصلاحات جوهرية")
+
+if __name__ == "__main__":
+    tester = FinancialSystemQuickTest()
+    tester.run_all_tests()
+"""
 Comprehensive Invoice and Debt System Testing - Arabic Review
 اختبار شامل لنظام الفواتير والديون - المراجعة العربية
 
