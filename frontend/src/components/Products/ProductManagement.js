@@ -83,7 +83,7 @@ const ProductManagement = ({ user, language, isRTL }) => {
           id: 'prod-002',
           name: 'فيتامين د3',
           description: 'مكمل غذائي لتقوية العظام',
-          category: 'فيتامينات',
+          brand: 'Pfizer',
           unit: 'علبة',
           line_id: 'line-002',
           line_name: 'خط الإسكندرية',
