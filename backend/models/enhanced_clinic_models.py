@@ -14,22 +14,17 @@ from enum import Enum
 
 class ClinicClassification(str, Enum):
     """تصنيف العيادات حسب الأداء"""
-    EXCELLENT = "excellent"        # ممتاز - أخضر
-    VERY_GOOD = "very_good"       # جيد جداً - أزرق  
-    GOOD = "good"                 # جيد - أصفر
-    AVERAGE = "average"           # متوسط - برتقالي
-    POOR = "poor"                 # ضعيف - أحمر
+    CLASS_A_STAR = "class_a_star"    # Class A star 
+    CLASS_A = "class_a"              # Class A
+    CLASS_B = "class_b"              # Class B  
+    CLASS_C = "class_c"              # Class C
+    CLASS_D = "class_d"              # Class D
 
 class CreditClassification(str, Enum):
     """التصنيف الائتماني للعيادة"""
-    AAA = "aaa"                   # AAA - ممتاز جداً
-    AA = "aa"                     # AA - ممتاز
-    A = "a"                       # A - جيد جداً
-    BBB = "bbb"                   # BBB - جيد
-    BB = "bb"                     # BB - مقبول
-    B = "b"                       # B - ضعيف
-    CCC = "ccc"                   # CCC - خطر عالي
-    DEFAULT = "default"           # متعثر
+    GREEN = "green"                  # أخضر - تصنيف ائتماني جيد
+    YELLOW = "yellow"                # أصفر - تصنيف ائتماني مقبول  
+    RED = "red"                      # أحمر - يحتاج مراجعة الحسابات
 
 class ClinicStatus(str, Enum):
     """حالة العيادة"""
