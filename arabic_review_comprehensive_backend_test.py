@@ -323,27 +323,31 @@ class ArabicReviewComprehensiveTestSuite:
         result = await self.make_request("GET", "/activities/stats", token=self.admin_token)
         
         if result["success"]:
-            stats = result["data"]
+            stats = result["data"].get("stats", result["data"])
             
             # Check for expected statistics
-            has_total_activities = "total_activities" in stats
-            has_activity_types = "activity_types_breakdown" in stats or "by_type" in stats
-            has_recent_activities = "recent_activities_count" in stats or "recent" in stats
+            has_today_activities = "today_activities" in stats
+            has_today_logins = "today_logins" in stats
+            has_unique_users = "unique_users" in stats
+            has_clinic_visits = "clinic_visits" in stats
             
-            stats_count = sum([has_total_activities, has_activity_types, has_recent_activities])
+            stats_count = sum([has_today_activities, has_today_logins, has_unique_users, has_clinic_visits])
             
-            details = f"إحصائيات الأنشطة متاحة - {stats_count}/3 إحصائية أساسية"
-            if has_total_activities:
-                total = stats.get("total_activities", 0)
-                details += f", إجمالي الأنشطة: {total}"
+            details = f"إحصائيات الأنشطة متاحة - {stats_count}/4 إحصائية أساسية"
+            if has_today_activities:
+                total = stats.get("today_activities", 0)
+                details += f", أنشطة اليوم: {total}"
+            if has_today_logins:
+                logins = stats.get("today_logins", 0)
+                details += f", تسجيلات دخول: {logins}"
             
             self.log_test_result(
                 "GET /api/activities/stats",
-                stats_count >= 1,  # At least one statistic available
+                stats_count >= 2,  # At least 2 statistics available
                 details,
                 result["response_time"]
             )
-            return stats_count >= 1
+            return stats_count >= 2
         else:
             self.log_test_result(
                 "GET /api/activities/stats",
