@@ -209,103 +209,105 @@ const SalesPerformance = ({
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* رأس المكون مع الإجراءات السريعة */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-              <span className="text-blue-600 mr-2">📈</span>
-              {title}
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              تحليل شامل لأداء المبيعات والأهداف
-            </p>
+      {title && (
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <span className="text-blue-600 mr-2 text-2xl">📈</span>
+                {title}
+              </h3>
+              <p className="text-base font-medium text-gray-700 mt-1">
+                تحليل شامل لأداء المبيعات والأهداف
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <select
+                value={viewType}
+                onChange={(e) => setViewType(e.target.value)}
+                className="bg-white border-2 border-gray-300 rounded-lg px-4 py-2 font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="chart">📊 رسم بياني</option>
+                <option value="table">📋 جدول</option>
+                <option value="summary">📈 ملخص</option>
+              </select>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <select
-              value={viewType}
-              onChange={(e) => setViewType(e.target.value)}
-              className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="chart">📊 رسم بياني</option>
-              <option value="table">📋 جدول</option>
-              <option value="summary">📈 ملخص</option>
-            </select>
-          </div>
-        </div>
 
-        {/* الإجراءات السريعة */}
-        <div className="flex flex-wrap gap-2">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={action.onClick}
-              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${action.color}`}
-            >
-              <span className="mr-1">{action.icon}</span>
-              {action.label}
-            </button>
-          ))}
+          {/* الإجراءات السريعة */}
+          <div className="flex flex-wrap gap-3">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold transition-all border-2 ${action.color} shadow-sm hover:shadow-md`}
+              >
+                <span className="mr-2 text-lg">{action.icon}</span>
+                {action.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* بطاقات الملخص المحسنة */}
-      <div className="p-6 bg-gray-50 border-b border-gray-100">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="bg-blue-500 rounded-full p-2 mr-3">
-                <span className="text-white text-lg">💰</span>
+      <div className="p-6 bg-white border-b border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-300 hover:shadow-xl transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-500 rounded-full p-3 mr-4">
+                <span className="text-white text-2xl">💰</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-blue-600">
+                <div className="text-2xl font-black text-blue-700">
                   {summary.totalSales.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">إجمالي المبيعات</div>
+                <div className="font-bold text-gray-900">إجمالي المبيعات</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="bg-green-500 rounded-full p-2 mr-3">
-                <span className="text-white text-lg">🎯</span>
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-300 hover:shadow-xl transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="bg-green-500 rounded-full p-3 mr-4">
+                <span className="text-white text-2xl">🎯</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-2xl font-black text-green-700">
                   {summary.totalTarget.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">إجمالي الأهداف</div>
+                <div className="font-bold text-gray-900">إجمالي الأهداف</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="bg-purple-500 rounded-full p-2 mr-3">
-                <span className="text-white text-lg">📦</span>
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-300 hover:shadow-xl transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="bg-purple-500 rounded-full p-3 mr-4">
+                <span className="text-white text-2xl">📦</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-purple-600">
+                <div className="text-2xl font-black text-purple-700">
                   {summary.totalOrders.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">عدد الطلبات</div>
+                <div className="font-bold text-gray-900">عدد الطلبات</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="bg-orange-500 rounded-full p-2 mr-3">
-                <span className="text-white text-lg">📊</span>
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-orange-300 hover:shadow-xl transition-shadow">
+            <div className="flex items-center mb-4">
+              <div className="bg-orange-500 rounded-full p-3 mr-4">
+                <span className="text-white text-2xl">📊</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-orange-600">
+                <div className="text-2xl font-black text-orange-700">
                   {summary.achievementRate.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600">معدل الإنجاز</div>
+                <div className="font-bold text-gray-900">معدل الإنجاز</div>
               </div>
             </div>
           </div>
@@ -313,7 +315,7 @@ const SalesPerformance = ({
       </div>
 
       {/* مؤشر التقدم الإجمالي المحسن */}
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-6 border-b border-gray-200">
         <CommonDashboardComponents.ProgressBar 
           title="إجمالي الإنجاز للفترة"
           current={summary.totalSales}
@@ -368,24 +370,24 @@ const SalesPerformance = ({
                 </div>
 
                 {/* التحليل التفصيلي */}
-                <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-6 border border-gray-100">
-                  <h4 className="font-semibold mb-4 flex items-center">
-                    <span className="mr-2">📋</span>
+                <div className="bg-white rounded-lg p-6 border-2 border-gray-200">
+                  <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span className="mr-2 text-2xl">📋</span>
                     تحليل شامل للأداء
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">إجمالي المبيعات:</span>
-                        <span className="font-semibold">{summary.totalSales.toLocaleString()} ج.م</span>
+                        <span className="font-bold text-gray-900">إجمالي المبيعات:</span>
+                        <span className="font-black text-lg">{summary.totalSales.toLocaleString()} ج.م</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">معدل الإنجاز:</span>
-                        <span className="font-semibold">{summary.achievementRate.toFixed(1)}%</span>
+                        <span className="font-bold text-gray-900">معدل الإنجاز:</span>
+                        <span className="font-black text-lg">{summary.achievementRate.toFixed(1)}%</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">متوسط قيمة الطلب:</span>
-                        <span className="font-semibold">
+                        <span className="font-bold text-gray-900">متوسط قيمة الطلب:</span>
+                        <span className="font-black text-lg">
                           {summary.totalOrders > 0 ? (summary.totalSales / summary.totalOrders).toLocaleString() : 0} ج.م
                         </span>
                       </div>
@@ -393,16 +395,16 @@ const SalesPerformance = ({
                     
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">عدد الفترات:</span>
-                        <span className="font-semibold">{performanceData.length}</span>
+                        <span className="font-bold text-gray-900">عدد الفترات:</span>
+                        <span className="font-black text-lg">{performanceData.length}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">الحالة العامة:</span>
-                        <span className={`font-semibold px-3 py-1 rounded-full text-sm ${
-                          summary.achievementRate >= 100 ? 'bg-green-100 text-green-700' :
-                          summary.achievementRate >= 80 ? 'bg-blue-100 text-blue-700' :
-                          summary.achievementRate >= 60 ? 'bg-yellow-100 text-yellow-700' : 
-                          'bg-red-100 text-red-700'
+                        <span className="font-bold text-gray-900">الحالة العامة:</span>
+                        <span className={`font-black px-4 py-2 rounded-full border-2 ${
+                          summary.achievementRate >= 100 ? 'bg-green-100 text-green-800 border-green-300' :
+                          summary.achievementRate >= 80 ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                          summary.achievementRate >= 60 ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 
+                          'bg-red-100 text-red-800 border-red-300'
                         }`}>
                           {summary.achievementRate >= 100 ? '🏆 ممتاز' :
                            summary.achievementRate >= 80 ? '👍 جيد' :
