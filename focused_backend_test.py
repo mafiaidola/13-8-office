@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Configuration
-BACKEND_URL = "https://0c7671be-0c51-4a84-bbb3-9b77f9ff726f.preview.emergentagent.com/api"
+BACKEND_URL = "https://39bfa0e9-57ce-4da8-b444-8d148da868a0.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class FocusedBackendTester:
