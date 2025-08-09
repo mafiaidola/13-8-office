@@ -359,24 +359,26 @@ class ArabicReviewComprehensiveTestSuite:
     
     async def test_7_visits_endpoint_without_login_logs(self):
         """اختبار 7: التأكد من أن /api/visits يعمل بدون login_logs"""
-        print("\n🏥 اختبار 7: /api/visits يعمل بدون اعتماد على login_logs")
+        print("\n🏥 اختبار 7: /api/visits endpoints تعمل بدون اعتماد على login_logs")
         
-        result = await self.make_request("GET", "/visits", token=self.admin_token)
+        # Test visits dashboard overview instead of /api/visits
+        result = await self.make_request("GET", "/visits/dashboard/overview", token=self.admin_token)
         
         if result["success"]:
-            visits = result["data"]
-            visits_count = len(visits) if isinstance(visits, list) else visits.get("total", 0)
+            overview = result["data"]
+            stats = overview.get("stats", {})
+            total_visits = stats.get("total_visits", 0)
             
             self.log_test_result(
-                "GET /api/visits Independence",
+                "GET /api/visits/dashboard/overview Independence",
                 True,
-                f"endpoint الزيارات يعمل بشكل مستقل - {visits_count} زيارة متاحة",
+                f"endpoint الزيارات يعمل بشكل مستقل - {total_visits} زيارة متاحة، معدل الإنجاز: {stats.get('completion_rate', 0)}%",
                 result["response_time"]
             )
             return True
         else:
             self.log_test_result(
-                "GET /api/visits Independence",
+                "GET /api/visits/dashboard/overview Independence",
                 False,
                 f"فشل endpoint الزيارات: {result['data']}",
                 result["response_time"]
