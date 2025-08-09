@@ -3383,6 +3383,125 @@ async def delete_warehouse(warehouse_id: str, current_user: User = Depends(get_c
         raise HTTPException(status_code=500, detail="خطأ في حذف المخزن")
 
 
+@api_router.post("/warehouses/{warehouse_id}/products")
+async def add_product_to_warehouse(
+    warehouse_id: str, 
+    product_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """إضافة منتج إلى المخزن - Add product to warehouse"""
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "warehouse_manager", "accounting"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بإدارة مخزون المخازن")
+        
+        # Validate required fields
+        required_fields = ["product_id", "quantity"]
+        for field in required_fields:
+            if field not in product_data or product_data[field] is None:
+                raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
+        
+        # Check if warehouse exists
+        warehouse = await db.warehouses.find_one({"id": warehouse_id})
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="المخزن غير موجود")
+        
+        # Check if product exists
+        product = await db.products.find_one({"id": product_data["product_id"]})
+        if not product:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود")
+        
+        # Get current inventory
+        current_inventory = warehouse.get("products_inventory", {})
+        product_id = product_data["product_id"]
+        
+        # Update or add product to warehouse inventory
+        current_inventory[product_id] = {
+            "quantity": int(product_data["quantity"]),
+            "min_quantity": int(product_data.get("min_quantity", 10)),
+            "max_quantity": int(product_data.get("max_quantity", 1000)),
+            "last_updated": datetime.utcnow(),
+            "updated_by": current_user.id
+        }
+        
+        # Update warehouse in database
+        await db.warehouses.update_one(
+            {"id": warehouse_id},
+            {
+                "$set": {
+                    "products_inventory": current_inventory,
+                    "updated_at": datetime.utcnow(),
+                    "updated_by": current_user.id
+                }
+            }
+        )
+        
+        return {
+            "success": True, 
+            "message": f"تم إضافة المنتج '{product['name']}' إلى المخزن بكمية {product_data['quantity']}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error adding product to warehouse: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في إضافة المنتج إلى المخزن")
+
+
+@api_router.put("/warehouses/{warehouse_id}/products/{product_id}")
+async def update_warehouse_product_stock(
+    warehouse_id: str, 
+    product_id: str,
+    stock_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """تحديث كمية منتج في المخزن - Update product stock in warehouse"""
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "warehouse_manager", "accounting"]:
+            raise HTTPException(status_code=403, detail="غير مصرح لك بتحديث المخزون")
+        
+        # Check if warehouse exists
+        warehouse = await db.warehouses.find_one({"id": warehouse_id})
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="المخزن غير موجود")
+        
+        # Get current inventory
+        current_inventory = warehouse.get("products_inventory", {})
+        
+        if product_id not in current_inventory:
+            raise HTTPException(status_code=404, detail="المنتج غير موجود في هذا المخزن")
+        
+        # Update stock quantities
+        current_inventory[product_id].update({
+            "quantity": int(stock_data.get("quantity", current_inventory[product_id]["quantity"])),
+            "min_quantity": int(stock_data.get("min_quantity", current_inventory[product_id]["min_quantity"])),
+            "max_quantity": int(stock_data.get("max_quantity", current_inventory[product_id]["max_quantity"])),
+            "last_updated": datetime.utcnow(),
+            "updated_by": current_user.id
+        })
+        
+        # Update warehouse in database
+        await db.warehouses.update_one(
+            {"id": warehouse_id},
+            {
+                "$set": {
+                    "products_inventory": current_inventory,
+                    "updated_at": datetime.utcnow(),
+                    "updated_by": current_user.id
+                }
+            }
+        )
+        
+        return {"success": True, "message": "تم تحديث كمية المنتج في المخزن بنجاح"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating warehouse product stock: {str(e)}")
+        raise HTTPException(status_code=500, detail="خطأ في تحديث كمية المنتج")
+
+
 # ============================================================================
 # AREAS MANAGEMENT FIXES - إصلاحات إدارة المناطق
 # ============================================================================
