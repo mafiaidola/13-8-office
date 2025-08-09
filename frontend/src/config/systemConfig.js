@@ -46,9 +46,9 @@ export const SYSTEM_TABS = {
     id: 'clinic_registration',
     path: '/clinic-registration',
     icon: '🏥',
-    name: { ar: 'تسجيل العيادات', en: 'Clinic Registration' },
-    component: 'RepClinicRegistration',
-    description: { ar: 'تسجيل عيادات جديدة مع GPS والتصنيفات', en: 'Register new clinics with GPS and classifications' },
+    name: { ar: 'تسجيل العيادات المحسن', en: 'Enhanced Clinic Registration' },
+    component: 'EnhancedClinicRegistration',
+    description: { ar: 'تسجيل عيادات جديدة مع خرائط جوجل التفاعلية والتصنيفات المتقدمة', en: 'Register new clinics with interactive Google Maps and advanced classifications' },
     permissions: ['admin', 'gm', 'medical_rep'],
     priority: 3
   },
