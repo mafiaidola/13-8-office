@@ -65,20 +65,104 @@ const EnhancedClinicRegistration = () => {
   const loadFormData = async () => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
-      const response = await axios.get(`${backendUrl}/api/enhanced-clinics/registration/form-data`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
       
-      if (response.data.success) {
-        setFormOptions(response.data.data);
-        console.log('✅ تم تحميل بيانات النموذج:', response.data.data);
+      // تحميل البيانات من APIs النظام الأساسية
+      const [linesResponse, areasResponse, formDataResponse] = await Promise.all([
+        axios.get(`${backendUrl}/api/lines`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        }),
+        axios.get(`${backendUrl}/api/areas`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        }),
+        axios.get(`${backendUrl}/api/enhanced-clinics/registration/form-data`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        }).catch(() => ({ data: { success: false } })) // fallback if endpoint doesn't exist
+      ]);
+      
+      // دمج البيانات من مصادر مختلفة
+      const combinedFormOptions = {
+        lines: linesResponse.data || [],
+        areas: areasResponse.data || [],
+        classifications: [
+          { value: 'class_a_star', label: '⭐ فئة أ نجمة - أعلى تصنيف', color: 'from-yellow-400 to-orange-500', icon: '⭐' },
+          { value: 'class_a', label: '🥇 فئة أ - ممتازة', color: 'from-green-400 to-blue-500', icon: '🥇' },
+          { value: 'class_b', label: '🥈 فئة ب - جيد جداً', color: 'from-blue-400 to-purple-500', icon: '🥈' },
+          { value: 'class_c', label: '🥉 فئة ج - جيد', color: 'from-purple-400 to-pink-500', icon: '🥉' },
+          { value: 'class_d', label: '📋 فئة د - مقبول', color: 'from-gray-400 to-gray-600', icon: '📋' }
+        ],
+        credit_classifications: [
+          { value: 'green', label: '🟢 أخضر - ائتمان ممتاز', color: 'from-green-400 to-green-600', icon: '🟢' },
+          { value: 'yellow', label: '🟡 أصفر - ائتمان متوسط', color: 'from-yellow-400 to-yellow-600', icon: '🟡' },
+          { value: 'red', label: '🔴 أحمر - ائتمان محدود', color: 'from-red-400 to-red-600', icon: '🔴' }
+        ]
+      };
+
+      // إضافة البيانات من enhanced endpoint إذا كانت متاحة
+      if (formDataResponse.data?.success) {
+        const enhancedData = formDataResponse.data.data;
+        if (enhancedData.classifications) {
+          combinedFormOptions.classifications = enhancedData.classifications.map(c => ({
+            ...c,
+            color: getClassificationColor(c.value),
+            icon: getClassificationIcon(c.value)
+          }));
+        }
+        if (enhancedData.credit_classifications) {
+          combinedFormOptions.credit_classifications = enhancedData.credit_classifications.map(c => ({
+            ...c,
+            color: getCreditClassificationColor(c.value),
+            icon: getCreditClassificationIcon(c.value)
+          }));
+        }
       }
+      
+      setFormOptions(combinedFormOptions);
+      console.log('✅ تم تحميل بيانات النموذج المدمجة:', combinedFormOptions);
     } catch (error) {
       console.error('❌ خطأ في تحميل بيانات النموذج:', error);
       setErrors({general: 'خطأ في تحميل بيانات النموذج'});
     }
+  };
+
+  // دوال مساعدة للألوان والأيقونات
+  const getClassificationColor = (value) => {
+    const colors = {
+      'class_a_star': 'from-yellow-400 to-orange-500',
+      'class_a': 'from-green-400 to-blue-500', 
+      'class_b': 'from-blue-400 to-purple-500',
+      'class_c': 'from-purple-400 to-pink-500',
+      'class_d': 'from-gray-400 to-gray-600'
+    };
+    return colors[value] || 'from-gray-400 to-gray-600';
+  };
+
+  const getClassificationIcon = (value) => {
+    const icons = {
+      'class_a_star': '⭐',
+      'class_a': '🥇',
+      'class_b': '🥈', 
+      'class_c': '🥉',
+      'class_d': '📋'
+    };
+    return icons[value] || '📋';
+  };
+
+  const getCreditClassificationColor = (value) => {
+    const colors = {
+      'green': 'from-green-400 to-green-600',
+      'yellow': 'from-yellow-400 to-yellow-600',
+      'red': 'from-red-400 to-red-600'
+    };
+    return colors[value] || 'from-gray-400 to-gray-600';
+  };
+
+  const getCreditClassificationIcon = (value) => {
+    const icons = {
+      'green': '🟢',
+      'yellow': '🟡',
+      'red': '🔴'
+    };
+    return icons[value] || '⚪';
   };
 
   const loadGoogleMaps = () => {
