@@ -192,8 +192,7 @@ const VisitsManagement = () => {
         return;
       }
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
-      const response = await axios.post(`${backendUrl}/api/visits/complete`, {
+      const response = await axios.post(`${API_BASE}/api/visits/complete`, {
         visit_id: visitId,
         ...completionData
       }, {
