@@ -469,32 +469,34 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
         <div className="modal-overlay">
           <div className="modal-content max-w-4xl">
             <div className="modal-header">
-              <h3 className="text-2xl font-bold">تفاصيل المستخدم: {selectedUser.full_name}</h3>
+              <h3 className="text-2xl font-bold">
+                {language === 'ar' ? `تفاصيل المستخدم: ${selectedUser.full_name}` : `User Details: ${selectedUser.full_name}`}
+              </h3>
               <button onClick={() => setShowUserCard(false)} className="modal-close">×</button>
             </div>
             
             <div className="modal-body">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold">المعلومات الأساسية</h4>
+                  <h4 className="text-lg font-semibold">{language === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}</h4>
                   <div className="space-y-2">
-                    <p><strong>الاسم:</strong> {selectedUser.full_name}</p>
-                    <p><strong>اسم المستخدم:</strong> {selectedUser.username}</p>
-                    <p><strong>البريد الإلكتروني:</strong> {selectedUser.email}</p>
-                    <p><strong>الهاتف:</strong> {selectedUser.phone}</p>
-                    <p><strong>الدور:</strong> {getRoleLabel(selectedUser.role)}</p>
-                    <p><strong>المنطقة:</strong> {selectedUser.area}</p>
+                    <p><strong>{language === 'ar' ? 'الاسم:' : 'Name:'}</strong> {selectedUser.full_name}</p>
+                    <p><strong>{language === 'ar' ? 'اسم المستخدم:' : 'Username:'}</strong> {selectedUser.username}</p>
+                    <p><strong>{language === 'ar' ? 'البريد الإلكتروني:' : 'Email:'}</strong> {selectedUser.email}</p>
+                    <p><strong>{language === 'ar' ? 'الهاتف:' : 'Phone:'}</strong> {selectedUser.phone}</p>
+                    <p><strong>{language === 'ar' ? 'الدور:' : 'Role:'}</strong> {getRoleLabel(selectedUser.role)}</p>
+                    <p><strong>{language === 'ar' ? 'المنطقة:' : 'Area:'}</strong> {selectedUser.area}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold">إحصائيات الأداء</h4>
+                  <h4 className="text-lg font-semibold">{language === 'ar' ? 'إحصائيات الأداء' : 'Performance Statistics'}</h4>
                   <div className="space-y-2">
-                    <p><strong>الزيارات (آخر 30 يوم):</strong> {selectedUser.stats_last_30_days?.visits || 0}</p>
-                    <p><strong>الطلبات (آخر 30 يوم):</strong> {selectedUser.stats_last_30_days?.orders || 0}</p>
-                    <p><strong>الإيرادات (آخر 30 يوم):</strong> {selectedUser.stats_last_30_days?.revenue || 0} ج.م</p>
-                    <p><strong>التقييم:</strong> {selectedUser.stats_last_30_days?.rating || 0}/5</p>
-                    <p><strong>نسبة الأداء:</strong> {selectedUser.stats_last_30_days?.performance_percentage || 0}%</p>
+                    <p><strong>{language === 'ar' ? 'الزيارات (آخر 30 يوم):' : 'Visits (Last 30 days):'}</strong> {selectedUser.stats_last_30_days?.visits || 0}</p>
+                    <p><strong>{language === 'ar' ? 'الطلبات (آخر 30 يوم):' : 'Orders (Last 30 days):'}</strong> {selectedUser.stats_last_30_days?.orders || 0}</p>
+                    <p><strong>{language === 'ar' ? 'الإيرادات (آخر 30 يوم):' : 'Revenue (Last 30 days):'}</strong> {selectedUser.stats_last_30_days?.revenue || 0} {language === 'ar' ? 'ج.م' : 'EGP'}</p>
+                    <p><strong>{language === 'ar' ? 'التقييم:' : 'Rating:'}</strong> {selectedUser.stats_last_30_days?.rating || 0}/5</p>
+                    <p><strong>{language === 'ar' ? 'نسبة الأداء:' : 'Performance Percentage:'}</strong> {selectedUser.stats_last_30_days?.performance_percentage || 0}%</p>
                   </div>
                 </div>
               </div>
@@ -505,7 +507,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                 onClick={() => setShowUserCard(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
               >
-                إغلاق
+                {language === 'ar' ? 'إغلاق' : 'Close'}
               </button>
             </div>
           </div>
