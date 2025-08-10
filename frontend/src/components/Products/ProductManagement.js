@@ -376,16 +376,16 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-6 py-4 text-right text-sm font-medium">المنتج</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">العلامة التجارية</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الخط</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الوحدة</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{t('products', 'productName')}</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{t('products', 'brand')}</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{language === 'ar' ? 'الخط' : 'Line'}</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{t('products', 'unit')}</th>
                 {canSeePrices && (
-                  <th className="px-6 py-4 text-right text-sm font-medium">السعر</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium">{tc('price')}</th>
                 )}
-                <th className="px-6 py-4 text-right text-sm font-medium">المخزون</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الحالة</th>
-                <th className="px-6 py-4 text-right text-sm font-medium">الإجراءات</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{t('products', 'stock')}</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{tc('status')}</th>
+                <th className="px-6 py-4 text-right text-sm font-medium">{language === 'ar' ? 'الإجراءات' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody>
