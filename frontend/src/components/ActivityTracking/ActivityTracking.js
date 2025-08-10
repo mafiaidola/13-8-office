@@ -591,8 +591,30 @@ const ActivityTracking = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {activity.location || activity.ip_address || 'غير محدد'}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                              {activity.details || activity.device_info || '-'}
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              <div className="space-y-1">
+                                {activity.device_info && (
+                                  <div className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                    {(() => {
+                                      const browserInfo = parseBrowserInfo(activity.device_info);
+                                      return `${browserInfo.browser} - ${browserInfo.os}`;
+                                    })()}
+                                  </div>
+                                )}
+                                {activity.details && (
+                                  <div className="text-xs text-gray-400 truncate max-w-xs">
+                                    {activity.details}
+                                  </div>
+                                )}
+                                {(activity.latitude && activity.longitude) && (
+                                  <button
+                                    onClick={() => showActivityDetails(activity)}
+                                    className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                  >
+                                    🗺️ عرض على الخريطة
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )) : (
