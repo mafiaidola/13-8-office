@@ -854,6 +854,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔥 handleSubmit called - starting login process');
     setLoading(true);
     setError('');
 
