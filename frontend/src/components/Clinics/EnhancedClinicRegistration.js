@@ -603,7 +603,7 @@ const EnhancedClinicRegistration = () => {
     const infoWindow = new window.google.maps.InfoWindow({
       content: infoContent,
       position: location,
-      pixelOffset: new google.maps.Size(0, -15)
+      pixelOffset: new window.google.maps.Size(0, -15)
     });
     
     // Show info window for appropriate duration based on accuracy
