@@ -801,6 +801,147 @@ const ActivityTracking = () => {
           )}
         </div>
       </div>
+
+      {/* Map Modal for Activity Details */}
+      {showMapModal && selectedActivity && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                🗺️ تفاصيل النشاط مع الموقع
+              </h3>
+              <button
+                onClick={() => {
+                  setShowMapModal(false);
+                  setSelectedActivity(null);
+                  if (mapInstanceRef.current) {
+                    mapInstanceRef.current = null;
+                  }
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Activity Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات النشاط</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">النوع:</span>
+                      <span className="font-medium">{getActivityTypeLabel(selectedActivity.activity_type)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">المستخدم:</span>
+                      <span className="font-medium">{selectedActivity.user_name}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">الدور:</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(selectedActivity.user_role)}`}>
+                        {getRoleLabel(selectedActivity.user_role)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">الوقت:</span>
+                      <span className="font-medium">{formatTimestamp(selectedActivity.timestamp)}</span>
+                    </div>
+
+                    {selectedActivity.description && (
+                      <div className="pt-2">
+                        <span className="text-gray-600 block">الوصف:</span>
+                        <p className="text-sm text-gray-800 bg-gray-50 p-2 rounded mt-1">
+                          {selectedActivity.description}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات تقنية</h4>
+                  
+                  <div className="space-y-3">
+                    {selectedActivity.device_info && (() => {
+                      const browserInfo = parseBrowserInfo(selectedActivity.device_info);
+                      return (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">المتصفح:</span>
+                            <span className="font-medium">{browserInfo.browser}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">نظام التشغيل:</span>
+                            <span className="font-medium">{browserInfo.os}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">نوع الجهاز:</span>
+                            <span className="font-medium">{browserInfo.device}</span>
+                          </div>
+                        </>
+                      );
+                    })()}
+                    
+                    {selectedActivity.ip_address && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">عنوان IP:</span>
+                        <span className="font-medium font-mono">{selectedActivity.ip_address}</span>
+                      </div>
+                    )}
+                    
+                    {selectedActivity.location && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">الموقع:</span>
+                        <span className="font-medium">{selectedActivity.location}</span>
+                      </div>
+                    )}
+
+                    {(selectedActivity.latitude && selectedActivity.longitude) && (
+                      <div className="pt-2">
+                        <span className="text-gray-600 block">الإحداثيات:</span>
+                        <p className="text-sm text-gray-800 bg-gray-50 p-2 rounded mt-1 font-mono">
+                          {parseFloat(selectedActivity.latitude).toFixed(6)}, {parseFloat(selectedActivity.longitude).toFixed(6)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Map Section */}
+              {(selectedActivity.latitude && selectedActivity.longitude) && (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">موقع النشاط على الخريطة</h4>
+                  <div 
+                    ref={mapRef}
+                    className="w-full h-96 rounded-lg border border-gray-300"
+                  />
+                </div>
+              )}
+
+              {/* Device Info Full Details */}
+              {selectedActivity.device_info && (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات الجهاز الكاملة</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <code className="text-xs text-gray-700 break-all">
+                      {selectedActivity.device_info}
+                    </code>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
