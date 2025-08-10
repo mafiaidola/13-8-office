@@ -179,22 +179,21 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
     }
   };
 
-  // Function to delete test/demo products
   const handleDeleteTestProducts = async () => {
     const testProducts = products.filter(product => 
       product.name?.toLowerCase().includes('test') || 
       product.name?.toLowerCase().includes('demo') ||
-      product.name?.includes('تجربة') ||
+      product.name?.includes('test') ||
       product.description?.toLowerCase().includes('test') ||
       product.brand?.toLowerCase().includes('test')
     );
 
     if (testProducts.length === 0) {
-      alert('لا توجد منتجات تجريبية للحذف');
+      alert(tc('noData'));
       return;
     }
 
-    if (window.confirm(`⚠️ سيتم حذف ${testProducts.length} منتج تجريبي نهائياً من النظام!\n\nهل أنت متأكد من المتابعة؟`)) {
+    if (window.confirm(`⚠️ ${tm('confirmDelete')} ${testProducts.length} ${language === 'ar' ? 'منتج تجريبي' : 'test products'}\n\n${tm('cannotUndo')}`)) {
       let successCount = 0;
       let errorCount = 0;
 
@@ -211,8 +210,8 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
         }
       }
 
-      fetchProducts(); // Refresh the products list
-      alert(`✅ تم حذف ${successCount} منتج تجريبي بنجاح${errorCount > 0 ? `\n❌ فشل حذف ${errorCount} منتج` : ''}`);
+      fetchProducts();
+      alert(`✅ ${tm('deleteSuccess')}: ${successCount} ${language === 'ar' ? 'منتج' : 'products'}${errorCount > 0 ? `\n❌ ${tc('error')}: ${errorCount} ${language === 'ar' ? 'منتج' : 'products'}` : ''}`);
     }
   };
 
