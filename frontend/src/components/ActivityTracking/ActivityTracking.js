@@ -1,175 +1,258 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useTranslation } from '../../localization/enhancedTranslations';
 
-const ActivityTracking = () => {
-  const [activeTab, setActiveTab] = useState('activities');
+const ActivityTracking = ({ language = 'en', theme = 'dark' }) => {
+  const { t, ta, td } = useTranslation(language);
+  const isDark = theme === 'dark';
+  
   const [activities, setActivities] = useState([]);
-  const [loginLogs, setLoginLogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [loginLogsLoading, setLoginLogsLoading] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState(null);
-  const [showMapModal, setShowMapModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    date_range: 'today', // today, week, month, all
-    activity_type: '', // all types
-    user_role: '', // all roles
+    date_range: 'today',
+    activity_type: 'all',
+    user_role: 'all',
     search: ''
   });
-
+  
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [stats, setStats] = useState({
+    total_activities: 0,
+    login_activities: 0,
+    unique_users: 0,
+    clinic_visits: 0
+  });
+  
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
   const API_BASE = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
   useEffect(() => {
-    loadActivities();
-    loadLoginLogs();
-  }, []);
+    fetchActivities();
+    fetchStats();
+  }, [filters]);
 
-  const loadActivities = async () => {
+  const fetchActivities = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       
       const params = new URLSearchParams();
       if (filters.date_range !== 'all') params.append('date_range', filters.date_range);
-      if (filters.activity_type) params.append('activity_type', filters.activity_type);
-      if (filters.user_role) params.append('user_role', filters.user_role);
+      if (filters.activity_type !== 'all') params.append('activity_type', filters.activity_type);
+      if (filters.user_role !== 'all') params.append('user_role', filters.user_role);
       if (filters.search) params.append('search', filters.search);
 
-      const response = await axios.get(`${API_BASE}/api/activities?${params}`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const response = await axios.get(`${API_BASE}/api/activities?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('✅ Activities loaded:', response.data);
-      setActivities(response.data.activities || []);
-    } catch (error) {
-      console.error('❌ Error loading activities:', error);
-      if (error.response?.status === 404) {
-        // إنشاء أنشطة تجريبية إذا لم يتم العثور على endpoint
-        setActivities([
-          {
-            id: 'demo-1',
-            activity_type: 'login',
-            description: 'تسجيل دخول للنظام',
-            user_name: 'أحمد محمد',
-            user_role: 'admin',
-            ip_address: '192.168.1.100',
-            location: 'القاهرة، مصر',
-            device_info: 'Chrome Browser',
-            timestamp: new Date().toISOString()
-          },
-          {
-            id: 'demo-2',
-            activity_type: 'user_created',
-            description: 'إنشاء مستخدم جديد',
-            user_name: 'أحمد محمد',
-            user_role: 'admin',
-            details: 'تم إنشاء مستخدم جديد: محمد علي',
-            timestamp: new Date(Date.now() - 3600000).toISOString()
-          },
-          {
-            id: 'demo-3',
-            activity_type: 'clinic_visit',
-            description: 'زيارة عيادة جديدة',
-            user_name: 'سارة أحمد',
-            user_role: 'medical_rep',
-            details: 'زيارة عيادة الدكتور محمد علي',
-            location: 'الجيزة، مصر',
-            timestamp: new Date(Date.now() - 7200000).toISOString()
-          }
-        ]);
-      }
+      setActivities(response.data || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      setError('Failed to load activities');
+      // Mock data for development
+      setActivities([
+        {
+          id: '1',
+          activity_type: 'login',
+          user_name: language === 'ar' ? 'أحمد محمد' : 'Ahmed Mohamed',
+          user_role: 'admin',
+          timestamp: new Date().toISOString(),
+          description: language === 'ar' ? 'تسجيل دخول إلى النظام' : 'System login',
+          ip_address: '192.168.1.100',
+          device_info: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          location: language === 'ar' ? 'القاهرة، مصر' : 'Cairo, Egypt',
+          latitude: 30.0444,
+          longitude: 31.2357
+        },
+        {
+          id: '2',
+          activity_type: 'clinic_visit',
+          user_name: language === 'ar' ? 'سارة أحمد' : 'Sara Ahmed',
+          user_role: 'medical_rep',
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          description: language === 'ar' ? 'زيارة عيادة الدكتور محمد' : 'Visit to Dr. Mohamed clinic',
+          ip_address: '192.168.1.101',
+          device_info: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
+          location: language === 'ar' ? 'الجيزة، مصر' : 'Giza, Egypt',
+          latitude: 30.0131,
+          longitude: 31.2089
+        }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Parse browser/device information from device_info string
-  const parseBrowserInfo = (deviceInfo) => {
-    if (!deviceInfo) return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${API_BASE}/api/activities/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(response.data || stats);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+      // Use mock stats
+      setStats({
+        total_activities: activities.length,
+        login_activities: activities.filter(a => a.activity_type === 'login').length,
+        unique_users: new Set(activities.map(a => a.user_name)).size,
+        clinic_visits: activities.filter(a => a.activity_type === 'clinic_visit').length
+      });
+    }
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Africa/Cairo'
+    };
+    return date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', options);
+  };
+
+  const getActivityTypeLabel = (type) => {
+    const labels = {
+      login: language === 'ar' ? 'تسجيل دخول' : 'Login',
+      logout: language === 'ar' ? 'تسجيل خروج' : 'Logout',
+      clinic_visit: language === 'ar' ? 'زيارة عيادة' : 'Clinic Visit',
+      product_order: language === 'ar' ? 'طلب منتج' : 'Product Order',
+      user_creation: language === 'ar' ? 'إنشاء مستخدم' : 'User Creation',
+      clinic_registration: language === 'ar' ? 'تسجيل عيادة' : 'Clinic Registration'
+    };
+    return labels[type] || type;
+  };
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      admin: language === 'ar' ? 'مدير' : 'Admin',
+      gm: language === 'ar' ? 'مدير عام' : 'General Manager',
+      medical_rep: language === 'ar' ? 'مندوب طبي' : 'Medical Rep',
+      sales_rep: language === 'ar' ? 'مندوب مبيعات' : 'Sales Rep',
+      accounting: language === 'ar' ? 'محاسب' : 'Accountant',
+      manager: language === 'ar' ? 'مدير منطقة' : 'Area Manager'
+    };
+    return labels[role] || role;
+  };
+
+  const getRoleBadgeClass = (role) => {
+    const classes = {
+      admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+      gm: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+      medical_rep: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      sales_rep: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+      accounting: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+      manager: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
+    };
+    return classes[role] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+  };
+
+  const getActivityTypeIcon = (type) => {
+    const icons = {
+      login: '🚪',
+      logout: '🚪',
+      clinic_visit: '🏥',
+      product_order: '📦',
+      user_creation: '👤',
+      clinic_registration: '🏥'
+    };
+    return icons[type] || '📊';
+  };
+
+  const parseBrowserInfo = (userAgent) => {
+    if (!userAgent) return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
     
-    const userAgent = deviceInfo.toLowerCase();
-    
-    // Browser detection
-    let browser = 'Unknown Browser';
-    if (userAgent.includes('chrome')) browser = 'Google Chrome';
-    else if (userAgent.includes('firefox')) browser = 'Mozilla Firefox';
-    else if (userAgent.includes('safari')) browser = 'Safari';
-    else if (userAgent.includes('edge')) browser = 'Microsoft Edge';
-    else if (userAgent.includes('opera')) browser = 'Opera';
-    
-    // OS detection
-    let os = 'Unknown OS';
-    if (userAgent.includes('windows')) os = 'Windows';
-    else if (userAgent.includes('mac')) os = 'macOS';
-    else if (userAgent.includes('linux')) os = 'Linux';
-    else if (userAgent.includes('android')) os = 'Android';
-    else if (userAgent.includes('iphone') || userAgent.includes('ipad')) os = 'iOS';
-    
-    // Device type
+    let browser = 'Unknown';
+    let os = 'Unknown';
     let device = 'Desktop';
-    if (userAgent.includes('mobile')) device = 'Mobile';
-    else if (userAgent.includes('tablet') || userAgent.includes('ipad')) device = 'Tablet';
-    
+
+    // Browser detection
+    if (userAgent.includes('Chrome')) browser = 'Chrome';
+    else if (userAgent.includes('Firefox')) browser = 'Firefox';
+    else if (userAgent.includes('Safari')) browser = 'Safari';
+    else if (userAgent.includes('Edge')) browser = 'Edge';
+
+    // OS detection
+    if (userAgent.includes('Windows')) os = 'Windows';
+    else if (userAgent.includes('Mac')) os = 'macOS';
+    else if (userAgent.includes('Linux')) os = 'Linux';
+    else if (userAgent.includes('Android')) os = 'Android';
+    else if (userAgent.includes('iOS')) os = 'iOS';
+
+    // Device detection
+    if (userAgent.includes('Mobile') || userAgent.includes('iPhone') || userAgent.includes('Android')) {
+      device = 'Mobile';
+    } else if (userAgent.includes('Tablet') || userAgent.includes('iPad')) {
+      device = 'Tablet';
+    }
+
     return { browser, os, device };
   };
 
-  // Show activity details with map
-  const showActivityDetails = (activity) => {
-    setSelectedActivity(activity);
-    setShowMapModal(true);
-    
-    // Initialize map when modal opens
-    setTimeout(() => {
-      if (activity.latitude && activity.longitude) {
-        initializeMap(activity);
-      }
-    }, 100);
-  };
-
-  // Initialize Google Maps
-  const initializeMap = (activity) => {
-    if (!window.google || !window.google.maps || !mapRef.current) {
-      console.error('Google Maps not available');
+  const initializeMapForActivity = (activity) => {
+    if (!window.google || !window.google.maps || !mapRef.current || !activity.latitude || !activity.longitude) {
       return;
     }
 
-    const location = {
+    const position = {
       lat: parseFloat(activity.latitude),
       lng: parseFloat(activity.longitude)
     };
 
     const map = new window.google.maps.Map(mapRef.current, {
-      center: location,
+      center: position,
       zoom: 15,
       mapTypeId: 'roadmap'
     });
 
     const marker = new window.google.maps.Marker({
-      position: location,
+      position: position,
       map: map,
-      title: `${activity.user_name} - ${activity.location || 'موقع النشاط'}`,
+      title: `${activity.user_name} - ${getActivityTypeLabel(activity.activity_type)}`,
       icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 0C7.031 0 3 4.031 3 9C3 14.25 12 24 12 24S21 14.25 21 9C21 4.031 16.969 0 12 0ZM12 12.5C10.069 12.5 8.5 10.931 8.5 9S10.069 5.5 12 5.5S15.5 7.069 15.5 9S13.931 12.5 12 12.5Z" fill="#DC2626"/>
-          </svg>
-        `),
-        scaledSize: new window.google.maps.Size(32, 32)
+        path: window.google.maps.SymbolPath.CIRCLE,
+        fillColor: '#4285f4',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+        scale: 8
       }
     });
 
     const infoWindow = new window.google.maps.InfoWindow({
       content: `
-        <div style="text-align: center; font-family: Arial, sans-serif; direction: rtl;">
-          <h4 style="margin: 0 0 8px 0; color: #1f2937;">${activity.user_name}</h4>
-          <p style="margin: 4px 0; color: #6b7280;">${activity.location || 'موقع غير محدد'}</p>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${formatTimestamp(activity.timestamp)}</p>
-          <p style="margin: 4px 0; color: #3b82f6; font-size: 11px;">النشاط: ${getActivityTypeLabel(activity.activity_type)}</p>
+        <div style="text-align: center; font-family: Arial, sans-serif;">
+          <div style="font-weight: bold; margin-bottom: 8px;">
+            ${getActivityTypeIcon(activity.activity_type)} ${getActivityTypeLabel(activity.activity_type)}
+          </div>
+          <div style="margin-bottom: 4px;">
+            <strong>${language === 'ar' ? 'المستخدم:' : 'User:'}</strong> ${activity.user_name}
+          </div>
+          <div style="margin-bottom: 4px;">
+            <strong>${language === 'ar' ? 'الوقت:' : 'Time:'}</strong> ${formatTimestamp(activity.timestamp)}
+          </div>
+          ${activity.location ? `
+            <div style="margin-bottom: 4px;">
+              <strong>${language === 'ar' ? 'الموقع:' : 'Location:'}</strong> ${activity.location}
+            </div>
+          ` : ''}
         </div>
       `
     });
@@ -181,767 +264,470 @@ const ActivityTracking = () => {
     mapInstanceRef.current = map;
   };
 
-  const loadLoginLogs = async () => {
-    try {
-      setLoginLogsLoading(true);
-      const token = localStorage.getItem('access_token');
-      
-      // استخدام endpoint صحيح لسجلات تسجيل الدخول الحقيقية
-      const response = await axios.get(`${API_BASE}/api/activities?activity_type=login&limit=100`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('✅ Login logs loaded from activities:', response.data);
-      
-      // معالجة البيانات لتحويلها من activities إلى login logs format
-      const loginActivities = response.data.activities || [];
-      const formattedLogs = loginActivities
-        .filter(activity => activity.activity_type === 'login')
-        .map(activity => ({
-          id: activity.id,
-          username: activity.user_name,
-          full_name: activity.user_name,
-          role: activity.user_role,
-          login_time: activity.timestamp,
-          ip_address: activity.ip_address || 'Unknown IP',
-          device_info: activity.device_info || 'Unknown Device',
-          location: activity.location || 'Unknown Location',
-          latitude: activity.geolocation?.latitude,
-          longitude: activity.geolocation?.longitude,
-          city: activity.geolocation?.city,
-          country: activity.geolocation?.country,
-          location_accuracy: activity.geolocation?.accuracy,
-          geolocation: activity.geolocation
-        }));
-      
-      setLoginLogs(formattedLogs);
-    } catch (error) {
-      console.error('❌ Error loading login logs:', error);
-      
-      // إذا فشل الاستدعاء، جرب من endpoint سجلات الدخول المباشر
-      try {
-        const fallbackResponse = await axios.get(`${API_BASE}/api/visits/login-logs`, {
-          headers: { 
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('✅ Fallback login logs loaded:', fallbackResponse.data);
-        setLoginLogs(fallbackResponse.data.logs || []);
-      } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
-        setLoginLogs([]);
-      }
-    } finally {
-      setLoginLogsLoading(false);
-    }
+  const handleViewDetails = (activity) => {
+    setSelectedActivity(activity);
+    setShowMapModal(true);
+    
+    // Initialize map after modal is shown
+    setTimeout(() => {
+      initializeMapForActivity(activity);
+    }, 100);
   };
 
-  const getActivityIcon = (activityType) => {
-    const icons = {
-      'login': '🔐',
-      'logout': '🚪',
-      'user_created': '👤',
-      'user_updated': '✏️',
-      'user_deleted': '🗑️',
-      'clinic_visit': '🏥',
-      'clinic_registered': '📋',
-      'product_added': '📦',
-      'order_created': '🛒',
-      'payment_processed': '💳',
-      'system_backup': '💾',
-      'settings_updated': '⚙️',
-      'report_generated': '📊',
-      'data_export': '📤',
-      'data_import': '📥'
-    };
-    return icons[activityType] || '📋';
-  };
+  // Theme styles
+  const containerStyles = `min-h-screen transition-all duration-300 ${
+    isDark 
+      ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
+      : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'
+  }`;
 
-  const getActivityTypeLabel = (activityType) => {
-    const labels = {
-      'login': 'تسجيل دخول',
-      'logout': 'تسجيل خروج',
-      'user_created': 'إنشاء مستخدم',
-      'user_updated': 'تحديث مستخدم',
-      'user_deleted': 'حذف مستخدم',
-      'clinic_visit': 'زيارة عيادة',
-      'clinic_registered': 'تسجيل عيادة',
-      'product_added': 'إضافة منتج',
-      'order_created': 'إنشاء طلب',
-      'payment_processed': 'معالجة دفعة',
-      'system_backup': 'نسخ احتياطي',
-      'settings_updated': 'تحديث إعدادات',
-      'report_generated': 'إنشاء تقرير',
-      'data_export': 'تصدير بيانات',
-      'data_import': 'استيراد بيانات'
-    };
-    return labels[activityType] || activityType;
-  };
+  const cardStyles = `rounded-xl shadow-lg border transition-all duration-200 hover:shadow-xl ${
+    isDark 
+      ? 'bg-slate-800/90 border-slate-700 backdrop-blur-sm' 
+      : 'bg-white border-gray-200'
+  }`;
 
-  const getRoleLabel = (role) => {
-    const labels = {
-      'admin': 'أدمن',
-      'gm': 'مدير عام',
-      'medical_rep': 'مندوب طبي',
-      'sales_rep': 'مندوب مبيعات',
-      'accounting': 'محاسب',
-      'line_manager': 'مدير خط',
-      'area_manager': 'مدير منطقة'
-    };
-    return labels[role] || role;
-  };
+  const inputStyles = `px-4 py-2 rounded-lg border transition-all duration-200 ${
+    isDark 
+      ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500' 
+      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+  } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`;
 
-  const getRoleBadgeClass = (role) => {
-    const classes = {
-      'admin': 'bg-red-100 text-red-800',
-      'gm': 'bg-purple-100 text-purple-800',
-      'medical_rep': 'bg-green-100 text-green-800',
-      'sales_rep': 'bg-blue-100 text-blue-800',
-      'accounting': 'bg-yellow-100 text-yellow-800',
-      'line_manager': 'bg-orange-100 text-orange-800',
-      'area_manager': 'bg-indigo-100 text-indigo-800'
-    };
-    return classes[role] || 'bg-gray-100 text-gray-800';
-  };
-
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString('ar-EG', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
-  const applyFilters = () => {
-    loadActivities();
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      date_range: 'today',
-      activity_type: '',
-      user_role: '',
-      search: ''
-    });
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              📊 تتبع الأنشطة والحركات
-            </h1>
-            <p className="text-gray-600">
-              مراقبة شاملة لجميع الأنشطة والحركات في النظام مع تتبع الموقع والوقت
-            </p>
+  if (loading) {
+    return (
+      <div className={containerStyles}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>{ta('tracking')}</p>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={loadActivities}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                '🔄'
-              )}
-              تحديث
-            </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={containerStyles}>
+        <div className="max-w-4xl mx-auto p-6">
+          <div className={`${cardStyles} p-8 text-center`}>
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold text-red-600 mb-2">{ta('title')}</h3>
+            <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>{error}</p>
             <button
               onClick={() => {
-                const data = activeTab === 'activities' ? activities : loginLogs;
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${activeTab}_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                setError(null);
+                fetchActivities();
               }}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              📤
-              تصدير
+              {t('common', 'retry')}
             </button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Navigation Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
-            {[
-              { id: 'activities', label: 'الأنشطة العامة', icon: '📋', count: activities.length },
-              { id: 'login_logs', label: 'سجل تسجيل الدخول', icon: '🔐', count: loginLogs.length }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  activeTab === tab.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </nav>
+  return (
+    <div className={containerStyles}>
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Header */}
+        <div className={`${cardStyles} p-8`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-3xl text-white">📊</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {ta('title')}
+                </h1>
+                <p className={`text-lg mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {language === 'ar' ? 'مراقبة وتتبع جميع أنشطة المستخدمين في النظام' : 'Monitor and track all user activities in the system'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className={`${cardStyles} p-6`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">📊</span>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.total_activities}</div>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  {language === 'ar' ? 'إجمالي الأنشطة' : 'Total Activities'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${cardStyles} p-6`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🚪</span>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.login_activities}</div>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  {language === 'ar' ? 'تسجيلات الدخول' : 'Login Activities'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${cardStyles} p-6`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.unique_users}</div>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  {language === 'ar' ? 'مستخدمين فريدين' : 'Unique Users'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${cardStyles} p-6`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/50 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🏥</span>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{stats.clinic_visits}</div>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  {language === 'ar' ? 'زيارات العيادات' : 'Clinic Visits'}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <select
-              value={filters.date_range}
-              onChange={(e) => setFilters({...filters, date_range: e.target.value})}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="today">اليوم</option>
-              <option value="week">هذا الأسبوع</option>
-              <option value="month">هذا الشهر</option>
-              <option value="all">جميع الأوقات</option>
-            </select>
-
-            <select
-              value={filters.activity_type}
-              onChange={(e) => setFilters({...filters, activity_type: e.target.value})}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">جميع الأنواع</option>
-              <option value="login">تسجيل دخول</option>
-              <option value="user_created">إنشاء مستخدم</option>
-              <option value="clinic_visit">زيارة عيادة</option>
-              <option value="order_created">إنشاء طلب</option>
-              <option value="payment_processed">معالجة دفعة</option>
-            </select>
-
-            <select
-              value={filters.user_role}
-              onChange={(e) => setFilters({...filters, user_role: e.target.value})}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">جميع الأدوار</option>
-              <option value="admin">أدمن</option>
-              <option value="medical_rep">مندوب طبي</option>
-              <option value="sales_rep">مندوب مبيعات</option>
-              <option value="accounting">محاسب</option>
-            </select>
-
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => setFilters({...filters, search: e.target.value})}
-              placeholder="بحث في الأنشطة..."
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-
-            <div className="flex gap-2">
-              <button
-                onClick={applyFilters}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex-1"
+        <div className={`${cardStyles} p-6`}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                {td('date')}
+              </label>
+              <select
+                value={filters.date_range}
+                onChange={(e) => handleFilterChange('date_range', e.target.value)}
+                className={inputStyles}
               >
-                🔍 بحث
-              </button>
-              <button
-                onClick={clearFilters}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                <option value="today">{td('today')}</option>
+                <option value="week">{td('thisWeek')}</option>
+                <option value="month">{td('thisMonth')}</option>
+                <option value="year">{td('thisYear')}</option>
+                <option value="all">{language === 'ar' ? 'جميع التواريخ' : 'All Time'}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                {ta('activity')}
+              </label>
+              <select
+                value={filters.activity_type}
+                onChange={(e) => handleFilterChange('activity_type', e.target.value)}
+                className={inputStyles}
               >
-                ✖️
-              </button>
+                <option value="all">{language === 'ar' ? 'جميع الأنشطة' : 'All Activities'}</option>
+                <option value="login">{language === 'ar' ? 'تسجيل دخول' : 'Login'}</option>
+                <option value="logout">{language === 'ar' ? 'تسجيل خروج' : 'Logout'}</option>
+                <option value="clinic_visit">{language === 'ar' ? 'زيارة عيادة' : 'Clinic Visit'}</option>
+                <option value="product_order">{language === 'ar' ? 'طلب منتج' : 'Product Order'}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                {language === 'ar' ? 'الدور' : 'Role'}
+              </label>
+              <select
+                value={filters.user_role}
+                onChange={(e) => handleFilterChange('user_role', e.target.value)}
+                className={inputStyles}
+              >
+                <option value="all">{language === 'ar' ? 'جميع الأدوار' : 'All Roles'}</option>
+                <option value="admin">{language === 'ar' ? 'مدير' : 'Admin'}</option>
+                <option value="gm">{language === 'ar' ? 'مدير عام' : 'General Manager'}</option>
+                <option value="medical_rep">{language === 'ar' ? 'مندوب طبي' : 'Medical Rep'}</option>
+                <option value="sales_rep">{language === 'ar' ? 'مندوب مبيعات' : 'Sales Rep'}</option>
+                <option value="accounting">{language === 'ar' ? 'محاسب' : 'Accountant'}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                {t('common', 'search')}
+              </label>
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                placeholder={language === 'ar' ? 'ابحث في الأنشطة...' : 'Search activities...'}
+                className={inputStyles}
+              />
             </div>
           </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-6">
-          {activeTab === 'activities' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-100">إجمالي الأنشطة</p>
-                      <p className="text-2xl font-bold">{activities.length}</p>
-                      <p className="text-sm text-blue-100">اليوم</p>
-                    </div>
-                    <div className="text-3xl opacity-80">📊</div>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-100">تسجيلات الدخول</p>
-                      <p className="text-2xl font-bold">
-                        {activities.filter(a => a.activity_type === 'login').length}
-                      </p>
-                      <p className="text-sm text-green-100">نشط</p>
-                    </div>
-                    <div className="text-3xl opacity-80">🔐</div>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-100">زيارات العيادات</p>
-                      <p className="text-2xl font-bold">
-                        {activities.filter(a => a.activity_type === 'clinic_visit').length}
-                      </p>
-                      <p className="text-sm text-purple-100">مكتمل</p>
-                    </div>
-                    <div className="text-3xl opacity-80">🏥</div>
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100">مستخدمين نشطين</p>
-                      <p className="text-2xl font-bold">
-                        {new Set(activities.map(a => a.user_name)).size}
-                      </p>
-                      <p className="text-sm text-orange-100">فريد</p>
-                    </div>
-                    <div className="text-3xl opacity-80">👥</div>
-                  </div>
-                </div>
-              </div>
+        {/* Activities Table */}
+        <div className={`${cardStyles} overflow-hidden`}>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className={`border-b ${isDark ? 'border-slate-700' : 'border-gray-200'} ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{ta('activity')}</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{language === 'ar' ? 'المستخدم' : 'User'}</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{language === 'ar' ? 'الدور' : 'Role'}</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{td('datetime')}</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{ta('location')}</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium">{language === 'ar' ? 'الإجراءات' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activities.map((activity) => (
+                  <tr 
+                    key={activity.id} 
+                    className={`border-b ${isDark ? 'border-slate-700/50' : 'border-gray-100'} hover:${isDark ? 'bg-slate-700/30' : 'bg-gray-50'} transition-colors`}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{getActivityTypeIcon(activity.activity_type)}</span>
+                        <div>
+                          <div className="font-medium">{getActivityTypeLabel(activity.activity_type)}</div>
+                          {activity.description && (
+                            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                              {activity.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{activity.user_name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(activity.user_role)}`}>
+                        {getRoleLabel(activity.user_role)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {formatTimestamp(activity.timestamp)}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {activity.location || (
+                        <span className={isDark ? 'text-slate-500' : 'text-gray-500'}>
+                          {language === 'ar' ? 'غير محدد' : 'Not specified'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleViewDetails(activity)}
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
+                        disabled={!activity.latitude || !activity.longitude}
+                      >
+                        {language === 'ar' ? 'التفاصيل' : 'Details'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-              {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="mr-3">جاري تحميل الأنشطة...</span>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg border overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            النشاط
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            المستخدم
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الدور
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الوقت
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الموقع
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            التفاصيل
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {activities.length > 0 ? activities.map((activity) => (
-                          <tr key={activity.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <span className="text-2xl mr-3">{getActivityIcon(activity.activity_type)}</span>
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {getActivityTypeLabel(activity.activity_type)}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    {activity.description}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {activity.user_name || 'غير محدد'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(activity.user_role)}`}>
-                                {getRoleLabel(activity.user_role)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatTimestamp(activity.timestamp)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {activity.location || activity.ip_address || 'غير محدد'}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-500">
-                              <div className="space-y-1">
-                                {activity.device_info && (
-                                  <div className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    {(() => {
-                                      const browserInfo = parseBrowserInfo(activity.device_info);
-                                      return `${browserInfo.browser} - ${browserInfo.os}`;
-                                    })()}
-                                  </div>
-                                )}
-                                {activity.details && (
-                                  <div className="text-xs text-gray-400 truncate max-w-xs">
-                                    {activity.details}
-                                  </div>
-                                )}
-                                {(activity.latitude && activity.longitude) && (
-                                  <button
-                                    onClick={() => showActivityDetails(activity)}
-                                    className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
-                                  >
-                                    🗺️ عرض على الخريطة
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )) : (
-                          <tr>
-                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                              <div className="space-y-2">
-                                <div className="text-4xl">📋</div>
-                                <div>لا توجد أنشطة متاحة</div>
-                                <div className="text-sm text-gray-400">
-                                  لم يتم العثور على أنشطة للفترة المحددة
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+        {activities.length === 0 && (
+          <div className={`${cardStyles} p-12 text-center`}>
+            <div className="text-6xl mb-4">📊</div>
+            <h3 className="text-xl font-bold mb-2">{language === 'ar' ? 'لا توجد أنشطة' : 'No Activities'}</h3>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+              {language === 'ar' ? 'لم يتم العثور على أنشطة مطابقة للفلاتر المحددة' : 'No activities found matching the selected filters'}
+            </p>
+          </div>
+        )}
 
-          {activeTab === 'login_logs' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">سجل تسجيل الدخول المفصل</h2>
+        {/* Activity Details Modal */}
+        {showMapModal && selectedActivity && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className={`${cardStyles} w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden`}>
+              <div className="flex items-center justify-between p-6 border-b border-opacity-20">
+                <h3 className="text-xl font-bold flex items-center gap-3">
+                  🗺️ {language === 'ar' ? 'تفاصيل النشاط مع الموقع' : 'Activity Details with Location'}
+                </h3>
                 <button
-                  onClick={loadLoginLogs}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                  disabled={loginLogsLoading}
+                  onClick={() => {
+                    setShowMapModal(false);
+                    setSelectedActivity(null);
+                    if (mapInstanceRef.current) {
+                      mapInstanceRef.current = null;
+                    }
+                  }}
+                  className={`${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'} text-2xl`}
                 >
-                  {loginLogsLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      جاري التحديث...
-                    </>
-                  ) : (
-                    <>
-                      🔄
-                      تحديث
-                    </>
-                  )}
+                  ✕
                 </button>
               </div>
 
-              {loginLogsLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="mr-3">جاري تحميل سجل تسجيل الدخول...</span>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg border overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            المستخدم
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الدور
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            تاريخ ووقت الدخول
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            الموقع الجغرافي
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            معلومات الجهاز
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            عنوان IP
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {loginLogs.length > 0 ? (
-                          loginLogs.map((log) => (
-                            <tr key={log.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="ml-4">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {log.full_name || log.username}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                      {log.username}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(log.role)}`}>
-                                  {getRoleLabel(log.role)}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatTimestamp(log.login_time)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {log.geolocation && log.latitude && log.longitude ? (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <div className="text-xs">
-                                        📍 {log.city || 'Unknown'}, {log.country || 'Unknown'}
-                                      </div>
-                                      <button
-                                        onClick={() => {
-                                          const lat = parseFloat(log.latitude).toFixed(6);
-                                          const lng = parseFloat(log.longitude).toFixed(6);
-                                          const url = `https://www.google.com/maps?q=${lat},${lng}&z=15`;
-                                          window.open(url, '_blank');
-                                        }}
-                                        className="text-blue-600 hover:text-blue-800 text-xs underline"
-                                        title="عرض على الخريطة"
-                                      >
-                                        🗺️ عرض
-                                      </button>
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      ({parseFloat(log.latitude).toFixed(4)}, {parseFloat(log.longitude).toFixed(4)})
-                                    </div>
-                                    {log.location_accuracy && (
-                                      <div className="text-xs text-gray-400">
-                                        دقة: {Math.round(log.location_accuracy)}م
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">لا يوجد موقع</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                                {log.device_info ? (
-                                  <div className="truncate" title={log.device_info}>
-                                    {log.device_info.includes('Chrome') ? '🌐 Chrome' :
-                                     log.device_info.includes('Firefox') ? '🦊 Firefox' :
-                                     log.device_info.includes('Safari') ? '🧭 Safari' :
-                                     log.device_info.includes('Edge') ? '🔷 Edge' :
-                                     '💻 Unknown Browser'}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">غير محدد</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {log.ip_address && log.ip_address !== 'Unknown IP' ? 
-                                  log.ip_address : 
-                                  <span className="text-gray-400">غير محدد</span>
-                                }
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                              <div className="space-y-2">
-                                <div className="text-4xl">🔐</div>
-                                <div>لا توجد سجلات تسجيل دخول متاحة</div>
-                                <div className="text-sm text-gray-400">
-                                  قد تحتاج إلى صلاحيات أدمن لعرض هذه البيانات
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {loginLogs.length > 0 && (
-                    <div className="bg-gray-50 px-6 py-3 border-t">
-                      <div className="text-sm text-gray-600">
-                        📊 إجمالي السجلات: {loginLogs.length} | 
-                        آخر تحديث: {new Date().toLocaleString('ar-EG')}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Map Modal for Activity Details */}
-      {showMapModal && selectedActivity && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                🗺️ تفاصيل النشاط مع الموقع
-              </h3>
-              <button
-                onClick={() => {
-                  setShowMapModal(false);
-                  setSelectedActivity(null);
-                  if (mapInstanceRef.current) {
-                    mapInstanceRef.current = null;
-                  }
-                }}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Activity Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات النشاط</h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">النوع:</span>
-                      <span className="font-medium">{getActivityTypeLabel(selectedActivity.activity_type)}</span>
-                    </div>
+              <div className="p-6 space-y-6">
+                {/* Activity Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h4 className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-800'} border-b pb-2`}>
+                      {language === 'ar' ? 'معلومات النشاط' : 'Activity Information'}
+                    </h4>
                     
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">المستخدم:</span>
-                      <span className="font-medium">{selectedActivity.user_name}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">الدور:</span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(selectedActivity.user_role)}`}>
-                        {getRoleLabel(selectedActivity.user_role)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">الوقت:</span>
-                      <span className="font-medium">{formatTimestamp(selectedActivity.timestamp)}</span>
-                    </div>
-
-                    {selectedActivity.description && (
-                      <div className="pt-2">
-                        <span className="text-gray-600 block">الوصف:</span>
-                        <p className="text-sm text-gray-800 bg-gray-50 p-2 rounded mt-1">
-                          {selectedActivity.description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات تقنية</h4>
-                  
-                  <div className="space-y-3">
-                    {selectedActivity.device_info && (() => {
-                      const browserInfo = parseBrowserInfo(selectedActivity.device_info);
-                      return (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">المتصفح:</span>
-                            <span className="font-medium">{browserInfo.browser}</span>
-                          </div>
-                          
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">نظام التشغيل:</span>
-                            <span className="font-medium">{browserInfo.os}</span>
-                          </div>
-                          
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">نوع الجهاز:</span>
-                            <span className="font-medium">{browserInfo.device}</span>
-                          </div>
-                        </>
-                      );
-                    })()}
-                    
-                    {selectedActivity.ip_address && (
+                    <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">عنوان IP:</span>
-                        <span className="font-medium font-mono">{selectedActivity.ip_address}</span>
+                        <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                          {language === 'ar' ? 'النوع:' : 'Type:'}
+                        </span>
+                        <span className="font-medium">{getActivityTypeLabel(selectedActivity.activity_type)}</span>
                       </div>
-                    )}
-                    
-                    {selectedActivity.location && (
+                      
                       <div className="flex justify-between">
-                        <span className="text-gray-600">الموقع:</span>
-                        <span className="font-medium">{selectedActivity.location}</span>
+                        <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                          {language === 'ar' ? 'المستخدم:' : 'User:'}
+                        </span>
+                        <span className="font-medium">{selectedActivity.user_name}</span>
                       </div>
-                    )}
+                      
+                      <div className="flex justify-between">
+                        <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                          {language === 'ar' ? 'الدور:' : 'Role:'}
+                        </span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeClass(selectedActivity.user_role)}`}>
+                          {getRoleLabel(selectedActivity.user_role)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                          {language === 'ar' ? 'الوقت:' : 'Time:'}
+                        </span>
+                        <span className="font-medium">{formatTimestamp(selectedActivity.timestamp)}</span>
+                      </div>
 
-                    {(selectedActivity.latitude && selectedActivity.longitude) && (
-                      <div className="pt-2">
-                        <span className="text-gray-600 block">الإحداثيات:</span>
-                        <p className="text-sm text-gray-800 bg-gray-50 p-2 rounded mt-1 font-mono">
-                          {parseFloat(selectedActivity.latitude).toFixed(6)}, {parseFloat(selectedActivity.longitude).toFixed(6)}
-                        </p>
-                      </div>
-                    )}
+                      {selectedActivity.description && (
+                        <div className="pt-2">
+                          <span className={`${isDark ? 'text-slate-400' : 'text-gray-600'} block`}>
+                            {language === 'ar' ? 'الوصف:' : 'Description:'}
+                          </span>
+                          <p className={`text-sm ${isDark ? 'text-slate-300 bg-slate-700/50' : 'text-gray-800 bg-gray-50'} p-2 rounded mt-1`}>
+                            {selectedActivity.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-800'} border-b pb-2`}>
+                      {language === 'ar' ? 'معلومات تقنية' : 'Technical Information'}
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      {selectedActivity.device_info && (() => {
+                        const browserInfo = parseBrowserInfo(selectedActivity.device_info);
+                        return (
+                          <>
+                            <div className="flex justify-between">
+                              <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                                {language === 'ar' ? 'المتصفح:' : 'Browser:'}
+                              </span>
+                              <span className="font-medium">{browserInfo.browser}</span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                                {language === 'ar' ? 'نظام التشغيل:' : 'OS:'}
+                              </span>
+                              <span className="font-medium">{browserInfo.os}</span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                                {language === 'ar' ? 'نوع الجهاز:' : 'Device:'}
+                              </span>
+                              <span className="font-medium">{browserInfo.device}</span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                      
+                      {selectedActivity.ip_address && (
+                        <div className="flex justify-between">
+                          <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                            {language === 'ar' ? 'عنوان IP:' : 'IP Address:'}
+                          </span>
+                          <span className="font-medium font-mono">{selectedActivity.ip_address}</span>
+                        </div>
+                      )}
+                      
+                      {selectedActivity.location && (
+                        <div className="flex justify-between">
+                          <span className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                            {language === 'ar' ? 'الموقع:' : 'Location:'}
+                          </span>
+                          <span className="font-medium">{selectedActivity.location}</span>
+                        </div>
+                      )}
+
+                      {(selectedActivity.latitude && selectedActivity.longitude) && (
+                        <div className="pt-2">
+                          <span className={`${isDark ? 'text-slate-400' : 'text-gray-600'} block`}>
+                            {language === 'ar' ? 'الإحداثيات:' : 'Coordinates:'}
+                          </span>
+                          <p className={`text-sm ${isDark ? 'text-slate-300 bg-slate-700/50' : 'text-gray-800 bg-gray-50'} p-2 rounded mt-1 font-mono`}>
+                            {parseFloat(selectedActivity.latitude).toFixed(6)}, {parseFloat(selectedActivity.longitude).toFixed(6)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Map Section */}
+                {(selectedActivity.latitude && selectedActivity.longitude) && (
+                  <div className="space-y-4">
+                    <h4 className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-800'} border-b pb-2`}>
+                      {language === 'ar' ? 'موقع النشاط على الخريطة' : 'Activity Location on Map'}
+                    </h4>
+                    <div 
+                      ref={mapRef}
+                      className={`w-full h-96 rounded-lg border ${isDark ? 'border-slate-600' : 'border-gray-300'}`}
+                    />
+                  </div>
+                )}
+
+                {/* Device Info Full Details */}
+                {selectedActivity.device_info && (
+                  <div className="space-y-4">
+                    <h4 className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-800'} border-b pb-2`}>
+                      {language === 'ar' ? 'معلومات الجهاز الكاملة' : 'Complete Device Information'}
+                    </h4>
+                    <div className={`${isDark ? 'bg-slate-700/50' : 'bg-gray-50'} p-4 rounded-lg`}>
+                      <code className={`text-xs ${isDark ? 'text-slate-300' : 'text-gray-700'} break-all`}>
+                        {selectedActivity.device_info}
+                      </code>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Map Section */}
-              {(selectedActivity.latitude && selectedActivity.longitude) && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">موقع النشاط على الخريطة</h4>
-                  <div 
-                    ref={mapRef}
-                    className="w-full h-96 rounded-lg border border-gray-300"
-                  />
-                </div>
-              )}
-
-              {/* Device Info Full Details */}
-              {selectedActivity.device_info && (
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">معلومات الجهاز الكاملة</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <code className="text-xs text-gray-700 break-all">
-                      {selectedActivity.device_info}
-                    </code>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
