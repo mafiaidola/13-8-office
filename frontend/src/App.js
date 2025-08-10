@@ -972,6 +972,7 @@ const DashboardLayout = () => {
         toggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         language={language}
         isRTL={isRTL}
+        theme={theme}
       />
 
       {/* Main Dashboard Content with modern layout */}
