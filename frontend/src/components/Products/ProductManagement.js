@@ -413,7 +413,7 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
                     {canSeePrices && (
                       <td className="px-6 py-4 text-sm">
                         <div className="flex flex-col">
-                          <span className="font-medium">{product.price} ج.م</span>
+                          <span className="font-medium">{product.price} {language === 'ar' ? 'ج.م' : 'EGP'}</span>
                           <span className="text-xs opacity-60">
                             {getPriceTypeLabel(product.price_type)}
                           </span>
