@@ -49,37 +49,37 @@ const AdminDashboard = ({
     loadSystemHealth();
   }, [timeFilter]);
 
-  // الإحصائيات المخصصة للأدمن مع التحسينات البصرية
+  // Admin stats with better horizontal layout
   const adminStats = [
     {
-      title: 'إجمالي المستخدمين',
+      title: language === 'ar' ? 'إجمالي المستخدمين' : 'Total Users',
       value: (dashboardData.total_users || 0).toLocaleString(),
       icon: '👥',
-      change: '+5 مستخدم هذا الشهر',
+      change: language === 'ar' ? '+5 مستخدم هذا الشهر' : '+5 users this month',
       color: 'bg-gradient-to-br from-blue-500 to-blue-600',
       trend: 'up'
     },
     {
-      title: 'العيادات النشطة',
+      title: language === 'ar' ? 'العيادات النشطة' : 'Active Clinics',
       value: (dashboardData.total_clinics || 0).toLocaleString(),
       icon: '🏥',
-      change: `${Math.round((dashboardData.total_clinics || 0) * 0.85)} عيادة متاحة`,
+      change: `${Math.round((dashboardData.total_clinics || 0) * 0.85)} ${language === 'ar' ? 'عيادة متاحة' : 'clinics available'}`,
       color: 'bg-gradient-to-br from-green-500 to-green-600',
       trend: 'up'
     },
     {
-      title: 'المنتجات المتاحة',
+      title: language === 'ar' ? 'المنتجات المتاحة' : 'Available Products',
       value: (dashboardData.total_products || 0).toLocaleString(),
       icon: '📦',
-      change: 'جميع المنتجات متوفرة',
+      change: language === 'ar' ? 'جميع المنتجات متوفرة' : 'All products available',
       color: 'bg-gradient-to-br from-purple-500 to-purple-600',
       trend: 'neutral'
     },
     {
-      title: 'الطلبات اليوم',
+      title: language === 'ar' ? 'الطلبات اليوم' : 'Today\'s Orders',
       value: (dashboardData.orders_in_period || 0).toLocaleString(),
       icon: '📋',
-      change: `${dashboardData.visits_in_period || 0} زيارة مجدولة`,
+      change: `${dashboardData.visits_in_period || 0} ${language === 'ar' ? 'زيارة مجدولة' : 'scheduled visits'}`,
       color: 'bg-gradient-to-br from-orange-500 to-orange-600',
       trend: 'up'
     }
