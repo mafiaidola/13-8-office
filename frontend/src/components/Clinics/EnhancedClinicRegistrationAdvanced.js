@@ -818,93 +818,163 @@ const EnhancedClinicRegistrationAdvanced = ({ language = 'en', theme = 'dark', u
             ⚙️ {language === 'ar' ? 'المعلومات الإدارية' : 'Administrative Information'}
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Line Selection */}
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+            {/* Line Selection - Card Style */}
             <div>
-              <label className="block text-white/90 font-medium mb-2">
+              <label className="block text-white/90 font-medium mb-4">
                 {language === 'ar' ? 'الخط *' : 'Line *'}
               </label>
-              <select
-                name="line_id"
-                value={formData.line_id}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              >
-                <option value="">{language === 'ar' ? 'اختر الخط' : 'Select Line'}</option>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {lines.map((line) => (
-                  <option key={line.id} value={line.id} className="bg-gray-800 text-white">
-                    {line.name}
-                  </option>
+                  <button
+                    key={line.id}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, line_id: line.id }))}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                      formData.line_id === line.id
+                        ? 'border-blue-400 bg-blue-500/20 text-white shadow-lg transform scale-105'
+                        : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/15 hover:border-white/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        formData.line_id === line.id 
+                          ? 'border-blue-400 bg-blue-500' 
+                          : 'border-white/50'
+                      }`}>
+                        {formData.line_id === line.id && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-lg">{line.name}</h4>
+                        {line.code && (
+                          <p className="text-sm opacity-75">كود: {line.code}</p>
+                        )}
+                        {line.description && (
+                          <p className="text-xs mt-1 opacity-60">{line.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
                 ))}
-              </select>
+                {lines.length === 0 && (
+                  <div className="col-span-2 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-xl text-yellow-200">
+                    {language === 'ar' ? 'لا توجد خطوط متاحة' : 'No lines available'}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Area Selection */}
+            {/* Area Selection - Card Style */}
             <div>
-              <label className="block text-white/90 font-medium mb-2">
+              <label className="block text-white/90 font-medium mb-4">
                 {language === 'ar' ? 'المنطقة *' : 'Area *'}
               </label>
-              <select
-                name="area_id"
-                value={formData.area_id}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              >
-                <option value="">{language === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {areas.map((area) => (
-                  <option key={area.id} value={area.id} className="bg-gray-800 text-white">
-                    {area.name}
-                  </option>
+                  <button
+                    key={area.id}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, area_id: area.id }))}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                      formData.area_id === area.id
+                        ? 'border-green-400 bg-green-500/20 text-white shadow-lg transform scale-105'
+                        : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/15 hover:border-white/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        formData.area_id === area.id 
+                          ? 'border-green-400 bg-green-500' 
+                          : 'border-white/50'
+                      }`}>
+                        {formData.area_id === area.id && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{area.name}</h4>
+                        {area.code && (
+                          <p className="text-sm opacity-75">كود: {area.code}</p>
+                        )}
+                        {area.parent_line_name && (
+                          <p className="text-xs mt-1 opacity-60">خط: {area.parent_line_name}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
                 ))}
-              </select>
+                {areas.length === 0 && (
+                  <div className="col-span-3 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-xl text-yellow-200">
+                    {language === 'ar' ? 'لا توجد مناطق متاحة' : 'No areas available'}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Classification */}
+            {/* Classification - Card Style */}
             <div>
-              <label className="block text-white/90 font-medium mb-2">
+              <label className="block text-white/90 font-medium mb-4">
                 {language === 'ar' ? 'التصنيف' : 'Classification'}
               </label>
-              <select
-                name="classification"
-                value={formData.classification}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              >
-                <option value="class_a" className="bg-gray-800 text-white">
-                  {language === 'ar' ? 'فئة أ - ممتاز' : 'Class A - Excellent'}
-                </option>
-                <option value="class_b" className="bg-gray-800 text-white">
-                  {language === 'ar' ? 'فئة ب - جيد' : 'Class B - Good'}
-                </option>
-                <option value="class_c" className="bg-gray-800 text-white">
-                  {language === 'ar' ? 'فئة ج - متوسط' : 'Class C - Average'}
-                </option>
-              </select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { value: 'class_a', label: language === 'ar' ? 'فئة أ - ممتاز' : 'Class A - Excellent', color: 'emerald', icon: '⭐' },
+                  { value: 'class_b', label: language === 'ar' ? 'فئة ب - جيد' : 'Class B - Good', color: 'blue', icon: '🏆' },
+                  { value: 'class_c', label: language === 'ar' ? 'فئة ج - متوسط' : 'Class C - Average', color: 'amber', icon: '📊' }
+                ].map((classification) => (
+                  <button
+                    key={classification.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, classification: classification.value }))}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                      formData.classification === classification.value
+                        ? `border-${classification.color}-400 bg-${classification.color}-500/20 text-white shadow-lg transform scale-105`
+                        : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/15 hover:border-white/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{classification.icon}</div>
+                      <div>
+                        <h4 className="font-semibold">{classification.label}</h4>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Credit Classification */}
+            {/* Credit Classification - Card Style */}
             <div>
-              <label className="block text-white/90 font-medium mb-2">
+              <label className="block text-white/90 font-medium mb-4">
                 {language === 'ar' ? 'التصنيف الائتماني' : 'Credit Classification'}
               </label>
-              <select
-                name="credit_classification"
-                value={formData.credit_classification}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              >
-                <option value="green" className="bg-gray-800 text-white">
-                  {language === 'ar' ? '🟢 أخضر - ممتاز' : '🟢 Green - Excellent'}
-                </option>
-                <option value="yellow" className="bg-gray-800 text-white">
-                  {language === 'ar' ? '🟡 أصفر - جيد' : '🟡 Yellow - Good'}
-                </option>
-                <option value="red" className="bg-gray-800 text-white">
-                  {language === 'ar' ? '🔴 أحمر - يحتاج متابعة' : '🔴 Red - Needs Follow-up'}
-                </option>
-              </select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { value: 'green', label: language === 'ar' ? 'أخضر - ممتاز' : 'Green - Excellent', icon: '🟢' },
+                  { value: 'yellow', label: language === 'ar' ? 'أصفر - جيد' : 'Yellow - Good', icon: '🟡' },
+                  { value: 'red', label: language === 'ar' ? 'أحمر - يحتاج متابعة' : 'Red - Needs Follow-up', icon: '🔴' }
+                ].map((creditClass) => (
+                  <button
+                    key={creditClass.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, credit_classification: creditClass.value }))}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                      formData.credit_classification === creditClass.value
+                        ? 'border-purple-400 bg-purple-500/20 text-white shadow-lg transform scale-105'
+                        : 'border-white/30 bg-white/10 text-white/80 hover:bg-white/15 hover:border-white/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{creditClass.icon}</div>
+                      <div>
+                        <h4 className="font-semibold">{creditClass.label}</h4>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
