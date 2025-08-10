@@ -416,53 +416,105 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Check if location is set (this is still required)
     if (!locationData.clinic_latitude || !locationData.clinic_longitude) {
-      alert(language === 'ar' ? 'يرجى تحديد موقع العيادة على الخريطة' : 'Please set the clinic location on the map');
+      alert(language === 'ar' 
+        ? 'يرجى تحديد موقع العيادة على الخريطة أولاً' 
+        : 'Please set the clinic location on the map first'
+      );
       return;
     }
 
     setSaving(true);
     try {
       const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
+      const headers = { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
       
       const submitData = {
         ...formData,
         ...locationData,
-        registered_by: user?.username || 'system'
+        registered_by: user?.username || 'system',
+        registration_timestamp: new Date().toISOString(),
+        gps_accuracy: locationData.location_accuracy,
+        address_source: locationData.formatted_address ? 'geocoded' : 'manual'
       };
+
+      console.log('📤 Submitting clinic data:', submitData);
 
       const response = await axios.post(`${API_URL}/api/clinics`, submitData, { headers });
       
-      if (response.status === 201) {
-        alert(tm('createSuccess'));
+      if (response.status === 201 || response.status === 200) {
+        alert(language === 'ar' ? '✅ تم تسجيل العيادة بنجاح!' : '✅ Clinic registered successfully!');
+        
         // Reset form
-        setFormData({
-          clinic_name: '',
-          clinic_phone: '',
-          clinic_email: '',
-          doctor_name: '',
-          doctor_phone: '',
-          clinic_address: '',
-          line_id: '',
-          area_id: '',
-          classification: 'class_b',
-          credit_classification: 'yellow',
-          classification_notes: '',
-          registration_notes: ''
-        });
-        setLocationData({
-          clinic_latitude: null,
-          clinic_longitude: null,
-          location_accuracy: null
-        });
-        setGpsStatus('idle');
+        resetForm();
+        
+        console.log('✅ Clinic registered successfully');
       }
     } catch (error) {
-      console.error('Error saving clinic:', error);
-      alert(tm('actionFailed'));
+      console.error('❌ Error saving clinic:', error);
+      
+      const errorMessage = error.response?.data?.detail || error.message || 
+        (language === 'ar' ? 'حدث خطأ أثناء حفظ البيانات' : 'An error occurred while saving');
+        
+      alert(`❌ ${errorMessage}`);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      clinic_name: '',
+      clinic_phone: '',
+      clinic_email: '',
+      doctor_name: '',
+      doctor_phone: '',
+      clinic_address: '',
+      line_id: '',
+      area_id: '',
+      classification: 'class_b',
+      credit_classification: 'yellow',
+      classification_notes: '',
+      registration_notes: ''
+    });
+
+    setLocationData({
+      clinic_latitude: null,
+      clinic_longitude: null,
+      location_accuracy: null,
+      formatted_address: '',
+      place_id: null,
+      address_components: []
+    });
+
+    setGpsStatus('idle');
+    setCurrentPosition(null);
+
+    // Clear search input
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
+
+    // Reset map to default location
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter({ lat: 30.0444, lng: 31.2357 });
+      mapInstanceRef.current.setZoom(15);
+    }
+
+    // Hide marker
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+    }
+
+    // Stop watching position
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
     }
   };
 
