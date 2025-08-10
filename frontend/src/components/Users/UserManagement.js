@@ -440,7 +440,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                   className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>📊</span>
-                  التفاصيل
+                  {language === 'ar' ? 'التفاصيل' : 'Details'}
                 </button>
                 
                 <button
@@ -448,7 +448,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                   className="bg-green-600 hover:bg-green-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>✏️</span>
-                  تعديل
+                  {language === 'ar' ? 'تعديل' : 'Edit'}
                 </button>
                 
                 <button
@@ -456,7 +456,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                   className="bg-red-600 hover:bg-red-700 text-white py-2.5 px-3 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1 shadow-lg"
                 >
                   <span>🗑️</span>
-                  حذف
+                  {language === 'ar' ? 'حذف' : 'Delete'}
                 </button>
               </div>
             </div>
