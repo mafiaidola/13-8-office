@@ -504,7 +504,7 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
       }
       
       setSearchResults(results);
-      } catch (error) {
+    } catch (error) {
         console.error('Search error:', error);
         setSearchResults([{
           id: 'error',
