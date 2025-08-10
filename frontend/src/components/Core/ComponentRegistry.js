@@ -228,59 +228,6 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل النظام المالي الموحد...'
   ),
   
-  // Visits Management
-  VisitsManagement: createLazyComponent(
-    () => import('../Visits/VisitsManagement'),
-    'جاري تحميل إدارة الزيارات...'
-  ),
-  
-  // Enhanced Clinic Management System
-  EnhancedClinicRegistration: createLazyComponent(
-    () => import('../Clinics/EnhancedClinicRegistrationFixed'),
-    'جاري تحميل تسجيل العيادات المحسن...'
-  ),
-  AdminRegistrationLogs: createLazyComponent(
-    () => import('../Clinics/AdminRegistrationLogs'),
-    'جاري تحميل سجلات التسجيل الإدارية...'
-  ),
-  AvailableClinics: createLazyComponent(
-    () => import('../Clinics/AvailableClinics'),
-    'جاري تحميل العيادات المتاحة...'
-  ),
-
-  GPSTracking: createLazyComponent(
-    () => import('../GPS/GPSTracking'),
-    'جاري تحميل تتبع المواقع...'
-  ),
-
-  // Settings
-  Settings: createLazyComponent(
-    () => import('../Settings/Settings'),
-    'جاري تحميل الإعدادات...'
-  ),
-
-  // Dashboard Support Components
-  CommonDashboardComponents: createLazyComponent(
-    () => import('../Dashboard/CommonDashboardComponents'),
-    'جاري تحميل مكونات لوحة التحكم المشتركة...'
-  ),
-  DashboardWrapper: createLazyComponent(
-    () => import('../Dashboard/DashboardWrapper'),
-    'جاري تحميل غلاف لوحة التحكم...'
-  ),
-  ActivityLog: createLazyComponent(
-    () => import('../Dashboard/ActivityLog'),
-    'جاري تحميل سجل الأنشطة...'
-  ),
-  SalesPerformance: createLazyComponent(
-    () => import('../Dashboard/SalesPerformance'),
-    'جاري تحميل أداء المبيعات...'
-  ),
-  LineCharts: createLazyComponent(
-    () => import('../Dashboard/LineCharts'),
-    'جاري تحميل الرسوم البيانية...'
-  ),
-  
   // Excel Management System
   ExcelManager: createLazyComponent(
     () => import('../Excel/ExcelManager'),
