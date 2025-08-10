@@ -275,7 +275,9 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
             </div>
             <div>
               <h1 className="text-3xl font-bold">{t('products', 'title')}</h1>
-              <p className="text-lg opacity-75">إدارة شاملة للمنتجات مع التحكم في الأسعار والمخزون</p>
+              <p className="text-lg opacity-75">
+                {language === 'ar' ? 'إدارة شاملة للمنتجات مع التحكم في الأسعار والمخزون' : 'Comprehensive product management with price and inventory control'}
+              </p>
             </div>
           </div>
           
