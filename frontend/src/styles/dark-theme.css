@@ -1,0 +1,287 @@
+/* Global Dark Theme Styles - أنماط الثيم الغامق الشاملة */
+/* This CSS file ensures consistent dark theme across all components */
+
+/* Root Variables for Dark Theme */
+.theme-dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --border-color: #4b5563;
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+}
+
+/* Global Dark Theme Application */
+.theme-dark * {
+  color-scheme: dark;
+}
+
+.theme-dark body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Input and Form Elements */
+.theme-dark input,
+.theme-dark textarea,
+.theme-dark select {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-dark input::placeholder,
+.theme-dark textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+.theme-dark input:focus,
+.theme-dark textarea:focus,
+.theme-dark select:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Dropdown and Select Elements */
+.theme-dark select,
+.theme-dark select option {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark select:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Buttons */
+.theme-dark button {
+  color: var(--text-primary) !important;
+}
+
+.theme-dark button:not(.btn-primary):not(.btn-secondary):not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600) {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark button:hover:not(.btn-primary):not(.btn-secondary) {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Cards and Containers */
+.theme-dark .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
+
+.theme-dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.theme-dark .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.theme-dark .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+/* Tables */
+.theme-dark table {
+  background-color: var(--bg-secondary) !important;
+}
+
+.theme-dark th {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark tr:hover td {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Modals and Overlays */
+.theme-dark .bg-white\/10,
+.theme-dark .modal,
+.theme-dark .dialog {
+  background-color: rgba(31, 41, 55, 0.95) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Shadows */
+.theme-dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.theme-dark .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.theme-dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Scrollbars */
+.theme-dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.theme-dark ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+/* Specific Component Overrides */
+
+/* Dashboard Cards */
+.theme-dark .dashboard-card {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Statistics Cards */
+.theme-dark .stat-card {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Navigation */
+.theme-dark .nav-item:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Badges and Labels */
+.theme-dark .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-dark .bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Loading Animations */
+.theme-dark .animate-pulse {
+  animation: pulse-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dark {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Alert Messages */
+.theme-dark .alert {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Tooltips */
+.theme-dark .tooltip {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Form Groups */
+.theme-dark .form-group label {
+  color: var(--text-primary) !important;
+}
+
+.theme-dark .form-group .help-text {
+  color: var(--text-tertiary) !important;
+}
+
+/* Breadcrumb */
+.theme-dark .breadcrumb {
+  background-color: var(--bg-secondary) !important;
+}
+
+.theme-dark .breadcrumb-item {
+  color: var(--text-secondary) !important;
+}
+
+.theme-dark .breadcrumb-item.active {
+  color: var(--text-primary) !important;
+}
+
+/* Pagination */
+.theme-dark .pagination .page-link {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-dark .pagination .page-item.active .page-link {
+  background-color: var(--accent-blue) !important;
+  border-color: var(--accent-blue) !important;
+}
+
+/* Progress Bars */
+.theme-dark .progress {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.theme-dark .progress-bar {
+  background-color: var(--accent-blue) !important;
+}
+
+/* Specific fixes for dropdown white background */
+.theme-dark select,
+.theme-dark option,
+.theme-dark datalist {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Fix for any remaining white backgrounds */
+.theme-dark [class*="bg-white"] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Fix for gray backgrounds */
+.theme-dark [class*="bg-gray-"] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Text color fixes */
+.theme-dark [class*="text-gray-"] {
+  color: var(--text-secondary) !important;
+}
+
+.theme-dark [class*="text-black"] {
+  color: var(--text-primary) !important;
+}
