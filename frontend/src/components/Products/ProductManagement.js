@@ -1,12 +1,10 @@
 // Enhanced Product Management Component - إدارة المنتجات المحسنة
 import React, { useState, useEffect } from 'react';
-import { useTranslation, useLayoutSystem, GlobalError } from '../../localization/globalTranslations';
+import { useTranslation } from '../../localization/enhancedTranslations';
 import axios from 'axios';
-import { activityLogger } from '../../utils/activityLogger.js';
 
 const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => {
-  const { t } = useTranslation(language);
-  const layouts = useLayoutSystem(theme);
+  const { t, tc, tp } = useTranslation(language);
   const isDark = theme === 'dark';
   
   const [products, setProducts] = useState([]);
