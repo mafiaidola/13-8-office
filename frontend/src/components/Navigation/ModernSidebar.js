@@ -10,7 +10,14 @@ const ModernSidebar = ({
   isRTL = false,  // Default to LTR (English)
   language = 'en' // Default to English
 }) => {
-  const [expandedSections, setExpandedSections] = useState({});
+  const [expandedSections, setExpandedSections] = useState({
+    core: true,
+    clinical: true,
+    financial: true,
+    inventory: true,
+    analytics: true,
+    system: true
+  });
 
   // Get available tabs for current user
   const availableTabs = useMemo(() => {
