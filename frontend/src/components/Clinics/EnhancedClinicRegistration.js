@@ -527,7 +527,7 @@ const EnhancedClinicRegistration = () => {
                            location.accuracy <= 100 ? '#f59e0b' : '#ef4444';
       
       markerRef.current.setIcon({
-        path: google.maps.SymbolPath.CIRCLE,
+        path: window.google.maps.SymbolPath.CIRCLE,
         fillColor: accuracyColor,
         fillOpacity: 0.8,
         strokeColor: '#ffffff',
@@ -536,7 +536,7 @@ const EnhancedClinicRegistration = () => {
       });
       
       // Add animation
-      markerRef.current.setAnimation(google.maps.Animation.DROP);
+      markerRef.current.setAnimation(window.google.maps.Animation.DROP);
       setTimeout(() => {
         if (markerRef.current) {
           markerRef.current.setAnimation(null);
