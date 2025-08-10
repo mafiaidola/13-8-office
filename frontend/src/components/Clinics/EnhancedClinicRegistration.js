@@ -786,7 +786,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {tcl('clinicName')}
+                {t('clinics', 'clinicName')}
               </h1>
               <p className={`text-lg mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                 {language === 'ar' ? 'تسجيل العيادات الطبية بنظام تصنيف متقدم وموقع جغرافي دقيق' : 'Medical clinic registration with advanced classification system and precise location'}
