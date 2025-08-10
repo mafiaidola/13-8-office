@@ -335,29 +335,57 @@
   background-color: var(--bg-surface);
 }
 
-/* Text Colors - Universal */
-[class*="theme-"] .text-gray-900 {
-  color: var(--text-primary);
+/* Text Colors - Enhanced for Better Visibility */
+[class*="theme-"] .text-gray-900,
+[class*="theme-"] .text-black {
+  color: var(--text-primary) !important;
+  font-weight: 500;
 }
 
 [class*="theme-"] .text-gray-800 {
-  color: var(--text-secondary);
+  color: var(--text-primary) !important;
+  opacity: 0.95;
 }
 
 [class*="theme-"] .text-gray-700 {
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
+  font-weight: 450;
 }
 
 [class*="theme-"] .text-gray-600 {
-  color: var(--text-muted);
+  color: var(--text-secondary) !important;
+  opacity: 0.85;
 }
 
 [class*="theme-"] .text-gray-500 {
-  color: var(--text-muted);
+  color: var(--text-secondary) !important;
+  opacity: 0.80;
 }
 
 [class*="theme-"] .text-gray-400 {
-  color: var(--text-muted);
+  color: var(--text-secondary) !important;
+  opacity: 0.75;
+}
+
+/* Enhanced text contrast for all themes */
+[class*="theme-"] p,
+[class*="theme-"] span,
+[class*="theme-"] div,
+[class*="theme-"] h1,
+[class*="theme-"] h2,
+[class*="theme-"] h3,
+[class*="theme-"] h4,
+[class*="theme-"] h5,
+[class*="theme-"] h6,
+[class*="theme-"] label {
+  color: var(--text-primary) !important;
+}
+
+/* Specific overrides for muted text that should remain readable */
+[class*="theme-"] .text-muted,
+[class*="theme-"] .text-sm {
+  color: var(--text-secondary) !important;
+  opacity: 0.9;
 }
 
 /* Border Colors - Enhanced */
