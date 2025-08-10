@@ -61,11 +61,19 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
   // Helper functions
   const getRoleLabel = (role) => {
     const roleLabels = {
-      admin: language === 'ar' ? 'مدير النظام' : 'Admin',
+      admin: language === 'ar' ? 'مدير النظام' : 'System Admin',
       manager: language === 'ar' ? 'مدير' : 'Manager',
       medical_rep: language === 'ar' ? 'مندوب طبي' : 'Medical Rep',
       accountant: language === 'ar' ? 'محاسب' : 'Accountant',
-      warehouse_keeper: language === 'ar' ? 'أمين مخزن' : 'Warehouse Keeper'
+      accounting: language === 'ar' ? 'محاسب' : 'Accountant',
+      warehouse_keeper: language === 'ar' ? 'أمين مخزن' : 'Warehouse Keeper',
+      warehouse_manager: language === 'ar' ? 'مدير مخزن' : 'Warehouse Manager',
+      gm: language === 'ar' ? 'مدير عام' : 'General Manager',
+      sales_rep: language === 'ar' ? 'مندوب مبيعات' : 'Sales Representative',
+      line_manager: language === 'ar' ? 'مدير خط' : 'Line Manager',
+      area_manager: language === 'ar' ? 'مدير منطقة' : 'Area Manager',
+      district_manager: language === 'ar' ? 'مدير منطقة' : 'District Manager',
+      key_account: language === 'ar' ? 'حساب رئيسي' : 'Key Account'
     };
     return roleLabels[role] || role;
   };
