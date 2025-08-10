@@ -162,9 +162,9 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل التحليلات المتقدمة...'
   ),
 
-  // Activity Tracking - Simplified Version
+  // Activity Tracking - Full Enhanced Version
   ActivityTracking: createLazyComponent(
-    () => import('../ActivityTracking/ActivityTrackingSimple'),
+    () => import('../ActivityTracking/ActivityTracking'),
     'جاري تحميل تتبع الأنشطة والحركات...'
   ),
 
