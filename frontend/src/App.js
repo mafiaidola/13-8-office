@@ -966,11 +966,12 @@ const DashboardLayout = () => {
       {/* Modern Sidebar */}
       <ModernSidebar 
         activeTab={activeTab}
-        onTabChange={setActiveTab}
-        user={user}
+        switchTab={setActiveTab}
+        currentUser={user}
         isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        toggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         language={language}
+        isRTL={isRTL}
       />
 
       {/* Main Dashboard Content with modern layout */}
