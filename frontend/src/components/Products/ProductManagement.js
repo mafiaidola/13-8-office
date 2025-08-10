@@ -128,8 +128,8 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       alert(tm('createSuccess'));
     } catch (error) {
       console.error('❌ Error creating product:', error);
-      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إنشاء المنتج';
-      alert(`خطأ في إنشاء المنتج: ${errorMessage}`);
+      const errorMessage = error.response?.data?.detail || tc('error');
+      alert(`${tc('error')}: ${errorMessage}`);
     }
   };
 
