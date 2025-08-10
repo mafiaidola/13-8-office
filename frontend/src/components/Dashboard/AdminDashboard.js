@@ -209,7 +209,7 @@ const AdminDashboard = ({
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-2xl font-bold text-gray-900 flex items-center">
             <span className="text-green-600 mr-3 text-3xl">💚</span>
-            مؤشرات صحة النظام
+            {t('system_health')}
           </h3>
           <button
             onClick={loadSystemHealth}
@@ -219,7 +219,7 @@ const AdminDashboard = ({
             <span className={`mr-3 text-lg ${loading ? 'animate-spin' : ''}`}>
               {loading ? '⏳' : '🔄'}
             </span>
-            {loading ? 'جاري التحديث...' : 'تحديث الحالة'}
+            {loading ? t('updating') : t('update_status')}
           </button>
         </div>
 
