@@ -85,16 +85,16 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
       setLoading(true);
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
-
+      
       const [linesRes, areasRes] = await Promise.all([
         axios.get(`${API_URL}/api/lines`, { headers }),
         axios.get(`${API_URL}/api/areas`, { headers })
       ]);
-
+      
       setLines(linesRes.data || []);
       setAreas(areasRes.data || []);
     } catch (error) {
-      console.error('Error loading form options:', error);
+      console.error('Error loading options:', error);
       // Fallback data
       setLines([
         { id: 'line-001', name: language === 'ar' ? 'خط القاهرة الكبرى' : 'Greater Cairo Line' },
