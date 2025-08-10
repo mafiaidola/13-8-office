@@ -401,33 +401,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
     setWatchId(newWatchId);
   };
 
-  // Initialize Google Maps
-  const initializeMap = (lat, lng) => {
-    if (!window.google) return;
 
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat, lng },
-      zoom: 16,
-      mapTypeId: 'roadmap'
-    });
-
-    const marker = new window.google.maps.Marker({
-      position: { lat, lng },
-      map: map,
-      draggable: true,
-      title: language === 'ar' ? 'موقع العيادة' : 'Clinic Location'
-    });
-
-    marker.addListener('dragend', (event) => {
-      const newLat = event.latLng.lat();
-      const newLng = event.latLng.lng();
-      setLocationData(prev => ({
-        ...prev,
-        clinic_latitude: newLat,
-        clinic_longitude: newLng
-      }));
-    });
-  };
 
   // Handle form input changes
   const handleInputChange = (e) => {
