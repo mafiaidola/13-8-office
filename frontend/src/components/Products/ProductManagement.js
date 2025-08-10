@@ -158,7 +158,7 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
   const handleDeleteProduct = async (productId) => {
     const productToDelete = products.find(p => p.id === productId);
     
-    if (window.confirm(`⚠️ تحذير: سيتم حذف المنتج نهائياً من النظام!\n\nالمنتج: ${productToDelete?.name}\nالكمية الحالية: ${productToDelete?.current_stock || 0}\n\nهل أنت متأكد من المتابعة؟`)) {
+    if (window.confirm(`⚠️ ${tm('confirmDelete')}\n\n${t('products', 'productName')}: ${productToDelete?.name}\n${tc('quantity')}: ${productToDelete?.current_stock || 0}\n\n${tm('cannotUndo')}`)) {
       try {
         const token = localStorage.getItem('access_token');
         console.log('🔧 Permanently deleting product:', productId);
@@ -169,31 +169,12 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
         
         console.log('✅ Product permanently deleted:', response.data);
         
-        // تسجيل النشاط
-        await activityLogger.logActivity(
-          'product_permanent_deletion',
-          'حذف منتج نهائياً',
-          'product',
-          productId,
-          productToDelete?.name || `منتج ${productId}`,
-          {
-            deleted_product_name: productToDelete?.name,
-            deleted_product_price: productToDelete?.price,
-            deleted_product_unit: productToDelete?.unit,
-            stock_at_deletion: productToDelete?.current_stock || 0,
-            deletion_type: 'HARD_DELETE',
-            deletion_reason: 'حذف نهائي بناءً على طلب المستخدم',
-            deleted_by_role: user?.role,
-            deletion_timestamp: new Date().toISOString()
-          }
-        );
-        
         fetchProducts();
-        alert('✅ تم حذف المنتج نهائياً من النظام');
+        alert(`✅ ${tm('deleteSuccess')}`);
       } catch (error) {
         console.error('❌ Error permanently deleting product:', error);
-        const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء حذف المنتج نهائياً';
-        alert(`❌ خطأ في حذف المنتج: ${errorMessage}`);
+        const errorMessage = error.response?.data?.detail || tc('error');
+        alert(`❌ ${tc('error')}: ${errorMessage}`);
       }
     }
   };
