@@ -331,19 +331,19 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-3">
                     <span className="text-blue-400 text-lg">📧</span>
-                    <span className="text-white/80 flex-1">{userData.email || 'غير محدد'}</span>
+                    <span className="text-white/80 flex-1">{userData.email || (language === 'ar' ? 'غير محدد' : 'Not specified')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-green-400 text-lg">📱</span>
-                    <span className="text-white/80 flex-1">{userData.phone || 'غير محدد'}</span>
+                    <span className="text-white/80 flex-1">{userData.phone || (language === 'ar' ? 'غير محدد' : 'Not specified')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-yellow-400 text-lg">📍</span>
-                    <span className="text-white/80 flex-1">{userData.area || 'غير محدد'}</span>
+                    <span className="text-white/80 flex-1">{userData.area || (language === 'ar' ? 'غير محدد' : 'Not specified')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-purple-400 text-lg">🏢</span>
-                    <span className="text-white/80 flex-1">{userData.department || 'عام'}</span>
+                    <span className="text-white/80 flex-1">{userData.department || (language === 'ar' ? 'عام' : 'General')}</span>
                   </div>
                 </div>
               </div>
