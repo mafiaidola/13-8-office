@@ -422,8 +422,8 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
                     )}
                     <td className="px-6 py-4 text-sm">
                       <div className={`inline-block px-3 py-1 rounded-lg border text-center ${getStockColor(stockStatus)}`}>
-                        <div className="font-medium">{product.current_stock}</div>
-                        <div className="text-xs">الحد الأدنى: {product.min_stock}</div>
+                        <div className="text-2xl font-bold">{product.current_stock}</div>
+                        <div className="text-xs">{language === 'ar' ? 'الحد الأدنى' : 'Min'}: {product.min_stock}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
