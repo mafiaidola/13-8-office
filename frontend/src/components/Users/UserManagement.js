@@ -261,10 +261,10 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
       {/* Excel Management Section */}
       <ExcelManager
         dataType="users"
-        title="المستخدمين"
+        title={language === 'ar' ? "المستخدمين" : "Users"}
         icon="👥"
         onImportComplete={() => {
-          loadUsers(); // إعادة تحميل البيانات بعد الاستيراد
+          loadUsers(); // Reload data after import
         }}
         className="mb-6"
       />
