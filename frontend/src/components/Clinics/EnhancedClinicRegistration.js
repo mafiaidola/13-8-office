@@ -866,7 +866,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
 
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
-                    {tcl('doctorName')} *
+                    {t('clinics', 'doctorName')} *
                   </label>
                   <input
                     type="text"
