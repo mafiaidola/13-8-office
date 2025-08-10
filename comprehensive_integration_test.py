@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional
 class ComprehensiveIntegrationTester:
     def __init__(self):
         # استخدام الـ URL الصحيح من متغيرات البيئة
-        self.base_url = "https://cba90dd5-7cf4-442d-a7f2-53754dd99b9e.preview.emergentagent.com/api"
+        self.base_url = "https://f4f7e091-f5a6-4f57-bca3-79ac25601921.preview.emergentagent.com/api"
         self.token = None
         self.test_results = []
         self.performance_metrics = []
