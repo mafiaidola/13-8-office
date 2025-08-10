@@ -88,6 +88,113 @@ const ActivityTracking = () => {
     }
   };
 
+  // Parse browser/device information from device_info string
+  const parseBrowserInfo = (deviceInfo) => {
+    if (!deviceInfo) return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
+    
+    const userAgent = deviceInfo.toLowerCase();
+    
+    // Browser detection
+    let browser = 'Unknown Browser';
+    if (userAgent.includes('chrome')) browser = 'Google Chrome';
+    else if (userAgent.includes('firefox')) browser = 'Mozilla Firefox';
+    else if (userAgent.includes('safari')) browser = 'Safari';
+    else if (userAgent.includes('edge')) browser = 'Microsoft Edge';
+    else if (userAgent.includes('opera')) browser = 'Opera';
+    
+    // OS detection
+    let os = 'Unknown OS';
+    if (userAgent.includes('windows')) os = 'Windows';
+    else if (userAgent.includes('mac')) os = 'macOS';
+    else if (userAgent.includes('linux')) os = 'Linux';
+    else if (userAgent.includes('android')) os = 'Android';
+    else if (userAgent.includes('iphone') || userAgent.includes('ipad')) os = 'iOS';
+    
+    // Device type
+    let device = 'Desktop';
+    if (userAgent.includes('mobile')) device = 'Mobile';
+    else if (userAgent.includes('tablet') || userAgent.includes('ipad')) device = 'Tablet';
+    
+    return { browser, os, device };
+  };
+
+  // Show activity details with map
+  const showActivityDetails = (activity) => {
+    setSelectedActivity(activity);
+    setShowMapModal(true);
+    
+    // Initialize map when modal opens
+    setTimeout(() => {
+      if (activity.latitude && activity.longitude) {
+        initializeMap(activity);
+      }
+    }, 100);
+  };
+
+  // Initialize Google Maps
+  const initializeMap = (activity) => {
+    if (!window.google || !window.google.maps || !mapRef.current) {
+      console.error('Google Maps not available');
+      return;
+    }
+
+    const location = {
+      lat: parseFloat(activity.latitude),
+      lng: parseFloat(activity.longitude)
+    };
+
+    const map = new window.google.maps.Map(mapRef.current, {
+      center: location,
+      zoom: 15,
+      mapTypeId: 'roadmap'
+    });
+
+    const marker = new window.google.maps.Marker({
+      position: location,
+      map: map,
+      title: `${activity.user_name} - ${activity.location || 'موقع النشاط'}`,
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C7.031 0 3 4.031 3 9C3 14.25 12 24 12 24S21 14.25 21 9C21 4.031 16.969 0 12 0ZM12 12.5C10.069 12.5 8.5 10.931 8.5 9S10.069 5.5 12 5.5S15.5 7.069 15.5 9S13.931 12.5 12 12.5Z" fill="#DC2626"/>
+          </svg>
+        `),
+        scaledSize: new window.google.maps.Size(32, 32)
+      }
+    });
+
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div style="text-align: center; font-family: Arial, sans-serif; direction: rtl;">
+          <h4 style="margin: 0 0 8px 0; color: #1f2937;">${activity.user_name}</h4>
+          <p style="margin: 4px 0; color: #6b7280;">${activity.location || 'موقع غير محدد'}</p>
+          <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${formatTimestamp(activity.timestamp)}</p>
+          <p style="margin: 4px 0; color: #3b82f6; font-size: 11px;">النشاط: ${getActivityTypeLabel(activity.activity_type)}</p>
+        </div>
+      `
+    });
+
+    marker.addListener('click', () => {
+      infoWindow.open(map, marker);
+    });
+
+    mapInstanceRef.current = map;
+  };
+
+  // Get activity type label in Arabic
+  const getActivityTypeLabel = (type) => {
+    const labels = {
+      'login': 'تسجيل دخول',
+      'logout': 'تسجيل خروج',
+      'user_created': 'إنشاء مستخدم',
+      'user_updated': 'تحديث مستخدم',
+      'clinic_visit': 'زيارة عيادة',
+      'order_created': 'إنشاء طلب',
+      'payment_processed': 'معالجة دفعة'
+    };
+    return labels[type] || type;
+  };
+
   const loadLoginLogs = async () => {
     try {
       setLoginLogsLoading(true);
