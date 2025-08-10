@@ -8,7 +8,7 @@ import ManagerDashboard from './ManagerDashboard';
 import SalesRepresentativeDashboard from './SalesRepresentativeDashboard';
 import MedicalRepresentativeDashboard from './MedicalRepresentativeDashboard';
 
-const RoleBasedDashboard = ({ user, language = 'ar', isRTL = true }) => {
+const RoleBasedDashboard = ({ user, language = 'en', isRTL = false }) => {
   const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState('today');
