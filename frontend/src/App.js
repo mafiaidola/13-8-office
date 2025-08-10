@@ -405,6 +405,23 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAuthStatus();
+    
+    // Expose debugging functions globally
+    window.debugAuth = {
+      checkAuth: checkAuthStatus,
+      getToken: () => localStorage.getItem('access_token'),
+      setToken: (token) => {
+        localStorage.setItem('access_token', token);
+        window.dispatchEvent(new CustomEvent('tokenInjected'));
+      },
+      clearToken: () => {
+        localStorage.removeItem('access_token');
+        checkAuthStatus();
+      },
+      getAuthState: () => authState
+    };
+    
+    console.log('🔧 Debug functions exposed: window.debugAuth');
   }, [checkAuthStatus]);
 
   const contextValue = {
