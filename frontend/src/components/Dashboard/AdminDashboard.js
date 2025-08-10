@@ -318,55 +318,59 @@ const AdminDashboard = ({
         </div>
       )}
 
-      {/* الرسوم البيانية والتحليلات */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* أداء النظام */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
+      {/* Charts and Analytics - Side by Side Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* System Performance */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <span className="text-blue-600 mr-3 text-2xl">📈</span>
-              أداء النظام العام
+              {language === 'ar' ? 'أداء النظام العام' : 'Overall System Performance'}
             </h3>
-            <p className="text-gray-700 font-medium mt-2">تحليل شامل لأداء النظام والمبيعات</p>
+            <p className="text-gray-700 font-medium mt-2">
+              {language === 'ar' ? 'تحليل شامل لأداء النظام والمبيعات' : 'Comprehensive analysis of system and sales performance'}
+            </p>
           </div>
           <SalesPerformance 
             data={[
-              { period: 'اليوم', sales: 15000, target: 12000, orders: 45 },
-              { period: 'أمس', sales: 8500, target: 12000, orders: 32 },
-              { period: 'قبل يومين', sales: 22000, target: 12000, orders: 67 },
-              { period: 'قبل 3 أيام', sales: 18000, target: 12000, orders: 54 }
+              { period: language === 'ar' ? 'اليوم' : 'Today', sales: 15000, target: 12000, orders: 45 },
+              { period: language === 'ar' ? 'أمس' : 'Yesterday', sales: 8500, target: 12000, orders: 32 },
+              { period: language === 'ar' ? 'قبل يومين' : '2 days ago', sales: 22000, target: 12000, orders: 67 },
+              { period: language === 'ar' ? 'قبل 3 أيام' : '3 days ago', sales: 18000, target: 12000, orders: 54 }
             ]}
             title=""
             timeFilter={timeFilter}
-            onExport={(data) => console.log('تصدير بيانات الأداء:', data)}
-            onViewDetails={(data) => console.log('عرض تفاصيل الأداء:', data)}
+            onExport={(data) => console.log('Export performance data:', data)}
+            onViewDetails={(data) => console.log('View performance details:', data)}
           />
         </div>
 
-        {/* اتجاهات الاستخدام */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
+        {/* Usage Trends */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
               <span className="text-purple-600 mr-3 text-2xl">📊</span>
-              اتجاهات استخدام النظام
+              {language === 'ar' ? 'اتجاهات استخدام النظام' : 'System Usage Trends'}
             </h3>
-            <p className="text-gray-700 font-medium mt-2">معدل استخدام النظام خلال الأسبوع</p>
+            <p className="text-gray-700 font-medium mt-2">
+              {language === 'ar' ? 'معدل استخدام النظام خلال الأسبوع' : 'System usage rate throughout the week'}
+            </p>
           </div>
           <LineCharts 
             data={[
-              { x: 'الإثنين', y: 120 },
-              { x: 'الثلاثاء', y: 150 },
-              { x: 'الأربعاء', y: 180 },
-              { x: 'الخميس', y: 165 },
-              { x: 'الجمعة', y: 200 },
-              { x: 'السبت', y: 145 },
-              { x: 'الأحد', y: 110 }
+              { x: language === 'ar' ? 'الإثنين' : 'Monday', y: 120 },
+              { x: language === 'ar' ? 'الثلاثاء' : 'Tuesday', y: 150 },
+              { x: language === 'ar' ? 'الأربعاء' : 'Wednesday', y: 180 },
+              { x: language === 'ar' ? 'الخميس' : 'Thursday', y: 165 },
+              { x: language === 'ar' ? 'الجمعة' : 'Friday', y: 200 },
+              { x: language === 'ar' ? 'السبت' : 'Saturday', y: 145 },
+              { x: language === 'ar' ? 'الأحد' : 'Sunday', y: 110 }
             ]}
             title=""
-            xAxisLabel="أيام الأسبوع"
-            yAxisLabel="عدد المستخدمين النشطين"
+            xAxisLabel={language === 'ar' ? 'أيام الأسبوع' : 'Days of the week'}
+            yAxisLabel={language === 'ar' ? 'عدد المستخدمين النشطين' : 'Number of active users'}
             interactive={true}
-            onDataPointClick={(item, index) => console.log('نقر على:', item)}
+            onDataPointClick={(item, index) => console.log('Clicked on:', item)}
           />
         </div>
       </div>
