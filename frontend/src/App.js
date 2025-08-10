@@ -1496,6 +1496,13 @@ const AppContent = () => {
     return <LoadingSpinner />;
   }
 
+  // TEMPORARY: Bypass authentication for testing components
+  const shouldBypassAuth = localStorage.getItem('bypass_auth') === 'true';
+  if (shouldBypassAuth) {
+    console.log('🔓 Bypassing authentication for testing');
+    return <DashboardLayout />;
+  }
+
   // Debug: authentication decision
   console.log('🎯 App rendering decision:', isAuthenticated ? 'DashboardLayout' : 'LoginForm');
   console.log('🔐 Authentication status:', { isAuthenticated, user: user?.username });
