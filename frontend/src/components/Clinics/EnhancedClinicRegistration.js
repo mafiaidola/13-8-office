@@ -600,7 +600,7 @@ const EnhancedClinicRegistration = () => {
       </div>
     `;
     
-    const infoWindow = new google.maps.InfoWindow({
+    const infoWindow = new window.google.maps.InfoWindow({
       content: infoContent,
       position: location,
       pixelOffset: new google.maps.Size(0, -15)
