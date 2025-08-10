@@ -153,7 +153,49 @@ const ModernProfessionalHeader = ({
     return initials;
   };
 
-  // Get role badge color and icon
+  // Mark notification as read
+  const markNotificationAsRead = (notificationId) => {
+    setNotifications(prev => prev.map(notification => 
+      notification.id === notificationId 
+        ? { ...notification, read: true }
+        : notification
+    ));
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+  };
+
+  // Handle notification click
+  const handleNotificationClick = (notification) => {
+    markNotificationAsRead(notification.id);
+    if (notification.action) {
+      notification.action();
+    }
+  };
+
+  // Get notification icon based on type
+  const getNotificationIcon = (type) => {
+    const icons = {
+      'info': '📄',
+      'success': '✅', 
+      'warning': '⚠️',
+      'error': '❌'
+    };
+    return icons[type] || '📄';
+  };
+
+  // Get notification color based on type
+  const getNotificationColor = (type) => {
+    const colors = {
+      'info': 'border-blue-200 bg-blue-50',
+      'success': 'border-green-200 bg-green-50',
+      'warning': 'border-yellow-200 bg-yellow-50',
+      'error': 'border-red-200 bg-red-50'
+    };
+    return colors[type] || 'border-gray-200 bg-gray-50';
+  };
   const getRoleInfo = (role) => {
     const roleMap = {
       'admin': { color: 'bg-gradient-to-r from-red-500 to-red-600', icon: '👑', label: language === 'ar' ? 'مدير' : 'Admin' },
