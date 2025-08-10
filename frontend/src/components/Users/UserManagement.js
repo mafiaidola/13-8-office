@@ -159,11 +159,16 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
     );
 
     if (testUsers.length === 0) {
-      alert('لا توجد مستخدمين تجريبيين للحذف');
+      const noTestUsersMessage = language === 'ar' ? 'لا توجد مستخدمين تجريبيين للحذف' : 'No test users found to delete';
+      alert(noTestUsersMessage);
       return;
     }
 
-    if (window.confirm(`⚠️ سيتم حذف ${testUsers.length} مستخدم تجريبي نهائياً من النظام!\n\nهل أنت متأكد من المتابعة؟`)) {
+    const confirmMessage = language === 'ar' 
+      ? `⚠️ سيتم حذف ${testUsers.length} مستخدم تجريبي نهائياً من النظام!\n\nهل أنت متأكد من المتابعة؟`
+      : `⚠️ This will permanently delete ${testUsers.length} test users from the system!\n\nAre you sure you want to continue?`;
+
+    if (window.confirm(confirmMessage)) {
       let successCount = 0;
       let errorCount = 0;
 
@@ -181,7 +186,10 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
       }
 
       loadUsers(); // Refresh the users list
-      alert(`✅ تم حذف ${successCount} مستخدم تجريبي بنجاح${errorCount > 0 ? `\n❌ فشل حذف ${errorCount} مستخدم` : ''}`);
+      const resultMessage = language === 'ar' 
+        ? `✅ تم حذف ${successCount} مستخدم تجريبي بنجاح${errorCount > 0 ? `\n❌ فشل حذف ${errorCount} مستخدم` : ''}`
+        : `✅ Successfully deleted ${successCount} test users${errorCount > 0 ? `\n❌ Failed to delete ${errorCount} users` : ''}`;
+      alert(resultMessage);
     }
   };
 
