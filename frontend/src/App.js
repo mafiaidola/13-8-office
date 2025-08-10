@@ -947,7 +947,7 @@ const DashboardLayout = () => {
   return (
     <div className={`dashboard-layout theme-${theme} ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Professional Header - Complete New Implementation */}
-      <ProfessionalHeader 
+      <ModernProfessionalHeader 
         user={user}
         language={language}
         setLanguage={(newLang) => {
@@ -960,14 +960,25 @@ const DashboardLayout = () => {
         setIsRTL={setIsRTL}
         onSearch={handleGlobalSearch}
         systemSettings={systemSettings}
+        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Main Dashboard Content with proper spacing for new header */}
-      <div className="dashboard-content flex pt-16">
+      {/* Modern Sidebar */}
+      <ModernSidebar 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        user={user}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        language={language}
+      />
+
+      {/* Main Dashboard Content with modern layout */}
+      <div className={`dashboard-content transition-all duration-300 ${
+        sidebarCollapsed ? 'ml-16' : 'ml-64'
+      } mt-16`}>
         {/* Main Content */}
-        <main className={`dashboard-main flex-1 p-6 overflow-auto transition-all duration-300 ${
-          sidebarCollapsed ? 'mr-16 sidebar-collapsed' : 'mr-80'
-        }`}>
+        <main className="dashboard-main flex-1 p-6 overflow-auto">
           {/* Current Tab Component */}
           <div className="tab-content">
             <ComponentRenderer
@@ -978,132 +989,6 @@ const DashboardLayout = () => {
             />
           </div>
         </main>
-
-        <aside className={`dashboard-sidebar fixed right-0 top-16 bottom-0 bg-white/5 backdrop-blur-lg border-l border-white/20 transition-all duration-300 z-30 ${
-          sidebarCollapsed ? 'w-16' : 'w-80'
-        }`}>
-          <div className="p-4">
-            {!sidebarCollapsed && (
-              <>
-                {/* Enhanced User Profile Panel */}
-                <div className="sidebar-user-panel mb-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="user-avatar-enhanced">
-                      <span>
-                        {(user?.full_name || user?.username || 'U')[0].toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-white">
-                        {user?.full_name || user?.username}
-                      </div>
-                      <div className="text-sm text-white/70 capitalize">
-                        {language === 'ar' ? (user?.role === 'admin' ? 'مدير النظام' : user?.role) : user?.role}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* User Details Grid */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">{language === 'ar' ? 'معرف المستخدم' : 'User ID'}:</span>
-                      <span className="text-white/90 font-mono text-xs">
-                        {user?.id ? user.id.substring(0, 8) + '...' : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">{language === 'ar' ? 'نشط منذ' : 'Active since'}:</span>
-                      <span className="text-white/90">
-                        {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">{language === 'ar' ? 'الثيم الحالي' : 'Current Theme'}:</span>
-                      <span className="text-white/90 flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full theme-preview-${theme}`}></div>
-                        {language === 'ar' ? availableThemes[theme]?.name.ar : availableThemes[theme]?.name.en}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/60">{language === 'ar' ? 'اللغة' : 'Language'}:</span>
-                      <span className="text-white/90">
-                        {language === 'ar' ? 'العربية' : 'English'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
-                    <button 
-                      onClick={() => setShowUserProfile(true)}
-                      className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
-                    >
-                      {language === 'ar' ? 'الملف الشخصي' : 'Profile'}
-                    </button>
-                    <button 
-                      onClick={() => setShowUserSettings(true)}
-                      className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
-                    >
-                      {language === 'ar' ? 'الإعدادات' : 'Settings'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Navigation */}
-                <NavigationSystem
-                  user={user}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  language={language}
-                  isRTL={isRTL}
-                />
-              </>
-            )}
-            
-            {sidebarCollapsed && (
-              <div className="space-y-2">
-                {/* Collapsed User Avatar */}
-                <div className="w-full p-3 rounded-lg bg-white/10 flex items-center justify-center mb-4">
-                  <div className="user-avatar-enhanced w-8 h-8">
-                    <span className="text-sm">
-                      {(user?.full_name || user?.username || 'U')[0].toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Collapsed Navigation */}
-                {availableTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full p-3 rounded-lg transition-all ${
-                      activeTab === tab.id 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-white/10 hover:bg-white/20'
-                    }`}
-                    title={language === 'ar' ? tab.name.ar : tab.name.en}
-                  >
-                    <span className="text-xl">{tab.icon}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* Toggle Button */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all duration-300 border border-white/20 backdrop-blur-sm"
-              title={language === 'ar' ? (sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة') : (sidebarCollapsed ? 'Expand Menu' : 'Collapse Menu')}
-            >
-              <span className={`text-sm transform transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}>
-                {isRTL ? '◀' : '▶'}
-              </span>
-            </button>
-          </div>
-        </aside>
       </div>
 
       {/* Global Search Modal */}
