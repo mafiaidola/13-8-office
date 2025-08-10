@@ -127,6 +127,16 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة العيادات...'
   ),
 
+  // Enhanced Clinic Management System
+  EnhancedClinicRegistration: createLazyComponent(
+    () => import('../Clinics/EnhancedClinicRegistration'),
+    'جاري تحميل تسجيل العيادات المحسن...'
+  ),
+  EnhancedClinicRegistrationFixed: createLazyComponent(
+    () => import('../Clinics/EnhancedClinicRegistrationFixed'),
+    'جاري تحميل تسجيل العيادات المحسن...'
+  ),
+
   // Product Management
   ProductManagement: createLazyComponent(
     () => import('../Products/ProductManagement'),
