@@ -402,9 +402,9 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                 <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-3 mb-4 border border-yellow-500/20">
                   <div className="text-center">
                     <div className="text-lg font-bold text-yellow-400">
-                      {userData.stats_last_30_days?.revenue?.toLocaleString('ar-EG') || '0'} ج.م
+                      {userData.stats_last_30_days?.revenue?.toLocaleString('ar-EG') || '0'} {language === 'ar' ? 'ج.م' : 'EGP'}
                     </div>
-                    <div className="text-xs text-yellow-200/80">إجمالي المبيعات الشهرية</div>
+                    <div className="text-xs text-yellow-200/80">{language === 'ar' ? 'إجمالي المبيعات الشهرية' : 'Monthly Total Sales'}</div>
                   </div>
                 </div>
               )}
