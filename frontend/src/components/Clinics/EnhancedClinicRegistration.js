@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useTranslation, useLayoutSystem, GlobalError } from '../../localization/globalTranslations';
+import { useTranslation } from '../../localization/enhancedTranslations';
 
 const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
-  const { t } = useTranslation(language);
-  const layouts = useLayoutSystem(theme);
+  const { t, tc, tcl } = useTranslation(language);
   const isDark = theme === 'dark';
   
   const [loading, setLoading] = useState(false);
