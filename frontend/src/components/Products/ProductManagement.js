@@ -1,10 +1,14 @@
 // Enhanced Product Management Component - إدارة المنتجات المحسنة
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '../../localization/translations.js';
+import { useTranslation, useLayoutSystem, GlobalError } from '../../localization/globalTranslations';
 import axios from 'axios';
 import { activityLogger } from '../../utils/activityLogger.js';
 
-const ProductManagement = ({ user, language, isRTL }) => {
+const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => {
+  const { t } = useTranslation(language);
+  const layouts = useLayoutSystem(theme);
+  const isDark = theme === 'dark';
+  
   const [products, setProducts] = useState([]);
   const [lines, setLines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,8 +17,8 @@ const ProductManagement = ({ user, language, isRTL }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBrand, setFilterBrand] = useState('all');
   const [filterLine, setFilterLine] = useState('all');
+  const [componentError, setComponentError] = useState(null);
   
-  const { t } = useTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
   // Check if user can see prices
