@@ -7,7 +7,6 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
   const isDark = theme === 'dark';
   
   const [loading, setLoading] = useState(false);
-  const [componentError, setComponentError] = useState(null);
   const [formData, setFormData] = useState({
     clinic_name: '',
     clinic_phone: '',
@@ -17,10 +16,8 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     clinic_address: '',
     line_id: '',
     area_id: '',
-    district_id: '',
-    // إضافة التصنيفات المطلوبة
-    classification: 'class_b', // تصنيف العيادة الافتراضي
-    credit_classification: 'yellow', // التصنيف الائتماني الافتراضي
+    classification: 'class_b',
+    credit_classification: 'yellow',
     classification_notes: '',
     registration_notes: ''
   });
@@ -38,7 +35,6 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
   const [formOptions, setFormOptions] = useState({
     lines: [],
     areas: [],
-    districts: [],
     classifications: [],
     credit_classifications: []
   });
@@ -47,6 +43,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [mapInitialized, setMapInitialized] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState('');
   
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -55,16 +52,11 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
 
   useEffect(() => {
     console.log('🏥 EnhancedClinicRegistration component mounted');
-    console.log('📊 Current formOptions:', formOptions);
-    console.log('📍 Current formData:', formData);
-    console.log('🗺️ Current locationData:', locationData);
-    
     loadFormData();
     loadGoogleMaps();
     getCurrentLocation();
   }, []);
 
-  // تهيئة الخريطة عند تحميل Google Maps
   useEffect(() => {
     if (mapLoaded && !mapInitialized) {
       initializeMap();
@@ -76,228 +68,134 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
       
-      // تحميل البيانات من APIs النظام الأساسية
-      const [linesResponse, areasResponse, formDataResponse] = await Promise.all([
+      const [linesResponse, areasResponse] = await Promise.all([
         axios.get(`${backendUrl}/api/lines`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
         }),
         axios.get(`${backendUrl}/api/areas`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
-        }),
-        axios.get(`${backendUrl}/api/enhanced-clinics/registration/form-data`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
-        }).catch(() => ({ data: { success: false } })) // fallback if endpoint doesn't exist
+        })
       ]);
       
-      // دمج البيانات من مصادر مختلفة
       const combinedFormOptions = {
         lines: linesResponse.data || [],
         areas: areasResponse.data || [],
         classifications: [
-          { value: 'class_a_star', label: '⭐ فئة أ نجمة - أعلى تصنيف', color: 'from-yellow-400 to-orange-500', icon: '⭐' },
-          { value: 'class_a', label: '🥇 فئة أ - ممتازة', color: 'from-green-400 to-blue-500', icon: '🥇' },
-          { value: 'class_b', label: '🥈 فئة ب - جيد جداً', color: 'from-blue-400 to-purple-500', icon: '🥈' },
-          { value: 'class_c', label: '🥉 فئة ج - جيد', color: 'from-purple-400 to-pink-500', icon: '🥉' },
-          { value: 'class_d', label: '📋 فئة د - مقبول', color: 'from-gray-400 to-gray-600', icon: '📋' }
+          { 
+            value: 'class_a_star', 
+            label: language === 'ar' ? '⭐ فئة أ نجمة - أعلى تصنيف' : '⭐ A-Star Class - Premium',
+            color: 'from-yellow-400 to-orange-500', 
+            icon: '⭐' 
+          },
+          { 
+            value: 'class_a', 
+            label: language === 'ar' ? '🥇 فئة أ - ممتازة' : '🥇 Class A - Excellent',
+            color: 'from-green-400 to-blue-500', 
+            icon: '🥇' 
+          },
+          { 
+            value: 'class_b', 
+            label: language === 'ar' ? '🥈 فئة ب - جيد جداً' : '🥈 Class B - Very Good',
+            color: 'from-blue-400 to-purple-500', 
+            icon: '🥈' 
+          },
+          { 
+            value: 'class_c', 
+            label: language === 'ar' ? '🥉 فئة ج - جيد' : '🥉 Class C - Good',
+            color: 'from-purple-400 to-pink-500', 
+            icon: '🥉' 
+          },
+          { 
+            value: 'class_d', 
+            label: language === 'ar' ? '📋 فئة د - مقبول' : '📋 Class D - Acceptable',
+            color: 'from-gray-400 to-gray-600', 
+            icon: '📋' 
+          }
         ],
         credit_classifications: [
-          { value: 'green', label: '🟢 أخضر - ائتمان ممتاز', color: 'from-green-400 to-green-600', icon: '🟢' },
-          { value: 'yellow', label: '🟡 أصفر - ائتمان متوسط', color: 'from-yellow-400 to-yellow-600', icon: '🟡' },
-          { value: 'red', label: '🔴 أحمر - ائتمان محدود', color: 'from-red-400 to-red-600', icon: '🔴' }
+          { 
+            value: 'green', 
+            label: language === 'ar' ? '🟢 أخضر - ائتمان ممتاز' : '🟢 Green - Excellent Credit',
+            color: 'from-green-400 to-green-600', 
+            icon: '🟢' 
+          },
+          { 
+            value: 'yellow', 
+            label: language === 'ar' ? '🟡 أصفر - ائتمان متوسط' : '🟡 Yellow - Average Credit',
+            color: 'from-yellow-400 to-yellow-600', 
+            icon: '🟡' 
+          },
+          { 
+            value: 'red', 
+            label: language === 'ar' ? '🔴 أحمر - ائتمان محدود' : '🔴 Red - Limited Credit',
+            color: 'from-red-400 to-red-600', 
+            icon: '🔴' 
+          }
         ]
       };
-
-      // إضافة البيانات من enhanced endpoint إذا كانت متاحة
-      if (formDataResponse.data?.success) {
-        const enhancedData = formDataResponse.data.data;
-        if (enhancedData.classifications) {
-          combinedFormOptions.classifications = enhancedData.classifications.map(c => ({
-            ...c,
-            color: getClassificationColor(c.value),
-            icon: getClassificationIcon(c.value)
-          }));
-        }
-        if (enhancedData.credit_classifications) {
-          combinedFormOptions.credit_classifications = enhancedData.credit_classifications.map(c => ({
-            ...c,
-            color: getCreditClassificationColor(c.value),
-            icon: getCreditClassificationIcon(c.value)
-          }));
-        }
-      }
       
       setFormOptions(combinedFormOptions);
-      console.log('✅ تم تحميل بيانات النموذج المدمجة:', combinedFormOptions);
+      console.log('✅ Form data loaded successfully:', combinedFormOptions);
     } catch (error) {
-      console.error('❌ خطأ في تحميل بيانات النموذج:', error);
-      setErrors({general: 'خطأ في تحميل بيانات النموذج'});
+      console.error('❌ Error loading form data:', error);
+      setErrors({general: t('messages', 'error')});
     }
   };
 
-  // دوال مساعدة للألوان والأيقونات
-  const getClassificationColor = (value) => {
-    const colors = {
-      'class_a_star': 'from-yellow-400 to-orange-500',
-      'class_a': 'from-green-400 to-blue-500', 
-      'class_b': 'from-blue-400 to-purple-500',
-      'class_c': 'from-purple-400 to-pink-500',
-      'class_d': 'from-gray-400 to-gray-600'
-    };
-    return colors[value] || 'from-gray-400 to-gray-600';
-  };
-
-  const getClassificationIcon = (value) => {
-    const icons = {
-      'class_a_star': '⭐',
-      'class_a': '🥇',
-      'class_b': '🥈', 
-      'class_c': '🥉',
-      'class_d': '📋'
-    };
-    return icons[value] || '📋';
-  };
-
-  const getCreditClassificationColor = (value) => {
-    const colors = {
-      'green': 'from-green-400 to-green-600',
-      'yellow': 'from-yellow-400 to-yellow-600',
-      'red': 'from-red-400 to-red-600'
-    };
-    return colors[value] || 'from-gray-400 to-gray-600';
-  };
-
-  const getCreditClassificationIcon = (value) => {
-    const icons = {
-      'green': '🟢',
-      'yellow': '🟡',
-      'red': '🔴'
-    };
-    return icons[value] || '⚪';
-  };
-
   const loadGoogleMaps = () => {
-    // التحقق إذا كانت مكتبة Google Maps محملة بالفعل
     if (window.google && window.google.maps) {
       setMapLoaded(true);
       return;
     }
 
     const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    console.log('🗺️ تحميل خرائط جوجل مع المفتاح:', apiKey ? 'موجود' : 'مفقود');
+    console.log('🗺️ Loading Google Maps with key:', apiKey ? 'available' : 'missing');
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=ar&region=EG`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=${language}&region=EG`;
     script.async = true;
     script.onload = () => {
-      console.log('✅ تم تحميل خرائط جوجل بنجاح');
+      console.log('✅ Google Maps loaded successfully');
       setMapLoaded(true);
     };
     script.onerror = () => {
-      console.error('❌ فشل في تحميل خرائط جوجل');
-      setErrors({map: 'فشل في تحميل خرائط جوجل - يرجى التأكد من مفتاح API'});
+      console.error('❌ Failed to load Google Maps');
+      setErrors({map: 'Failed to load Google Maps - Please check API key'});
     };
     document.head.appendChild(script);
   };
 
-  // دالة محسنة للحصول على الموقع الحالي مع معالجة أفضل للأخطاء
-  // دالة محسنة لإعدادات الموقع الجغرافي
-  const getLocationOptions = (attemptNumber = 1) => {
-    // إعدادات متدرجة الدقة حسب المحاولة
-    const optionSets = {
-      1: {
-        // المحاولة الأولى: أعلى دقة ممكنة
-        enableHighAccuracy: true,
-        timeout: 20000, // 20 ثانية
-        maximumAge: 0 // لا تستخدم cache قديم
-      },
-      2: {
-        // المحاولة الثانية: دقة متوسطة مع timeout أقل
-        enableHighAccuracy: true,
-        timeout: 15000, // 15 ثانية
-        maximumAge: 30000 // استخدم cache إذا كان عمره أقل من 30 ثانية
-      },
-      3: {
-        // المحاولة الثالثة: استخدم network location
-        enableHighAccuracy: false,
-        timeout: 10000, // 10 ثوان
-        maximumAge: 60000 // استخدم cache إذا كان عمره أقل من دقيقة
-      }
-    };
-
-    const options = optionSets[attemptNumber] || optionSets[3];
-    
-    console.log(`⚙️ إعدادات الموقع للمحاولة ${attemptNumber}:`, {
-      highAccuracy: options.enableHighAccuracy,
-      timeout: options.timeout / 1000 + 's',
-      maxAge: options.maximumAge / 1000 + 's'
-    });
-    
-    return options;
-  };
-
-  // دالة للتحقق من إمكانيات الجهاز
-  const checkGeolocationCapabilities = () => {
-    if (!navigator.geolocation) {
-      return { supported: false, reason: 'Geolocation not supported' };
-    }
-    
-    // فحص إضافي للمتصفحات المختلفة
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
-    
-    return {
-      supported: true,
-      isSecureContext,
-      browser: {
-        chrome: userAgent.includes('chrome'),
-        firefox: userAgent.includes('firefox'),
-        safari: userAgent.includes('safari') && !userAgent.includes('chrome'),
-        edge: userAgent.includes('edge')
-      },
-      permissions: navigator.permissions ? true : false,
-      capabilities: {
-        watchPosition: typeof navigator.geolocation.watchPosition === 'function',
-        getCurrentPosition: typeof navigator.geolocation.getCurrentPosition === 'function'
-      }
-    };
-  };
-
-  // Enhanced current location detection with maximum accuracy
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      console.warn('⚠️ الجهاز لا يدعم تحديد الموقع');
+      console.warn('⚠️ Device does not support geolocation');
       setErrors(prev => ({
         ...prev,
-        location: 'جهازك لا يدعم تحديد الموقع الجغرافي'
+        location: t('messages', 'featureUnavailable')
       }));
       useDefaultLocation();
       return;
     }
 
-    console.log('🔍 بدء تحديد الموقع الحالي بأقصى دقة ممكنة...');
+    console.log('🔍 Starting high-accuracy location detection...');
     
-    // Clear any cached location data first
     setErrors(prev => ({
       ...prev,
-      location: '📡 جاري تحديد موقعك الحالي بدقة عالية، يرجى عدم تحريك الجهاز...'
+      location: language === 'ar' ? '📡 جاري تحديد موقعك الحالي بدقة عالية، يرجى عدم تحريك الجهاز...' : '📡 Detecting your current location with high accuracy, please keep device steady...'
     }));
     
-    // Enhanced multi-attempt location detection
     const attemptHighAccuracyLocation = (attemptNumber = 1) => {
       const options = {
         enableHighAccuracy: true,
-        timeout: 25000, // 25 seconds for high accuracy
-        maximumAge: 0    // Force fresh location, no cached data
+        timeout: 25000,
+        maximumAge: 0
       };
 
-      console.log(`🎯 المحاولة ${attemptNumber} - إعدادات عالية الدقة`);
+      console.log(`🎯 Attempt ${attemptNumber} - High accuracy settings`);
       
-      // Create a timeout promise for better error handling
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Location timeout')), options.timeout);
       });
       
-      // Create geolocation promise
       const locationPromise = new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, options);
       });
@@ -306,42 +204,23 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         .then((position) => {
           const { latitude, longitude, accuracy, timestamp } = position.coords;
           
-          // Validate location accuracy
-          const isVeryAccurate = accuracy <= 30;   // Excellent accuracy
-          const isGoodAccuracy = accuracy <= 100;  // Good accuracy
-          const isAcceptable = accuracy <= 500;    // Acceptable accuracy
+          const isVeryAccurate = accuracy <= 30;
+          const isGoodAccuracy = accuracy <= 100;
+          const isAcceptable = accuracy <= 500;
           
-          console.log(`📍 موقع محصل عليه:`, {
+          console.log(`📍 Location obtained:`, {
             lat: latitude.toFixed(8),
             lng: longitude.toFixed(8), 
-            accuracy: `${Math.round(accuracy)} متر`,
-            quality: isVeryAccurate ? 'ممتازة' : (isGoodAccuracy ? 'جيدة' : 'مقبولة'),
-            timestamp: new Date(timestamp).toLocaleString('ar-EG'),
+            accuracy: `${Math.round(accuracy)} m`,
+            quality: isVeryAccurate ? 'excellent' : (isGoodAccuracy ? 'good' : 'acceptable'),
+            timestamp: new Date(timestamp).toLocaleString(),
             attempt: attemptNumber
           });
           
-          // If accuracy is poor and we have attempts left, try again
           if (!isAcceptable && attemptNumber < 3) {
-            console.log(`⚠️ دقة ضعيفة (${Math.round(accuracy)}م)، محاولة ${attemptNumber + 1}...`);
+            console.log(`⚠️ Poor accuracy (${Math.round(accuracy)}m), trying attempt ${attemptNumber + 1}...`);
             setTimeout(() => attemptHighAccuracyLocation(attemptNumber + 1), 2000);
             return;
-          }
-          
-          // If accuracy is poor but we've exhausted attempts, ask user
-          if (!isGoodAccuracy && attemptNumber >= 3) {
-            const userChoice = confirm(
-              `تم الحصول على موقعك بدقة ${Math.round(accuracy)} متر.\n\n` +
-              `هل تريد:\n` +
-              `✅ استخدام هذا الموقع\n` +
-              `🔄 إعادة المحاولة مع خيارات مختلفة\n\n` +
-              `(موافق = استخدام الموقع، إلغاء = إعادة المحاولة)`
-            );
-            
-            if (!userChoice) {
-              console.log('🔄 المستخدم اختار إعادة المحاولة...');
-              attemptNetworkLocation();
-              return;
-            }
           }
           
           const userLoc = {
@@ -355,7 +234,6 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           
           setUserLocation(userLoc);
           
-          // Update both rep and clinic location for accuracy
           setLocationData(prev => ({
             ...prev,
             rep_latitude: latitude,
@@ -371,28 +249,29 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
             location_quality_score: isVeryAccurate ? 100 : (isGoodAccuracy ? 80 : 60)
           }));
 
-          // Update map with enhanced accuracy
           if (mapInstanceRef.current) {
-            updateMapLocationEnhanced(userLoc);
+            updateMapLocation(userLoc);
           }
           
-          // Clear loading message
           setErrors(prev => {
             const newErrors = { ...prev };
             delete newErrors.location;
             return newErrors;
           });
           
-          // Show success message
           const qualityEmoji = isVeryAccurate ? '🎯' : (isGoodAccuracy ? '✅' : '⚠️');
-          const qualityText = isVeryAccurate ? 'دقة ممتازة' : (isGoodAccuracy ? 'دقة جيدة' : 'دقة مقبولة');
+          const qualityText = isVeryAccurate ? 
+            (language === 'ar' ? 'دقة ممتازة' : 'Excellent accuracy') : 
+            (isGoodAccuracy ? 
+              (language === 'ar' ? 'دقة جيدة' : 'Good accuracy') : 
+              (language === 'ar' ? 'دقة مقبولة' : 'Acceptable accuracy')
+            );
           
           setErrors(prev => ({
             ...prev,
-            location_success: `${qualityEmoji} تم تحديد موقعك الحالي بنجاح! ${qualityText} (±${Math.round(accuracy)} متر)`
+            location_success: `${qualityEmoji} ${language === 'ar' ? 'تم تحديد موقعك الحالي بنجاح!' : 'Your current location detected successfully!'} ${qualityText} (±${Math.round(accuracy)} ${language === 'ar' ? 'متر' : 'm'})`
           }));
           
-          // Auto-hide success message
           setTimeout(() => {
             setErrors(prev => {
               const newErrors = { ...prev };
@@ -403,33 +282,32 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           
         })
         .catch((error) => {
-          console.error(`❌ فشلت المحاولة ${attemptNumber}:`, {
+          console.error(`❌ Attempt ${attemptNumber} failed:`, {
             code: error.code || 'TIMEOUT',
             message: error.message,
             timestamp: new Date().toISOString()
           });
           
           if (attemptNumber < 3) {
-            console.log(`🔄 جاري المحاولة ${attemptNumber + 1} بعد 3 ثوان...`);
+            console.log(`🔄 Trying attempt ${attemptNumber + 1} in 3 seconds...`);
             setErrors(prev => ({
               ...prev,
-              location: `🔄 المحاولة ${attemptNumber} فشلت، جاري المحاولة ${attemptNumber + 1}/3...`
+              location: `🔄 ${language === 'ar' ? `المحاولة ${attemptNumber} فشلت، جاري المحاولة ${attemptNumber + 1}/3...` : `Attempt ${attemptNumber} failed, trying ${attemptNumber + 1}/3...`}`
             }));
             
             setTimeout(() => attemptHighAccuracyLocation(attemptNumber + 1), 3000);
           } else {
-            console.log('🌐 التبديل لخيار الشبكة...');
+            console.log('🌐 Switching to network location...');
             attemptNetworkLocation();
           }
         });
     };
     
-    // Fallback to network-based location
     const attemptNetworkLocation = () => {
-      console.log('🌐 محاولة الحصول على الموقع عبر الشبكة...');
+      console.log('🌐 Attempting to get location via network...');
       
       const networkOptions = {
-        enableHighAccuracy: false, // Use network location
+        enableHighAccuracy: false,
         timeout: 15000,
         maximumAge: 10000
       };
@@ -438,10 +316,10 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         (position) => {
           const { latitude, longitude, accuracy } = position.coords;
           
-          console.log('📍 موقع شبكة تم الحصول عليه:', {
+          console.log('📍 Network location obtained:', {
             lat: latitude.toFixed(6),
             lng: longitude.toFixed(6),
-            accuracy: `${Math.round(accuracy)} متر`,
+            accuracy: `${Math.round(accuracy)} m`,
             source: 'network'
           });
           
@@ -456,7 +334,6 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           
           setUserLocation(userLoc);
           
-          // Update location data
           setLocationData(prev => ({
             ...prev,
             rep_latitude: latitude,
@@ -464,7 +341,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
             rep_location_accuracy: accuracy,
             clinic_latitude: latitude,
             clinic_longitude: longitude,
-            clinic_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (شبكة)`,
+            clinic_address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (network)`,
             device_info: navigator.userAgent,
             location_obtained_at: new Date().toISOString(),
             location_source: 'network_location',
@@ -472,12 +349,12 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           }));
 
           if (mapInstanceRef.current) {
-            updateMapLocationEnhanced(userLoc);
+            updateMapLocation(userLoc);
           }
           
           setErrors(prev => ({
             ...prev,
-            location_success: `📶 تم تحديد موقعك عبر الشبكة (±${Math.round(accuracy)} متر) - للحصول على دقة أفضل، تأكد من تشغيل GPS`
+            location_success: `📶 ${language === 'ar' ? 'تم تحديد موقعك عبر الشبكة' : 'Location detected via network'} (±${Math.round(accuracy)} ${language === 'ar' ? 'متر) - للحصول على دقة أفضل، تأكد من تشغيل GPS' : 'm) - For better accuracy, ensure GPS is enabled'})`
           }));
           
           setTimeout(() => {
@@ -489,11 +366,11 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           }, 10000);
         },
         (error) => {
-          console.error('❌ فشل في الحصول على موقع الشبكة أيضاً:', error);
+          console.error('❌ Network location also failed:', error);
           
           setErrors(prev => ({
             ...prev,
-            location: `❌ فشل في تحديد الموقع. يرجى التأكد من:\n• تفعيل خدمة الموقع في الجهاز\n• منح الإذن للمتصفح\n• الاتصال بالإنترنت\nأو حدد موقع العيادة يدوياً على الخريطة`
+            location: `❌ ${language === 'ar' ? 'فشل في تحديد الموقع. يرجى التأكد من:\n• تفعيل خدمة الموقع في الجهاز\n• منح الإذن للمتصفح\n• الاتصال بالإنترنت\nأو حدد موقع العيادة يدوياً على الخريطة' : 'Failed to detect location. Please ensure:\n• Location service is enabled\n• Browser permission granted\n• Internet connection\nOr manually select clinic location on map'}`
           }));
           
           useDefaultLocation();
@@ -502,32 +379,26 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
       );
     };
     
-    // Start the location detection process
     attemptHighAccuracyLocation();
   };
 
-  // Enhanced map location update
-  const updateMapLocationEnhanced = (location) => {
+  const updateMapLocation = (location) => {
     if (!mapInstanceRef.current) return;
     
-    console.log('🗺️ تحديث موقع الخريطة بتحسينات...');
+    console.log('🗺️ Updating map location...');
     
-    // Determine zoom level based on accuracy
-    let zoomLevel = 15; // Default
-    if (location.accuracy <= 30) zoomLevel = 20;      // Very accurate
-    else if (location.accuracy <= 100) zoomLevel = 18; // Good accuracy  
-    else if (location.accuracy <= 500) zoomLevel = 16; // Acceptable
-    else zoomLevel = 14;                               // Poor accuracy
+    let zoomLevel = 15;
+    if (location.accuracy <= 30) zoomLevel = 20;
+    else if (location.accuracy <= 100) zoomLevel = 18;
+    else if (location.accuracy <= 500) zoomLevel = 16;
+    else zoomLevel = 14;
     
-    // Smooth pan to location
     mapInstanceRef.current.panTo(location);
     mapInstanceRef.current.setZoom(zoomLevel);
     
-    // Update marker with enhanced styling
     if (markerRef.current) {
       markerRef.current.setPosition(location);
       
-      // Enhanced marker with accuracy indication
       const accuracyColor = location.accuracy <= 30 ? '#10b981' : 
                            location.accuracy <= 100 ? '#f59e0b' : '#ef4444';
       
@@ -540,7 +411,6 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         scale: 8
       });
       
-      // Add animation
       markerRef.current.setAnimation(window.google.maps.Animation.DROP);
       setTimeout(() => {
         if (markerRef.current) {
@@ -549,12 +419,10 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
       }, 1500);
     }
     
-    // Remove previous accuracy circle
     if (accuracyCircleRef.current) {
       accuracyCircleRef.current.setMap(null);
     }
     
-    // Add enhanced accuracy circle
     const radiusColor = location.accuracy <= 30 ? '#10b981' : 
                        location.accuracy <= 100 ? '#f59e0b' : '#ef4444';
                        
@@ -568,210 +436,45 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
       center: location,
       radius: Math.max(location.accuracy || 50, 10)
     });
-    
-    // Enhanced info window
-    const accuracyText = location.accuracy <= 30 ? 'دقة ممتازة جداً' : 
-                        location.accuracy <= 100 ? 'دقة جيدة' : 
-                        location.accuracy <= 500 ? 'دقة مقبولة' : 'دقة ضعيفة';
-    
-    const qualityEmoji = location.accuracy <= 30 ? '🎯' : 
-                        location.accuracy <= 100 ? '✅' : 
-                        location.accuracy <= 500 ? '⚠️' : '❌';
-    
-    const infoContent = `
-      <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; min-width: 250px;">
-        <div style="background: linear-gradient(135deg, ${radiusColor}, ${radiusColor}aa); color: white; padding: 10px; border-radius: 8px 8px 0 0; margin: -8px -8px 8px -8px;">
-          <strong>${qualityEmoji} موقعك الحالي</strong>
-        </div>
-        <div style="padding: 8px 0;">
-          <div style="color: ${radiusColor}; font-weight: bold; font-size: 14px; margin-bottom: 8px;">
-            ${accuracyText}
-          </div>
-          <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 8px 0;">
-            <div style="color: #333; font-size: 12px; line-height: 1.4;">
-              <strong>دقة الموقع:</strong> ±${Math.round(location.accuracy)} متر<br>
-              <strong>الإحداثيات:</strong> ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}<br>
-              <strong>المصدر:</strong> ${location.source === 'gps_high_accuracy' ? 'GPS عالي الدقة' : 
-                                       location.source === 'network' ? 'موقع الشبكة' : 'افتراضي'}<br>
-              <strong>الوقت:</strong> ${new Date().toLocaleTimeString('ar-EG')}
-            </div>
-          </div>
-          ${location.accuracy > 100 ? 
-            '<div style="background: #fff3cd; padding: 6px; border-radius: 4px; border-left: 3px solid #ffc107;">' +
-            '<small style="color: #856404;">💡 للحصول على دقة أفضل، تأكد من تشغيل GPS وتحريك الجهاز للخارج</small>' +
-            '</div>' : ''
-          }
-        </div>
-      </div>
-    `;
-    
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: infoContent,
-      position: location,
-      pixelOffset: new window.google.maps.Size(0, -15)
-    });
-    
-    // Show info window for appropriate duration based on accuracy
-    const displayDuration = location.accuracy <= 100 ? 6000 : 12000;
-    infoWindow.open(mapInstanceRef.current);
-    setTimeout(() => {
-      if (infoWindow) {
-        infoWindow.close();
-      }
-    }, displayDuration);
   };
 
-  // دالة محسنة لتحديث موقع الخريطة
-  const updateMapLocation = (location, isHighAccuracy) => {
-    if (!mapInstanceRef.current) return;
-    
-    console.log('🗺️ تحديث موقع الخريطة...');
-    
-    // تحديد مستوى التكبير حسب دقة الموقع
-    const zoomLevel = isHighAccuracy ? 19 : (location.accuracy <= 100 ? 18 : 16);
-    
-    // تحريك الخريطة بسلاسة إلى الموقع الجديد
-    mapInstanceRef.current.panTo(location);
-    mapInstanceRef.current.setZoom(zoomLevel);
-    
-    // تحديث موقع العلامة
-    if (markerRef.current) {
-      markerRef.current.setPosition(location);
-      
-      // إضافة أنيميشن للعلامة
-      markerRef.current.setAnimation(window.google.maps.Animation.BOUNCE);
-      setTimeout(() => {
-        if (markerRef.current) {
-          markerRef.current.setAnimation(null);
-        }
-      }, 2000);
-    }
-    
-    // إزالة الدائرة السابقة
-    if (accuracyCircleRef.current) {
-      accuracyCircleRef.current.setMap(null);
-    }
-    
-    // إضافة دائرة دقة محسنة
-    const radiusColor = isHighAccuracy ? '#10b981' : (location.accuracy <= 100 ? '#f59e0b' : '#ef4444');
-    accuracyCircleRef.current = new window.google.maps.Circle({
-      strokeColor: radiusColor,
-      strokeOpacity: 1.0,
-      strokeWeight: 2,
-      fillColor: radiusColor,
-      fillOpacity: 0.1,
-      map: mapInstanceRef.current,
-      center: location,
-      radius: Math.max(location.accuracy || 50, 10) // الحد الأدنى 10 أمتار
-    });
-    
-    // إنشاء نافذة معلومات محسنة
-    const accuracyText = location.accuracy <= 50 ? 'دقة عالية جداً' : 
-                        (location.accuracy <= 100 ? 'دقة جيدة' : 'دقة مقبولة');
-    
-    const infoContent = `
-      <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px; border-radius: 8px 8px 0 0; margin: -8px -8px 8px -8px;">
-          <strong>📍 موقعك الحالي</strong>
-        </div>
-        <div style="padding: 4px 0;">
-          <div style="color: ${radiusColor}; font-weight: bold; margin-bottom: 4px;">
-            ${accuracyText}
-          </div>
-          <small style="color: #666;">
-            دقة الموقع: ±${Math.round(location.accuracy)} متر<br>
-            الإحداثيات: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}
-          </small>
-        </div>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
-          <small style="color: #999;">
-            ${new Date().toLocaleTimeString('ar-EG')}
-          </small>
-        </div>
-      </div>
-    `;
-    
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: infoContent,
-      position: location,
-      pixelOffset: new window.google.maps.Size(0, -10)
-    });
-    
-    // عرض النافذة مؤقتاً
-    infoWindow.open(mapInstanceRef.current);
-    setTimeout(() => {
-      if (infoWindow) {
-        infoWindow.close();
-      }
-    }, 6000); // عرض لمدة 6 ثواني لإعطاء وقت أكثر للقراءة
-  };
-
-  // دالة مساعدة لتوضيح تفاصيل الخطأ
-  const getLocationErrorDetails = (error) => {
-    switch(error.code) {
-      case error.PERMISSION_DENIED:
-        return "المستخدم رفض طلب الوصول للموقع";
-      case error.POSITION_UNAVAILABLE:
-        return "معلومات الموقع غير متاحة";
-      case error.TIMEOUT:
-        return "انتهت مهلة طلب الموقع";
-      default:
-        return "خطأ غير معروف";
-    }
-  };
-
-  // دالة لإرجاع رسالة خطأ للمستخدم
-  const getLocationErrorMessage = (error) => {
-    switch(error.code) {
-      case error.PERMISSION_DENIED:
-        return "يرجى السماح للموقع بالوصول للموقع الجغرافي من إعدادات المتصفح";
-      case error.POSITION_UNAVAILABLE:
-        return "تعذر تحديد موقعك الحالي، يرجى تحديد الموقع يدوياً على الخريطة";
-      case error.TIMEOUT:
-        return "تم تجاوز الوقت المحدد للحصول على الموقع، يرجى المحاولة مرة أخرى";
-      default:
-        return "خطأ في تحديد الموقع، يرجى تحديد الموقع يدوياً على الخريطة";
-    }
-  };
-
-  // دالة محسنة لاستخدام الموقع الافتراضي
   const useDefaultLocation = () => {
-    // إحداثيات أكثر دقة لوسط القاهرة (ميدان التحرير)
     const defaultLocation = { 
-      lat: 30.0444, // خط العرض لميدان التحرير
-      lng: 31.2357, // خط الطول لميدان التحرير
+      lat: 30.0444,
+      lng: 31.2357,
       accuracy: null,
       isDefault: true
     };
     
     setUserLocation(defaultLocation);
-    console.log('📍 استخدام الموقع الافتراضي المحسن (ميدان التحرير - القاهرة):', defaultLocation);
+    console.log('📍 Using enhanced default location (Tahrir Square - Cairo):', defaultLocation);
     
     setLocationData(prev => ({
       ...prev,
       rep_latitude: defaultLocation.lat,
       rep_longitude: defaultLocation.lng,
       rep_location_accuracy: null,
-      // إضافة موقع العيادة أيضاً
       clinic_latitude: defaultLocation.lat,
       clinic_longitude: defaultLocation.lng,
-      clinic_address: `ميدان التحرير، القاهرة (${defaultLocation.lat.toFixed(6)}, ${defaultLocation.lng.toFixed(6)})`,
+      clinic_address: language === 'ar' ? 
+        `ميدان التحرير، القاهرة (${defaultLocation.lat.toFixed(6)}, ${defaultLocation.lng.toFixed(6)})` :
+        `Tahrir Square, Cairo (${defaultLocation.lat.toFixed(6)}, ${defaultLocation.lng.toFixed(6)})`,
       device_info: navigator.userAgent,
       location_obtained_at: new Date().toISOString(),
       location_source: 'default_cairo_center',
-      location_note: 'تم استخدام الموقع الافتراضي (ميدان التحرير، القاهرة) - يرجى تحديد الموقع الصحيح يدوياً'
+      location_note: language === 'ar' ? 
+        'تم استخدام الموقع الافتراضي (ميدان التحرير، القاهرة) - يرجى تحديد الموقع الصحيح يدوياً' :
+        'Default location used (Tahrir Square, Cairo) - Please select correct location manually'
     }));
     
-    // إذا كانت الخريطة متاحة، اضبطها على الموقع الافتراضي
     if (mapInstanceRef.current) {
-      console.log('🗺️ تحديث الخريطة للموقع الافتراضي...');
+      console.log('🗺️ Updating map to default location...');
       mapInstanceRef.current.setCenter(defaultLocation);
-      mapInstanceRef.current.setZoom(11); // zoom مناسب لعرض القاهرة
+      mapInstanceRef.current.setZoom(11);
       
       if (markerRef.current) {
         markerRef.current.setPosition(defaultLocation);
         
-        // تغيير لون العلامة للإشارة لأنه موقع افتراضي
         markerRef.current.setIcon({
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -781,68 +484,28 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           scaledSize: new window.google.maps.Size(32, 32)
         });
       }
-      
-      // إضافة نافذة معلومات تفسيرية
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div style="text-align: center; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
-            <div style="background: linear-gradient(135deg, #ff6b35 0%, #f7971e 100%); color: white; padding: 8px; border-radius: 8px 8px 0 0; margin: -8px -8px 8px -8px;">
-              <strong>📍 الموقع الافتراضي</strong>
-            </div>
-            <div style="padding: 8px 0;">
-              <div style="color: #ff6b35; font-weight: bold; margin-bottom: 8px;">
-                ميدان التحرير - وسط القاهرة
-              </div>
-              <div style="background: #fff3cd; padding: 8px; border-radius: 6px; margin: 8px 0;">
-                <small style="color: #856404;">
-                  ⚠️ هذا موقع افتراضي<br>
-                  يرجى تحديد الموقع الصحيح للعيادة
-                </small>
-              </div>
-              <div style="margin-top: 8px;">
-                <button onclick="document.querySelector('[onclick*=getCurrentLocation]').click()" 
-                        style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                  📱 تحديد موقعي الحالي
-                </button>
-              </div>
-            </div>
-          </div>
-        `,
-        position: defaultLocation
-      });
-      
-      // عرض النافذة لفترة أطول لأنها مهمة
-      if (infoWindow && mapInstanceRef.current) {
-        infoWindow.open(mapInstanceRef.current);
-        setTimeout(() => {
-          if (infoWindow) {
-            infoWindow.close();
-          }
-        }, 8000); // 8 ثوان لقراءة التحذير
-      }
     }
     
-    // إظهار تحذير للمستخدم
     setErrors(prev => ({
       ...prev,
-      location: '📍 تم استخدام الموقع الافتراضي (ميدان التحرير). يرجى الضغط على "تحديد موقعي الحالي" أو تحديد موقع العيادة يدوياً على الخريطة لضمان الدقة.'
+      location: language === 'ar' ? 
+        '📍 تم استخدام الموقع الافتراضي (ميدان التحرير). يرجى الضغط على "تحديد موقعي الحالي" أو تحديد موقع العيادة يدوياً على الخريطة لضمان الدقة.' :
+        '📍 Default location used (Tahrir Square). Please click "Get My Current Location" or manually select clinic location on map for accuracy.'
     }));
   };
 
   const initializeMap = () => {
     if (!window.google || !window.google.maps || !mapRef.current) {
-      console.error('❌ Google Maps غير متاح أو عنصر الخريطة غير موجود');
+      console.error('❌ Google Maps not available or map element not found');
       return;
     }
 
     try {
-      // إعداد الموقع الافتراضي - استخدام الموقع الحالي إذا كان متاحاً
-      const defaultCenter = userLocation || { lat: 30.0444, lng: 31.2357 }; // القاهرة
-      const initialZoom = userLocation ? 17 : 13; // zoom أعلى إذا كان الموقع الحالي متاحاً
+      const defaultCenter = userLocation || { lat: 30.0444, lng: 31.2357 };
+      const initialZoom = userLocation ? 17 : 13;
       
-      console.log('🗺️ تهيئة الخريطة في الموقع:', defaultCenter);
+      console.log('🗺️ Initializing map at location:', defaultCenter);
 
-      // إنشاء الخريطة
       const map = new window.google.maps.Map(mapRef.current, {
         center: defaultCenter,
         zoom: initialZoom,
@@ -868,14 +531,14 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         ]
       });
 
-      // حفظ مرجع الخريطة
       mapInstanceRef.current = map;
 
-      // إنشاء دبوس قابل للسحب مع icon محسن
       const marker = new window.google.maps.Marker({
         position: defaultCenter,
         map: map,
-        title: 'موقع العيادة - يمكنك سحبه لتحديد الموقع الدقيق',
+        title: language === 'ar' ? 
+          'موقع العيادة - يمكنك سحبه لتحديد الموقع الدقيق' :
+          'Clinic Location - You can drag to set precise location',
         draggable: true,
         animation: window.google.maps.Animation.DROP,
         icon: {
@@ -890,10 +553,8 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         }
       });
 
-      // حفظ مرجع الدبوس
       markerRef.current = marker;
 
-      // إذا كان الموقع الحالي متاحاً، أضف دائرة الدقة
       if (userLocation && userLocation.accuracy) {
         accuracyCircleRef.current = new window.google.maps.Circle({
           strokeColor: '#4285f4',
@@ -905,17 +566,14 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
           center: userLocation,
           radius: userLocation.accuracy
         });
-        
-        console.log(`📍 تم إضافة دائرة دقة الموقع بنصف قطر ${userLocation.accuracy} متر`);
       }
 
-      // إضافة زر "موقعي الحالي" مخصص
       const locationButton = document.createElement('button');
-      locationButton.textContent = '📍 موقعي الحالي';
+      locationButton.textContent = language === 'ar' ? '📍 موقعي الحالي' : '📍 My Current Location';
       locationButton.classList.add('custom-location-button');
       locationButton.style.cssText = `
-        background-color: white;
-        border: 2px solid #ddd;
+        background-color: ${isDark ? '#1f2937' : 'white'};
+        border: 2px solid ${isDark ? '#374151' : '#ddd'};
         border-radius: 8px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         cursor: pointer;
@@ -926,195 +584,80 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
         padding: 8px 12px;
         text-align: center;
         transition: all 0.2s ease;
+        color: ${isDark ? '#f9fafb' : '#333'};
       `;
       
       locationButton.addEventListener('mouseenter', () => {
-        locationButton.style.backgroundColor = '#f0f0f0';
+        locationButton.style.backgroundColor = isDark ? '#374151' : '#f0f0f0';
         locationButton.style.transform = 'scale(1.05)';
       });
       
       locationButton.addEventListener('mouseleave', () => {
-        locationButton.style.backgroundColor = 'white';
+        locationButton.style.backgroundColor = isDark ? '#1f2937' : 'white';
         locationButton.style.transform = 'scale(1)';
       });
 
       locationButton.addEventListener('click', () => {
-        locationButton.textContent = '⏳ جاري التحديد...';
+        locationButton.textContent = language === 'ar' ? '⏳ جاري التحديد...' : '⏳ Detecting...';
         locationButton.disabled = true;
         getCurrentLocation();
         
         setTimeout(() => {
-          locationButton.textContent = '📍 موقعي الحالي';
+          locationButton.textContent = language === 'ar' ? '📍 موقعي الحالي' : '📍 My Current Location';
           locationButton.disabled = false;
         }, 3000);
       });
 
       map.controls[window.google.maps.ControlPosition.TOP_RIGHT].push(locationButton);
 
-      // إعداد البحث في الخريطة
-      if (window.google.maps.places) {
-        const searchInput = document.getElementById('address-search');
-        if (searchInput) {
-          const searchBox = new window.google.maps.places.SearchBox(searchInput);
-          map.controls[window.google.maps.ControlPosition.TOP_LEFT].push(searchInput);
-
-          // البحث عند الكتابة
-          searchBox.addListener('places_changed', () => {
-            const places = searchBox.getPlaces();
-            if (places.length === 0) return;
-
-            const place = places[0];
-            if (!place.geometry || !place.geometry.location) return;
-
-            const location = place.geometry.location;
-            const lat = location.lat();
-            const lng = location.lng();
-
-            console.log('🔍 تم العثور على المكان:', { lat, lng, name: place.name });
-
-            // تحديث الخريطة والدبوس
-            map.setCenter({ lat, lng });
-            map.setZoom(17);
-            marker.setPosition({ lat, lng });
-            
-            setLocationData(prev => ({
-              ...prev,
-              clinic_latitude: lat,
-              clinic_longitude: lng,
-              clinic_address: place.formatted_address || place.name || `${lat}, ${lng}`,
-              search_query: searchInput.value
-            }));
-          });
-        }
-      }
-
-      // معالج حدث سحب الدبوس
+      // Handle marker drag
       marker.addListener('dragend', (event) => {
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
-        
-        console.log('📍 تم تحديد موقع جديد:', { lat, lng });
         
         setLocationData(prev => ({
           ...prev,
           clinic_latitude: lat,
           clinic_longitude: lng,
-          clinic_address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-        }));
-
-        // Reverse Geocoding للحصول على العنوان
-        if (window.google.maps.Geocoder) {
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              const address = results[0].formatted_address;
-              console.log('🏠 العنوان المحول:', address);
-              
-              setLocationData(prev => ({
-                ...prev,
-                clinic_address: address
-              }));
-            }
-          });
-        }
-      });
-
-      // النقر على الخريطة لتحديد موقع جديد
-      map.addListener('click', (event) => {
-        const lat = event.latLng.lat();
-        const lng = event.latLng.lng();
-        
-        marker.setPosition({ lat, lng });
-        
-        setLocationData(prev => ({
-          ...prev,
-          clinic_latitude: lat,
-          clinic_longitude: lng
+          clinic_address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          location_source: 'manual_drag',
+          manual_location_set: true
         }));
         
-        console.log('🖱️ تم النقر على موقع جديد:', { lat, lng });
+        console.log('📍 Clinic location updated by drag:', { lat, lng });
       });
 
-      console.log('✅ تم تهيئة الخريطة بنجاح');
-      
+      console.log('✅ Map initialized successfully');
     } catch (error) {
-      console.error('❌ خطأ في تهيئة الخريطة:', error);
+      console.error('❌ Error initializing map:', error);
       setErrors(prev => ({
         ...prev,
-        map: 'خطأ في تحميل الخريطة، يرجى إعادة تحميل الصفحة'
+        map: 'Failed to initialize map'
       }));
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // إزالة رسالة الخطأ عند التعديل
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
-
-  // دالة حساب نسبة إكمال النموذج
-  const getFormCompletionPercentage = () => {
-    const requiredFields = [
-      'clinic_name', 'doctor_name', 
-      'clinic_address', 'line_id', 'area_id', 
-      'classification', 'credit_classification'
-    ];
-    const locationRequired = locationData.clinic_latitude && locationData.clinic_longitude;
-    
-    let completed = 0;
-    const total = requiredFields.length + (locationRequired ? 1 : 0);
-    
-    // فحص الحقول المطلوبة
-    requiredFields.forEach(field => {
-      if (formData[field] && formData[field].trim() !== '') {
-        completed++;
-      }
-    });
-    
-    // فحص الموقع
-    if (locationRequired) {
-      completed++;
-    }
-    
-    return Math.round((completed / (requiredFields.length + 1)) * 100);
-  };
-
-  const getFilteredAreas = () => {
-    if (!formData.line_id) return [];
-    // فلترة المناطق حسب الخط المختار من APIs النظام الأساسية
-    return formOptions.areas.filter(area => 
-      area.parent_line_id === formData.line_id || area.line_id === formData.line_id
-    );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     
-    // التحقق من الحقول المطلوبة
-    if (!formData.clinic_name.trim()) newErrors.clinic_name = 'اسم العيادة مطلوب';
-    if (!formData.doctor_name.trim()) newErrors.doctor_name = 'اسم الطبيب مطلوب';
-    if (!formData.line_id) newErrors.line_id = 'يجب اختيار الخط';
-    if (!formData.area_id) newErrors.area_id = 'يجب اختيار المنطقة';
-    if (!formData.clinic_address.trim()) newErrors.clinic_address = 'عنوان العيادة مطلوب';
-    
-    // التحقق من الموقع
-    if (!locationData.clinic_latitude || !locationData.clinic_longitude) {
-      newErrors.location = 'يجب تحديد موقع العيادة على الخريطة';
+    if (!formData.clinic_name.trim()) {
+      newErrors.clinic_name = t('validation', 'required');
+    }
+    if (!formData.doctor_name.trim()) {
+      newErrors.doctor_name = t('validation', 'required');
+    }
+    if (!formData.clinic_phone.trim()) {
+      newErrors.clinic_phone = t('validation', 'required');
     }
     
-    // التحقق من رقم الهاتف
-    if (formData.clinic_phone && !/^[0-9+\-\s()]+$/.test(formData.clinic_phone)) {
-      newErrors.clinic_phone = 'رقم الهاتف غير صحيح';
-    }
-    
-    // التحقق من البريد الإلكتروني
-    if (formData.clinic_email && !/\S+@\S+\.\S+/.test(formData.clinic_email)) {
-      newErrors.clinic_email = 'البريد الإلكتروني غير صحيح';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -1125,493 +668,582 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     if (!validateForm()) {
       return;
     }
-
+    
     setLoading(true);
-
+    setSubmissionStatus('submitting');
+    
     try {
       const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+      const token = localStorage.getItem('access_token');
       
-      const requestData = {
+      const submissionData = {
         ...formData,
-        ...locationData
+        ...locationData,
+        submission_timestamp: new Date().toISOString(),
+        form_language: language,
+        user_agent: navigator.userAgent
       };
-
-      console.log('📤 إرسال بيانات تسجيل العيادة:', requestData);
-
-      const response = await axios.post(
-        `${backendUrl}/api/enhanced-clinics/register`,
-        requestData,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
-          }
+      
+      console.log('📤 Submitting clinic registration:', submissionData);
+      
+      const response = await axios.post(`${backendUrl}/api/enhanced-clinics/register`, submissionData, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
-
-      if (response.data.success) {
-        alert(`✅ تم تسجيل العيادة بنجاح!\n\nرقم التسجيل: ${response.data.registration_number}\nالحالة: ${response.data.status}\n\nتصنيف العيادة: ${getClassificationLabel(formData.classification)}\nالتصنيف الائتماني: ${getCreditClassificationLabel(formData.credit_classification)}`);
-        
-        // إعادة تعيين النموذج
-        setFormData({
-          clinic_name: '',
-          clinic_phone: '',
-          clinic_email: '',
-          doctor_name: '',
-          doctor_phone: '',
-          clinic_address: '',
-          line_id: '',
-          area_id: '',
-          district_id: '',
-          classification: 'class_b',
-          credit_classification: 'yellow',
-          classification_notes: '',
-          registration_notes: ''
-        });
-        
-        setLocationData({
-          clinic_latitude: null,
-          clinic_longitude: null,
-          location_accuracy: null,
-          rep_latitude: userLocation?.lat || null,
-          rep_longitude: userLocation?.lng || null,
-          rep_location_accuracy: userLocation?.accuracy || null,
-          device_info: navigator.userAgent
-        });
-
-        // إعادة تعيين الخريطة للموقع الحالي
-        if (mapInstanceRef.current && markerRef.current && userLocation) {
-          mapInstanceRef.current.setCenter(userLocation);
-          markerRef.current.setPosition(userLocation);
-        }
-      }
+      });
+      
+      console.log('✅ Clinic registration successful:', response.data);
+      
+      setSubmissionStatus('success');
+      
+      // Reset form
+      setFormData({
+        clinic_name: '',
+        clinic_phone: '',
+        clinic_email: '',
+        doctor_name: '',
+        doctor_phone: '',
+        clinic_address: '',
+        line_id: '',
+        area_id: '',
+        classification: 'class_b',
+        credit_classification: 'yellow',
+        classification_notes: '',
+        registration_notes: ''
+      });
+      
+      // Show success message
+      setTimeout(() => {
+        setSubmissionStatus('');
+      }, 5000);
+      
     } catch (error) {
-      console.error('❌ خطأ في تسجيل العيادة:', error);
-      if (error.response?.data?.detail) {
-        setErrors({general: error.response.data.detail});
-      } else {
-        setErrors({general: 'حدث خطأ أثناء تسجيل العيادة'});
-      }
+      console.error('❌ Clinic registration failed:', error);
+      setSubmissionStatus('error');
+      setErrors({
+        submit: error.response?.data?.detail || t('messages', 'error')
+      });
+      
+      setTimeout(() => {
+        setSubmissionStatus('');
+      }, 5000);
     } finally {
       setLoading(false);
     }
   };
 
-  // دوال مساعدة للحصول على تسميات التصنيفات
-  const getClassificationLabel = (value) => {
-    const classification = formOptions.classifications.find(c => c.value === value);
-    return classification ? classification.label : value;
+  const getProgressPercentage = () => {
+    const totalFields = 7; // Essential fields
+    let filledFields = 0;
+    
+    if (formData.clinic_name.trim()) filledFields++;
+    if (formData.doctor_name.trim()) filledFields++;
+    if (formData.clinic_phone.trim()) filledFields++;
+    if (formData.line_id) filledFields++;
+    if (formData.area_id) filledFields++;
+    if (locationData.clinic_latitude && locationData.clinic_longitude) filledFields++;
+    if (formData.classification) filledFields++;
+    
+    return Math.round((filledFields / totalFields) * 100);
   };
 
-  const getCreditClassificationLabel = (value) => {
-    const classification = formOptions.credit_classifications.find(c => c.value === value);
-    return classification ? classification.label : value;
-  };
+  const progressPercentage = getProgressPercentage();
+
+  // Theme styles
+  const containerStyles = `min-h-screen transition-all duration-300 ${
+    isDark 
+      ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
+      : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'
+  }`;
+
+  const cardStyles = `rounded-xl shadow-lg border transition-all duration-200 hover:shadow-xl ${
+    isDark 
+      ? 'bg-slate-800/90 border-slate-700 backdrop-blur-sm' 
+      : 'bg-white border-gray-200'
+  }`;
+
+  const inputStyles = `w-full px-4 py-3 rounded-lg border transition-all duration-200 ${
+    isDark 
+      ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:bg-slate-600' 
+      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+  } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`;
+
+  const buttonPrimaryStyles = `px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+    isDark 
+      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+      : 'bg-blue-600 hover:bg-blue-700 text-white'
+  } transform hover:scale-105 focus:scale-95 shadow-lg hover:shadow-xl`;
 
   return (
-    <div className={layouts.pageContainer}>
-      <div className={layouts.formContainer}>
-        {/* Enhanced Header with Professional Design */}
-        <div className={layouts.pageHeader}>
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl mb-6 shadow-xl">
-            <span className="text-4xl">🏥</span>
+    <div className={containerStyles}>
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Header */}
+        <div className={`${cardStyles} p-8 text-center`}>
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+              <span className="text-3xl text-white">🏥</span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {tcl('clinicName')}
+              </h1>
+              <p className={`text-lg mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                {language === 'ar' ? 'تسجيل العيادات الطبية بنظام تصنيف متقدم وموقع جغرافي دقيق' : 'Medical clinic registration with advanced classification system and precise location'}
+              </p>
+            </div>
           </div>
-          <h1 className={layouts.pageTitle}>
-            {t('clinicRegistrationTitle')}
-          </h1>
-          <p className={layouts.pageDescription}>
-            {t('clinicRegistrationDesc')}
-          </p>
-        </div>
 
-        {/* Enhanced Progress Bar */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <span className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
-              {t('formCompletionProgress')}
-            </span>
-            <span className={`text-2xl font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent`}>
-              {getCompletionPercentage()}%
-            </span>
-          </div>
-          
-          <div className={`w-full bg-gray-200 rounded-full h-3 shadow-inner ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
-            <div 
-              className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out shadow-lg"
-              style={{ width: `${getCompletionPercentage()}%` }}
-            />
-          </div>
-          
-          {/* Progress Steps */}
-          <div className="flex justify-between mt-4 text-sm">
-            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 0 ? 'text-green-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 0 ? 'bg-green-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
-                1
+          {/* Progress Bar */}
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">
+                {language === 'ar' ? 'تقدم النموذج' : 'Form Progress'}
               </span>
-              <span>{t('basicInfo')}</span>
+              <span className="text-sm font-bold text-blue-600">{progressPercentage}%</span>
             </div>
-            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 50 ? 'text-blue-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 50 ? 'bg-blue-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
-                2
-              </span>
-              <span>{t('locationMapping')}</span>
-            </div>
-            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 80 ? 'text-purple-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 80 ? 'bg-purple-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
-                3
-              </span>
-              <span>{t('classifications')}</span>
-            </div>
-            <div className={`flex items-center space-x-2 ${getCompletionPercentage() === 100 ? 'text-green-600 font-bold' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() === 100 ? 'bg-green-500 text-white animate-pulse' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
-                ✓
-              </span>
-              <span>{t('completed')}</span>
+            <div className={`w-full rounded-full h-3 ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Form Layout with Professional Design */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          
-          {/* Left Column - Basic Information */}
-          <div className="xl:col-span-2 space-y-8">
-            
-            {/* Basic Clinic Information Card */}
-            <div className={layouts.card}>
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white text-xl">🏥</span>
-                  </div>
-                  <div>
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {t('basicInfo')}
-                    </h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                      {language === 'ar' ? 'معلومات العيادة الأساسية' : 'Essential clinic information'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('clinicName')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.clinic_name}
-                      onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'أدخل اسم العيادة' : 'Enter clinic name'}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('clinicPhone')} *
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.clinic_phone}
-                      onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'رقم هاتف العيادة' : 'Clinic phone number'}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('clinicEmail')}
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.clinic_email}
-                      onChange={(e) => setFormData({...formData, clinic_email: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'البريد الإلكتروني للعيادة' : 'Clinic email address'}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('doctorName')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.doctor_name}
-                      onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'اسم الطبيب' : 'Doctor name'}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('doctorPhone')}
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.doctor_phone}
-                      onChange={(e) => setFormData({...formData, doctor_phone: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'رقم هاتف الطبيب' : 'Doctor phone number'}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2 space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('clinicAddress')} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.clinic_address}
-                      onChange={(e) => setFormData({...formData, clinic_address: e.target.value})}
-                      className={layouts.input}
-                      placeholder={language === 'ar' ? 'العنوان التفصيلي للعيادة' : 'Detailed clinic address'}
-                      required
-                    />
-                  </div>
-                </div>
+        {/* Submission Status */}
+        {submissionStatus && (
+          <div className={`${cardStyles} p-4`}>
+            {submissionStatus === 'submitting' && (
+              <div className="flex items-center justify-center gap-3 text-blue-600">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span>{language === 'ar' ? 'جاري تسجيل العيادة...' : 'Registering clinic...'}</span>
               </div>
-            </div>
-
-            {/* Location and Areas Card */}
-            <div className={layouts.card}>
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white text-xl">📍</span>
-                  </div>
-                  <div>
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {t('locationMapping')}
-                    </h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                      {language === 'ar' ? 'تحديد المنطقة والموقع الجغرافي' : 'Area and geographical location'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('selectLine')} *
-                    </label>
-                    <select
-                      value={formData.line_id}
-                      onChange={(e) => {
-                        setFormData({...formData, line_id: e.target.value, area_id: '', district_id: ''});
-                      }}
-                      className={layouts.input}
-                      required
-                    >
-                      <option value="">{language === 'ar' ? 'اختر الخط' : 'Select Line'}</option>
-                      {formOptions.lines.map(line => (
-                        <option key={line.id} value={line.id}>
-                          {line.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('selectArea')} *
-                    </label>
-                    <select
-                      value={formData.area_id}
-                      onChange={(e) => {
-                        setFormData({...formData, area_id: e.target.value, district_id: ''});
-                      }}
-                      className={layouts.input}
-                      disabled={!formData.line_id}
-                      required
-                    >
-                      <option value="">{language === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>
-                      {getAvailableAreas().map(area => (
-                        <option key={area.id} value={area.id}>
-                          {area.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      {t('selectDistrict')}
-                    </label>
-                    <select
-                      value={formData.district_id}
-                      onChange={(e) => setFormData({...formData, district_id: e.target.value})}
-                      className={layouts.input}
-                      disabled={!formData.area_id}
-                    >
-                      <option value="">{language === 'ar' ? 'اختر الحي (اختياري)' : 'Select District (Optional)'}</option>
-                      {formOptions.districts.map(district => (
-                        <option key={district.id} value={district.id}>
-                          {district.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+            )}
+            {submissionStatus === 'success' && (
+              <div className="flex items-center justify-center gap-3 text-green-600">
+                <span className="text-2xl">✅</span>
+                <span className="font-medium">{language === 'ar' ? 'تم تسجيل العيادة بنجاح!' : 'Clinic registered successfully!'}</span>
               </div>
-            </div>
+            )}
+            {submissionStatus === 'error' && (
+              <div className="flex items-center justify-center gap-3 text-red-600">
+                <span className="text-2xl">❌</span>
+                <span className="font-medium">{language === 'ar' ? 'فشل في تسجيل العيادة' : 'Failed to register clinic'}</span>
+              </div>
+            )}
           </div>
+        )}
 
-          {/* Right Column - Map and Actions */}
-          <div className="space-y-8">
-            
-            {/* Map Section */}
-            <div className={layouts.card}>
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white text-xl">🗺️</span>
-                  </div>
-                  <div>
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {t('mapLocationTitle')}
-                    </h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                      {t('mapLocationDesc')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Map Container */}
-                <div className="mb-6">
-                  <div 
-                    ref={mapRef}
-                    className={`w-full h-80 rounded-xl border-2 ${isDark ? 'border-slate-600 bg-slate-700' : 'border-gray-300 bg-gray-100'}`}
-                    style={{
-                      background: isDark 
-                        ? 'linear-gradient(45deg, #334155 25%, transparent 25%), linear-gradient(-45deg, #334155 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #334155 75%), linear-gradient(-45deg, transparent 75%, #334155 75%)'
-                        : 'linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)',
-                      backgroundSize: '20px 20px',
-                      backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-                    }}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Basic Information */}
+          <div className={cardStyles}>
+            <div className="p-6 border-b border-opacity-20">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <span className="text-2xl">ℹ️</span>
+                {language === 'ar' ? 'المعلومات الأساسية' : 'Basic Information'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {tcl('clinicName')} *
+                  </label>
+                  <input
+                    type="text"
+                    name="clinic_name"
+                    value={formData.clinic_name}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                    placeholder={language === 'ar' ? 'اسم العيادة' : 'Clinic name'}
+                    required
                   />
-                  
-                  {!mapLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className={`animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4`}></div>
-                        <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>
-                          {language === 'ar' ? 'جاري تحميل الخريطة...' : 'Loading map...'}
-                        </p>
-                      </div>
-                    </div>
+                  {errors.clinic_name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.clinic_name}</p>
                   )}
                 </div>
 
-                {/* Location Buttons */}
-                <div className="grid grid-cols-1 gap-4">
-                  <button
-                    onClick={getCurrentLocation}
-                    disabled={loading}
-                    className={`${layouts.buttonPrimary} w-full flex items-center justify-center space-x-2`}
-                  >
-                    <span className="text-xl">📍</span>
-                    <span>{t('getCurrentLocation')}</span>
-                  </button>
-
-                  <button
-                    onClick={useDefaultLocation}
-                    disabled={loading}
-                    className={`${layouts.buttonSecondary} w-full flex items-center justify-center space-x-2`}
-                  >
-                    <span className="text-xl">📌</span>
-                    <span>{t('setLocationManually')}</span>
-                  </button>
-                </div>
-                
-                {/* Location Status */}
-                {locationData.clinic_latitude && (
-                  <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-green-900/20 border border-green-700' : 'bg-green-50 border border-green-200'}`}>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-green-500 text-xl">✅</span>
-                      <span className={`font-medium ${isDark ? 'text-green-400' : 'text-green-700'}`}>
-                        {language === 'ar' ? 'تم تحديد الموقع بنجاح' : 'Location Set Successfully'}
-                      </span>
-                    </div>
-                    <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
-                      {language === 'ar' ? 'الإحداثيات:' : 'Coordinates:'} 
-                      {locationData.clinic_latitude?.toFixed(6)}, {locationData.clinic_longitude?.toFixed(6)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Submit Actions */}
-            <div className={layouts.card}>
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-4">
-                    <span className="text-white text-xl">🚀</span>
-                  </div>
-                  <div>
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      {t('setupClinic')}
-                    </h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                      {language === 'ar' ? 'مراجعة وإرسال البيانات' : 'Review and submit data'}
-                    </p>
-                  </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {tcl('doctorName')} *
+                  </label>
+                  <input
+                    type="text"
+                    name="doctor_name"
+                    value={formData.doctor_name}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                    placeholder={language === 'ar' ? 'اسم الطبيب' : 'Doctor name'}
+                    required
+                  />
+                  {errors.doctor_name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.doctor_name}</p>
+                  )}
                 </div>
 
-                <div className="space-y-4">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={loading || !validateForm()}
-                    className={`${layouts.buttonPrimary} w-full text-lg py-4 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                        <span>{language === 'ar' ? 'جاري الحفظ...' : 'Saving...'}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center space-x-2">
-                        <span>💾</span>
-                        <span>{language === 'ar' ? 'حفظ العيادة' : 'Save Clinic'}</span>
-                      </div>
-                    )}
-                  </button>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {tcl('clinicPhone')} *
+                  </label>
+                  <input
+                    type="tel"
+                    name="clinic_phone"
+                    value={formData.clinic_phone}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                    placeholder={language === 'ar' ? 'رقم هاتف العيادة' : 'Clinic phone number'}
+                    required
+                  />
+                  {errors.clinic_phone && (
+                    <p className="mt-1 text-sm text-red-500">{errors.clinic_phone}</p>
+                  )}
+                </div>
 
-                  <button
-                    onClick={() => {
-                      setFormData({
-                        clinic_name: '', clinic_phone: '', clinic_email: '', 
-                        doctor_name: '', doctor_phone: '', clinic_address: '',
-                        line_id: '', area_id: '', district_id: '', 
-                        classification: 'class_b', credit_classification: 'yellow',
-                        classification_notes: '', registration_notes: ''
-                      });
-                      setLocationData({
-                        clinic_latitude: null, clinic_longitude: null, location_accuracy: null,
-                        rep_latitude: null, rep_longitude: null, rep_location_accuracy: null, device_info: ''
-                      });
-                    }}
-                    disabled={loading}
-                    className={`${layouts.buttonSecondary} w-full`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <span>🔄</span>
-                      <span>{language === 'ar' ? 'مسح النموذج' : 'Clear Form'}</span>
-                    </div>
-                  </button>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {tcl('clinicEmail')}
+                  </label>
+                  <input
+                    type="email"
+                    name="clinic_email"
+                    value={formData.clinic_email}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                    placeholder={language === 'ar' ? 'البريد الإلكتروني للعيادة' : 'Clinic email'}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {language === 'ar' ? 'هاتف الطبيب' : 'Doctor Phone'}
+                  </label>
+                  <input
+                    type="tel"
+                    name="doctor_phone"
+                    value={formData.doctor_phone}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                    placeholder={language === 'ar' ? 'رقم هاتف الطبيب' : 'Doctor phone number'}
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Geographic Information */}
+          <div className={cardStyles}>
+            <div className="p-6 border-b border-opacity-20">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <span className="text-2xl">🌍</span>
+                {language === 'ar' ? 'المعلومات الجغرافية' : 'Geographic Information'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {language === 'ar' ? 'الخط' : 'Line'}
+                  </label>
+                  <select
+                    name="line_id"
+                    value={formData.line_id}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                  >
+                    <option value="">{language === 'ar' ? 'اختر الخط' : 'Select Line'}</option>
+                    {formOptions.lines.map(line => (
+                      <option key={line.id} value={line.id}>{line.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                    {language === 'ar' ? 'المنطقة' : 'Area'}
+                  </label>
+                  <select
+                    name="area_id"
+                    value={formData.area_id}
+                    onChange={handleInputChange}
+                    className={inputStyles}
+                  >
+                    <option value="">{language === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>
+                    {formOptions.areas.map(area => (
+                      <option key={area.id} value={area.id}>{area.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                  {tcl('clinicAddress')}
+                </label>
+                <input
+                  type="text"
+                  name="clinic_address"
+                  value={formData.clinic_address}
+                  onChange={handleInputChange}
+                  className={inputStyles}
+                  placeholder={language === 'ar' ? 'عنوان العيادة التفصيلي' : 'Detailed clinic address'}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Classification Section */}
+          <div className={cardStyles}>
+            <div className="p-6 border-b border-opacity-20">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <span className="text-2xl">⭐</span>
+                {language === 'ar' ? 'التصنيفات' : 'Classifications'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-8">
+              {/* Clinic Classifications */}
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>
+                  {language === 'ar' ? 'تصنيف العيادة' : 'Clinic Classification'}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  {formOptions.classifications.map((classification) => (
+                    <div
+                      key={classification.value}
+                      onClick={() => setFormData(prev => ({ ...prev, classification: classification.value }))}
+                      className={`
+                        cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-105
+                        ${formData.classification === classification.value 
+                          ? `bg-gradient-to-r ${classification.color} text-white border-transparent shadow-lg` 
+                          : `${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'} hover:shadow-md`
+                        }
+                      `}
+                    >
+                      <div className="text-center">
+                        <div className="text-3xl mb-2">{classification.icon}</div>
+                        <div className="font-medium text-sm leading-tight">
+                          {classification.label}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Credit Classifications */}
+              <div>
+                <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>
+                  {language === 'ar' ? 'التصنيف الائتماني' : 'Credit Classification'}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {formOptions.credit_classifications.map((credit) => (
+                    <div
+                      key={credit.value}
+                      onClick={() => setFormData(prev => ({ ...prev, credit_classification: credit.value }))}
+                      className={`
+                        cursor-pointer p-6 rounded-xl border-2 transition-all duration-200 transform hover:scale-105
+                        ${formData.credit_classification === credit.value 
+                          ? `bg-gradient-to-r ${credit.color} text-white border-transparent shadow-lg` 
+                          : `${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'} hover:shadow-md`
+                        }
+                      `}
+                    >
+                      <div className="text-center">
+                        <div className="text-4xl mb-3">{credit.icon}</div>
+                        <div className="font-medium">
+                          {credit.label}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Map */}
+          <div className={cardStyles}>
+            <div className="p-6 border-b border-opacity-20">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <span className="text-2xl">📍</span>
+                {language === 'ar' ? 'موقع العيادة على الخريطة' : 'Clinic Location on Map'}
+              </h2>
+              <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                {language === 'ar' ? 
+                  'اضغط على "موقعي الحالي" للحصول على موقعك الدقيق، أو اسحب الدبوس لتحديد موقع العيادة' :
+                  'Click "My Current Location" to get your precise location, or drag the pin to set clinic location'
+                }
+              </p>
+            </div>
+            <div className="p-6">
+              {/* Location Status Messages */}
+              {errors.location && (
+                <div className={`mb-4 p-4 rounded-lg ${
+                  errors.location.includes('📡') || errors.location.includes('🔄') ?
+                    'bg-blue-100 border border-blue-300 text-blue-800' :
+                    'bg-yellow-100 border border-yellow-300 text-yellow-800'
+                }`}>
+                  <p className="text-sm whitespace-pre-line">{errors.location}</p>
+                </div>
+              )}
+              {errors.location_success && (
+                <div className="mb-4 p-4 rounded-lg bg-green-100 border border-green-300 text-green-800">
+                  <p className="text-sm">{errors.location_success}</p>
+                </div>
+              )}
+              
+              {/* Map Container */}
+              <div 
+                ref={mapRef}
+                className={`w-full h-96 rounded-lg border-2 ${
+                  isDark ? 'border-slate-600' : 'border-gray-300'
+                } ${!mapLoaded ? 'flex items-center justify-center bg-gray-100' : ''}`}
+              >
+                {!mapLoaded && (
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">{language === 'ar' ? 'جاري تحميل الخريطة...' : 'Loading map...'}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Location Coordinates Display */}
+              {(locationData.clinic_latitude && locationData.clinic_longitude) && (
+                <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">{language === 'ar' ? 'خط العرض:' : 'Latitude:'}</span>
+                      <span className="ml-2 font-mono">{locationData.clinic_latitude.toFixed(6)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">{language === 'ar' ? 'خط الطول:' : 'Longitude:'}</span>
+                      <span className="ml-2 font-mono">{locationData.clinic_longitude.toFixed(6)}</span>
+                    </div>
+                    {locationData.rep_location_accuracy && (
+                      <div>
+                        <span className="font-medium">{language === 'ar' ? 'الدقة:' : 'Accuracy:'}</span>
+                        <span className="ml-2">±{Math.round(locationData.rep_location_accuracy)} {language === 'ar' ? 'متر' : 'm'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes Section */}
+          <div className={cardStyles}>
+            <div className="p-6 border-b border-opacity-20">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <span className="text-2xl">📝</span>
+                {language === 'ar' ? 'ملاحظات إضافية' : 'Additional Notes'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                  {language === 'ar' ? 'ملاحظات التصنيف' : 'Classification Notes'}
+                </label>
+                <textarea
+                  name="classification_notes"
+                  value={formData.classification_notes}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={inputStyles}
+                  placeholder={language === 'ar' ? 'أي ملاحظات حول تصنيف العيادة...' : 'Any notes about clinic classification...'}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                  {language === 'ar' ? 'ملاحظات التسجيل' : 'Registration Notes'}
+                </label>
+                <textarea
+                  name="registration_notes"
+                  value={formData.registration_notes}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={inputStyles}
+                  placeholder={language === 'ar' ? 'أي ملاحظات إضافية حول العيادة...' : 'Any additional notes about the clinic...'}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Section */}
+          <div className={cardStyles}>
+            <div className="p-6">
+              {errors.submit && (
+                <div className="mb-4 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800">
+                  <p className="text-sm">{errors.submit}</p>
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={loading || submissionStatus === 'submitting'}
+                  className={`
+                    flex-1 ${buttonPrimaryStyles}
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100
+                    flex items-center justify-center gap-3
+                  `}
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      {language === 'ar' ? 'جاري التسجيل...' : 'Registering...'}
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl">🏥</span>
+                      {language === 'ar' ? 'تسجيل العيادة' : 'Register Clinic'}
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(language === 'ar' ? 'هل تريد مسح جميع البيانات؟' : 'Do you want to clear all data?')) {
+                      setFormData({
+                        clinic_name: '',
+                        clinic_phone: '',
+                        clinic_email: '',
+                        doctor_name: '',
+                        doctor_phone: '',
+                        clinic_address: '',
+                        line_id: '',
+                        area_id: '',
+                        classification: 'class_b',
+                        credit_classification: 'yellow',
+                        classification_notes: '',
+                        registration_notes: ''
+                      });
+                      setLocationData({
+                        clinic_latitude: null,
+                        clinic_longitude: null,
+                        location_accuracy: null,
+                        rep_latitude: null,
+                        rep_longitude: null,
+                        rep_location_accuracy: null,
+                        device_info: ''
+                      });
+                      setErrors({});
+                    }
+                  }}
+                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    isDark 
+                      ? 'bg-slate-600 hover:bg-slate-700 border-slate-500' 
+                      : 'bg-gray-600 hover:bg-gray-700 border-gray-500'
+                  } text-white border transform hover:scale-105 focus:scale-95`}
+                >
+                  {language === 'ar' ? 'مسح' : 'Clear'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );
