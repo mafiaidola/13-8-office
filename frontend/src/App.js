@@ -281,18 +281,77 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// Global Search Component
+// Global Search Modal Component with full translation support
 const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Translation helper
+  const t = (key) => {
+    const translations = {
+      ar: {
+        globalSearch: 'البحث الشامل',
+        searchPlaceholder: 'ابحث في النظام...',
+        searching: 'جاري البحث...',
+        searchResults: 'نتائج البحث ({count})',
+        noResults: 'لا توجد نتائج مطابقة',
+        noResultsDesc: 'لم يتم العثور على نتائج لـ "{query}"',
+        searchError: 'خطأ في البحث',
+        searchErrorDesc: 'حدث خطأ أثناء البحث، يرجى المحاولة مرة أخرى',
+        userManagement: 'إدارة المستخدمين',
+        clinicsManagement: 'إدارة العيادات',
+        productsManagement: 'إدارة المنتجات',
+        accounting: 'الحسابات والفواتير',
+        systemSearch: 'بحث',
+        system: 'نظام',
+        noEmail: 'لا يوجد بريد إلكتروني',
+        doctor: 'د.',
+        unspecified: 'غير محدد',
+        priceHidden: 'السعر مخفي',
+        currency: 'ج.م',
+        paid: 'مدفوعة',
+        pending: 'معلقة',
+        partial: 'جزئية'
+      },
+      en: {
+        globalSearch: 'Global Search',
+        searchPlaceholder: 'Search the system...',
+        searching: 'Searching...',
+        searchResults: 'Search Results ({count})',
+        noResults: 'No matching results',
+        noResultsDesc: 'No results found for "{query}"',
+        searchError: 'Search Error',
+        searchErrorDesc: 'An error occurred while searching, please try again',
+        userManagement: 'User Management',
+        clinicsManagement: 'Clinics Management',
+        productsManagement: 'Products Management',
+        accounting: 'Accounting & Invoices',
+        systemSearch: 'Search',
+        system: 'System',
+        noEmail: 'No email',
+        doctor: 'Dr.',
+        unspecified: 'Unspecified',
+        priceHidden: 'Price hidden',
+        currency: 'EGP',
+        paid: 'Paid',
+        pending: 'Pending',
+        partial: 'Partial'
+      }
+    };
+    return translations[language]?.[key] || translations['en'][key] || key;
+  };
+
   const handleSearch = async (query) => {
-    if (!query.trim()) return;
-    setLoading(true);
-    
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
     try {
+      setLoading(true);
       const token = localStorage.getItem('access_token');
+      let results = [];
       
       // Search across multiple APIs
       const [usersRes, clinicsRes, productsRes, invoicesRes] = await Promise.allSettled([
@@ -310,8 +369,6 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
         })
       ]);
 
-      let results = [];
-
       // Process Users
       if (usersRes.status === 'fulfilled') {
         const users = usersRes.value.data || [];
@@ -319,8 +376,8 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           id: `user-${user.id}`,
           type: 'user',
           title: user.full_name || user.username,
-          description: `${user.role} - ${user.email || 'لا يوجد بريد إلكتروني'}`,
-          module: 'إدارة المستخدمين',
+          description: `${user.role} - ${user.email || t('noEmail')}`,
+          module: t('userManagement'),
           icon: '👤',
           action: () => setActiveTab('users')
         })));
@@ -333,8 +390,8 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           id: `clinic-${clinic.id}`,
           type: 'clinic',
           title: clinic.clinic_name,
-          description: `د. ${clinic.doctor_name} - ${clinic.address}`,
-          module: 'إدارة العيادات',
+          description: `${t('doctor')} ${clinic.doctor_name} - ${clinic.address}`,
+          module: t('clinicsManagement'),
           icon: '🏥',
           action: () => setActiveTab('clinics-management')
         })));
@@ -347,8 +404,8 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           id: `product-${product.id}`,
           type: 'product',
           title: product.name,
-          description: `${product.category || 'غير محدد'} - ${product.unit} - ${product.price || 'السعر مخفي'} ج.م`,
-          module: 'إدارة المنتجات',
+          description: `${product.category || t('unspecified')} - ${product.unit} - ${product.price || t('priceHidden')} ${t('currency')}`,
+          module: t('productsManagement'),
           icon: '📦',
           action: () => setActiveTab('products')
         })));
@@ -357,50 +414,77 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
       // Process Invoices
       if (invoicesRes.status === 'fulfilled') {
         const invoices = invoicesRes.value.data || [];
-        results.push(...invoices.slice(0, 3).map(invoice => ({
-          id: `invoice-${invoice.id}`,
-          type: 'invoice',
-          title: invoice.invoice_number,
-          description: `${invoice.clinic_name} - ${invoice.total_amount} ج.م - ${invoice.status === 'paid' ? 'مدفوعة' : invoice.status === 'pending' ? 'معلقة' : 'جزئية'}`,
-          module: 'الحسابات والفواتير',
-          icon: '🧾',
-          action: () => setActiveTab('accounting')
+        results.push(...invoices.slice(0, 3).map(invoice => {
+          let statusText = invoice.status;
+          if (invoice.status === 'paid') statusText = t('paid');
+          else if (invoice.status === 'pending') statusText = t('pending');
+          else if (invoice.status === 'partial') statusText = t('partial');
+          
+          return {
+            id: `invoice-${invoice.id}`,
+            type: 'invoice',
+            title: invoice.invoice_number,
+            description: `${invoice.clinic_name} - ${invoice.total_amount} ${t('currency')} - ${statusText}`,
+            module: t('accounting'),
+            icon: '🧾',
+            action: () => setActiveTab('accounting')
+          };
         })));
       }
 
       // Add mock data if no API results
       if (results.length === 0) {
+        // Search in system tabs
+        Object.values(SYSTEM_TABS).forEach(tab => {
+          const tabName = tab.name[language] || tab.name.en || tab.id;
+          const tabDesc = tab.description[language] || tab.description.en || '';
+          
+          if (tabName.toLowerCase().includes(query.toLowerCase()) || 
+              tabDesc.toLowerCase().includes(query.toLowerCase())) {
+            results.push({
+              id: tab.id,
+              type: 'navigation',
+              title: tabName,
+              description: tabDesc,
+              module: t('system'),
+              icon: tab.icon || '📄',
+              action: () => setActiveTab(tab.id)
+            });
+          }
+        });
+
+        // Mock data for common searches
         if (query.toLowerCase().includes('فاتورة') || query.toUpperCase().includes('INV')) {
           results.push({
             id: 'invoice-demo',
             type: 'invoice',
             title: 'INV-2024-001',
-            description: 'عيادة الدكتور أحمد محمد - 1,250 ج.م - مدفوعة',
-            module: 'الحسابات والفواتير',
+            description: language === 'ar' ? 'عيادة الدكتور أحمد محمد - 1,250 ج.م - مدفوعة' : 'Dr. Ahmed Mohamed Clinic - 1,250 EGP - Paid',
+            module: t('accounting'),
             icon: '🧾',
             action: () => setActiveTab('accounting')
           });
         }
         
-        if (query.toLowerCase().includes('دكتور') || query.toLowerCase().includes('طبيب')) {
+        if (query.toLowerCase().includes('دكتور') || query.toLowerCase().includes('طبيب') || query.toLowerCase().includes('doctor')) {
           results.push({
             id: 'doctor-demo',
             type: 'clinic',
-            title: 'عيادة الدكتور أحمد محمد',
-            description: 'د. أحمد محمد - أمراض باطنة - القاهرة',
-            module: 'إدارة العيادات',
+            title: language === 'ar' ? 'عيادة الدكتور أحمد محمد' : 'Dr. Ahmed Mohamed Clinic',
+            description: language === 'ar' ? 'د. أحمد محمد - أمراض باطنة - القاهرة' : 'Dr. Ahmed Mohamed - Internal Medicine - Cairo',
+            module: t('clinicsManagement'),
             icon: '🏥',
             action: () => setActiveTab('clinics-management')
           });
         }
 
-        if (query.toLowerCase().includes('مستخدم') || query.toLowerCase().includes('admin')) {
+        if (query.toLowerCase().includes('مستخدم') || query.toLowerCase().includes('admin') || query.toLowerCase().includes('user')) {
           results.push({
             id: 'user-demo',
             type: 'user',
-            title: 'أحمد محمد علي',
+            title: language === 'ar' ? 'أحمد محمد علي' : 'Ahmed Mohamed Ali',
             description: 'admin - admin@example.com',
-            module: 'إدارة المستخدمين',
+            module: t('userManagement'),
             icon: '👤',
             action: () => setActiveTab('users')
           });
@@ -410,9 +494,9 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           results.push({
             id: 'no-results',
             type: 'info',
-            title: 'لا توجد نتائج مطابقة',
-            description: `لم يتم العثور على نتائج لـ "${query}"`,
-            module: 'بحث',
+            title: t('noResults'),
+            description: t('noResultsDesc').replace('{query}', query),
+            module: t('systemSearch'),
             icon: '🔍',
             action: () => {}
           });
@@ -421,13 +505,13 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
       
       setSearchResults(results);
     } catch (error) {
-      console.error('خطأ في البحث:', error);
+      console.error('Search error:', error);
       setSearchResults([{
         id: 'error',
         type: 'error',
-        title: 'خطأ في البحث',
-        description: 'حدث خطأ أثناء البحث، يرجى المحاولة مرة أخرى',
-        module: 'نظام',
+        title: t('searchError'),
+        description: t('searchErrorDesc'),
+        module: t('system'),
         icon: '⚠️',
         action: () => {}
       }]);
@@ -446,14 +530,14 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, language]);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-2xl mx-4 border border-white/20">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold">
-            {language === 'ar' ? 'البحث الشامل' : 'Global Search'}
+          <h3 className="text-xl font-bold text-white">
+            {t('globalSearch')}
           </h3>
           <button
             onClick={onClose}
@@ -468,9 +552,10 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'ar' ? 'ابحث في النظام...' : 'Search the system...'}
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+            placeholder={t('searchPlaceholder')}
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12 text-white placeholder-white/50"
             autoFocus
+            dir={isRTL ? 'rtl' : 'ltr'}
           />
           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/50">
             🔍
@@ -480,13 +565,15 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
         {loading && (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
-            <p className="text-white/70">جاري البحث...</p>
+            <p className="text-white/70">{t('searching')}</p>
           </div>
         )}
 
         {searchResults.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium text-white/80 mb-3">نتائج البحث ({searchResults.length})</h4>
+            <h4 className="font-medium text-white/80 mb-3">
+              {t('searchResults').replace('{count}', searchResults.length)}
+            </h4>
             {searchResults.map(result => (
               <div 
                 key={result.id} 
@@ -498,12 +585,12 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
                   }
                 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
                   <span className="text-2xl">{result.icon}</span>
                   <div className="flex-1">
-                    <div className="font-medium">{result.title}</div>
-                    <div className="text-sm text-white/60">{result.description}</div>
-                    <div className="text-xs text-white/40 mt-1">{result.module}</div>
+                    <h5 className="font-medium text-white">{result.title}</h5>
+                    <p className="text-sm text-white/70">{result.description}</p>
+                    <span className="text-xs text-blue-300">{result.module}</span>
                   </div>
                 </div>
               </div>
@@ -511,10 +598,10 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
           </div>
         )}
 
-        {searchQuery && !loading && searchResults.length === 0 && (
-          <div className="text-center py-8">
+        {!loading && searchQuery && searchResults.length === 0 && (
+          <div className="text-center py-8 text-white/70">
             <div className="text-4xl mb-2">🔍</div>
-            <p className="text-white/70">لا توجد نتائج مطابقة</p>
+            <p>{t('noResults')}</p>
           </div>
         )}
       </div>
