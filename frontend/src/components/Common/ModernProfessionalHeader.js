@@ -412,25 +412,80 @@ const ModernProfessionalHeader = ({
               {showNotifications && (
                 <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-800">{language === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-800">{language === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {language === 'ar' ? 'تمييز الكل كمقروء' : 'Mark all as read'}
+                        </button>
+                      )}
+                    </div>
                     {unreadCount > 0 && (
-                      <p className="text-sm text-gray-500">{unreadCount} {language === 'ar' ? 'غير مقروءة' : 'unread'}</p>
+                      <p className="text-sm text-gray-500">
+                        {unreadCount} {language === 'ar' ? 'غير مقروءة' : 'unread'}
+                      </p>
                     )}
                   </div>
                   
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.map((notification) => (
-                      <div key={notification.id} className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50/50' : ''}`}>
+                      <div 
+                        key={notification.id} 
+                        className={`px-4 py-3 border-b border-gray-50 transition-colors cursor-pointer ${
+                          !notification.read ? 'bg-blue-50/50 hover:bg-blue-100/50' : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
                         <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getNotificationColor(notification.type)}`}>
+                            <span className="text-sm">{getNotificationIcon(notification.type)}</span>
+                          </div>
                           <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-gray-800">{notification.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">{notification.time}</p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-sm font-semibold text-gray-800">{notification.title}</h4>
+                              {!notification.read && (
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2 leading-relaxed">{notification.message}</p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-gray-400">{notification.time}</p>
+                              <button 
+                                className="text-xs text-blue-600 hover:text-blue-800"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleNotificationClick(notification);
+                                }}
+                              >
+                                {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
+                    
+                    {notifications.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <span className="text-3xl block mb-2">📫</span>
+                        <p>{language === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                    <button 
+                      className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium py-2"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        console.log('Navigate to all notifications');
+                      }}
+                    >
+                      {language === 'ar' ? 'عرض جميع الإشعارات' : 'View All Notifications'}
+                    </button>
                   </div>
                 </div>
               )}
