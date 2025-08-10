@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useTranslation, GlobalError } from '../../localization/globalTranslations';
 
-const EnhancedClinicRegistration = () => {
+const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
+  const { t } = useTranslation(language);
+  const isDark = theme === 'dark';
+  
   const [loading, setLoading] = useState(false);
+  const [componentError, setComponentError] = useState(null);
   const [formData, setFormData] = useState({
     clinic_name: '',
     clinic_phone: '',
