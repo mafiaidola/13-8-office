@@ -283,151 +283,117 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-// Auth Provider
+// Simplified Authentication System
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState({
+    loading: true,
+    isAuthenticated: false,
+    user: null
+  });
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
+  const checkAuthStatus = useCallback(() => {
+    console.log('🔍 Simple auth check started');
+    
+    const token = localStorage.getItem('access_token');
+    console.log('🔑 Token check:', token ? 'EXISTS' : 'NOT_FOUND');
+    
+    if (!token) {
+      console.log('❌ No token, setting unauthenticated state');
+      setAuthState({ loading: false, isAuthenticated: false, user: null });
+      return;
+    }
 
-  const checkAuthStatus = async () => {
-    console.log('🔍 checkAuthStatus called');
     try {
-      const token = localStorage.getItem('access_token');
-      console.log('🔑 Token check:', token ? 'EXISTS' : 'NOT_FOUND');
-      
-      if (!token) {
-        console.log('❌ No token found, user not authenticated');
-        setLoading(false);
+      // Decode JWT token
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.log('❌ Invalid token format');
+        localStorage.removeItem('access_token');
+        setAuthState({ loading: false, isAuthenticated: false, user: null });
         return;
       }
 
-      // Decode token locally to check validity and get user info
-      try {
-        const tokenParts = token.split('.');
-        if (tokenParts.length !== 3) {
-          console.error('❌ Invalid token format');
-          localStorage.removeItem('access_token');
-          setLoading(false);
-          return;
-        }
-        
-        const payloadBase64 = tokenParts[1];
-        // Add padding if needed for base64 decoding
-        const padding = '='.repeat((4 - payloadBase64.length % 4) % 4);
-        const payloadWithPadding = payloadBase64 + padding;
-        
-        const payloadJson = atob(payloadWithPadding);
-        const tokenPayload = JSON.parse(payloadJson);
-        
-        console.log('🔍 Token payload decoded:', {
-          user_id: tokenPayload.user_id,
-          username: tokenPayload.username,
-          role: tokenPayload.role,
-          exp: tokenPayload.exp,
-          current_time: Math.floor(Date.now() / 1000)
-        });
-        
-        // Check if token is expired
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (tokenPayload.exp <= currentTime) {
-          console.log('❌ Token expired, removing from storage');
-          localStorage.removeItem('access_token');
-          setLoading(false);
-          return;
-        }
-        
-        // Token is valid, create user object
-        const user = {
-          id: tokenPayload.user_id,
-          username: tokenPayload.username,
-          role: tokenPayload.role,
-          full_name: tokenPayload.full_name || tokenPayload.username
-        };
-        
-        console.log('✅ Valid token found, setting user:', user);
-        setUser(user);
-        setIsAuthenticated(true);
-        
-      } catch (tokenError) {
-        console.error('❌ Token decode failed:', tokenError);
-        localStorage.removeItem('access_token');
-      }
-    } catch (error) {
-      console.error('❌ Auth check failed:', error);
-      localStorage.removeItem('access_token');
-    } finally {
-      console.log('🏁 checkAuthStatus completed');
-      setLoading(false);
-    }
-  };
+      const payload = JSON.parse(atob(parts[1] + '='.repeat((4 - parts[1].length % 4) % 4)));
+      console.log('🔍 Token decoded:', { username: payload.username, role: payload.role, exp: payload.exp });
 
-  const login = async (credentials) => {
-    console.log('🔄 Starting login process for:', credentials.username);
+      // Check expiration
+      if (payload.exp <= Math.floor(Date.now() / 1000)) {
+        console.log('❌ Token expired');
+        localStorage.removeItem('access_token');
+        setAuthState({ loading: false, isAuthenticated: false, user: null });
+        return;
+      }
+
+      // Valid token
+      const user = {
+        id: payload.user_id,
+        username: payload.username,
+        role: payload.role,
+        full_name: payload.full_name || payload.username
+      };
+
+      console.log('✅ Valid token, user authenticated:', user);
+      setAuthState({ loading: false, isAuthenticated: true, user });
+      
+    } catch (error) {
+      console.error('❌ Token decode error:', error);
+      localStorage.removeItem('access_token');
+      setAuthState({ loading: false, isAuthenticated: false, user: null });
+    }
+  }, []);
+
+  const login = useCallback(async (credentials) => {
+    console.log('🔄 Simple login started for:', credentials.username);
+    
     try {
-      const response = await axios.post(`${API}/auth/login`, credentials);
-      
-      console.log('📡 Login API Response received:', {
-        success: !!response.data?.access_token,
-        user: response.data?.user?.username,
-        role: response.data?.user?.role
+      const response = await axios.post(`${API}/auth/login`, {
+        username: credentials.username,
+        password: credentials.password
       });
-      
-      if (response.data && response.data.access_token && response.data.user) {
-        console.log('💾 Saving token and updating user state...');
-        
-        // Store the token
+
+      console.log('📡 Login response:', { status: response.status, hasToken: !!response.data?.access_token });
+
+      if (response.data?.access_token && response.data?.user) {
         localStorage.setItem('access_token', response.data.access_token);
         
-        // Update the user state immediately
-        const userData = response.data.user;
-        setUser(userData);
-        setIsAuthenticated(true);
+        const user = response.data.user;
+        console.log('✅ Login successful, updating state:', user);
         
-        console.log('✅ Authentication state updated successfully:', {
-          user: userData,
-          isAuthenticated: true
-        });
-        
-        // Double-check by calling checkAuthStatus to ensure everything is correct
-        setTimeout(() => {
-          console.log('🔄 Double-checking auth status after login...');
-          checkAuthStatus();
-        }, 100);
-        
-        return { success: true, user: userData };
-      } else {
-        console.error('❌ Invalid response format:', response.data);
-        return { success: false, error: 'Invalid response format from server' };
+        setAuthState({ loading: false, isAuthenticated: true, user });
+        return { success: true, user };
       }
+
+      return { success: false, error: 'Invalid response format' };
     } catch (error) {
-      console.error('❌ Login API error:', error);
+      console.error('❌ Login error:', error);
       return { 
         success: false, 
         error: error.response?.data?.detail || error.message || 'Login failed' 
       };
     }
+  }, []);
+
+  const logout = useCallback(() => {
+    console.log('🚪 Logging out...');
+    localStorage.removeItem('access_token');
+    setAuthState({ loading: false, isAuthenticated: false, user: null });
+  }, []);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  const contextValue = {
+    ...authState,
+    login,
+    logout,
+    checkAuthStatus
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
+  console.log('🔐 AuthProvider state:', authState);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      setUser,
-      loading,
-      isAuthenticated,
-      login,
-      logout,
-      checkAuthStatus
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
