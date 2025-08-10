@@ -6,7 +6,7 @@ import ComprehensiveUserModal from './ComprehensiveUserModal';
 import AddUserModal from './AddUserModal';
 import ExcelManager from '../Excel/ExcelManager.js';
 
-const UserManagement = ({ user, language, isRTL }) => {
+const UserManagement = ({ user, language = 'en', isRTL }) => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserCard, setShowUserCard] = useState(false);
@@ -18,7 +18,7 @@ const UserManagement = ({ user, language, isRTL }) => {
   const [showComprehensiveModal, setShowComprehensiveModal] = useState(false);
   const [comprehensiveModalMode, setComprehensiveModalMode] = useState('view'); // 'view' or 'edit'
   
-  const { t } = useTranslation(language);
+  const { t, tc, tn, tf, tm } = useGlobalTranslation(language);
   const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
 
   useEffect(() => {
