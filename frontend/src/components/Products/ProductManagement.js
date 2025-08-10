@@ -244,13 +244,13 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
 
   const getPriceTypeLabel = (priceType) => {
     const labels = {
-      'per_vial': 'سعر الڤايل',
-      'per_box': 'سعر العلبة',
-      'per_pen': 'سعر القلم',
-      'per_tube': 'سعر الأنبوب',
-      'per_bottle': 'سعر الزجاجة'
+      'per_vial': language === 'ar' ? 'سعر الڤايل' : 'Per Vial',
+      'per_box': language === 'ar' ? 'سعر العلبة' : 'Per Box',
+      'per_pen': language === 'ar' ? 'سعر القلم' : 'Per Pen',
+      'per_tube': language === 'ar' ? 'سعر الأنبوب' : 'Per Tube',
+      'per_bottle': language === 'ar' ? 'سعر الزجاجة' : 'Per Bottle'
     };
-    return labels[priceType] || 'سعر الوحدة';
+    return labels[priceType] || (language === 'ar' ? 'سعر الوحدة' : 'Per Unit');
   };
 
   if (loading) {
