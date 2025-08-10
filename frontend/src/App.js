@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, createContext, useContext, useCallback, useMemo } from 'react';
 import './App.css';
+import './styles/dark-theme.css'; // Import comprehensive dark theme styles
 import axios from 'axios';
 
 // Modern Professional Header Import
