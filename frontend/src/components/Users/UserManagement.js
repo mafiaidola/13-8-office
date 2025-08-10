@@ -353,33 +353,33 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
                 {/* Original stats */}
                 <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/20 text-center">
                   <div className="text-xl font-bold text-green-400">{userData.stats_last_30_days?.visits || 0}</div>
-                  <div className="text-xs text-green-200/80">الزيارات</div>
+                  <div className="text-xs text-green-200/80">{language === 'ar' ? 'الزيارات' : 'Visits'}</div>
                 </div>
                 
                 <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
                   <div className="text-xl font-bold text-blue-400">{userData.stats_last_30_days?.orders || 0}</div>
-                  <div className="text-xs text-blue-200/80">الطلبات</div>
+                  <div className="text-xs text-blue-200/80">{language === 'ar' ? 'الطلبات' : 'Orders'}</div>
                 </div>
 
                 {/* NEW METRICS REQUESTED */}
                 <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/20 text-center">
                   <div className="text-xl font-bold text-red-400">{userData.stats_last_30_days?.total_debts || 0}</div>
-                  <div className="text-xs text-red-200/80">المديونيات</div>
+                  <div className="text-xs text-red-200/80">{language === 'ar' ? 'المديونيات' : 'Debts'}</div>
                 </div>
 
                 <div className="bg-emerald-500/10 rounded-xl p-3 border border-emerald-500/20 text-center">
                   <div className="text-xl font-bold text-emerald-400">{userData.stats_last_30_days?.total_collections || 0}</div>
-                  <div className="text-xs text-emerald-200/80">التحصيلات</div>
+                  <div className="text-xs text-emerald-200/80">{language === 'ar' ? 'التحصيلات' : 'Collections'}</div>
                 </div>
 
                 <div className="bg-orange-500/10 rounded-xl p-3 border border-orange-500/20 text-center">
                   <div className="text-xl font-bold text-orange-400">{userData.stats_last_30_days?.total_visits || userData.stats_last_30_days?.visits || 0}</div>
-                  <div className="text-xs text-orange-200/80">إجمالي الزيارات</div>
+                  <div className="text-xs text-orange-200/80">{language === 'ar' ? 'إجمالي الزيارات' : 'Total Visits'}</div>
                 </div>
 
                 <div className="bg-cyan-500/10 rounded-xl p-3 border border-cyan-500/20 text-center">
                   <div className="text-xl font-bold text-cyan-400">{userData.stats_last_30_days?.added_clinics || 0}</div>
-                  <div className="text-xs text-cyan-200/80">العيادات المضافة</div>
+                  <div className="text-xs text-cyan-200/80">{language === 'ar' ? 'العيادات المضافة' : 'Added Clinics'}</div>
                 </div>
               </div>
 
