@@ -4,7 +4,7 @@ import { useGlobalTranslation } from '../../localization/completeTranslations';
 import axios from 'axios';
 
 const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => {
-  const { t, tc, tp } = useTranslation(language);
+  const { t, tc, tm } = useGlobalTranslation(language);
   const isDark = theme === 'dark';
   
   const [products, setProducts] = useState([]);
