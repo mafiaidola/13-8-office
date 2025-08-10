@@ -501,91 +501,112 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
             action: () => {}
           });
         }
+        
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([{
+          id: 'error',
+          type: 'error',
+          title: t('searchError'),
+          description: t('searchErrorDesc'),
+          module: t('system'),
+          icon: '⚠️',
+          action: () => {}
+        }]);
+      } finally {
+        setLoading(false);
       }
-      
-      setSearchResults(results);
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([{
-        id: 'error',
-        type: 'error',
-        title: t('searchError'),
-        description: t('searchErrorDesc'),
-        module: t('system'),
-        icon: '⚠️',
-        action: () => {}
-      }]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        handleSearch(searchQuery);
-      } else {
-        setSearchResults([]);
-      }
-    }, 300);
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        if (searchQuery.trim()) {
+          handleSearch(searchQuery);
+        } else {
+          setSearchResults([]);
+        }
+      }, 300);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery, language]);
+      return () => clearTimeout(timer);
+    }, [searchQuery, language]);
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-2xl mx-4 border border-white/20">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">
-            {t('globalSearch')}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-white/70 hover:text-white text-2xl"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="relative mb-6">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12 text-white placeholder-white/50"
-            autoFocus
-            dir={isRTL ? 'rtl' : 'ltr'}
-          />
-          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/50">
-            🔍
-          </span>
-        </div>
-
-        {loading && (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
-            <p className="text-white/70">{t('searching')}</p>
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-2xl mx-4 border border-white/20">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-white">
+              {t('globalSearch')}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-white/70 hover:text-white text-2xl"
+            >
+              ✕
+            </button>
           </div>
-        )}
 
-        {searchResults.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="font-medium text-white/80 mb-3">
-              {t('searchResults').replace('{count}', searchResults.length)}
-            </h4>
-            {searchResults.map(result => (
-              <div 
-                key={result.id} 
-                className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
-                onClick={() => {
-                  if (result.action) {
-                    result.action();
-                    onClose();
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="relative mb-6">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12 text-white placeholder-white/50"
+              autoFocus
+              dir={isRTL ? 'rtl' : 'ltr'}
+            />
+            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/50">
+              🔍
+            </span>
+          </div>
+
+          {loading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-2"></div>
+              <p className="text-white/70">{t('searching')}</p>
+            </div>
+          )}
+
+          {searchResults.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-white/80 mb-3">
+                {t('searchResults').replace('{count}', searchResults.length)}
+              </h4>
+              {searchResults.map(result => (
+                <div 
+                  key={result.id} 
+                  className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer"
+                  onClick={() => {
+                    if (result.action) {
+                      result.action();
+                      onClose();
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <span className="text-2xl">{result.icon}</span>
+                    <div className="flex-1">
+                      <h5 className="font-medium text-white">{result.title}</h5>
+                      <p className="text-sm text-white/70">{result.description}</p>
+                      <span className="text-xs text-blue-300">{result.module}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && searchQuery && searchResults.length === 0 && (
+            <div className="text-center py-8 text-white/70">
+              <div className="text-4xl mb-2">🔍</div>
+              <p>{t('noResults')}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
                   <span className="text-2xl">{result.icon}</span>
                   <div className="flex-1">
                     <h5 className="font-medium text-white">{result.title}</h5>
