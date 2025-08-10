@@ -316,7 +316,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
 
               {/* User Details */}
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">{userData.full_name || 'غير محدد'}</h3>
+                <h3 className="text-xl font-bold text-white mb-2">{userData.full_name || (language === 'ar' ? 'غير محدد' : 'Not Specified')}</h3>
                 <p className="text-sm text-white/70 mb-3">@{userData.username}</p>
                 
                 <div className="flex justify-center mb-4">
