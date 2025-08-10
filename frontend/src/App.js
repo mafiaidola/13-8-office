@@ -34,55 +34,125 @@ const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/a
 const ThemeContext = createContext();
 const AuthContext = createContext();
 
-// 5 ثيمات احترافية متقدمة - 5 Advanced Professional Themes
+// 8 ثيمات احترافية متطورة - 8 Advanced Professional Themes
 const AVAILABLE_THEMES = {
-  // 1. الثيم الداكن الأساسي - Primary Dark Theme
+  // 1. الثيم الداكن الكلاسيكي - Classic Dark Theme
   dark: {
     name: { ar: 'داكن كلاسيكي', en: 'Classic Dark' },
     colors: {
       background: '#0f172a',
       card: '#1e293b',
-      text: '#ffffff'
+      surface: '#334155',
+      text: '#ffffff',
+      textSecondary: '#e2e8f0',
+      accent: '#3b82f6',
+      accentSecondary: '#2563eb',
+      border: '#475569'
     }
   },
   
-  // 2. ثيم الليل العميق - Deep Night Theme
-  midnight: {
-    name: { ar: 'ليل عميق', en: 'Deep Night' },
+  // 2. ثيم الأزرق الاحترافي - Professional Blue Theme
+  professional: {
+    name: { ar: 'أزرق احترافي', en: 'Professional Blue' },
     colors: {
-      background: '#030712',
-      card: '#111827',
-      text: '#ffffff'
+      background: '#1e3a8a',
+      card: '#1e40af',
+      surface: '#3b82f6',
+      text: '#ffffff',
+      textSecondary: '#dbeafe',
+      accent: '#60a5fa',
+      accentSecondary: '#3b82f6',
+      border: '#2563eb'
     }
   },
   
-  // 3. ثيم الأزرق المهني - Professional Blue Theme
-  oceanic: {
-    name: { ar: 'أزرق محيطي', en: 'Oceanic Blue' },
-    colors: {
-      background: '#0c4a6e',
-      card: '#075985',
-      text: '#ffffff'
-    }
-  },
-  
-  // 4. ثيم البنفسجي الملكي - Royal Purple Theme
+  // 3. ثيم البنفسجي الملكي - Royal Purple Theme
   royal: {
     name: { ar: 'بنفسجي ملكي', en: 'Royal Purple' },
     colors: {
-      background: '#4c1d95',
-      card: '#6b21a8',
-      text: '#ffffff'
+      background: '#581c87',
+      card: '#7c3aed',
+      surface: '#8b5cf6',
+      text: '#ffffff',
+      textSecondary: '#e9d5ff',
+      accent: '#a78bfa',
+      accentSecondary: '#8b5cf6',
+      border: '#7c3aed'
     }
   },
   
-  // 5. ثيم الأخضر المتطور - Advanced Green Theme
-  forest: {
-    name: { ar: 'أخضر الغابة', en: 'Forest Green' },
+  // 4. ثيم الأخضر الطبي - Medical Green Theme
+  medical: {
+    name: { ar: 'أخضر طبي', en: 'Medical Green' },
     colors: {
       background: '#14532d',
-      card: '#166534',
-      text: '#ffffff'
+      card: '#16a34a',
+      surface: '#22c55e',
+      text: '#ffffff',
+      textSecondary: '#dcfce7',
+      accent: '#4ade80',
+      accentSecondary: '#22c55e',
+      border: '#16a34a'
+    }
+  },
+  
+  // 5. ثيم الذهبي الفاخر - Luxury Gold Theme
+  luxury: {
+    name: { ar: 'ذهبي فاخر', en: 'Luxury Gold' },
+    colors: {
+      background: '#92400e',
+      card: '#d97706',
+      surface: '#f59e0b',
+      text: '#ffffff',
+      textSecondary: '#fef3c7',
+      accent: '#fbbf24',
+      accentSecondary: '#f59e0b',
+      border: '#d97706'
+    }
+  },
+  
+  // 6. ثيم الأحمر القوي - Power Red Theme
+  power: {
+    name: { ar: 'أحمر قوي', en: 'Power Red' },
+    colors: {
+      background: '#991b1b',
+      card: '#dc2626',
+      surface: '#ef4444',
+      text: '#ffffff',
+      textSecondary: '#fecaca',
+      accent: '#f87171',
+      accentSecondary: '#ef4444',
+      border: '#dc2626'
+    }
+  },
+  
+  // 7. ثيم الرمادي المتطور - Advanced Gray Theme
+  slate: {
+    name: { ar: 'رمادي متطور', en: 'Advanced Slate' },
+    colors: {
+      background: '#0f172a',
+      card: '#334155',
+      surface: '#475569',
+      text: '#ffffff',
+      textSecondary: '#cbd5e1',
+      accent: '#64748b',
+      accentSecondary: '#475569',
+      border: '#64748b'
+    }
+  },
+  
+  // 8. ثيم الليل العميق - Deep Night Theme
+  midnight: {
+    name: { ar: 'ليل عميق', en: 'Deep Night' },
+    colors: {
+      background: '#000000',
+      card: '#111827',
+      surface: '#1f2937',
+      text: '#ffffff',
+      textSecondary: '#d1d5db',
+      accent: '#6366f1',
+      accentSecondary: '#4f46e5',
+      border: '#374151'
     }
   }
 };
