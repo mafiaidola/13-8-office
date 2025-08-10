@@ -434,6 +434,11 @@ const ModernSidebar = ({
                         )}
                       </div>
                     )}
+
+                    {/* Active Tab Ripple Effect */}
+                    {activeTab === item.id && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl animate-pulse"></div>
+                    )}
                   </button>
                 ))}
               </div>
