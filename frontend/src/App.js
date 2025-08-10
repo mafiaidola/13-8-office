@@ -221,29 +221,41 @@ const ThemeProvider = ({ children }) => {
   const changeTheme = (newTheme) => {
     if (AVAILABLE_THEMES[newTheme]) {
       setTheme(newTheme);
-      console.log(`🎨 Changing to professional theme: ${newTheme}`);
+      console.log(`🎨 Changing to advanced theme: ${newTheme} (${AVAILABLE_THEMES[newTheme].name.en})`);
       
       // Apply theme immediately with advanced color system
       setTimeout(() => {
-        document.body.classList.remove('theme-dark', 'theme-midnight', 'theme-oceanic', 'theme-royal', 'theme-forest');
+        const existingThemeClasses = ['theme-dark', 'theme-professional', 'theme-royal', 'theme-medical', 'theme-luxury', 'theme-power', 'theme-slate', 'theme-midnight'];
+        document.body.classList.remove(...existingThemeClasses);
         document.body.classList.add(`theme-${newTheme}`);
         
-        // Apply CSS variables for the selected theme
+        // Apply advanced CSS variables for the selected theme
         const root = document.documentElement;
         const themeConfig = AVAILABLE_THEMES[newTheme];
         
-        root.style.setProperty('--bg-primary', themeConfig.colors.background);
-        root.style.setProperty('--bg-card', themeConfig.colors.card);
-        root.style.setProperty('--text-primary', themeConfig.colors.text);
-        root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.2)');
+        root.style.setProperty('--theme-bg-primary', themeConfig.colors.background);
+        root.style.setProperty('--theme-bg-card', themeConfig.colors.card);
+        root.style.setProperty('--theme-bg-surface', themeConfig.colors.surface);
+        root.style.setProperty('--theme-text-primary', themeConfig.colors.text);
+        root.style.setProperty('--theme-text-secondary', themeConfig.colors.textSecondary);
+        root.style.setProperty('--theme-accent', themeConfig.colors.accent);
+        root.style.setProperty('--theme-accent-secondary', themeConfig.colors.accentSecondary);
+        root.style.setProperty('--theme-border', themeConfig.colors.border);
         
-        // Advanced theme-specific styling
+        // Advanced theme-specific styling with professional gradients
         document.body.style.background = `linear-gradient(135deg, ${themeConfig.colors.background}, ${themeConfig.colors.card})`;
+        document.body.style.color = themeConfig.colors.text;
         
-        console.log(`✅ Professional theme applied successfully: ${newTheme}`);
+        console.log(`✅ Advanced professional theme applied successfully: ${newTheme}`);
         
-        // Dispatch theme change event
-        const event = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
+        // Dispatch advanced theme change event
+        const event = new CustomEvent('advancedThemeChanged', { 
+          detail: { 
+            theme: newTheme, 
+            config: themeConfig,
+            timestamp: new Date().toISOString()
+          } 
+        });
         window.dispatchEvent(event);
       }, 10);
     }
