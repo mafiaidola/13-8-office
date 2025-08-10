@@ -213,7 +213,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            {language === 'ar' ? 'إدارة المستخدمين' : 'User Management'}
+            {t('users', 'title')}
           </h1>
           <p className="text-lg opacity-75">
             {language === 'ar' ? 'إدارة شاملة لجميع المستخدمين في النظام' : 'Comprehensive management of all system users'}
@@ -226,7 +226,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
             className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 flex items-center gap-2 font-medium shadow-lg"
           >
             <span>➕</span>
-            {language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User'}
+            {t('users', 'addUser')}
           </button>
           
           <button
