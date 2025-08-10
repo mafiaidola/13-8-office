@@ -123,26 +123,9 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       
       console.log('✅ Product created successfully:', response.data);
       
-      // تسجيل النشاط
-      await activityLogger.logActivity(
-        'product_creation',
-        'إنشاء منتج جديد',
-        'product',
-        response.data.id,
-        productData.name,
-        {
-          price: productData.price,
-          unit: productData.unit,
-          line_id: productData.line_id,
-          brand: productData.brand,
-          stock_quantity: productData.stock_quantity || 0,
-          created_by_role: user?.role
-        }
-      );
-      
       fetchProducts();
       setShowProductModal(false);
-      alert('تم إنشاء المنتج بنجاح');
+      alert(tm('createSuccess'));
     } catch (error) {
       console.error('❌ Error creating product:', error);
       const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء إنشاء المنتج';
