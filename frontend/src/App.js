@@ -164,32 +164,43 @@ const ThemeProvider = ({ children }) => {
   const [isRTL, setIsRTL] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
-  // Apply theme to body element
+  // Apply theme to body element - Enhanced with comprehensive theme system
   useEffect(() => {
     const body = document.body;
     const html = document.documentElement;
+    const currentThemeConfig = AVAILABLE_THEMES[theme];
     
-    // Remove all theme classes first
-    body.classList.remove('theme-light', 'theme-dark');
-    html.classList.remove('theme-light', 'theme-dark');
+    if (!currentThemeConfig) {
+      console.warn(`Theme ${theme} not found, defaulting to dark`);
+      return;
+    }
+    
+    // Remove all existing theme classes
+    const existingThemeClasses = ['theme-dark', 'theme-professional', 'theme-royal', 'theme-medical', 'theme-luxury', 'theme-power', 'theme-slate', 'theme-midnight'];
+    body.classList.remove(...existingThemeClasses);
+    html.classList.remove(...existingThemeClasses);
     
     // Apply current theme
     const themeClass = `theme-${theme}`;
     body.classList.add(themeClass);
     html.classList.add(themeClass);
     
-    // Set CSS variables dynamically based on theme
-    if (theme === 'dark') {
-      body.style.setProperty('--theme-bg', '#0f172a');
-      body.style.setProperty('--theme-text', '#f8fafc');
-      body.style.setProperty('--theme-accent', '#3b82f6');
-    } else {
-      body.style.setProperty('--theme-bg', '#ffffff');
-      body.style.setProperty('--theme-text', '#1f2937');
-      body.style.setProperty('--theme-accent', '#2563eb');
-    }
+    // Set comprehensive CSS variables for the theme
+    const root = document.documentElement;
+    root.style.setProperty('--theme-bg-primary', currentThemeConfig.colors.background);
+    root.style.setProperty('--theme-bg-card', currentThemeConfig.colors.card);
+    root.style.setProperty('--theme-bg-surface', currentThemeConfig.colors.surface);
+    root.style.setProperty('--theme-text-primary', currentThemeConfig.colors.text);
+    root.style.setProperty('--theme-text-secondary', currentThemeConfig.colors.textSecondary);
+    root.style.setProperty('--theme-accent', currentThemeConfig.colors.accent);
+    root.style.setProperty('--theme-accent-secondary', currentThemeConfig.colors.accentSecondary);
+    root.style.setProperty('--theme-border', currentThemeConfig.colors.border);
     
-    console.log(`🎨 Theme applied: ${theme} (class: ${themeClass})`);
+    // Apply gradient background
+    body.style.background = `linear-gradient(135deg, ${currentThemeConfig.colors.background}, ${currentThemeConfig.colors.card})`;
+    body.style.color = currentThemeConfig.colors.text;
+    
+    console.log(`🎨 Enhanced theme applied: ${theme} (${currentThemeConfig.name.en})`);
   }, [theme]);
 
   // Apply language and direction
