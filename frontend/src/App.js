@@ -988,6 +988,7 @@ const DashboardLayout = () => {
               user={user}
               language={language}
               isRTL={isRTL}
+              theme={theme}
             />
           </div>
         </main>
