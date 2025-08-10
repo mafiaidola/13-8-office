@@ -22,10 +22,44 @@ const ModernProfessionalHeader = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  // Enhanced notification system
   const [notifications, setNotifications] = useState([
-    { id: 1, type: 'info', title: 'System Update', message: 'New features available', time: '5m ago', read: false },
-    { id: 2, type: 'success', title: 'Backup Complete', message: 'Daily backup completed successfully', time: '1h ago', read: false },
-    { id: 3, type: 'warning', title: 'Low Stock Alert', message: 'Some products are running low', time: '2h ago', read: true }
+    { 
+      id: 1, 
+      type: 'info', 
+      title: language === 'ar' ? 'تحديث النظام' : 'System Update', 
+      message: language === 'ar' ? 'ميزات جديدة متاحة' : 'New features available', 
+      time: '5m ago', 
+      read: false,
+      action: () => console.log('Navigate to system updates')
+    },
+    { 
+      id: 2, 
+      type: 'success', 
+      title: language === 'ar' ? 'اكتمال النسخ الاحتياطي' : 'Backup Complete', 
+      message: language === 'ar' ? 'تم إنجاز النسخ الاحتياطي اليومي بنجاح' : 'Daily backup completed successfully', 
+      time: '1h ago', 
+      read: false,
+      action: () => console.log('View backup details')
+    },
+    { 
+      id: 3, 
+      type: 'warning', 
+      title: language === 'ar' ? 'تنبيه انخفاض المخزون' : 'Low Stock Alert', 
+      message: language === 'ar' ? 'بعض المنتجات على وشك النفاد' : 'Some products are running low', 
+      time: '2h ago', 
+      read: true,
+      action: () => console.log('Navigate to inventory')
+    },
+    { 
+      id: 4, 
+      type: 'info', 
+      title: language === 'ar' ? 'زيارة جديدة مجدولة' : 'New Visit Scheduled', 
+      message: language === 'ar' ? 'تم جدولة زيارة للدكتور أحمد غداً' : 'Visit scheduled with Dr. Ahmed tomorrow', 
+      time: '3h ago', 
+      read: true,
+      action: () => console.log('View visit details')
+    }
   ]);
   
   const userMenuRef = useRef(null);
