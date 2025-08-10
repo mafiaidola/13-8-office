@@ -21,7 +21,7 @@ from typing import Dict, List, Any
 
 class ClinicAreasRelationshipTester:
     def __init__(self):
-        self.base_url = "https://ec499ace-685d-480d-b657-849bf4e418d7.preview.emergentagent.com/api"
+        self.base_url = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com/api"
         self.token = None
         self.session = requests.Session()
         self.test_results = []

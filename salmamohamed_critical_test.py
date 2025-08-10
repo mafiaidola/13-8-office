@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://ec499ace-685d-480d-b657-849bf4e418d7.preview.emergentagent.com/api"
+BACKEND_URL = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com/api"
 SALMAMOHAMED_USER_ID = "1cf45634-a655-4d0b-b96f-248c29fa1f7c"
 NEW_PASSWORD = "salmanewpass123"
 

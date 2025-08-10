@@ -16,7 +16,7 @@ from typing import Dict, List, Any, Optional
 class ComprehensiveAPITester:
     def __init__(self):
         # استخدام الـ URL الصحيح من frontend/.env
-        self.base_url = "https://ec499ace-685d-480d-b657-849bf4e418d7.preview.emergentagent.com/api"
+        self.base_url = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com/api"
         self.session = None
         self.jwt_token = None
         self.test_results = []

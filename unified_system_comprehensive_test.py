@@ -30,7 +30,7 @@ import sys
 import os
 
 # إعدادات الاختبار - استخدام URL الصحيح من frontend/.env
-BACKEND_URL = "https://ec499ace-685d-480d-b657-849bf4e418d7.preview.emergentagent.com"
+BACKEND_URL = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 TEST_CREDENTIALS = {
     "username": "admin",
