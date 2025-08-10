@@ -206,30 +206,30 @@ const AdminDashboard = ({
         </div>
       </div>
 
-      {/* مؤشرات صحة النظام */}
-      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
+      {/* System Health Indicators - Improved Horizontal Layout */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-2xl font-bold text-gray-900 flex items-center">
             <span className="text-green-600 mr-3 text-3xl">💚</span>
-            {t('system_health')}
+            {language === 'ar' ? 'مؤشرات صحة النظام' : 'System Health Indicators'}
           </h3>
           <button
             onClick={loadSystemHealth}
             disabled={loading}
-            className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl border-2 border-green-600 hover:border-green-700 transition-all shadow-lg hover:shadow-xl"
+            className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl border border-green-600 hover:border-green-700 transition-all shadow-lg hover:shadow-xl"
           >
             <span className={`mr-3 text-lg ${loading ? 'animate-spin' : ''}`}>
               {loading ? '⏳' : '🔄'}
             </span>
-            {loading ? t('updating') : t('update_status')}
+            {loading ? tc('loading') : (language === 'ar' ? 'تحديث الحالة' : 'Update Status')}
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl p-6 border-2 border-green-300 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 shadow-lg hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-lg font-bold text-gray-900 mb-2">قاعدة البيانات</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{language === 'ar' ? 'قاعدة البيانات' : 'Database'}</p>
                 <p className="text-4xl font-black text-green-700">
                   {systemHealth.database === 'connected' ? '✅' : '❌'}
                 </p>
@@ -237,41 +237,44 @@ const AdminDashboard = ({
               <div className="text-green-600 text-5xl">🗄️</div>
             </div>
             <p className="text-sm font-semibold text-gray-800">
-              {systemHealth.database === 'connected' ? 'متصلة ومستقرة' : 'غير متصلة'}
+              {systemHealth.database === 'connected' 
+                ? (language === 'ar' ? 'متصلة ومستقرة' : 'Connected & Stable') 
+                : (language === 'ar' ? 'غير متصلة' : 'Disconnected')
+              }
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border-2 border-blue-300 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 shadow-lg hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-lg font-bold text-gray-900 mb-2">وقت التشغيل</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{language === 'ar' ? 'وقت التشغيل' : 'Uptime'}</p>
                 <p className="text-4xl font-black text-blue-700">99.9%</p>
               </div>
               <div className="text-blue-600 text-5xl">⏱️</div>
             </div>
-            <p className="text-sm font-semibold text-gray-800">أداء ممتاز</p>
+            <p className="text-sm font-semibold text-gray-800">{language === 'ar' ? 'أداء ممتاز' : 'Excellent Performance'}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border-2 border-purple-300 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 shadow-lg hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-lg font-bold text-gray-900 mb-2">الذاكرة</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{language === 'ar' ? 'الذاكرة' : 'Memory'}</p>
                 <p className="text-4xl font-black text-purple-700">68%</p>
               </div>
               <div className="text-purple-600 text-5xl">💾</div>
             </div>
-            <p className="text-sm font-semibold text-gray-800">ضمن الحدود الطبيعية</p>
+            <p className="text-sm font-semibold text-gray-800">{language === 'ar' ? 'ضمن الحدود الطبيعية' : 'Within Normal Range'}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border-2 border-orange-300 shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200 shadow-lg hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-lg font-bold text-gray-900 mb-2">المعالج</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{language === 'ar' ? 'المعالج' : 'CPU'}</p>
                 <p className="text-4xl font-black text-orange-700">45%</p>
               </div>
               <div className="text-orange-600 text-5xl">⚡</div>
             </div>
-            <p className="text-sm font-semibold text-gray-800">أداء مثالي</p>
+            <p className="text-sm font-semibold text-gray-800">{language === 'ar' ? 'أداء مثالي' : 'Optimal Performance'}</p>
           </div>
         </div>
       </div>
