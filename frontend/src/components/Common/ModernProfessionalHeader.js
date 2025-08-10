@@ -11,32 +11,46 @@ const ModernProfessionalHeader = ({
   setIsRTL, 
   onSearch,
   systemSettings,
-  onToggleSidebar // New prop for sidebar toggle
+  onToggleSidebar,
+  availableThemes = {} // Add available themes prop
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'info', title: 'System Update', message: 'New features available', time: '5m ago', read: false },
+    { id: 2, type: 'success', title: 'Backup Complete', message: 'Daily backup completed successfully', time: '1h ago', read: false },
+    { id: 3, type: 'warning', title: 'Low Stock Alert', message: 'Some products are running low', time: '2h ago', read: true }
+  ]);
   
   const userMenuRef = useRef(null);
-  const settingsMenuRef = useRef(null);
+  const themeMenuRef = useRef(null);
+  const languageMenuRef = useRef(null);
+  const notificationRef = useRef(null);
 
   const API_BASE = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
-  // Available themes
-  const availableThemes = {
-    dark: { name: 'Dark Mode', icon: '🌙', class: 'dark' },
-    light: { name: 'Light Mode', icon: '☀️', class: 'light' },
-    blue: { name: 'Corporate Blue', icon: '💼', class: 'blue' },
-    green: { name: 'Medical Green', icon: '🏥', class: 'green' }
+  // Enhanced theme definitions - Now using the themes from props
+  const themeOptions = availableThemes && Object.keys(availableThemes).length > 0 ? availableThemes : {
+    dark: { name: { ar: 'داكن كلاسيكي', en: 'Classic Dark' }, icon: '🌙' },
+    professional: { name: { ar: 'أزرق احترافي', en: 'Professional Blue' }, icon: '💼' },
+    royal: { name: { ar: 'بنفسجي ملكي', en: 'Royal Purple' }, icon: '👑' },
+    medical: { name: { ar: 'أخضر طبي', en: 'Medical Green' }, icon: '🏥' },
+    luxury: { name: { ar: 'ذهبي فاخر', en: 'Luxury Gold' }, icon: '✨' },
+    power: { name: { ar: 'أحمر قوي', en: 'Power Red' }, icon: '🔥' },
+    slate: { name: { ar: 'رمادي متطور', en: 'Advanced Slate' }, icon: '⚡' },
+    midnight: { name: { ar: 'ليل عميق', en: 'Deep Night' }, icon: '🌌' }
   };
 
-  // Available languages
+  // Enhanced language options
   const availableLanguages = {
-    en: { name: 'English', flag: '🇺🇸', dir: 'ltr' },
-    ar: { name: 'العربية', flag: '🇪🇬', dir: 'rtl' }
+    en: { name: 'English', nativeName: 'English', flag: '🇺🇸', dir: 'ltr' },
+    ar: { name: 'العربية', nativeName: 'Arabic', flag: '🇪🇬', dir: 'rtl' }
   };
 
   // Close dropdowns when clicking outside
@@ -45,8 +59,14 @@ const ModernProfessionalHeader = ({
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
-      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
-        setShowSettingsMenu(false);
+      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target)) {
+        setShowThemeMenu(false);
+      }
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+        setShowLanguageMenu(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
       }
     };
 
@@ -79,7 +99,7 @@ const ModernProfessionalHeader = ({
   const handleSearch = (query) => {
     if (!query.trim()) return;
     if (onSearch) {
-      onSearch(query);
+      onSearch(query, 'global');
     }
   };
 
@@ -99,144 +119,137 @@ const ModernProfessionalHeader = ({
     return initials;
   };
 
-  // Get role badge color
-  const getRoleBadgeColor = (role) => {
-    const colors = {
-      'admin': 'bg-red-500',
-      'gm': 'bg-purple-500',
-      'medical_rep': 'bg-green-500',
-      'sales_rep': 'bg-blue-500',
-      'accounting': 'bg-yellow-500',
-      'line_manager': 'bg-orange-500'
+  // Get role badge color and icon
+  const getRoleInfo = (role) => {
+    const roleMap = {
+      'admin': { color: 'bg-gradient-to-r from-red-500 to-red-600', icon: '👑', label: language === 'ar' ? 'مدير' : 'Admin' },
+      'gm': { color: 'bg-gradient-to-r from-purple-500 to-purple-600', icon: '🎯', label: language === 'ar' ? 'مدير عام' : 'GM' },
+      'medical_rep': { color: 'bg-gradient-to-r from-green-500 to-green-600', icon: '🏥', label: language === 'ar' ? 'مندوب طبي' : 'Medical Rep' },
+      'sales_rep': { color: 'bg-gradient-to-r from-blue-500 to-blue-600', icon: '💼', label: language === 'ar' ? 'مندوب مبيعات' : 'Sales Rep' },
+      'accounting': { color: 'bg-gradient-to-r from-yellow-500 to-yellow-600', icon: '📊', label: language === 'ar' ? 'محاسب' : 'Accountant' },
+      'line_manager': { color: 'bg-gradient-to-r from-orange-500 to-orange-600', icon: '📋', label: language === 'ar' ? 'مدير خط' : 'Line Manager' }
     };
-    return colors[role] || 'bg-gray-500';
+    return roleMap[role] || { color: 'bg-gradient-to-r from-gray-500 to-gray-600', icon: '👤', label: role };
   };
+
+  const roleInfo = getRoleInfo(user?.role);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <>
-      {/* Modern Header */}
-      <header className="bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
-        <div className="flex items-center justify-between h-16 px-4">
+      {/* Enhanced Professional Header */}
+      <header className="bg-white/95 backdrop-blur-lg shadow-xl border-b border-gray-200/50 sticky top-0 z-50 transition-all duration-300">
+        <div className="flex items-center justify-between h-20 px-6">
           
-          {/* Left Section - Logo and Sidebar Toggle */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            {/* Sidebar Toggle Button */}
+          {/* Left Section - Enhanced Logo and Controls */}
+          <div className="flex items-center space-x-6 rtl:space-x-reverse">
+            {/* Modern Sidebar Toggle */}
             <button
               onClick={onToggleSidebar}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 group"
-              title="Toggle Sidebar"
+              className="group p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              title={language === 'ar' ? 'تبديل القائمة' : 'Toggle Menu'}
             >
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
 
-            {/* Logo and System Name */}
-            <div className="flex items-center space-x-3 rtl:space-x-reverse">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            {/* Enhanced Logo Section */}
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transform hover:rotate-3 transition-transform">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-800">Medical Management System</h1>
-                <p className="text-xs text-gray-500">Comprehensive Healthcare Solution</p>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {language === 'ar' ? 'نظام الإدارة الطبية' : 'Medical Management System'}
+                </h1>
+                <p className="text-sm text-gray-500 font-medium">
+                  {language === 'ar' ? 'حل شامل للرعاية الصحية' : 'Comprehensive Healthcare Solution'}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Center Section - Search */}
-          <div className="flex-1 max-w-xl mx-8">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 rtl:inset-y-0 rtl:right-0 rtl:left-auto pl-3 rtl:pr-3 flex items-center">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Center Section - Enhanced Global Search */}
+          <div className="flex-1 max-w-2xl mx-8">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 rtl:inset-y-0 rtl:right-0 rtl:left-auto pl-4 rtl:pr-4 flex items-center">
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <input
                 type="text"
-                className="w-full pl-10 rtl:pr-10 rtl:pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                placeholder="Search patients, clinics, orders..."
+                className="w-full pl-12 rtl:pr-12 rtl:pl-6 pr-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/80 focus:bg-white placeholder-gray-500 text-gray-800 font-medium shadow-inner"
+                placeholder={language === 'ar' ? 'البحث الشامل في النظام...' : 'Search patients, clinics, orders, reports...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(searchQuery);
+                  }
+                }}
               />
               {searchQuery && (
                 <button
                   onClick={() => handleSearch(searchQuery)}
-                  className="absolute inset-y-0 right-0 rtl:inset-y-0 rtl:left-0 rtl:right-auto pr-3 rtl:pl-3 flex items-center"
+                  className="absolute inset-y-0 right-0 rtl:inset-y-0 rtl:left-0 rtl:right-auto pr-2 rtl:pl-2 flex items-center"
                 >
-                  <div className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700 transition-colors">
-                    Search
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl text-sm hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg font-medium">
+                    {language === 'ar' ? 'بحث' : 'Search'}
                   </div>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Right Section - Settings and User Menu */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          {/* Right Section - Enhanced Control Panel */}
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
             
-            {/* Language Selector */}
-            <div className="relative" ref={settingsMenuRef}>
+            {/* Theme Selector */}
+            <div className="relative" ref={themeMenuRef}>
               <button
-                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 group"
-                title="Language & Settings"
+                onClick={() => {
+                  setShowThemeMenu(!showThemeMenu);
+                  setShowLanguageMenu(false);
+                  setShowNotifications(false);
+                  setShowUserMenu(false);
+                }}
+                className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-300 transform hover:scale-105 shadow-lg group"
+                title={language === 'ar' ? 'اختيار الثيم' : 'Theme Selector'}
               >
-                <span className="text-lg">{availableLanguages[language]?.flag}</span>
+                <span className="text-lg group-hover:animate-pulse">🎨</span>
               </button>
               
-              {showSettingsMenu && (
-                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              {showThemeMenu && (
+                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-72 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 py-3 z-50">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-700">Language & Theme</h3>
+                    <h3 className="text-lg font-bold text-gray-800">{language === 'ar' ? 'اختيار الثيم' : 'Theme Selection'}</h3>
+                    <p className="text-sm text-gray-500">{language === 'ar' ? 'اختر المظهر المناسب' : 'Choose your preferred appearance'}</p>
                   </div>
                   
-                  {/* Languages */}
-                  <div className="px-2 py-2">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1">Language</p>
-                    {Object.entries(availableLanguages).map(([code, lang]) => (
-                      <button
-                        key={code}
-                        onClick={() => {
-                          setLanguage(code);
-                          setIsRTL(lang.dir === 'rtl');
-                          setShowSettingsMenu(false);
-                        }}
-                        className={`w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors ${
-                          language === code ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="mr-3 rtl:ml-3 rtl:mr-0">{lang.flag}</span>
-                        {lang.name}
-                        {language === code && (
-                          <svg className="w-4 h-4 ml-auto rtl:mr-auto rtl:ml-0 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Themes */}
-                  <div className="px-2 py-2 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1">Theme</p>
-                    {Object.entries(availableThemes).map(([key, themeOption]) => (
+                  <div className="px-2 py-2 max-h-80 overflow-y-auto">
+                    {Object.entries(themeOptions).map(([key, themeOption]) => (
                       <button
                         key={key}
                         onClick={() => {
                           setTheme(key);
-                          setShowSettingsMenu(false);
+                          setShowThemeMenu(false);
                         }}
-                        className={`w-full flex items-center px-2 py-2 text-sm rounded-md transition-colors ${
-                          theme === key ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                        className={`w-full flex items-center px-3 py-3 text-sm rounded-xl transition-all duration-200 mb-1 ${
+                          theme === key 
+                            ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-2 border-blue-200' 
+                            : 'text-gray-700 hover:bg-gray-50 border-2 border-transparent hover:border-gray-200'
                         }`}
                       >
-                        <span className="mr-3 rtl:ml-3 rtl:mr-0">{themeOption.icon}</span>
-                        {themeOption.name}
+                        <span className="text-2xl mr-3 rtl:ml-3 rtl:mr-0">{themeOption.icon}</span>
+                        <div className="flex-1 text-left rtl:text-right">
+                          <div className="font-semibold">{themeOption.name[language] || themeOption.name.en}</div>
+                        </div>
                         {theme === key && (
-                          <svg className="w-4 h-4 ml-auto rtl:mr-auto rtl:ml-0 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -247,82 +260,178 @@ const ModernProfessionalHeader = ({
               )}
             </div>
 
-            {/* Notifications */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 group relative">
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5z M11.25 3c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z" />
-              </svg>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-            </button>
+            {/* Language Selector */}
+            <div className="relative" ref={languageMenuRef}>
+              <button
+                onClick={() => {
+                  setShowLanguageMenu(!showLanguageMenu);
+                  setShowThemeMenu(false);
+                  setShowNotifications(false);
+                  setShowUserMenu(false);
+                }}
+                className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white transition-all duration-300 transform hover:scale-105 shadow-lg group"
+                title={language === 'ar' ? 'اختيار اللغة' : 'Language Selector'}
+              >
+                <span className="text-lg group-hover:animate-bounce">{availableLanguages[language]?.flag}</span>
+              </button>
+              
+              {showLanguageMenu && (
+                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-64 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 py-3 z-50">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-800">{language === 'ar' ? 'اختيار اللغة' : 'Language'}</h3>
+                  </div>
+                  
+                  {Object.entries(availableLanguages).map(([code, lang]) => (
+                    <button
+                      key={code}
+                      onClick={() => {
+                        setLanguage(code);
+                        setIsRTL(lang.dir === 'rtl');
+                        setShowLanguageMenu(false);
+                      }}
+                      className={`w-full flex items-center px-4 py-3 text-sm rounded-xl transition-all duration-200 mx-2 mb-1 ${
+                        language === code 
+                          ? 'bg-gradient-to-r from-blue-50 to-green-50 text-blue-700 border-2 border-blue-200' 
+                          : 'text-gray-700 hover:bg-gray-50 border-2 border-transparent hover:border-gray-200'
+                      }`}
+                    >
+                      <span className="text-2xl mr-3 rtl:ml-3 rtl:mr-0">{lang.flag}</span>
+                      <div className="flex-1 text-left rtl:text-right">
+                        <div className="font-semibold">{lang.nativeName}</div>
+                        <div className="text-xs text-gray-500">{lang.name}</div>
+                      </div>
+                      {language === code && (
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {/* User Profile Menu */}
+            {/* Enhanced Notifications */}
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowThemeMenu(false);
+                  setShowLanguageMenu(false);
+                  setShowUserMenu(false);
+                }}
+                className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white transition-all duration-300 transform hover:scale-105 shadow-lg relative group"
+              >
+                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z" />
+                </svg>
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white animate-pulse">
+                    {unreadCount}
+                  </div>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-800">{language === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
+                    {unreadCount > 0 && (
+                      <p className="text-sm text-gray-500">{unreadCount} {language === 'ar' ? 'غير مقروءة' : 'unread'}</p>
+                    )}
+                  </div>
+                  
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <div key={notification.id} className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!notification.read ? 'bg-blue-50/50' : ''}`}>
+                        <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-gray-800">{notification.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-400 mt-2">{notification.time}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Enhanced User Profile Menu */}
             <div className="relative" ref={userMenuRef}>
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 rtl:space-x-reverse p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 group"
+                onClick={() => {
+                  setShowUserMenu(!showUserMenu);
+                  setShowThemeMenu(false);
+                  setShowLanguageMenu(false);
+                  setShowNotifications(false);
+                }}
+                className="flex items-center space-x-3 rtl:space-x-reverse p-2 rounded-2xl bg-white/80 hover:bg-white transition-all duration-300 transform hover:scale-105 shadow-lg border border-gray-200/50 group"
               >
                 {user?.avatar ? (
                   <img 
                     src={user.avatar} 
                     alt={user.full_name} 
-                    className="w-8 h-8 rounded-full object-cover"
+                    className="w-10 h-10 rounded-xl object-cover shadow-md"
                   />
                 ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-md ${roleInfo.color}`}>
                     {getUserAvatar()}
                   </div>
                 )}
                 
                 <div className="hidden md:block text-left rtl:text-right">
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                  <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
                     {user?.full_name || user?.username}
                   </p>
                   <div className="flex items-center">
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 rtl:ml-2 rtl:mr-0 ${getRoleBadgeColor(user?.role)}`}></span>
-                    <p className="text-xs text-gray-500 capitalize">
-                      {user?.role?.replace('_', ' ')}
+                    <span className="text-xs mr-1 rtl:ml-1 rtl:mr-0">{roleInfo.icon}</span>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {roleInfo.label}
                     </p>
                   </div>
                 </div>
                 
-                <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-transform duration-200 transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-all duration-200 transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  {/* User Info Header */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-50">
+                  {/* Enhanced User Info Header */}
+                  <div className="px-6 py-4 border-b border-gray-100">
+                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
                       {user?.avatar ? (
                         <img 
                           src={user.avatar} 
                           alt={user.full_name} 
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-16 h-16 rounded-2xl object-cover shadow-lg"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-medium">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg ${roleInfo.color}`}>
                           {getUserAvatar()}
                         </div>
                       )}
                       <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-gray-900">
+                        <h3 className="text-lg font-bold text-gray-900">
                           {user?.full_name || user?.username}
                         </h3>
-                        <p className="text-sm text-gray-500">{user?.email}</p>
-                        <div className="flex items-center mt-1">
-                          <span className={`inline-block w-2 h-2 rounded-full mr-2 rtl:ml-2 rtl:mr-0 ${getRoleBadgeColor(user?.role)}`}></span>
-                          <span className="text-xs text-gray-600 capitalize">
-                            {user?.role?.replace('_', ' ')}
+                        <p className="text-sm text-gray-500 mb-1">{user?.email}</p>
+                        <div className="flex items-center">
+                          <span className="text-sm mr-2 rtl:ml-2 rtl:mr-0">{roleInfo.icon}</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${roleInfo.color} shadow-sm`}>
+                            {roleInfo.label}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Menu Items */}
+                  {/* Enhanced Menu Items */}
                   <div className="py-2">
                     <button
                       onClick={() => {
@@ -330,35 +439,50 @@ const ModernProfessionalHeader = ({
                         setShowUserMenu(false);
                         loadUserProfile();
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group"
                     >
-                      <svg className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      View Profile
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3 rtl:ml-3 rtl:mr-0 group-hover:bg-blue-200 transition-colors">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold">{language === 'ar' ? 'عرض الملف الشخصي' : 'View Profile'}</div>
+                        <div className="text-xs text-gray-500">{language === 'ar' ? 'إدارة معلوماتك الشخصية' : 'Manage your personal information'}</div>
+                      </div>
                     </button>
 
                     <button
                       onClick={() => setShowUserMenu(false)}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 transition-all duration-200 group"
                     >
-                      <svg className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Account Settings
+                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mr-3 rtl:ml-3 rtl:mr-0 group-hover:bg-green-200 transition-colors">
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold">{language === 'ar' ? 'إعدادات الحساب' : 'Account Settings'}</div>
+                        <div className="text-xs text-gray-500">{language === 'ar' ? 'تخصيص تفضيلاتك' : 'Customize your preferences'}</div>
+                      </div>
                     </button>
 
                     <div className="border-t border-gray-100 my-2"></div>
 
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full flex items-center px-6 py-3 text-sm text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 group"
                     >
-                      <svg className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Sign Out
+                      <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center mr-3 rtl:ml-3 rtl:mr-0 group-hover:bg-red-200 transition-colors">
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold">{language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}</div>
+                        <div className="text-xs text-gray-500">{language === 'ar' ? 'إنهاء الجلسة الحالية' : 'End your current session'}</div>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -368,15 +492,17 @@ const ModernProfessionalHeader = ({
         </div>
       </header>
 
-      {/* User Profile Modal */}
+      {/* Enhanced User Profile Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">User Profile</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-lg rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-200/50">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-lg border-b border-gray-200/50 px-8 py-6 flex items-center justify-between rounded-t-3xl">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {language === 'ar' ? 'الملف الشخصي' : 'User Profile'}
+              </h2>
               <button
                 onClick={() => setShowProfileModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -384,98 +510,112 @@ const ModernProfessionalHeader = ({
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-8">
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3">Loading profile...</span>
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <span className="text-gray-600 font-medium">{language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading profile...'}</span>
+                  </div>
                 </div>
               ) : userProfile ? (
-                <div className="space-y-6">
-                  {/* Basic Info */}
-                  <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                <div className="space-y-8">
+                  {/* Enhanced Basic Info */}
+                  <div className="flex items-center space-x-6 rtl:space-x-reverse p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl">
                     {userProfile.avatar ? (
                       <img 
                         src={userProfile.avatar} 
                         alt={userProfile.full_name} 
-                        className="w-20 h-20 rounded-full object-cover"
+                        className="w-24 h-24 rounded-2xl object-cover shadow-lg"
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-medium">
+                      <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg ${roleInfo.color}`}>
                         {getUserAvatar()}
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900">{userProfile.full_name}</h3>
-                      <p className="text-gray-600">{userProfile.email}</p>
-                      <div className="flex items-center mt-2">
-                        <span className={`inline-block w-3 h-3 rounded-full mr-2 rtl:ml-2 rtl:mr-0 ${getRoleBadgeColor(userProfile.role)}`}></span>
-                        <span className="text-sm text-gray-600 capitalize">
-                          {userProfile.role?.replace('_', ' ')}
+                    <div className="flex-1">
+                      <h3 className="text-3xl font-bold text-gray-900 mb-2">{userProfile.full_name}</h3>
+                      <p className="text-gray-600 text-lg mb-2">{userProfile.email}</p>
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2 rtl:ml-2 rtl:mr-0">{roleInfo.icon}</span>
+                        <span className={`px-4 py-2 rounded-full text-sm font-bold text-white ${roleInfo.color} shadow-sm`}>
+                          {roleInfo.label}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Profile Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Personal Information</h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm text-gray-600">Username</label>
-                          <p className="font-medium">{userProfile.username}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600">Phone</label>
-                          <p className="font-medium">{userProfile.phone || 'Not provided'}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600">Address</label>
-                          <p className="font-medium">{userProfile.address || 'Not provided'}</p>
-                        </div>
+                  {/* Enhanced Profile Details Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2">
+                        {language === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}
+                      </h4>
+                      <div className="space-y-4">
+                        {[
+                          { label: language === 'ar' ? 'اسم المستخدم' : 'Username', value: userProfile.username },
+                          { label: language === 'ar' ? 'الهاتف' : 'Phone', value: userProfile.phone || (language === 'ar' ? 'غير محدد' : 'Not provided') },
+                          { label: language === 'ar' ? 'العنوان' : 'Address', value: userProfile.address || (language === 'ar' ? 'غير محدد' : 'Not provided') }
+                        ].map((item, index) => (
+                          <div key={index} className="p-4 bg-gray-50 rounded-xl">
+                            <label className="block text-sm font-semibold text-gray-600 mb-1">{item.label}</label>
+                            <p className="text-lg font-medium text-gray-800">{item.value}</p>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-3">Work Information</h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm text-gray-600">Employee ID</label>
-                          <p className="font-medium">{userProfile.employee_id || 'Not assigned'}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600">Department</label>
-                          <p className="font-medium">{userProfile.department || 'General'}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600">Status</label>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            userProfile.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {userProfile.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2">
+                        {language === 'ar' ? 'معلومات العمل' : 'Work Information'}
+                      </h4>
+                      <div className="space-y-4">
+                        {[
+                          { label: language === 'ar' ? 'رقم الموظف' : 'Employee ID', value: userProfile.employee_id || (language === 'ar' ? 'غير مخصص' : 'Not assigned') },
+                          { label: language === 'ar' ? 'القسم' : 'Department', value: userProfile.department || (language === 'ar' ? 'عام' : 'General') },
+                          { 
+                            label: language === 'ar' ? 'الحالة' : 'Status', 
+                            value: userProfile.is_active ? 
+                              (language === 'ar' ? 'نشط' : 'Active') : 
+                              (language === 'ar' ? 'غير نشط' : 'Inactive'),
+                            isStatus: true,
+                            active: userProfile.is_active
+                          }
+                        ].map((item, index) => (
+                          <div key={index} className="p-4 bg-gray-50 rounded-xl">
+                            <label className="block text-sm font-semibold text-gray-600 mb-1">{item.label}</label>
+                            {item.isStatus ? (
+                              <span className={`inline-flex px-3 py-1 text-sm font-bold rounded-full ${
+                                item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {item.value}
+                              </span>
+                            ) : (
+                              <p className="text-lg font-medium text-gray-800">{item.value}</p>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="border-t border-gray-200 pt-6 flex justify-end space-x-3 rtl:space-x-reverse">
+                  {/* Enhanced Action Buttons */}
+                  <div className="border-t border-gray-200 pt-8 flex justify-end space-x-4 rtl:space-x-reverse">
                     <button
                       onClick={() => setShowProfileModal(false)}
-                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
                     >
-                      Close
+                      {language === 'ar' ? 'إغلاق' : 'Close'}
                     </button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                      Edit Profile
+                    <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg transform hover:scale-105">
+                      {language === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile'}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Unable to load profile information.</p>
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4">😔</div>
+                  <p className="text-gray-500 text-lg">{language === 'ar' ? 'غير قادر على تحميل معلومات الملف الشخصي.' : 'Unable to load profile information.'}</p>
                 </div>
               )}
             </div>
