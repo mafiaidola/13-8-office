@@ -2,7 +2,7 @@
 import React from 'react';
 import RoleBasedDashboard from './RoleBasedDashboard';
 
-const Dashboard = ({ user, language = 'ar', isRTL = true, setActiveTab }) => {
+const Dashboard = ({ user, language = 'en', isRTL = false, setActiveTab }) => {
   console.log('🎯 Dashboard loaded for user:', user?.role, user?.username);
   
   return (
