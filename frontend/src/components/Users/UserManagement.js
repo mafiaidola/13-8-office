@@ -386,7 +386,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
               {/* Performance Bar - RESTORED */}
               <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/80">الأداء العام</span>
+                  <span className="text-sm text-white/80">{language === 'ar' ? 'الأداء العام' : 'Overall Performance'}</span>
                   <span className="text-sm font-bold text-white">{userData.stats_last_30_days?.performance_percentage || 0}%</span>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-2">
