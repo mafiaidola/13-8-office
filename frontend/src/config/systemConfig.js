@@ -126,7 +126,7 @@ export const SYSTEM_TABS = {
     path: '/activity-tracking',
     icon: '📊',
     name: { ar: 'تتبع الأنشطة والحركات', en: 'Activity Tracking' },
-    component: 'ActivityTracking',
+    component: 'ActivityTrackingFixed',
     description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
     permissions: ['admin', 'gm'],
     priority: 12
