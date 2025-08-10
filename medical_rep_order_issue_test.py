@@ -20,7 +20,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com/api"
+BASE_URL = "https://edfab686-d8ce-4a18-b8dd-9d603d68b461.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class MedicalRepOrderTest:

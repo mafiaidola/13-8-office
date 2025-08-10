@@ -583,7 +583,7 @@ class ComprehensiveFinancialSystemTester:
 def main():
     """الدالة الرئيسية لتشغيل الاختبار"""
     # Use the backend URL from the Arabic review request
-    backend_url = "https://90173345-bd28-4520-b247-a1bbdbaac9ff.preview.emergentagent.com"
+    backend_url = "https://edfab686-d8ce-4a18-b8dd-9d603d68b461.preview.emergentagent.com"
     
     print("💰 اختبار شامل للنظام المالي المصحح ومراجعة مشاكل الرؤية في النصوص")
     print("💰 Comprehensive Testing for Corrected Financial System and Text Visibility Issues")
