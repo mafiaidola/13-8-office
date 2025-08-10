@@ -85,40 +85,40 @@ const AdminDashboard = ({
     }
   ];
 
-  // الإجراءات السريعة للأدمن
+  // Admin quick actions with translations
   const adminQuickActions = [
     {
-      label: 'إضافة مستخدم',
+      label: language === 'ar' ? 'إضافة مستخدم' : 'Add User',
       icon: '👤➕',
-      onClick: () => console.log('إضافة مستخدم'),
+      onClick: () => console.log('Add user'),
       color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
     },
     {
-      label: 'إدارة العيادات',
+      label: language === 'ar' ? 'إدارة العيادات' : 'Manage Clinics',
       icon: '🏥⚙️',
-      onClick: () => console.log('إدارة العيادات'),
+      onClick: () => console.log('Manage clinics'),
       color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
     },
     {
-      label: t('system_reports'),
+      label: language === 'ar' ? 'تقارير النظام' : 'System Reports',
       icon: '📊📋',
       onClick: () => console.log('System Reports'),
       color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
     },
     {
-      label: t('backup'),
+      label: language === 'ar' ? 'النسخ الاحتياطي' : 'Backup',
       icon: '💾🔒',
       onClick: () => console.log('Backup'),
       color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
     },
     {
-      label: t('system_monitoring'),
+      label: language === 'ar' ? 'مراقبة النظام' : 'System Monitoring',
       icon: '📈🔍',
       onClick: () => loadSystemHealth(),
       color: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200'
     },
     {
-      label: t('advanced_settings'),
+      label: language === 'ar' ? 'إعدادات متقدمة' : 'Advanced Settings',
       icon: '⚙️🎛️',
       onClick: () => console.log('Advanced Settings'),
       color: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
