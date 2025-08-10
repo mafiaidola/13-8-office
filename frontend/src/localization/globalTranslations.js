@@ -361,4 +361,45 @@ export const useLayoutSystem = (theme = 'dark') => {
   return layouts;
 };
 
+// Global error component with translation
+export const GlobalError = ({ language = 'en', error, onRetry }) => {
+  const { t } = useTranslation(language);
+  
+  const isDark = typeof document !== 'undefined' && document.body.classList.contains('theme-dark');
+  
+  return (
+    <div className={`
+      flex flex-col items-center justify-center p-8 min-h-[400px] rounded-lg
+      ${isDark 
+        ? 'bg-gray-800 text-white border border-gray-700' 
+        : 'bg-white text-gray-900 border border-gray-200'
+      }
+    `}>
+      <div className="text-6xl mb-4">⚠️</div>
+      <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`}>
+        {t('componentError')}
+      </h3>
+      {error && (
+        <p className={`text-sm mb-4 text-center max-w-md ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          {error.message || error}
+        </p>
+      )}
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className={`
+            px-4 py-2 rounded-lg transition-colors
+            ${isDark 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }
+          `}
+        >
+          {t('tryAgain')}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default useTranslation;
