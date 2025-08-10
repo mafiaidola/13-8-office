@@ -127,23 +127,23 @@ const AdminDashboard = ({
 
   return (
     <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* رأس لوحة التحكم المحسن */}
+      {/* Enhanced Dashboard Header */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold mb-2">
-              {t('title')}
+              {language === 'ar' ? 'لوحة تحكم الأدمن المتقدمة' : 'Advanced Admin Dashboard'}
             </h1>
             <p className="text-blue-100 text-lg">
-              {t('welcome').replace('{name}', user?.full_name || user?.username)}
+              {(language === 'ar' ? 'مرحباً {name} 👨‍💻 - إدارة شاملة للنظام' : 'Welcome {name} 👨‍💻 - Comprehensive System Management').replace('{name}', user?.full_name || user?.username)}
             </p>
             <div className="flex items-center space-x-4 space-x-reverse mt-4">
               <div className="flex items-center bg-white/20 rounded-full px-3 py-1">
                 <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                <span className="text-sm">{t('system_running')}</span>
+                <span className="text-sm">{language === 'ar' ? 'النظام يعمل بكفاءة' : 'System Running Efficiently'}</span>
               </div>
               <div className="text-sm bg-white/20 rounded-full px-3 py-1">
-                📊 {t('indicators_available').replace('{count}', Object.keys(dashboardData).length)}
+                📊 {Object.keys(dashboardData).length} {language === 'ar' ? 'مؤشر متاح' : 'indicators available'}
               </div>
             </div>
           </div>
@@ -165,11 +165,46 @@ const AdminDashboard = ({
         </div>
       </div>
 
-      {/* الإحصائيات الرئيسية مع الإجراءات السريعة */}
-      <CommonDashboardComponents.StatsGrid 
-        stats={adminStats}
-        quickActions={adminQuickActions}
-      />
+      {/* Stats Grid with Better Layout - Enhanced Horizontal Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        {adminStats.map((stat, index) => (
+          <div key={index} className={`${stat.color} rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-4xl opacity-80">{stat.icon}</div>
+              <div className="text-right">
+                <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                <div className="text-sm opacity-90">{stat.title}</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm opacity-75 flex-1">{stat.change}</div>
+              <div className="text-xl">
+                {stat.trend === 'up' ? '📈' : stat.trend === 'down' ? '📉' : '➡️'}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Actions Grid - Horizontal Layout */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+          <span className="text-blue-600 mr-3 text-3xl">⚡</span>
+          {language === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'}
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {adminQuickActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
+              className={`${action.color} border-2 rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+            >
+              <div className="text-2xl mb-2">{action.icon}</div>
+              <div className="text-sm font-semibold">{action.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* مؤشرات صحة النظام */}
       <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
