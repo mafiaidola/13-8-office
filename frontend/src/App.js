@@ -5,8 +5,11 @@ import React, { useState, useEffect, createContext, useContext, useCallback, use
 import './App.css';
 import axios from 'axios';
 
-// Professional Header Import
-import ProfessionalHeader from './components/Common/ProfessionalHeader.js';
+// Modern Professional Header Import
+import ModernProfessionalHeader from './components/Common/ModernProfessionalHeader.js';
+
+// Modern Sidebar Import
+import ModernSidebar from './components/Navigation/ModernSidebar.js';
 
 // Central System Imports
 import { 
