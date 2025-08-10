@@ -19,6 +19,41 @@ const AdminDashboard = ({
 
   const API_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
+  // Translation helper
+  const t = (key) => {
+    const translations = {
+      ar: {
+        title: 'لوحة تحكم الأدمن المتقدمة',
+        welcome: 'مرحباً {name} 👨‍💻 - إدارة شاملة للنظام',
+        system_running: 'النظام يعمل بكفاءة',
+        indicators_available: '{count} مؤشر متاح',
+        system_health: 'مؤشرات صحة النظام',
+        updating: 'جاري التحديث...',
+        update_status: 'تحديث الحالة',
+        database: 'قاعدة البيانات',
+        system_reports: 'تقارير النظام',
+        backup: 'النسخ الاحتياطي', 
+        system_monitoring: 'مراقبة النظام',
+        advanced_settings: 'إعدادات متقدمة'
+      },
+      en: {
+        title: 'Advanced Admin Dashboard',
+        welcome: 'Welcome {name} 👨‍💻 - Comprehensive System Management',
+        system_running: 'System Running Efficiently',
+        indicators_available: '{count} indicators available',
+        system_health: 'System Health Indicators',
+        updating: 'Updating...',
+        update_status: 'Update Status',
+        database: 'Database',
+        system_reports: 'System Reports',
+        backup: 'Backup',
+        system_monitoring: 'System Monitoring', 
+        advanced_settings: 'Advanced Settings'
+      }
+    };
+    return translations[language]?.[key] || translations['en'][key] || key;
+  };
+
   // تحميل صحة النظام
   const loadSystemHealth = async () => {
     try {
