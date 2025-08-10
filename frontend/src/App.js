@@ -429,7 +429,7 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
             icon: '🧾',
             action: () => setActiveTab('accounting')
           };
-        })));
+        }));
       }
 
       // Add mock data if no API results
