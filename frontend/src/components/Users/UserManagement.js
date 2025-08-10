@@ -412,7 +412,7 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
               {/* Rating Display - RESTORED */}
               <div className="bg-white/5 rounded-xl p-3 mb-4 border border-white/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/80">التقييم</span>
+                  <span className="text-sm text-white/80">{language === 'ar' ? 'التقييم' : 'Rating'}</span>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <span 
