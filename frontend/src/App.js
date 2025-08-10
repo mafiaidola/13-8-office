@@ -366,38 +366,48 @@ const AuthProvider = ({ children }) => {
   };
 
   const login = async (credentials) => {
+    console.log('🔄 Starting login process for:', credentials.username);
     try {
-      console.log('🔄 Starting login process...');
       const response = await axios.post(`${API}/auth/login`, credentials);
       
-      console.log('📡 Login API Response:', response.data);
+      console.log('📡 Login API Response received:', {
+        success: !!response.data?.access_token,
+        user: response.data?.user?.username,
+        role: response.data?.user?.role
+      });
       
-      if (response.data && response.data.access_token) {
+      if (response.data && response.data.access_token && response.data.user) {
         console.log('💾 Saving token and updating user state...');
+        
+        // Store the token
         localStorage.setItem('access_token', response.data.access_token);
-        setUser(response.data.user);
+        
+        // Update the user state immediately
+        const userData = response.data.user;
+        setUser(userData);
         setIsAuthenticated(true);
         
-        console.log('✅ User state updated:', response.data.user);
-        console.log('✅ isAuthenticated set to true');
+        console.log('✅ Authentication state updated successfully:', {
+          user: userData,
+          isAuthenticated: true
+        });
         
-        // Force re-render by triggering a state update
+        // Double-check by calling checkAuthStatus to ensure everything is correct
         setTimeout(() => {
-          console.log('🔄 Force state refresh after login');
-          setIsAuthenticated(true);
-          setUser(response.data.user);
+          console.log('🔄 Double-checking auth status after login...');
+          checkAuthStatus();
         }, 100);
         
-        return { success: true, user: response.data.user };
+        return { success: true, user: userData };
+      } else {
+        console.error('❌ Invalid response format:', response.data);
+        return { success: false, error: 'Invalid response format from server' };
       }
-      
-      console.error('❌ Invalid response format:', response.data);
-      return { success: false, error: 'Invalid response format' };
     } catch (error) {
       console.error('❌ Login API error:', error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
+        error: error.response?.data?.detail || error.message || 'Login failed' 
       };
     }
   };
