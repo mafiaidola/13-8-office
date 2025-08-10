@@ -519,9 +519,95 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Professional Enhancement: Smooth Transitions */
+/* Enhanced Card and Interactive Elements - High Contrast */
+[class*="theme-"] .bg-white/10 {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(10px);
+}
+
+[class*="theme-"] .bg-white/5 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[class*="theme-"] .text-white/90 {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[class*="theme-"] .text-white/80 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[class*="theme-"] .text-white/70 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[class*="theme-"] .text-white/60 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Enhanced button states with better visibility */
+[class*="theme-"] button:hover {
+  backdrop-filter: blur(15px);
+  transform: translateY(-1px);
+}
+
+/* Card interactions with enhanced visual feedback */
+[class*="theme-"] [class*="border-white/30"]:hover {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Status indicators with better contrast */
+[class*="theme-"] .border-blue-400 {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3) !important;
+}
+
+[class*="theme-"] .border-green-400 {
+  border-color: #4ade80 !important;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3) !important;
+}
+
+[class*="theme-"] .border-purple-400 {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.3) !important;
+}
+
+/* Enhanced modal and overlay visibility */
+[class*="theme-"] .backdrop-blur-lg {
+  backdrop-filter: blur(20px) !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Better form input visibility */
+[class*="theme-"] input,
+[class*="theme-"] textarea {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+[class*="theme-"] input::placeholder,
+[class*="theme-"] textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* High contrast for important elements */
+[class*="theme-"] .text-white {
+  color: #ffffff !important;
+}
+
+[class*="theme-"] h1,
+[class*="theme-"] h2,
+[class*="theme-"] h3,
+[class*="theme-"] h4 {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Enhanced readability for all text elements */
 [class*="theme-"] * {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Professional Enhancement: Interactive Elements */
