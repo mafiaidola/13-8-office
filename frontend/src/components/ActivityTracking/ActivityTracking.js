@@ -181,20 +181,6 @@ const ActivityTracking = () => {
     mapInstanceRef.current = map;
   };
 
-  // Get activity type label in Arabic
-  const getActivityTypeLabel = (type) => {
-    const labels = {
-      'login': 'تسجيل دخول',
-      'logout': 'تسجيل خروج',
-      'user_created': 'إنشاء مستخدم',
-      'user_updated': 'تحديث مستخدم',
-      'clinic_visit': 'زيارة عيادة',
-      'order_created': 'إنشاء طلب',
-      'payment_processed': 'معالجة دفعة'
-    };
-    return labels[type] || type;
-  };
-
   const loadLoginLogs = async () => {
     try {
       setLoginLogsLoading(true);
