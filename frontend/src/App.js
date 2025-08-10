@@ -351,6 +351,13 @@ const AuthProvider = ({ children }) => {
         console.log('✅ User state updated:', response.data.user);
         console.log('✅ isAuthenticated set to true');
         
+        // Force re-render by triggering a state update
+        setTimeout(() => {
+          console.log('🔄 Force state refresh after login');
+          setIsAuthenticated(true);
+          setUser(response.data.user);
+        }, 100);
+        
         return { success: true, user: response.data.user };
       }
       
