@@ -1617,37 +1617,8 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     </div>
   );
 };
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${getFormCompletionPercentage()}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>معلومات أساسية</span>
-          <span>موقع وخريطة</span>
-          <span>تصنيفات</span>
-          <span>مكتمل</span>
-        </div>
-      </div>
 
-      {errors.general && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 rounded-md">
-          <p className="text-red-700">❌ {errors.general}</p>
-        </div>
-      )}
-
-      {errors.map && (
-        <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
-          <p className="text-yellow-700">⚠️ {errors.map}</p>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* قسم الخريطة والموقع - محسن */}
-        <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
-          <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center">
-            🗺️ تحديد الموقع على الخريطة
+export default EnhancedClinicRegistration;
           </h3>
           
           {/* رسالة خطأ الموقع */}
