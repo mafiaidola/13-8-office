@@ -849,7 +849,7 @@ const useTheme = () => {
   return context;
 };
 
-// Simplified Login Form
+// Enhanced Login Form with direct token handling
 const LoginForm = () => {
   const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -874,13 +874,57 @@ const LoginForm = () => {
       
       if (result.success) {
         console.log('✅ Login successful!');
-        // State update is handled by AuthProvider
+        // Force immediate re-render by triggering custom event
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
       } else {
         console.error('❌ Login failed:', result.error);
         setError(result.error);
       }
     } catch (error) {
       console.error('❌ Login exception:', error);
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Alternative: Direct API call if useAuth login doesn't work
+  const handleDirectLogin = async () => {
+    console.log('🚀 Direct login attempt...');
+    setLoading(true);
+    setError('');
+
+    try {
+      const API_URL = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+      
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('access_token', data.access_token);
+        
+        // Use the debug function to update auth state
+        if (window.debugAuth) {
+          window.debugAuth.setToken(data.access_token);
+        } else {
+          // Fallback: trigger custom event
+          window.dispatchEvent(new CustomEvent('tokenInjected'));
+        }
+        
+        console.log('✅ Direct login successful!');
+      } else {
+        const errorData = await response.json().catch(() => ({ detail: 'Login failed' }));
+        setError(errorData.detail || 'Login failed');
+      }
+    } catch (error) {
+      console.error('❌ Direct login error:', error);
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -944,13 +988,24 @@ const LoginForm = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
+          <div className="space-y-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleDirectLogin}
+              disabled={loading || !credentials.username || !credentials.password}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {loading ? 'Processing...' : 'Direct Login (Backup)'}
+            </button>
+          </div>
         </form>
 
         {/* Footer */}
