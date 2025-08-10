@@ -442,13 +442,13 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
                           }}
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
                         >
-                          تعديل
+                          {tc('edit')}
                         </button>
                         <button
                           onClick={() => handleDeleteProduct(product.id)}
                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-xs"
                         >
-                          حذف
+                          {tc('delete')}
                         </button>
                       </div>
                     </td>
