@@ -101,18 +101,44 @@ const ModernSidebar = ({
     }));
   };
 
+  // Theme-based styling
+  const isDark = theme === 'dark';
+  const themeStyles = {
+    sidebar: isDark 
+      ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white' 
+      : 'bg-gradient-to-b from-gray-50 to-white text-gray-900',
+    header: isDark 
+      ? 'bg-gradient-to-r from-blue-800 via-purple-800 to-indigo-800' 
+      : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600',
+    sectionHeader: isDark 
+      ? 'text-gray-200 hover:bg-gray-700/50 hover:text-blue-300' 
+      : 'text-gray-800 hover:bg-blue-50 hover:text-blue-700',
+    activeItem: isDark 
+      ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/50 text-blue-300 border-blue-400' 
+      : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-600',
+    inactiveItem: isDark 
+      ? 'text-gray-300 hover:bg-gray-700/30 hover:text-gray-100 hover:border-gray-500' 
+      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300',
+    footer: isDark 
+      ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700' 
+      : 'bg-gradient-to-r from-gray-100 to-gray-50 border-gray-200',
+    border: isDark ? 'border-gray-700' : 'border-gray-200',
+    accent: isDark ? 'border-gray-600' : 'border-gray-200'
+  };
+
   return (
     <div 
       className={`
-        fixed top-0 right-0 h-full bg-gradient-to-b from-gray-50 to-white shadow-2xl border-l border-gray-200 z-40
+        fixed top-0 right-0 h-full shadow-2xl border-l z-40
         transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-16' : 'w-80'}
         flex flex-col
+        ${themeStyles.sidebar} ${themeStyles.border}
       `}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
+      <div className={`flex items-center justify-between p-4 text-white shadow-lg ${themeStyles.header}`}>
         {!isCollapsed && (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
@@ -147,22 +173,22 @@ const ModernSidebar = ({
               onClick={() => toggleSection(sectionKey)}
               className={`
                 w-full flex items-center justify-between px-4 py-3 text-right
-                hover:bg-blue-50 transition-all duration-200 group border-r-4 border-transparent
-                hover:border-r-blue-400
+                transition-all duration-200 group border-r-4 border-transparent
+                ${themeStyles.sectionHeader}
                 ${isCollapsed ? 'justify-center px-2' : ''}
               `}
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{section.icon}</span>
                 {!isCollapsed && (
-                  <span className="font-semibold text-gray-800 group-hover:text-blue-700">
+                  <span className="font-semibold">
                     {section.title}
                   </span>
                 )}
               </div>
               {!isCollapsed && (
                 <span className={`
-                  transform transition-transform text-gray-500 group-hover:text-blue-600
+                  transform transition-transform 
                   ${expandedSections[sectionKey] ? 'rotate-180' : ''}
                 `}>
                   ▼
@@ -172,17 +198,17 @@ const ModernSidebar = ({
 
             {/* Section Items */}
             {(expandedSections[sectionKey] || isCollapsed) && (
-              <div className={isCollapsed ? '' : `pr-4 mr-6 border-r border-gray-200`}>
+              <div className={`${isCollapsed ? '' : `pr-4 mr-6 border-r ${themeStyles.accent}`}`}>
                 {section.items.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => switchTab(item.id)}
                     className={`
                       w-full flex items-center gap-3 px-4 py-3 text-right
-                      transition-all duration-200 relative
+                      transition-all duration-200 relative border-r-4 border-transparent
                       ${activeTab === item.id 
-                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-r-4 border-blue-600 shadow-md' 
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-r-4 border-transparent hover:border-gray-300'
+                        ? `${themeStyles.activeItem} shadow-md` 
+                        : themeStyles.inactiveItem
                       }
                       ${isCollapsed ? 'justify-center px-2' : ''}
                       group
@@ -191,7 +217,7 @@ const ModernSidebar = ({
                   >
                     {/* Active indicator */}
                     {activeTab === item.id && !isCollapsed && (
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-blue-600 rounded-l-full"></div>
+                      <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-l-full ${isDark ? 'bg-blue-400' : 'bg-blue-600'}`}></div>
                     )}
                     
                     <span className={`text-lg flex-shrink-0 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-105'} transition-transform`}>
@@ -203,7 +229,7 @@ const ModernSidebar = ({
                           {item.title}
                         </div>
                         {item.description && (
-                          <div className="text-xs text-gray-500 truncate mt-0.5">
+                          <div className={`text-xs truncate mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {item.description}
                           </div>
                         )}
@@ -218,21 +244,21 @@ const ModernSidebar = ({
       </div>
 
       {/* Footer */}
-      <div className="p-4 bg-gradient-to-r from-gray-100 to-gray-50 border-t border-gray-200">
+      <div className={`p-4 border-t ${themeStyles.footer}`}>
         {!isCollapsed ? (
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="text-2xl">🏥</span>
               <div>
-                <p className="text-sm font-semibold text-gray-800">
+                <p className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
                   {language === 'ar' ? 'نظام الإدارة الطبية' : 'Medical Management System'}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   {language === 'ar' ? 'الإصدار 2.1.0' : 'Version 2.1.0'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+            <div className={`flex items-center justify-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
               <span>🇪🇬</span>
               <span>{language === 'ar' ? 'مصر' : 'Egypt'}</span>
               <span>•</span>
