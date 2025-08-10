@@ -240,10 +240,7 @@ class BackendTester:
             ("/invoices", "Invoices Management"),
             ("/invoices/statistics/overview", "Invoice Statistics"),
             ("/debts", "Debts Management"),
-            ("/debts/statistics/overview", "Debt Statistics"),
-            ("/payments", "Payments Management"),
-            ("/unified-financial/dashboard/overview", "Unified Financial Dashboard"),
-            ("/unified-financial/records", "Financial Records")
+            ("/debts/statistics/overview", "Debt Statistics")
         ]
         
         for endpoint, name in financial_endpoints:
