@@ -1209,62 +1209,413 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     return classification ? classification.label : value;
   };
 
-  // Error boundary
-  if (componentError) {
-    return (
-      <GlobalError 
-        language={language}
-        error={componentError}
-        onRetry={() => {
-          setComponentError(null);
-          setLoading(false);
-        }}
-      />
-    );
-  }
-
   return (
-    <div className={`
-      max-w-6xl mx-auto p-6 rounded-lg shadow-lg min-h-screen
-      ${isDark 
-        ? 'bg-gray-800 text-white' 
-        : 'bg-white text-gray-900'
-      }
-    `}>
-      {/* العنوان الرئيسي المحسن */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
-          <span className="text-3xl">🏥</span>
+    <div className={layouts.pageContainer}>
+      <div className={layouts.formContainer}>
+        {/* Enhanced Header with Professional Design */}
+        <div className={layouts.pageHeader}>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl mb-6 shadow-xl">
+            <span className="text-4xl">🏥</span>
+          </div>
+          <h1 className={layouts.pageTitle}>
+            {t('clinicRegistrationTitle')}
+          </h1>
+          <p className={layouts.pageDescription}>
+            {t('clinicRegistrationDesc')}
+          </p>
         </div>
-        <h1 className={`
-          text-3xl font-bold mb-2
-          ${isDark ? 'text-white' : 'text-gray-900'}
-        `}>
-          {language === 'ar' 
-            ? 'تسجيل عيادة جديدة - نظام محسن'
-            : 'Enhanced Clinic Registration System'
-          }
-        </h1>
-        <p className={`
-          max-w-2xl mx-auto
-          ${isDark ? 'text-gray-300' : 'text-gray-600'}
-        `}>
-          {language === 'ar'
-            ? 'يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة. النظام متكامل مع إدارة الخطوط والمناطق لضمان التوافق الكامل.'
-            : 'Please fill in all required information and accurately locate the clinic on the map. The system is integrated with line and area management for complete compatibility.'
-          }
-        </p>
-      </div>
 
-      {/* شريط التقدم */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <span className={`
-            text-sm font-medium
-            ${isDark ? 'text-gray-300' : 'text-gray-700'}
-          `}>
-            {language === 'ar' ? 'مدى اكتمال النموذج' : 'Form Completion Progress'}
-          </span>
+        {/* Enhanced Progress Bar */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <span className={`text-lg font-semibold ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+              {t('formCompletionProgress')}
+            </span>
+            <span className={`text-2xl font-bold bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent`}>
+              {getCompletionPercentage()}%
+            </span>
+          </div>
+          
+          <div className={`w-full bg-gray-200 rounded-full h-3 shadow-inner ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
+            <div 
+              className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out shadow-lg"
+              style={{ width: `${getCompletionPercentage()}%` }}
+            />
+          </div>
+          
+          {/* Progress Steps */}
+          <div className="flex justify-between mt-4 text-sm">
+            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 0 ? 'text-green-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 0 ? 'bg-green-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
+                1
+              </span>
+              <span>{t('basicInfo')}</span>
+            </div>
+            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 50 ? 'text-blue-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 50 ? 'bg-blue-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
+                2
+              </span>
+              <span>{t('locationMapping')}</span>
+            </div>
+            <div className={`flex items-center space-x-2 ${getCompletionPercentage() > 80 ? 'text-purple-600 font-medium' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() > 80 ? 'bg-purple-500 text-white' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
+                3
+              </span>
+              <span>{t('classifications')}</span>
+            </div>
+            <div className={`flex items-center space-x-2 ${getCompletionPercentage() === 100 ? 'text-green-600 font-bold' : (isDark ? 'text-slate-400' : 'text-gray-400')}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getCompletionPercentage() === 100 ? 'bg-green-500 text-white animate-pulse' : (isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-300 text-gray-600')}`}>
+                ✓
+              </span>
+              <span>{t('completed')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Form Layout with Professional Design */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          
+          {/* Left Column - Basic Information */}
+          <div className="xl:col-span-2 space-y-8">
+            
+            {/* Basic Clinic Information Card */}
+            <div className={layouts.card}>
+              <div className="p-6">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-4">
+                    <span className="text-white text-xl">🏥</span>
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {t('basicInfo')}
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      {language === 'ar' ? 'معلومات العيادة الأساسية' : 'Essential clinic information'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('clinicName')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.clinic_name}
+                      onChange={(e) => setFormData({...formData, clinic_name: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'أدخل اسم العيادة' : 'Enter clinic name'}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('clinicPhone')} *
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.clinic_phone}
+                      onChange={(e) => setFormData({...formData, clinic_phone: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'رقم هاتف العيادة' : 'Clinic phone number'}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('clinicEmail')}
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.clinic_email}
+                      onChange={(e) => setFormData({...formData, clinic_email: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'البريد الإلكتروني للعيادة' : 'Clinic email address'}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('doctorName')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.doctor_name}
+                      onChange={(e) => setFormData({...formData, doctor_name: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'اسم الطبيب' : 'Doctor name'}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('doctorPhone')}
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.doctor_phone}
+                      onChange={(e) => setFormData({...formData, doctor_phone: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'رقم هاتف الطبيب' : 'Doctor phone number'}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('clinicAddress')} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.clinic_address}
+                      onChange={(e) => setFormData({...formData, clinic_address: e.target.value})}
+                      className={layouts.input}
+                      placeholder={language === 'ar' ? 'العنوان التفصيلي للعيادة' : 'Detailed clinic address'}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location and Areas Card */}
+            <div className={layouts.card}>
+              <div className="p-6">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center mr-4">
+                    <span className="text-white text-xl">📍</span>
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {t('locationMapping')}
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      {language === 'ar' ? 'تحديد المنطقة والموقع الجغرافي' : 'Area and geographical location'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('selectLine')} *
+                    </label>
+                    <select
+                      value={formData.line_id}
+                      onChange={(e) => {
+                        setFormData({...formData, line_id: e.target.value, area_id: '', district_id: ''});
+                      }}
+                      className={layouts.input}
+                      required
+                    >
+                      <option value="">{language === 'ar' ? 'اختر الخط' : 'Select Line'}</option>
+                      {formOptions.lines.map(line => (
+                        <option key={line.id} value={line.id}>
+                          {line.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('selectArea')} *
+                    </label>
+                    <select
+                      value={formData.area_id}
+                      onChange={(e) => {
+                        setFormData({...formData, area_id: e.target.value, district_id: ''});
+                      }}
+                      className={layouts.input}
+                      disabled={!formData.line_id}
+                      required
+                    >
+                      <option value="">{language === 'ar' ? 'اختر المنطقة' : 'Select Area'}</option>
+                      {getAvailableAreas().map(area => (
+                        <option key={area.id} value={area.id}>
+                          {area.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`block text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                      {t('selectDistrict')}
+                    </label>
+                    <select
+                      value={formData.district_id}
+                      onChange={(e) => setFormData({...formData, district_id: e.target.value})}
+                      className={layouts.input}
+                      disabled={!formData.area_id}
+                    >
+                      <option value="">{language === 'ar' ? 'اختر الحي (اختياري)' : 'Select District (Optional)'}</option>
+                      {formOptions.districts.map(district => (
+                        <option key={district.id} value={district.id}>
+                          {district.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Map and Actions */}
+          <div className="space-y-8">
+            
+            {/* Map Section */}
+            <div className={layouts.card}>
+              <div className="p-6">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-4">
+                    <span className="text-white text-xl">🗺️</span>
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {t('mapLocationTitle')}
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      {t('mapLocationDesc')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Map Container */}
+                <div className="mb-6">
+                  <div 
+                    ref={mapRef}
+                    className={`w-full h-80 rounded-xl border-2 ${isDark ? 'border-slate-600 bg-slate-700' : 'border-gray-300 bg-gray-100'}`}
+                    style={{
+                      background: isDark 
+                        ? 'linear-gradient(45deg, #334155 25%, transparent 25%), linear-gradient(-45deg, #334155 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #334155 75%), linear-gradient(-45deg, transparent 75%, #334155 75%)'
+                        : 'linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)',
+                      backgroundSize: '20px 20px',
+                      backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                    }}
+                  />
+                  
+                  {!mapLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className={`animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4`}></div>
+                        <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>
+                          {language === 'ar' ? 'جاري تحميل الخريطة...' : 'Loading map...'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Location Buttons */}
+                <div className="grid grid-cols-1 gap-4">
+                  <button
+                    onClick={getCurrentLocation}
+                    disabled={loading}
+                    className={`${layouts.buttonPrimary} w-full flex items-center justify-center space-x-2`}
+                  >
+                    <span className="text-xl">📍</span>
+                    <span>{t('getCurrentLocation')}</span>
+                  </button>
+
+                  <button
+                    onClick={useDefaultLocation}
+                    disabled={loading}
+                    className={`${layouts.buttonSecondary} w-full flex items-center justify-center space-x-2`}
+                  >
+                    <span className="text-xl">📌</span>
+                    <span>{t('setLocationManually')}</span>
+                  </button>
+                </div>
+                
+                {/* Location Status */}
+                {locationData.clinic_latitude && (
+                  <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-green-900/20 border border-green-700' : 'bg-green-50 border border-green-200'}`}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-green-500 text-xl">✅</span>
+                      <span className={`font-medium ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                        {language === 'ar' ? 'تم تحديد الموقع بنجاح' : 'Location Set Successfully'}
+                      </span>
+                    </div>
+                    <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-600'}`}>
+                      {language === 'ar' ? 'الإحداثيات:' : 'Coordinates:'} 
+                      {locationData.clinic_latitude?.toFixed(6)}, {locationData.clinic_longitude?.toFixed(6)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Submit Actions */}
+            <div className={layouts.card}>
+              <div className="p-6">
+                <div className="flex items-center mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-4">
+                    <span className="text-white text-xl">🚀</span>
+                  </div>
+                  <div>
+                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {t('setupClinic')}
+                    </h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      {language === 'ar' ? 'مراجعة وإرسال البيانات' : 'Review and submit data'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading || !validateForm()}
+                    className={`${layouts.buttonPrimary} w-full text-lg py-4 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                        <span>{language === 'ar' ? 'جاري الحفظ...' : 'Saving...'}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center space-x-2">
+                        <span>💾</span>
+                        <span>{language === 'ar' ? 'حفظ العيادة' : 'Save Clinic'}</span>
+                      </div>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setFormData({
+                        clinic_name: '', clinic_phone: '', clinic_email: '', 
+                        doctor_name: '', doctor_phone: '', clinic_address: '',
+                        line_id: '', area_id: '', district_id: '', 
+                        classification: 'class_b', credit_classification: 'yellow',
+                        classification_notes: '', registration_notes: ''
+                      });
+                      setLocationData({
+                        clinic_latitude: null, clinic_longitude: null, location_accuracy: null,
+                        rep_latitude: null, rep_longitude: null, rep_location_accuracy: null, device_info: ''
+                      });
+                    }}
+                    disabled={loading}
+                    className={`${layouts.buttonSecondary} w-full`}
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <span>🔄</span>
+                      <span>{language === 'ar' ? 'مسح النموذج' : 'Clear Form'}</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
           <span className="text-sm text-gray-500">{getFormCompletionPercentage()}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
