@@ -301,19 +301,6 @@ class BackendTester:
             
         headers = {"Authorization": f"Bearer {self.token}"}
         
-        # Test form data endpoint
-        response, response_time = self.make_request("GET", "/enhanced-clinics/registration/form-data", headers=headers)
-        if response and response.status_code == 200:
-            data = response.json()
-            lines_count = len(data.get("lines", []))
-            areas_count = len(data.get("areas", []))
-            classifications_count = len(data.get("clinic_classifications", []))
-            details = f"Lines: {lines_count}, Areas: {areas_count}, Classifications: {classifications_count}"
-            self.log_test("GET /api/enhanced-clinics/registration/form-data", True, response_time, details)
-        else:
-            error_msg = response.text if response else "Connection failed"
-            self.log_test("GET /api/enhanced-clinics/registration/form-data", False, response_time, f"Error: {error_msg}")
-        
         # Test enhanced clinics list
         response, response_time = self.make_request("GET", "/enhanced-clinics", headers=headers)
         if response and response.status_code == 200:
