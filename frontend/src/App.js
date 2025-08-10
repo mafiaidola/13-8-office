@@ -915,27 +915,9 @@ const LoginForm = () => {
     
     if (result.success) {
       console.log('✅ نجح تسجيل الدخول، سيتم توجيهك للوحة التحكم');
-      
-      // Force immediate re-render by updating a dummy state
       setLoading(false);
-      
-      // Double-check authentication state
-      setTimeout(() => {
-        // Use a more aggressive approach to force UI update
-        window.dispatchEvent(new Event('login-success'));
-        
-        // As last resort, reload if still not working
-        setTimeout(() => {
-          if (!localStorage.getItem('access_token')) {
-            console.warn('⚠️ Token not found after login - something went wrong');
-          } else {
-            // Force a location change to trigger React router
-            window.history.pushState({}, '', '/dashboard');
-            window.location.reload();
-          }
-        }, 1000);
-      }, 500);
-      
+      // The authentication state is already set in the login function
+      // No need for additional timeouts or reloads
     } else {
       console.error('❌ فشل تسجيل الدخول:', result.error);
       setError(result.error);
