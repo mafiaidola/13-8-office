@@ -15,7 +15,7 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
     clinic_email: '',
     doctor_name: '',
     doctor_phone: '',
-    clinic_address: '',
+    clinic_address: '', // Now optional
     line_id: '',
     area_id: '',
     classification: 'class_b',
@@ -24,20 +24,42 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
     registration_notes: ''
   });
 
-  // Location state
+  // Location state with enhanced GPS tracking
   const [locationData, setLocationData] = useState({
     clinic_latitude: null,
     clinic_longitude: null,
-    location_accuracy: null
+    location_accuracy: null,
+    formatted_address: '',
+    place_id: null,
+    address_components: []
   });
+
+  // Map and GPS state
+  const [gpsStatus, setGpsStatus] = useState('idle'); // idle, requesting, locating, found, error
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(null);
+  const [watchId, setWatchId] = useState(null);
 
   // Options state
   const [lines, setLines] = useState([]);
   const [areas, setAreas] = useState([]);
-  const [gpsStatus, setGpsStatus] = useState('idle'); // idle, searching, found, error
+  
+  // Refs
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const geocoderRef = useRef(null);
   
   const API_URL = process.env.REACT_APP_BACKEND_URL;
-  const mapRef = useRef(null);
+
+  // Enhanced GPS options for maximum accuracy
+  const gpsOptions = {
+    enableHighAccuracy: true,
+    timeout: 15000, // 15 seconds
+    maximumAge: 0 // No cache, always get fresh location
+  };
 
   // Load form options
   useEffect(() => {
