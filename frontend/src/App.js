@@ -295,7 +295,7 @@ const AuthProvider = ({ children }) => {
     console.log('🔍 Simple auth check started');
     
     const token = localStorage.getItem('access_token');
-    console.log('🔑 Token check:', token ? 'EXISTS' : 'NOT_FOUND');
+    console.log('🔑 Token check:', token ? `EXISTS (${token.substring(0, 20)}...)` : 'NOT_FOUND');
     
     if (!token) {
       console.log('❌ No token, setting unauthenticated state');
@@ -317,7 +317,8 @@ const AuthProvider = ({ children }) => {
       console.log('🔍 Token decoded:', { username: payload.username, role: payload.role, exp: payload.exp });
 
       // Check expiration
-      if (payload.exp <= Math.floor(Date.now() / 1000)) {
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp <= currentTime) {
         console.log('❌ Token expired');
         localStorage.removeItem('access_token');
         setAuthState({ loading: false, isAuthenticated: false, user: null });
@@ -341,6 +342,29 @@ const AuthProvider = ({ children }) => {
       setAuthState({ loading: false, isAuthenticated: false, user: null });
     }
   }, []);
+
+  // Listen for storage changes and manual token updates
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'access_token') {
+        console.log('🔄 Token changed in localStorage, re-checking auth...');
+        checkAuthStatus();
+      }
+    };
+
+    const handleTokenInjected = () => {
+      console.log('💉 Token injection event detected, re-checking auth...');
+      setTimeout(checkAuthStatus, 100);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('tokenInjected', handleTokenInjected);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('tokenInjected', handleTokenInjected);
+    };
+  }, [checkAuthStatus]);
 
   const login = useCallback(async (credentials) => {
     console.log('🔄 Simple login started for:', credentials.username);
