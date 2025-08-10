@@ -301,42 +301,34 @@ const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Try to verify token with backend
+      // Decode token locally to check validity and get user info
       try {
-        const response = await axios.get(`${API}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.data && response.data.user) {
-          setUser(response.data.user);
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔍 Token payload:', tokenPayload);
+        
+        if (tokenPayload.exp > Date.now() / 1000) {
+          // Token is still valid, create user object from token
+          const user = {
+            id: tokenPayload.user_id,
+            username: tokenPayload.username,
+            role: tokenPayload.role,
+            full_name: tokenPayload.full_name || tokenPayload.username
+          };
+          
+          console.log('✅ Valid token found, setting user:', user);
+          setUser(user);
           setIsAuthenticated(true);
-        }
-      } catch (authError) {
-        console.error('Auth verification failed:', authError);
-        // If auth verification fails, try to decode token locally as fallback
-        try {
-          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-          if (tokenPayload.exp > Date.now() / 1000) {
-            // Token is still valid, create user object from token
-            const user = {
-              id: tokenPayload.user_id,
-              username: tokenPayload.username,
-              role: tokenPayload.role,
-              full_name: tokenPayload.username
-            };
-            setUser(user);
-            setIsAuthenticated(true);
-          } else {
-            // Token expired
-            localStorage.removeItem('access_token');
-          }
-        } catch (tokenError) {
-          console.error('Token decode failed:', tokenError);
+        } else {
+          // Token expired
+          console.log('❌ Token expired, removing from storage');
           localStorage.removeItem('access_token');
         }
+      } catch (tokenError) {
+        console.error('❌ Token decode failed:', tokenError);
+        localStorage.removeItem('access_token');
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('❌ Auth check failed:', error);
       localStorage.removeItem('access_token');
     } finally {
       setLoading(false);
