@@ -94,22 +94,42 @@ const ThemeProvider = ({ children }) => {
   const [isRTL, setIsRTL] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
+  // Apply theme to body element
   useEffect(() => {
-    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-    document.documentElement.setAttribute('lang', language);
+    const body = document.body;
+    const html = document.documentElement;
     
-    // Apply ultra simple theme
-    const themeConfig = AVAILABLE_THEMES[theme];
-    if (themeConfig) {
-      // Remove all theme classes
-      document.body.className = document.body.className.replace(/theme-\w+/g, '');
-      
-      // Add current theme class
-      document.body.classList.add(`theme-${theme}`);
-      
-      console.log(`✅ Applied ultra simple theme: ${theme} (${themeConfig.name[language]})`);
+    // Remove all theme classes first
+    body.classList.remove('theme-light', 'theme-dark');
+    html.classList.remove('theme-light', 'theme-dark');
+    
+    // Apply current theme
+    const themeClass = `theme-${theme}`;
+    body.classList.add(themeClass);
+    html.classList.add(themeClass);
+    
+    // Set CSS variables dynamically based on theme
+    if (theme === 'dark') {
+      body.style.setProperty('--theme-bg', '#0f172a');
+      body.style.setProperty('--theme-text', '#f8fafc');
+      body.style.setProperty('--theme-accent', '#3b82f6');
+    } else {
+      body.style.setProperty('--theme-bg', '#ffffff');
+      body.style.setProperty('--theme-text', '#1f2937');
+      body.style.setProperty('--theme-accent', '#2563eb');
     }
-  }, [isRTL, language, theme]);
+    
+    console.log(`🎨 Theme applied: ${theme} (class: ${themeClass})`);
+  }, [theme]);
+
+  // Apply language and direction
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute('lang', language);
+    html.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+    
+    console.log(`🌐 Language applied: ${language} (${isRTL ? 'RTL' : 'LTR'})`);
+  }, [language, isRTL]);
 
   const toggleLanguage = () => {
     const newLanguage = language === 'ar' ? 'en' : 'ar';
