@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const ActivityTracking = () => {
@@ -7,12 +7,17 @@ const ActivityTracking = () => {
   const [loginLogs, setLoginLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loginLogsLoading, setLoginLogsLoading] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showMapModal, setShowMapModal] = useState(false);
   const [filters, setFilters] = useState({
     date_range: 'today', // today, week, month, all
     activity_type: '', // all types
     user_role: '', // all roles
     search: ''
   });
+
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
   const API_BASE = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
