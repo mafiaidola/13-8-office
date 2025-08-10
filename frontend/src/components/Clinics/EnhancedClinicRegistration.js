@@ -553,7 +553,7 @@ const EnhancedClinicRegistration = () => {
     const radiusColor = location.accuracy <= 30 ? '#10b981' : 
                        location.accuracy <= 100 ? '#f59e0b' : '#ef4444';
                        
-    accuracyCircleRef.current = new google.maps.Circle({
+    accuracyCircleRef.current = new window.google.maps.Circle({
       strokeColor: radiusColor,
       strokeOpacity: 1.0,
       strokeWeight: 3,
