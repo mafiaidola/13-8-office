@@ -485,5 +485,101 @@ async def get_clinics(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching clinics: {str(e)}")
 
+@app.post("/api/clinics")
+async def create_clinic(clinic_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new clinic"""
+    try:
+        # Verify user has permission to create clinics
+        user_role = current_user.get("role", "")
+        if user_role not in ["medical_rep", "admin", "manager", "line_manager"]:
+            raise HTTPException(status_code=403, detail="غير مسموح لك بتسجيل العيادات")
+        
+        # Generate unique ID and registration number
+        clinic_id = str(uuid.uuid4())
+        registration_number = f"CL-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        
+        # Prepare clinic document
+        clinic_document = {
+            "id": clinic_id,
+            "registration_number": registration_number,
+            "clinic_name": clinic_data.get("clinic_name", ""),
+            "clinic_phone": clinic_data.get("clinic_phone", ""),
+            "clinic_email": clinic_data.get("clinic_email", ""),
+            "doctor_name": clinic_data.get("doctor_name", ""),
+            "doctor_phone": clinic_data.get("doctor_phone", ""),
+            "clinic_address": clinic_data.get("clinic_address", ""),
+            "line_id": clinic_data.get("line_id", ""),
+            "area_id": clinic_data.get("area_id", ""),
+            "classification": clinic_data.get("classification", "class_b"),
+            "credit_classification": clinic_data.get("credit_classification", "yellow"),
+            "classification_notes": clinic_data.get("classification_notes", ""),
+            "registration_notes": clinic_data.get("registration_notes", ""),
+            
+            # Location data
+            "clinic_latitude": clinic_data.get("clinic_latitude"),
+            "clinic_longitude": clinic_data.get("clinic_longitude"),
+            "location_accuracy": clinic_data.get("location_accuracy"),
+            "formatted_address": clinic_data.get("formatted_address", ""),
+            "place_id": clinic_data.get("place_id"),
+            
+            # System fields
+            "registered_by": current_user.get("username", ""),
+            "created_by": current_user.get("user_id", ""),
+            "status": "pending",
+            "is_active": True,
+            "is_verified": False,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            
+            # GPS tracking data
+            "gps_accuracy": clinic_data.get("gps_accuracy"),
+            "address_source": clinic_data.get("address_source", "manual"),
+            "registration_timestamp": clinic_data.get("registration_timestamp", datetime.utcnow().isoformat())
+        }
+        
+        # Insert into database
+        result = await db.clinics.insert_one(clinic_document)
+        
+        if result.inserted_id:
+            print(f"✅ تم تسجيل العيادة بنجاح: {clinic_data.get('clinic_name', 'Unknown')} - ID: {clinic_id}")
+            
+            # Create activity log
+            activity_record = {
+                "_id": str(uuid.uuid4()),
+                "activity_type": "clinic_registration",
+                "description": f"تسجيل عيادة جديدة: {clinic_data.get('clinic_name', 'Unknown')}",
+                "user_id": current_user.get("user_id", ""),
+                "user_name": current_user.get("full_name", current_user.get("username", "")),
+                "user_role": current_user.get("role", ""),
+                "details": f"عيادة: {clinic_data.get('clinic_name', 'Unknown')} - دكتور: {clinic_data.get('doctor_name', 'Unknown')}",
+                "clinic_id": clinic_id,
+                "clinic_name": clinic_data.get("clinic_name", ""),
+                "location": clinic_data.get("clinic_address", "Unknown Location"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            try:
+                await db.activities.insert_one(activity_record)
+                print(f"✅ تم تسجيل نشاط تسجيل العيادة")
+            except Exception as activity_error:
+                print(f"⚠️ خطأ في تسجيل النشاط: {activity_error}")
+            
+            return {
+                "success": True,
+                "message": "تم تسجيل العيادة بنجاح",
+                "clinic_id": clinic_id,
+                "registration_number": registration_number,
+                "status": "pending"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="فشل في حفظ العيادة")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ خطأ في تسجيل العيادة: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"خطأ في حفظ بيانات العيادة: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
