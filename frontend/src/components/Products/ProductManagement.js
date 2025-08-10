@@ -430,7 +430,7 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
                       <span className={`inline-block px-2 py-1 rounded-full text-xs ${
                         product.is_active ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
                       }`}>
-                        {product.is_active ? 'نشط' : 'غير نشط'}
+                        {product.is_active ? tc('active') : tc('inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
