@@ -330,10 +330,10 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">البحث</label>
+            <label className="block text-sm font-medium mb-2">{tc('search')}</label>
             <input
               type="text"
-              placeholder="ابحث عن المنتجات..."
+              placeholder={language === 'ar' ? 'ابحث عن المنتجات...' : 'Search products...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -341,13 +341,13 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">العلامة التجارية</label>
+            <label className="block text-sm font-medium mb-2">{t('products', 'brand')}</label>
             <select
               value={filterBrand}
               onChange={(e) => setFilterBrand(e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="all">جميع العلامات التجارية</option>
+              <option value="all">{language === 'ar' ? 'جميع العلامات التجارية' : 'All Brands'}</option>
               {brands.map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
@@ -355,13 +355,13 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">الخط</label>
+            <label className="block text-sm font-medium mb-2">{language === 'ar' ? 'الخط' : 'Line'}</label>
             <select
               value={filterLine}
               onChange={(e) => setFilterLine(e.target.value)}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
-              <option value="all">جميع الخطوط</option>
+              <option value="all">{language === 'ar' ? 'جميع الخطوط' : 'All Lines'}</option>
               {lines.map(line => (
                 <option key={line.id} value={line.id}>{line.name}</option>
               ))}
