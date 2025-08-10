@@ -291,16 +291,16 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
             >
               <span>➕</span>
-              إضافة منتج جديد
+              {t('products', 'addProduct')}
             </button>
             
             <button
               onClick={handleDeleteTestProducts}
               className="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium"
-              title="حذف جميع المنتجات التجريبية"
+              title={language === 'ar' ? 'حذف جميع المنتجات التجريبية' : 'Delete all test products'}
             >
               <span>🗑️</span>
-              حذف المنتجات التجريبية
+              {language === 'ar' ? 'حذف المنتجات التجريبية' : 'Delete Test Products'}
             </button>
           </div>
         </div>
