@@ -1028,8 +1028,24 @@ const LoginForm = () => {
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
-            onClick={(e) => {
-              // Let form onSubmit handle it
+            onClick={async (e) => {
+              e.preventDefault();
+              console.log('🔥 Login button clicked directly!');
+              setLoading(true);
+              setError('');
+              
+              const result = await login({
+                username: credentials.username,
+                password: credentials.password
+              });
+              
+              if (result.success) {
+                console.log('✅ Login successful!');
+              } else {
+                console.error('❌ Login failed:', result.error);
+                setError(result.error);
+              }
+              setLoading(false);
             }}
           >
             {loading ? t('common', 'loading') : t('auth', 'login')}
