@@ -109,7 +109,176 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
     }
   };
 
-  // Get current location with high accuracy
+  // Initialize Google Maps with all components
+  const initializeGoogleMaps = useCallback(() => {
+    if (!window.google || !mapRef.current) return;
+
+    console.log('🗺️ Initializing enhanced Google Maps...');
+
+    // Initialize geocoder for reverse geocoding
+    geocoderRef.current = new window.google.maps.Geocoder();
+
+    // Create map with enhanced options
+    const mapOptions = {
+      center: { lat: 30.0444, lng: 31.2357 }, // Default: Cairo, Egypt
+      zoom: 15,
+      mapTypeId: 'roadmap',
+      streetViewControl: true,
+      fullscreenControl: true,
+      mapTypeControl: true,
+      zoomControl: true,
+      gestureHandling: 'cooperative'
+    };
+
+    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
+
+    // Initialize search autocomplete
+    if (searchInputRef.current) {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        searchInputRef.current,
+        {
+          types: ['establishment', 'geocode'],
+          componentRestrictions: { country: 'eg' }, // Egypt
+          fields: ['place_id', 'geometry', 'formatted_address', 'address_components', 'name']
+        }
+      );
+
+      // Handle place selection from autocomplete
+      autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
+    }
+
+    // Create initial marker
+    markerRef.current = new window.google.maps.Marker({
+      map: mapInstanceRef.current,
+      draggable: true,
+      title: language === 'ar' ? 'اسحب لتحديد موقع العيادة' : 'Drag to set clinic location',
+      animation: window.google.maps.Animation.DROP
+    });
+
+    // Handle marker drag
+    markerRef.current.addListener('dragend', handleMarkerDrag);
+    
+    // Handle map clicks
+    mapInstanceRef.current.addListener('click', handleMapClick);
+
+    console.log('✅ Google Maps initialized successfully');
+  }, [language]);
+
+  // Handle place selection from autocomplete search
+  const handlePlaceSelect = () => {
+    if (!autocompleteRef.current) return;
+
+    const place = autocompleteRef.current.getPlace();
+    console.log('🔍 Place selected from search:', place);
+
+    if (place.geometry) {
+      const location = place.geometry.location;
+      const lat = location.lat();
+      const lng = location.lng();
+
+      // Update map and marker
+      mapInstanceRef.current.setCenter({ lat, lng });
+      mapInstanceRef.current.setZoom(17);
+      markerRef.current.setPosition({ lat, lng });
+
+      // Update location data
+      setLocationData({
+        clinic_latitude: lat,
+        clinic_longitude: lng,
+        location_accuracy: 'high',
+        formatted_address: place.formatted_address || '',
+        place_id: place.place_id || null,
+        address_components: place.address_components || []
+      });
+
+      // Update address field
+      setFormData(prev => ({
+        ...prev,
+        clinic_address: place.formatted_address || prev.clinic_address
+      }));
+
+      setGpsStatus('found');
+    }
+  };
+
+  // Handle marker drag
+  const handleMarkerDrag = (event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
+    console.log(`📍 Marker dragged to: ${lat}, ${lng}`);
+
+    // Update location immediately
+    setLocationData(prev => ({
+      ...prev,
+      clinic_latitude: lat,
+      clinic_longitude: lng,
+      location_accuracy: 'manual'
+    }));
+
+    // Perform reverse geocoding to get address
+    performReverseGeocoding(lat, lng);
+  };
+
+  // Handle map clicks
+  const handleMapClick = (event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+
+    console.log(`🗺️ Map clicked at: ${lat}, ${lng}`);
+
+    // Move marker to clicked position
+    markerRef.current.setPosition({ lat, lng });
+
+    // Update location data
+    setLocationData(prev => ({
+      ...prev,
+      clinic_latitude: lat,
+      clinic_longitude: lng,
+      location_accuracy: 'manual'
+    }));
+
+    // Get address for clicked location
+    performReverseGeocoding(lat, lng);
+  };
+
+  // Perform reverse geocoding to get address from coordinates
+  const performReverseGeocoding = (lat, lng) => {
+    if (!geocoderRef.current) return;
+
+    console.log(`🔄 Reverse geocoding for: ${lat}, ${lng}`);
+
+    geocoderRef.current.geocode(
+      { location: { lat, lng } },
+      (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const address = results[0].formatted_address;
+          console.log(`✅ Address found: ${address}`);
+
+          // Update location data
+          setLocationData(prev => ({
+            ...prev,
+            formatted_address: address,
+            place_id: results[0].place_id || null,
+            address_components: results[0].address_components || []
+          }));
+
+          // Update address field if empty or user wants to update
+          setFormData(prev => ({
+            ...prev,
+            clinic_address: address
+          }));
+
+          // Update search input
+          if (searchInputRef.current) {
+            searchInputRef.current.value = address;
+          }
+        } else {
+          console.warn('⚠️ Reverse geocoding failed:', status);
+        }
+      }
+    );
+  };
   const getCurrentLocation = () => {
     setGpsStatus('searching');
     
