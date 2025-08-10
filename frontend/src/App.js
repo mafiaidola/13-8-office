@@ -294,35 +294,64 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuthStatus = async () => {
+    console.log('🔍 checkAuthStatus called');
     try {
       const token = localStorage.getItem('access_token');
+      console.log('🔑 Token check:', token ? 'EXISTS' : 'NOT_FOUND');
+      
       if (!token) {
+        console.log('❌ No token found, user not authenticated');
         setLoading(false);
         return;
       }
 
       // Decode token locally to check validity and get user info
       try {
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        console.log('🔍 Token payload:', tokenPayload);
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('❌ Invalid token format');
+          localStorage.removeItem('access_token');
+          setLoading(false);
+          return;
+        }
         
-        if (tokenPayload.exp > Date.now() / 1000) {
-          // Token is still valid, create user object from token
-          const user = {
-            id: tokenPayload.user_id,
-            username: tokenPayload.username,
-            role: tokenPayload.role,
-            full_name: tokenPayload.full_name || tokenPayload.username
-          };
-          
-          console.log('✅ Valid token found, setting user:', user);
-          setUser(user);
-          setIsAuthenticated(true);
-        } else {
-          // Token expired
+        const payloadBase64 = tokenParts[1];
+        // Add padding if needed for base64 decoding
+        const padding = '='.repeat((4 - payloadBase64.length % 4) % 4);
+        const payloadWithPadding = payloadBase64 + padding;
+        
+        const payloadJson = atob(payloadWithPadding);
+        const tokenPayload = JSON.parse(payloadJson);
+        
+        console.log('🔍 Token payload decoded:', {
+          user_id: tokenPayload.user_id,
+          username: tokenPayload.username,
+          role: tokenPayload.role,
+          exp: tokenPayload.exp,
+          current_time: Math.floor(Date.now() / 1000)
+        });
+        
+        // Check if token is expired
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (tokenPayload.exp <= currentTime) {
           console.log('❌ Token expired, removing from storage');
           localStorage.removeItem('access_token');
+          setLoading(false);
+          return;
         }
+        
+        // Token is valid, create user object
+        const user = {
+          id: tokenPayload.user_id,
+          username: tokenPayload.username,
+          role: tokenPayload.role,
+          full_name: tokenPayload.full_name || tokenPayload.username
+        };
+        
+        console.log('✅ Valid token found, setting user:', user);
+        setUser(user);
+        setIsAuthenticated(true);
+        
       } catch (tokenError) {
         console.error('❌ Token decode failed:', tokenError);
         localStorage.removeItem('access_token');
@@ -331,6 +360,7 @@ const AuthProvider = ({ children }) => {
       console.error('❌ Auth check failed:', error);
       localStorage.removeItem('access_token');
     } finally {
+      console.log('🏁 checkAuthStatus completed');
       setLoading(false);
     }
   };
