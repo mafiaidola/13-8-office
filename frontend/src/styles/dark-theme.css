@@ -27,16 +27,16 @@
 }
 
 /* ===========================================
-   1. CLASSIC DARK THEME
+   1. CLASSIC DARK THEME - Enhanced
    =========================================== */
 .theme-dark {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
   --bg-surface: #475569;
-  --text-primary: #f8fafc;
-  --text-secondary: #e2e8f0;
-  --text-muted: #cbd5e1;
+  --text-primary: #ffffff;
+  --text-secondary: #f1f5f9;
+  --text-muted: #e2e8f0;
   --border-primary: #475569;
   --border-secondary: #64748b;
   --accent-primary: #3b82f6;
@@ -48,7 +48,7 @@
 }
 
 /* ===========================================
-   2. PROFESSIONAL BLUE THEME
+   2. PROFESSIONAL BLUE THEME - Enhanced
    =========================================== */
 .theme-professional {
   --bg-primary: #1e3a8a;
@@ -56,8 +56,8 @@
   --bg-tertiary: #3b82f6;
   --bg-surface: #60a5fa;
   --text-primary: #ffffff;
-  --text-secondary: #dbeafe;
-  --text-muted: #bfdbfe;
+  --text-secondary: #f0f9ff;
+  --text-muted: #e0f2fe;
   --border-primary: #2563eb;
   --border-secondary: #3b82f6;
   --accent-primary: #60a5fa;
@@ -69,7 +69,7 @@
 }
 
 /* ===========================================
-   3. ROYAL PURPLE THEME
+   3. ROYAL PURPLE THEME - Enhanced
    =========================================== */
 .theme-royal {
   --bg-primary: #581c87;
@@ -77,8 +77,8 @@
   --bg-tertiary: #8b5cf6;
   --bg-surface: #a78bfa;
   --text-primary: #ffffff;
-  --text-secondary: #e9d5ff;
-  --text-muted: #d8b4fe;
+  --text-secondary: #f5f3ff;
+  --text-muted: #ede9fe;
   --border-primary: #7c3aed;
   --border-secondary: #8b5cf6;
   --accent-primary: #a78bfa;
@@ -90,7 +90,7 @@
 }
 
 /* ===========================================
-   4. MEDICAL GREEN THEME
+   4. MEDICAL GREEN THEME - Enhanced
    =========================================== */
 .theme-medical {
   --bg-primary: #14532d;
@@ -98,8 +98,8 @@
   --bg-tertiary: #22c55e;
   --bg-surface: #4ade80;
   --text-primary: #ffffff;
-  --text-secondary: #dcfce7;
-  --text-muted: #bbf7d0;
+  --text-secondary: #f0fdf4;
+  --text-muted: #dcfce7;
   --border-primary: #16a34a;
   --border-secondary: #22c55e;
   --accent-primary: #4ade80;
@@ -111,7 +111,7 @@
 }
 
 /* ===========================================
-   5. LUXURY GOLD THEME
+   5. LUXURY GOLD THEME - Enhanced
    =========================================== */
 .theme-luxury {
   --bg-primary: #92400e;
@@ -119,8 +119,8 @@
   --bg-tertiary: #f59e0b;
   --bg-surface: #fbbf24;
   --text-primary: #ffffff;
-  --text-secondary: #fef3c7;
-  --text-muted: #fef08a;
+  --text-secondary: #fffbeb;
+  --text-muted: #fef3c7;
   --border-primary: #d97706;
   --border-secondary: #f59e0b;
   --accent-primary: #fbbf24;
@@ -132,7 +132,7 @@
 }
 
 /* ===========================================
-   6. POWER RED THEME
+   6. POWER RED THEME - Enhanced
    =========================================== */
 .theme-power {
   --bg-primary: #991b1b;
@@ -140,8 +140,8 @@
   --bg-tertiary: #ef4444;
   --bg-surface: #f87171;
   --text-primary: #ffffff;
-  --text-secondary: #fecaca;
-  --text-muted: #fca5a5;
+  --text-secondary: #fef2f2;
+  --text-muted: #fecaca;
   --border-primary: #dc2626;
   --border-secondary: #ef4444;
   --accent-primary: #f87171;
@@ -153,7 +153,7 @@
 }
 
 /* ===========================================
-   7. ADVANCED SLATE THEME
+   7. ADVANCED SLATE THEME - Enhanced
    =========================================== */
 .theme-slate {
   --bg-primary: #0f172a;
@@ -161,8 +161,8 @@
   --bg-tertiary: #475569;
   --bg-surface: #64748b;
   --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-secondary: #f8fafc;
+  --text-muted: #e2e8f0;
   --border-primary: #64748b;
   --border-secondary: #475569;
   --accent-primary: #64748b;
@@ -174,7 +174,7 @@
 }
 
 /* ===========================================
-   8. DEEP NIGHT THEME
+   8. DEEP NIGHT THEME - Enhanced
    =========================================== */
 .theme-midnight {
   --bg-primary: #000000;
@@ -182,8 +182,8 @@
   --bg-tertiary: #1f2937;
   --bg-surface: #374151;
   --text-primary: #ffffff;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
+  --text-secondary: #f9fafb;
+  --text-muted: #e5e7eb;
   --border-primary: #374151;
   --border-secondary: #1f2937;
   --accent-primary: #6366f1;
