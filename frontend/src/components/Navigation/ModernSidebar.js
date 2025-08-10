@@ -8,7 +8,8 @@ const ModernSidebar = ({
   switchTab, 
   currentUser, 
   isRTL = false,  // Default to LTR (English)
-  language = 'en' // Default to English
+  language = 'en', // Default to English
+  theme = 'dark'   // Add theme support
 }) => {
   const [expandedSections, setExpandedSections] = useState({
     core: true,
