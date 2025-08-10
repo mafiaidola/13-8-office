@@ -1,5 +1,6 @@
 // Admin Dashboard Component - لوحة تحكم الأدمن المحسنة
 import React, { useState, useEffect } from 'react';
+import { useGlobalTranslation } from '../../localization/completeTranslations';
 import CommonDashboardComponents from './CommonDashboardComponents';
 import ActivityLog from './ActivityLog';
 import SalesPerformance from './SalesPerformance';
