@@ -491,7 +491,7 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
     name: product?.name || '',
     description: product?.description || '',
     brand: product?.brand || '',
-    unit: product?.unit || 'ڤايل',
+    unit: product?.unit || (language === 'ar' ? 'ڤايل' : 'Vial'),
     line_id: product?.line_id || '',
     price: product?.price || '',
     price_type: product?.price_type || 'per_vial',
@@ -529,7 +529,10 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold">
-              {product ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+              {product ? 
+                (language === 'ar' ? 'تعديل المنتج' : 'Edit Product') : 
+                (language === 'ar' ? 'إضافة منتج جديد' : 'Add New Product')
+              }
             </h3>
             <button onClick={onClose} className="text-white/70 hover:text-white text-2xl">
               ✕
@@ -540,7 +543,9 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2">اسم المنتج *</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'اسم المنتج *' : 'Product Name *'}
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -552,27 +557,31 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">العلامة التجارية *</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'العلامة التجارية *' : 'Brand *'}
+                </label>
                 <input
                   type="text"
                   name="brand"
                   value={formData.brand}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="GSK، Pfizer، Novartis، إلخ"
+                  placeholder={language === 'ar' ? 'GSK، Pfizer، Novartis، إلخ' : 'GSK, Pfizer, Novartis, etc.'}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الخط</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'الخط' : 'Line'}
+                </label>
                 <select
                   name="line_id"
                   value={formData.line_id}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="">اختر الخط</option>
+                  <option value="">{language === 'ar' ? 'اختر الخط' : 'Select Line'}</option>
                   {lines.map(line => (
                     <option key={line.id} value={line.id}>{line.name}</option>
                   ))}
@@ -580,7 +589,9 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">وحدة القياس *</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'وحدة القياس *' : 'Unit of Measurement *'}
+                </label>
                 <select
                   name="unit"
                   value={formData.unit}
@@ -588,18 +599,34 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
                 >
-                  <option value="ڤايل">ڤايل</option>
-                  <option value="علبة">علبة</option>
-                  <option value="قلم">قلم</option>
-                  <option value="أنبوب">أنبوب</option>
-                  <option value="زجاجة">زجاجة</option>
-                  <option value="كيس">كيس</option>
-                  <option value="شريط">شريط</option>
+                  <option value={language === 'ar' ? 'ڤايل' : 'Vial'}>
+                    {language === 'ar' ? 'ڤايل' : 'Vial'}
+                  </option>
+                  <option value={language === 'ar' ? 'علبة' : 'Box'}>
+                    {language === 'ar' ? 'علبة' : 'Box'}
+                  </option>
+                  <option value={language === 'ar' ? 'قلم' : 'Pen'}>
+                    {language === 'ar' ? 'قلم' : 'Pen'}
+                  </option>
+                  <option value={language === 'ar' ? 'أنبوب' : 'Tube'}>
+                    {language === 'ar' ? 'أنبوب' : 'Tube'}
+                  </option>
+                  <option value={language === 'ar' ? 'زجاجة' : 'Bottle'}>
+                    {language === 'ar' ? 'زجاجة' : 'Bottle'}
+                  </option>
+                  <option value={language === 'ar' ? 'كيس' : 'Bag'}>
+                    {language === 'ar' ? 'كيس' : 'Bag'}
+                  </option>
+                  <option value={language === 'ar' ? 'شريط' : 'Strip'}>
+                    {language === 'ar' ? 'شريط' : 'Strip'}
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">السعر (ج.م) *</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'السعر (ج.م) *' : 'Price (EGP) *'}
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -612,23 +639,27 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">نوع السعر</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'نوع السعر' : 'Price Type'}
+                </label>
                 <select
                   name="price_type"
                   value={formData.price_type}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="per_vial">سعر الڤايل</option>
-                  <option value="per_box">سعر العلبة</option>
-                  <option value="per_pen">سعر القلم</option>
-                  <option value="per_tube">سعر الأنبوب</option>
-                  <option value="per_bottle">سعر الزجاجة</option>
+                  <option value="per_vial">{language === 'ar' ? 'سعر الڤايل' : 'Per Vial'}</option>
+                  <option value="per_box">{language === 'ar' ? 'سعر العلبة' : 'Per Box'}</option>
+                  <option value="per_pen">{language === 'ar' ? 'سعر القلم' : 'Per Pen'}</option>
+                  <option value="per_tube">{language === 'ar' ? 'سعر الأنبوب' : 'Per Tube'}</option>
+                  <option value="per_bottle">{language === 'ar' ? 'سعر الزجاجة' : 'Per Bottle'}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الكمية الحالية</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'الكمية الحالية' : 'Current Stock'}
+                </label>
                 <input
                   type="number"
                   name="current_stock"
@@ -639,7 +670,9 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">الحد الأدنى للمخزون</label>
+                <label className="block text-sm font-medium mb-2">
+                  {language === 'ar' ? 'الحد الأدنى للمخزون' : 'Minimum Stock Level'}
+                </label>
                 <input
                   type="number"
                   name="min_stock"
@@ -651,14 +684,16 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">الوصف</label>
+              <label className="block text-sm font-medium mb-2">
+                {language === 'ar' ? 'الوصف' : 'Description'}
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows="3"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="وصف تفصيلي للمنتج..."
+                placeholder={language === 'ar' ? 'وصف تفصيلي للمنتج...' : 'Detailed product description...'}
               />
             </div>
 
@@ -672,7 +707,7 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
                 className="w-4 h-4 text-purple-600 rounded"
               />
               <label htmlFor="is_active" className="text-sm font-medium">
-                منتج نشط
+                {language === 'ar' ? 'منتج نشط' : 'Active Product'}
               </label>
             </div>
 
@@ -682,14 +717,17 @@ const ProductModal = ({ product, lines, onClose, onSave, language }) => {
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all"
               >
-                {product ? 'تحديث المنتج' : 'إضافة المنتج'}
+                {product ? 
+                  (language === 'ar' ? 'تحديث المنتج' : 'Update Product') : 
+                  (language === 'ar' ? 'إضافة المنتج' : 'Add Product')
+                }
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                إلغاء
+                {language === 'ar' ? 'إلغاء' : 'Cancel'}
               </button>
             </div>
           </form>
