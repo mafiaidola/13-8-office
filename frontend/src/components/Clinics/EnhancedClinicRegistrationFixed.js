@@ -279,42 +279,126 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
       }
     );
   };
+  // Enhanced GPS location with proper device access
   const getCurrentLocation = () => {
-    setGpsStatus('searching');
-    
     if (!navigator.geolocation) {
-      setGpsStatus('error');
-      alert(language === 'ar' ? 'الجهاز لا يدعم تحديد الموقع' : 'Geolocation is not supported');
+      alert(language === 'ar' ? 'متصفحك لا يدعم تحديد الموقع' : 'Your browser does not support geolocation');
       return;
     }
 
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0
-    };
+    setGpsStatus('requesting');
+    console.log('📡 Requesting GPS permission and location...');
 
+    // Request current position with high accuracy
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('✅ GPS location obtained:', position);
+        
         const { latitude, longitude, accuracy } = position.coords;
+        
+        setGpsStatus('locating');
+        setCurrentPosition(position);
+        
+        // Update location data
         setLocationData({
           clinic_latitude: latitude,
           clinic_longitude: longitude,
-          location_accuracy: accuracy
+          location_accuracy: accuracy,
+          formatted_address: '',
+          place_id: null,
+          address_components: []
         });
-        setGpsStatus('found');
+
+        // Update map and marker
+        if (mapInstanceRef.current && markerRef.current) {
+          const location = { lat: latitude, lng: longitude };
+          mapInstanceRef.current.setCenter(location);
+          mapInstanceRef.current.setZoom(18); // High zoom for accuracy
+          markerRef.current.setPosition(location);
+        }
+
+        // Get address for current location
+        performReverseGeocoding(latitude, longitude);
         
-        if (window.google && mapRef.current) {
-          initializeMap(latitude, longitude);
+        setGpsStatus('found');
+
+        // Start watching position for better accuracy
+        startWatchingPosition();
+        
+        console.log(`✅ Current location set: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`);
+      },
+      (error) => {
+        console.error('❌ GPS error:', error);
+        setGpsStatus('error');
+        
+        let errorMessage = '';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = language === 'ar' 
+              ? 'تم رفض الإذن لتحديد الموقع. يرجى السماح بالوصول للموقع في إعدادات المتصفح.' 
+              : 'Location access denied. Please allow location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = language === 'ar' 
+              ? 'معلومات الموقع غير متاحة. يرجى التأكد من تشغيل GPS.' 
+              : 'Location information unavailable. Please ensure GPS is enabled.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = language === 'ar' 
+              ? 'انتهت مهلة طلب تحديد الموقع. يرجى المحاولة مرة أخرى.' 
+              : 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage = language === 'ar' 
+              ? 'حدث خطأ غير معروف أثناء تحديد الموقع.' 
+              : 'An unknown error occurred while retrieving location.';
+            break;
+        }
+        
+        alert(errorMessage);
+      },
+      gpsOptions
+    );
+  };
+
+  // Start watching position for continuous updates
+  const startWatchingPosition = () => {
+    if (!navigator.geolocation || watchId) return;
+
+    console.log('👀 Starting position watch...');
+
+    const newWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        
+        // Only update if accuracy improved
+        if (!currentPosition || position.coords.accuracy < currentPosition.coords.accuracy) {
+          console.log(`🎯 Better accuracy position: ${latitude}, ${longitude} (${accuracy}m)`);
+          
+          setCurrentPosition(position);
+          setLocationData(prev => ({
+            ...prev,
+            clinic_latitude: latitude,
+            clinic_longitude: longitude,
+            location_accuracy: accuracy
+          }));
+
+          // Update marker position
+          if (markerRef.current) {
+            markerRef.current.setPosition({ lat: latitude, lng: longitude });
+          }
         }
       },
       (error) => {
-        console.error('Geolocation error:', error);
-        setGpsStatus('error');
-        alert(language === 'ar' ? 'فشل في تحديد الموقع، يرجى المحاولة مرة أخرى' : 'Failed to get location, please try again');
+        console.warn('⚠️ Position watch error:', error);
       },
-      options
+      {
+        ...gpsOptions,
+        timeout: 30000 // Longer timeout for watch
+      }
     );
+
+    setWatchId(newWatchId);
   };
 
   // Initialize Google Maps
