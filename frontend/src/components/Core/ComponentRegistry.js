@@ -236,7 +236,7 @@ export const COMPONENT_REGISTRY = {
   
   // Enhanced Clinic Management System
   EnhancedClinicRegistration: createLazyComponent(
-    () => import('../Clinics/EnhancedClinicRegistration'),
+    () => import('../Clinics/EnhancedClinicRegistrationFixed'),
     'جاري تحميل تسجيل العيادات المحسن...'
   ),
   AdminRegistrationLogs: createLazyComponent(
