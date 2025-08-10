@@ -1162,6 +1162,7 @@ const DashboardLayout = () => {
         onSearch={handleGlobalSearch}
         systemSettings={systemSettings}
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        availableThemes={AVAILABLE_THEMES} // Pass available themes
       />
 
       {/* Modern Sidebar */}
