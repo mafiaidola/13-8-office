@@ -403,7 +403,7 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {product.line_name || 'غير محدد'}
+                      {product.line_name || (language === 'ar' ? 'غير محدد' : 'Not specified')}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span className="px-2 py-1 bg-gray-500/20 text-gray-300 rounded text-xs">
