@@ -310,19 +310,19 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
           <div className="text-2xl font-bold">{products.length}</div>
-          <div className="text-sm opacity-75">إجمالي المنتجات</div>
+          <div className="text-sm opacity-75">{language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
           <div className="text-2xl font-bold">{products.filter(p => p.is_active).length}</div>
-          <div className="text-sm opacity-75">منتجات نشطة</div>
+          <div className="text-sm opacity-75">{language === 'ar' ? 'منتجات نشطة' : 'Active Products'}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
           <div className="text-2xl font-bold">{products.filter(p => getStockStatus(p) === 'critical').length}</div>
-          <div className="text-sm opacity-75">مخزون حرج</div>
+          <div className="text-sm opacity-75">{language === 'ar' ? 'مخزون حرج' : 'Critical Stock'}</div>
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
           <div className="text-2xl font-bold">{brands.length}</div>
-          <div className="text-sm opacity-75">العلامات التجارية</div>
+          <div className="text-sm opacity-75">{language === 'ar' ? 'العلامات التجارية' : 'Brands'}</div>
         </div>
       </div>
 
