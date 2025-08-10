@@ -375,42 +375,50 @@ const AdminDashboard = ({
         </div>
       </div>
 
-      {/* الملخص المالي */}
+      {/* Financial Overview - Improved Horizontal Layout */}
       {dashboardData.financial_overview && (
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
           <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
             <span className="text-green-600 mr-3 text-3xl">💰</span>
-            الملخص المالي الشامل
+            {language === 'ar' ? 'الملخص المالي الشامل' : 'Comprehensive Financial Overview'}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-green-400 hover:shadow-xl transition-shadow">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8 shadow-lg border border-green-200 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">إجمالي الديون</h4>
+                <h4 className="text-xl font-bold text-gray-900">
+                  {language === 'ar' ? 'إجمالي الديون' : 'Total Outstanding'}
+                </h4>
                 <span className="text-green-600 text-4xl">💳</span>
               </div>
               <p className="text-4xl font-black text-green-700 mb-3">
-                {(dashboardData.financial_overview.total_outstanding || 0).toLocaleString()} ج.م
+                {(dashboardData.financial_overview.total_outstanding || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
               </p>
               <p className="text-base font-semibold text-gray-800">
-                {dashboardData.financial_overview.total_debts || 0} دين نشط
+                {dashboardData.financial_overview.total_debts || 0} {language === 'ar' ? 'دين نشط' : 'active debts'}
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-blue-400 hover:shadow-xl transition-shadow">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8 shadow-lg border border-blue-200 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">المبلغ المحصل</h4>
+                <h4 className="text-xl font-bold text-gray-900">
+                  {language === 'ar' ? 'المبلغ المحصل' : 'Amount Collected'}
+                </h4>
                 <span className="text-blue-600 text-4xl">💰</span>
               </div>
               <p className="text-4xl font-black text-blue-700 mb-3">
-                {(dashboardData.financial_overview.total_settled || 0).toLocaleString()} ج.م
+                {(dashboardData.financial_overview.total_settled || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
               </p>
-              <p className="text-base font-semibold text-gray-800">تم تحصيله بنجاح</p>
+              <p className="text-base font-semibold text-gray-800">
+                {language === 'ar' ? 'تم تحصيله بنجاح' : 'Successfully collected'}
+              </p>
             </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-purple-400 hover:shadow-xl transition-shadow">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-8 shadow-lg border border-purple-200 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">معدل التحصيل</h4>
+                <h4 className="text-xl font-bold text-gray-900">
+                  {language === 'ar' ? 'معدل التحصيل' : 'Collection Rate'}
+                </h4>
                 <span className="text-purple-600 text-4xl">📊</span>
               </div>
               <p className="text-4xl font-black text-purple-700 mb-3">
@@ -418,20 +426,24 @@ const AdminDashboard = ({
                   Math.round((dashboardData.financial_overview.total_settled / 
                     (dashboardData.financial_overview.total_outstanding + dashboardData.financial_overview.total_settled)) * 100) : 0}%
               </p>
-              <p className="text-base font-semibold text-gray-800">من إجمالي المبلغ</p>
+              <p className="text-base font-semibold text-gray-800">
+                {language === 'ar' ? 'من إجمالي المبلغ' : 'of total amount'}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* سجل الأنشطة المحسن */}
-      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-2">
+      {/* Enhanced Activity Log */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2">
         <div className="p-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
             <span className="text-indigo-600 mr-3 text-3xl">📊</span>
-            سجل أنشطة النظام الحديثة
+            {language === 'ar' ? 'سجل أنشطة النظام الحديثة' : 'Recent System Activity Log'}
           </h3>
-          <p className="text-gray-700 font-medium mb-6">متابعة شاملة لجميع الأنشطة والعمليات في النظام</p>
+          <p className="text-gray-700 font-medium mb-6">
+            {language === 'ar' ? 'متابعة شاملة لجميع الأنشطة والعمليات في النظام' : 'Comprehensive tracking of all system activities and operations'}
+          </p>
         </div>
         
         <ActivityLog 
@@ -442,15 +454,15 @@ const AdminDashboard = ({
           onRefresh={onRefresh}
           quickActions={[
             {
-              label: 'تصدير السجل الكامل',
+              label: language === 'ar' ? 'تصدير السجل الكامل' : 'Export Full Log',
               icon: '📋💾',
-              onClick: () => console.log('تصدير السجل الكامل'),
+              onClick: () => console.log('Export full log'),
               color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
             },
             {
-              label: 'إعدادات التنبيهات',
+              label: language === 'ar' ? 'إعدادات التنبيهات' : 'Alert Settings',
               icon: '🔔⚙️',
-              onClick: () => console.log('إعدادات التنبيهات'),
+              onClick: () => console.log('Alert settings'),
               color: 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200'
             }
           ]}
