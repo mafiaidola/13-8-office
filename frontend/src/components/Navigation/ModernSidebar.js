@@ -408,7 +408,7 @@ const ModernSidebar = ({
                     )}
                     
                     <span className={`text-lg flex-shrink-0 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-105'} transition-transform`}>
-                      {item.icon}
+                      {getEnhancedIcon(item.id)}
                     </span>
                     {!isCollapsed && (
                       <div className="flex-1 min-w-0 text-right">
