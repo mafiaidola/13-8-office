@@ -608,7 +608,6 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
       </div>
     );
   };
-};
 
 // Theme Selector Component
 const ThemeSelector = ({ language, availableThemes, currentTheme, onThemeChange }) => {
