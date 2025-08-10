@@ -136,6 +136,10 @@ export const COMPONENT_REGISTRY = {
     () => import('../Clinics/EnhancedClinicRegistrationFixed'),
     'جاري تحميل تسجيل العيادات المحسن...'
   ),
+  EnhancedClinicRegistrationAdvanced: createLazyComponent(
+    () => import('../Clinics/EnhancedClinicRegistrationAdvanced'),
+    'جاري تحميل تسجيل العيادات المتقدم...'
+  ),
 
   // Product Management
   ProductManagement: createLazyComponent(
