@@ -24,14 +24,8 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
   useEffect(() => {
     loadUsers();
     
-    // Log system access
-    activityLogger.logSystemAccess('إدارة المستخدمين', {
-      previousSection: sessionStorage.getItem('previousSection') || '',
-      accessMethod: 'navigation',
-      userRole: user?.role
-    });
-    
-    sessionStorage.setItem('previousSection', 'إدارة المستخدمين');
+    // Store previous section for navigation
+    sessionStorage.setItem('previousSection', t('users', 'title'));
   }, []);
 
   const loadUsers = async () => {
