@@ -162,8 +162,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل التحليلات المتقدمة...'
   ),
 
-  // Activity Tracking - Full Enhanced Version
+  // Activity Tracking System
   ActivityTracking: createLazyComponent(
+    () => import('../ActivityTracking/ActivityTracking'),
+    'جاري تحميل تتبع الأنشطة والحركات...'
+  ),
+  ActivityTrackingFixed: createLazyComponent(
     () => import('../ActivityTracking/ActivityTrackingFixed'),
     'جاري تحميل تتبع الأنشطة والحركات...'
   ),
