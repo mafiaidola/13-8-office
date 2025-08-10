@@ -165,30 +165,30 @@ const AdminDashboard = ({
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold mb-2">
-              لوحة تحكم الأدمن المتقدمة
+              {t('title')}
             </h1>
             <p className="text-blue-100 text-lg">
-              مرحباً {user?.full_name || user?.username} 👨‍💻 - إدارة شاملة للنظام
+              {t('welcome').replace('{name}', user?.full_name || user?.username)}
             </p>
             <div className="flex items-center space-x-4 space-x-reverse mt-4">
               <div className="flex items-center bg-white/20 rounded-full px-3 py-1">
                 <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                <span className="text-sm">النظام يعمل بكفاءة</span>
+                <span className="text-sm">{t('system_running')}</span>
               </div>
               <div className="text-sm bg-white/20 rounded-full px-3 py-1">
-                📊 {Object.keys(dashboardData).length} مؤشر متاح
+                📊 {t('indicators_available').replace('{count}', Object.keys(dashboardData).length)}
               </div>
             </div>
           </div>
           
           <div className="text-right">
             <div className="text-3xl font-bold">
-              {new Date().toLocaleDateString('ar-EG', { 
+              {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { 
                 weekday: 'long'
               })}
             </div>
             <div className="text-lg text-blue-100">
-              {new Date().toLocaleDateString('ar-EG', {
+              {new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
                 year: 'numeric',
                 month: 'long', 
                 day: 'numeric'
