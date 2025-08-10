@@ -11,8 +11,8 @@ const AdminDashboard = ({
   timeFilter, 
   onTimeFilterChange, 
   onRefresh,
-  language = 'ar',
-  isRTL = true 
+  language = 'en',
+  isRTL = false 
 }) => {
   const [loading, setLoading] = useState(false);
   const [systemHealth, setSystemHealth] = useState({});
