@@ -1185,13 +1185,31 @@ const DashboardLayout = () => {
         <main className="dashboard-main flex-1 p-6 overflow-auto">
           {/* Current Tab Component */}
           <div className="tab-content">
-            <ComponentRenderer
-              componentName={Object.values(SYSTEM_TABS).find(tab => tab.id === activeTab)?.component}
-              user={user}
-              language={language}
-              isRTL={isRTL}
-              theme={theme}
-            />
+            {(() => {
+              const currentTab = Object.values(SYSTEM_TABS).find(tab => tab.id === activeTab);
+              const componentName = currentTab?.component;
+              
+              console.log('🔍 Tab Resolution Debug:', {
+                activeTab,
+                currentTab: currentTab ? {
+                  id: currentTab.id,
+                  name: currentTab.name,
+                  component: currentTab.component
+                } : null,
+                componentName,
+                availableTabs: Object.values(SYSTEM_TABS).map(t => ({ id: t.id, component: t.component }))
+              });
+              
+              return (
+                <ComponentRenderer
+                  componentName={componentName}
+                  user={user}
+                  language={language}
+                  isRTL={isRTL}
+                  theme={theme}
+                />
+              );
+            })()}
           </div>
         </main>
       </div>
