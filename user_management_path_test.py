@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # استخدام URL الخارجي من متغيرات البيئة
-BACKEND_URL = "https://3cea5fc2-9f6b-4b4e-9dbe-7a3c938a0e71.preview.emergentagent.com/api"
+BACKEND_URL = "https://ec499ace-685d-480d-b657-849bf4e418d7.preview.emergentagent.com/api"
 
 def test_user_management_path():
     """اختبار شامل لمسار إدارة المستخدمين"""
