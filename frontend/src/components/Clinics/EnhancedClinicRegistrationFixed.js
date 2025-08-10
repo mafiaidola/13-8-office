@@ -1,5 +1,5 @@
-// Enhanced Clinic Registration - Simplified & Fixed Version
-import React, { useState, useEffect, useRef } from 'react';
+// Enhanced Clinic Registration - Advanced GPS & Maps Integration
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGlobalTranslation } from '../../localization/completeTranslations';
 import axios from 'axios';
 
