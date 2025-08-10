@@ -976,7 +976,7 @@ const DashboardLayout = () => {
 
       {/* Main Dashboard Content with modern layout */}
       <div className={`dashboard-content transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-16' : 'ml-64'
+        sidebarCollapsed ? 'mr-16' : 'mr-80'
       } mt-16`}>
         {/* Main Content */}
         <main className="dashboard-main flex-1 p-6 overflow-auto">
