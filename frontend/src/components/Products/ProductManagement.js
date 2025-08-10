@@ -1,6 +1,6 @@
 // Enhanced Product Management Component - إدارة المنتجات المحسنة
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '../../localization/enhancedTranslations';
+import { useGlobalTranslation } from '../../localization/completeTranslations';
 import axios from 'axios';
 
 const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => {
