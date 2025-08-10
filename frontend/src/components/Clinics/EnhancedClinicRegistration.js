@@ -1619,701 +1619,3 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
 };
 
 export default EnhancedClinicRegistration;
-          </h3>
-          
-          {/* رسالة خطأ الموقع */}
-          {errors.location && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <span className="text-2xl">⚠️</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-yellow-800 text-sm">
-                    {errors.location}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* أزرار التحكم في الموقع المحسنة */}
-          <div className="mb-4 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={getCurrentLocation}
-              disabled={loading}
-              className="relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            >
-              <svg className="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              📍 تحديد موقعي الحالي بدقة عالية
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => {
-                if (mapInstanceRef.current && markerRef.current) {
-                  const center = mapInstanceRef.current.getCenter();
-                  markerRef.current.setPosition(center);
-                  
-                  setLocationData(prev => ({
-                    ...prev,
-                    clinic_latitude: center.lat(),
-                    clinic_longitude: center.lng(),
-                    location_source: 'manual_center'
-                  }));
-                  
-                  // إظهار رسالة تأكيد
-                  setErrors(prev => ({
-                    ...prev,
-                    location_success: '✅ تم وضع دبوس العيادة في وسط الخريطة'
-                  }));
-                  
-                  setTimeout(() => {
-                    setErrors(prev => {
-                      const newErrors = { ...prev };
-                      delete newErrors.location_success;
-                      return newErrors;
-                    });
-                  }, 3000);
-                }
-              }}
-              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
-            >
-              🎯 وضع الدبوس في المنتصف
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (mapInstanceRef.current) {
-                  // إعادة تعيين الخريطة لموقع القاهرة الافتراضي
-                  const defaultLocation = { lat: 30.0444, lng: 31.2357 };
-                  mapInstanceRef.current.setCenter(defaultLocation);
-                  mapInstanceRef.current.setZoom(11);
-                  
-                  if (markerRef.current) {
-                    markerRef.current.setPosition(defaultLocation);
-                  }
-                  
-                  setLocationData(prev => ({
-                    ...prev,
-                    clinic_latitude: defaultLocation.lat,
-                    clinic_longitude: defaultLocation.lng,
-                    location_source: 'default'
-                  }));
-                  
-                  setErrors(prev => ({
-                    ...prev,
-                    location_success: '🏙️ تم إعادة تعيين الخريطة للموقع الافتراضي (القاهرة)'
-                  }));
-                  
-                  setTimeout(() => {
-                    setErrors(prev => {
-                      const newErrors = { ...prev };
-                      delete newErrors.location_success;
-                      return newErrors;
-                    });
-                  }, 3000);
-                }
-              }}
-              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
-            >
-              🏙️ إعادة التعيين
-            </button>
-          </div>
-          
-          {/* رسائل حالة الموقع */}
-          {errors.location_success && (
-            <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-400 rounded-md">
-              <p className="text-green-700 text-sm font-medium">
-                {errors.location_success}
-              </p>
-            </div>
-          )}
-
-          {/* حقل البحث في العنوان */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-blue-800 mb-2">
-              البحث عن عنوان أو مكان
-            </label>
-            <input
-              id="address-search"
-              type="text"
-              className="w-full px-3 py-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
-              placeholder="اكتب اسم المكان أو العنوان للبحث..."
-            />
-            <p className="mt-1 text-xs text-blue-600">
-              مثال: مستشفى القاهرة، شارع التحرير، أو اسم المنطقة
-            </p>
-          </div>
-
-          {/* الخريطة */}
-          <div className="relative">
-            <div 
-              ref={mapRef}
-              className="w-full h-96 rounded-lg border border-blue-300 shadow-lg"
-              style={{ minHeight: '400px' }}
-            />
-            {/* مؤشر التحميل */}
-            {!window.google && (
-              <div className="absolute inset-0 flex items-center justify-center bg-blue-50 rounded-lg">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-blue-600 text-sm">جاري تحميل الخريطة...</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* معلومات الموقع المحدد */}
-          <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-              معلومات الموقع المحدد:
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">خط الطول:</span>
-                <span className="ml-2 text-blue-600">
-                  {locationData.clinic_longitude ? locationData.clinic_longitude.toFixed(6) : 'غير محدد'}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">خط العرض:</span>
-                <span className="ml-2 text-blue-600">
-                  {locationData.clinic_latitude ? locationData.clinic_latitude.toFixed(6) : 'غير محدد'}
-                </span>
-              </div>
-              {locationData.clinic_address && (
-                <div className="md:col-span-2">
-                  <span className="font-medium text-gray-600">العنوان:</span>
-                  <span className="ml-2 text-gray-800">{locationData.clinic_address}</span>
-                </div>
-              )}
-              {userLocation && userLocation.accuracy && (
-                <div className="md:col-span-2">
-                  <span className="font-medium text-gray-600">دقة الموقع:</span>
-                  <span className="ml-2 text-green-600">
-                    ±{Math.round(userLocation.accuracy)} متر
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            {(!locationData.clinic_latitude || !locationData.clinic_longitude) && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-amber-800 text-sm">
-                  ⚡ يرجى تحديد موقع العيادة على الخريطة بسحب الدبوس أو النقر على الموقع المطلوب
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* إرشادات الاستخدام */}
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">إرشادات تحديد الموقع:</h4>
-            <ul className="text-xs text-gray-600 space-y-1">
-              <li>• اضغط على "الحصول على موقعي الحالي" لتحديد موقعك الحالي تلقائياً</li>
-              <li>• يمكنك البحث عن العنوان في مربع البحث أعلاه</li>
-              <li>• اسحب الدبوس الأحمر لتحديد الموقع الدقيق للعيادة</li>
-              <li>• انقر في أي مكان على الخريطة لنقل الدبوس إلى ذلك الموقع</li>
-              <li>• استخدم أزرار التكبير والتصغير للحصول على دقة أفضل</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* قسم بيانات العيادة الأساسية */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            🏥 بيانات العيادة الأساسية
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                اسم العيادة *
-              </label>
-              <input
-                type="text"
-                value={formData.clinic_name}
-                onChange={(e) => handleInputChange('clinic_name', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.clinic_name ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="أدخل اسم العيادة"
-              />
-              {errors.clinic_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.clinic_name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                رقم هاتف العيادة
-              </label>
-              <input
-                type="tel"
-                value={formData.clinic_phone}
-                onChange={(e) => handleInputChange('clinic_phone', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.clinic_phone ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="01xxxxxxxxx"
-              />
-              {errors.clinic_phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.clinic_phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                البريد الإلكتروني للعيادة
-              </label>
-              <input
-                type="email"
-                value={formData.clinic_email}
-                onChange={(e) => handleInputChange('clinic_email', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.clinic_email ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="clinic@example.com"
-              />
-              {errors.clinic_email && (
-                <p className="mt-1 text-sm text-red-600">{errors.clinic_email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                عنوان العيادة *
-              </label>
-              <input
-                type="text"
-                value={formData.clinic_address}
-                onChange={(e) => handleInputChange('clinic_address', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.clinic_address ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="سيتم ملؤه تلقائياً من الخريطة"
-                readOnly
-              />
-              {errors.clinic_address && (
-                <p className="mt-1 text-sm text-red-600">{errors.clinic_address}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* قسم بيانات الطبيب */}
-        <div className="bg-green-50 p-6 rounded-lg">
-          <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center">
-            👨‍⚕️ بيانات الطبيب
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-green-800 mb-2">
-                اسم الطبيب *
-              </label>
-              <input
-                type="text"
-                value={formData.doctor_name}
-                onChange={(e) => handleInputChange('doctor_name', e.target.value)}
-                className={`w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  errors.doctor_name ? 'border-red-500' : 'border-green-300'
-                }`}
-                placeholder="د. أحمد محمد"
-              />
-              {errors.doctor_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.doctor_name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-green-800 mb-2">
-                رقم هاتف الطبيب
-              </label>
-              <input
-                type="tel"
-                value={formData.doctor_phone}
-                onChange={(e) => handleInputChange('doctor_phone', e.target.value)}
-                className="w-full px-3 py-3 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="01xxxxxxxxx"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* قسم التقسيم الإداري - محسن مع التكامل الكامل */}
-        <div className="bg-purple-50 p-6 rounded-lg">
-          <h3 className="text-xl font-bold text-purple-900 mb-6 flex items-center">
-            🗂️ التقسيم الإداري والجغرافي
-            <span className="ml-2 px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs">
-              متكامل مع النظام
-            </span>
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* الخط - بطاقات تفاعلية */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-purple-800 mb-4">
-                <span className="flex items-center">
-                  🚀 اختيار الخط *
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                    {formOptions.lines.length} خط متاح
-                  </span>
-                </span>
-              </label>
-              
-              {formOptions.lines.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {formOptions.lines.map((line) => (
-                    <button
-                      key={line.id}
-                      type="button"
-                      onClick={() => {
-                        handleInputChange('line_id', line.id);
-                        // إعادة تعيين المنطقة عند تغيير الخط
-                        handleInputChange('area_id', '');
-                      }}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg text-right ${
-                        formData.line_id === line.id
-                          ? 'border-purple-500 bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-lg scale-105'
-                          : 'border-purple-200 bg-white hover:border-purple-400 text-gray-700'
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl">🚀</span>
-                          <span className="text-xs font-mono opacity-60">
-                            {line.code || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="font-bold text-sm">
-                          {line.name}
-                        </div>
-                        {line.description && (
-                          <div className="text-xs opacity-75 leading-tight">
-                            {line.description}
-                          </div>
-                        )}
-                        {line.manager_name && (
-                          <div className="text-xs opacity-60">
-                            👨‍💼 مدير: {line.manager_name}
-                          </div>
-                        )}
-                        {formData.line_id === line.id && (
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse mx-auto"></div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
-                    ⚠️ لا توجد خطوط متاحة. يرجى التواصل مع الإدارة لإعداد الخطوط الجغرافية.
-                  </p>
-                </div>
-              )}
-              
-              {errors.line_id && (
-                <p className="mt-2 text-sm text-red-600">{errors.line_id}</p>
-              )}
-            </div>
-
-            {/* المنطقة - بطاقات تفاعلية مفلترة */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-purple-800 mb-4">
-                <span className="flex items-center">
-                  🌍 اختيار المنطقة *
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                    {getFilteredAreas().length} منطقة متاحة
-                  </span>
-                  {!formData.line_id && (
-                    <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                      يجب اختيار الخط أولاً
-                    </span>
-                  )}
-                </span>
-              </label>
-              
-              {formData.line_id ? (
-                getFilteredAreas().length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getFilteredAreas().map((area) => (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => handleInputChange('area_id', area.id)}
-                        className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg text-right ${
-                          formData.area_id === area.id
-                            ? 'border-purple-500 bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg scale-105'
-                            : 'border-purple-200 bg-white hover:border-purple-400 text-gray-700'
-                        }`}
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-2xl">🌍</span>
-                            <span className="text-xs font-mono opacity-60">
-                              {area.code || 'N/A'}
-                            </span>
-                          </div>
-                          <div className="font-bold text-sm">
-                            {area.name}
-                          </div>
-                          {area.description && (
-                            <div className="text-xs opacity-75 leading-tight">
-                              {area.description}
-                            </div>
-                          )}
-                          {area.manager_id && (
-                            <div className="text-xs opacity-60">
-                              👨‍💼 مدير المنطقة
-                            </div>
-                          )}
-                          {formData.area_id === area.id && (
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse mx-auto"></div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-yellow-800 text-sm">
-                      ⚠️ لا توجد مناطق متاحة للخط المختار. يرجى اختيار خط آخر أو التواصل مع الإدارة.
-                    </p>
-                  </div>
-                )
-              ) : (
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-gray-600 text-sm flex items-center">
-                    👆 يرجى اختيار الخط أولاً لعرض المناطق المرتبطة به
-                  </p>
-                </div>
-              )}
-              
-              {errors.area_id && (
-                <p className="mt-2 text-sm text-red-600">{errors.area_id}</p>
-              )}
-            </div>
-          </div>
-
-          {/* ملخص الاختيار */}
-          {(formData.line_id || formData.area_id) && (
-            <div className="mt-6 p-4 bg-white rounded-lg border border-purple-200 shadow-inner">
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-                ملخص التقسيم الإداري المختار:
-              </h4>
-              <div className="space-y-2">
-                {formData.line_id && (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-purple-500 to-blue-600 text-white">
-                      🚀 {formOptions.lines.find(l => l.id === formData.line_id)?.name || 'خط غير محدد'}
-                    </span>
-                  </div>
-                )}
-                {formData.area_id && (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-green-500 to-teal-600 text-white">
-                      🌍 {getFilteredAreas().find(a => a.id === formData.area_id)?.name || 'منطقة غير محددة'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {formData.line_id && formData.area_id && (
-                <p className="text-xs text-green-600 mt-2 flex items-center">
-                  ✅ تم اختيار التقسيم الإداري بنجاح - مرتبط بنظام إدارة الخطوط والمناطق
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* قسم تصنيفات العيادة - محسن مع البطاقات التفاعلية */}
-        <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
-          <h3 className="text-xl font-bold text-orange-900 mb-6 flex items-center">
-            ⭐ تصنيفات العيادة
-          </h3>
-          
-          {/* تصنيف العيادة - بطاقات تفاعلية */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-orange-800 mb-4">
-              تصنيف العيادة حسب الأداء والجودة *
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {formOptions.classifications.map((classification) => (
-                <button
-                  key={classification.value}
-                  type="button"
-                  onClick={() => handleInputChange('classification', classification.value)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                    formData.classification === classification.value
-                      ? `border-orange-500 bg-gradient-to-r ${classification.color} text-white shadow-lg scale-105`
-                      : 'border-orange-200 bg-white hover:border-orange-400 text-gray-700'
-                  }`}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2">
-                    <span className="text-2xl">{classification.icon}</span>
-                    <span className="font-medium text-sm leading-tight">
-                      {classification.label}
-                    </span>
-                    {formData.classification === classification.value && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {formData.classification && (
-              <div className="mt-3 p-3 bg-orange-100 rounded-lg">
-                <p className="text-sm text-orange-800">
-                  ✅ <strong>التصنيف المختار:</strong> {getClassificationLabel(formData.classification)}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* التصنيف الائتماني - بطاقات تفاعلية */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-orange-800 mb-4">
-              التصنيف الائتماني للعيادة *
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {formOptions.credit_classifications.map((classification) => (
-                <button
-                  key={classification.value}
-                  type="button"
-                  onClick={() => handleInputChange('credit_classification', classification.value)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                    formData.credit_classification === classification.value
-                      ? `border-orange-500 bg-gradient-to-r ${classification.color} text-white shadow-lg scale-105`
-                      : 'border-orange-200 bg-white hover:border-orange-400 text-gray-700'
-                  }`}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2">
-                    <span className="text-3xl">{classification.icon}</span>
-                    <span className="font-medium text-sm leading-tight">
-                      {classification.label}
-                    </span>
-                    {formData.credit_classification === classification.value && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {formData.credit_classification && (
-              <div className="mt-3 p-3 bg-orange-100 rounded-lg">
-                <p className="text-sm text-orange-800">
-                  ✅ <strong>التصنيف الائتماني المختار:</strong> {getCreditClassificationLabel(formData.credit_classification)}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* ملاحظات التصنيف */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-orange-800 mb-2">
-              ملاحظات التصنيف
-            </label>
-            <textarea
-              value={formData.classification_notes}
-              onChange={(e) => handleInputChange('classification_notes', e.target.value)}
-              rows={3}
-              className="w-full px-3 py-3 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="ملاحظات حول تصنيف العيادة (اختياري)..."
-            />
-          </div>
-
-          {/* عرض التصنيفات المختارة - محسن */}
-          <div className="p-4 bg-white rounded-lg border border-orange-200 shadow-inner">
-            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-              <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-              ملخص التصنيفات المختارة:
-            </h4>
-            <div className="flex flex-wrap gap-3">
-              {formData.classification && (
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${getClassificationColor(formData.classification)} text-white shadow-md`}>
-                    {getClassificationIcon(formData.classification)} {getClassificationLabel(formData.classification)}
-                  </span>
-                </div>
-              )}
-              {formData.credit_classification && (
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r ${getCreditClassificationColor(formData.credit_classification)} text-white shadow-md`}>
-                    {getCreditClassificationIcon(formData.credit_classification)} {getCreditClassificationLabel(formData.credit_classification)}
-                  </span>
-                </div>
-              )}
-            </div>
-            {(!formData.classification || !formData.credit_classification) && (
-              <p className="text-xs text-gray-500 mt-2 italic">
-                يرجى اختيار التصنيفات المطلوبة أعلاه لإكمال التسجيل
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* قسم الملاحظات */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            📝 ملاحظات إضافية
-          </h3>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              ملاحظات التسجيل
-            </label>
-            <textarea
-              value={formData.registration_notes}
-              onChange={(e) => handleInputChange('registration_notes', e.target.value)}
-              rows={4}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="أي ملاحظات إضافية حول العيادة أو عملية التسجيل..."
-            />
-          </div>
-        </div>
-
-        {/* أزرار التحكم */}
-        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            ⬅️ رجوع
-          </button>
-          
-          <button
-            type="submit"
-            disabled={loading || !mapLoaded}
-            className={`px-8 py-3 border border-transparent rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              loading || !mapLoaded
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-            }`}
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                جاري التسجيل...
-              </span>
-            ) : (
-              '✅ تسجيل العيادة'
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default EnhancedClinicRegistration;
