@@ -272,8 +272,8 @@ class BackendTester:
         # Visits endpoints to test
         visits_endpoints = [
             ("/visits/dashboard/overview", "Visits Dashboard Overview"),
-            ("/visits/available-clinics", "Available Clinics for Visits"),
-            ("/rep-visits", "Representative Visits")
+            ("/visits/list", "Visits List"),
+            ("/visits/stats/representatives", "Representatives Stats")
         ]
         
         for endpoint, name in visits_endpoints:
