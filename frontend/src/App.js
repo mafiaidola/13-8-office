@@ -608,27 +608,6 @@ const GlobalSearchModal = ({ onClose, language, isRTL, setActiveTab }) => {
       </div>
     );
   };
-                  <span className="text-2xl">{result.icon}</span>
-                  <div className="flex-1">
-                    <h5 className="font-medium text-white">{result.title}</h5>
-                    <p className="text-sm text-white/70">{result.description}</p>
-                    <span className="text-xs text-blue-300">{result.module}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && searchQuery && searchResults.length === 0 && (
-          <div className="text-center py-8 text-white/70">
-            <div className="text-4xl mb-2">🔍</div>
-            <p>{t('noResults')}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 };
 
 // Theme Selector Component
