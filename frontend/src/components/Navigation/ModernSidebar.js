@@ -1,161 +1,97 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { SYSTEM_TABS, getAvailableTabs } from '../../config/systemConfig';
 
 const ModernSidebar = ({ 
+  isCollapsed, 
+  toggleSidebar, 
   activeTab, 
-  onTabChange, 
-  user, 
-  isCollapsed = false, 
-  onToggleCollapse,
-  language = 'en'
+  switchTab, 
+  currentUser, 
+  isRTL = false,  // Default to LTR (English)
+  language = 'en' // Default to English
 }) => {
-  const [hoveredTab, setHoveredTab] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
 
-  // Navigation sections with English-first structure
-  const navigationSections = {
-    main: {
-      title: 'Main',
-      icon: '🏠',
-      items: [
-        {
-          id: 'dashboard',
-          title: 'Dashboard',
-          icon: '📊',
-          path: '/dashboard',
-          description: 'Overview and analytics'
-        }
-      ]
-    },
-    patients: {
-      title: 'Patient Management',
-      icon: '👥',
-      items: [
-        {
-          id: 'activity_tracking',
-          title: 'Activity Tracking',
-          icon: '📋',
-          path: '/activity-tracking',
-          description: 'Track system activities'
-        },
-        {
-          id: 'visits',
-          title: 'Visit Management',
-          icon: '🏥',
-          path: '/visits',
-          description: 'Manage medical visits'
-        }
-      ]
-    },
-    inventory: {
-      title: 'Inventory & Products',
-      icon: '📦',
-      items: [
-        {
-          id: 'products_management',
-          title: 'Product Management',
-          icon: '🏷️',
-          path: '/products',
-          description: 'Manage products and inventory'
-        },
-        {
-          id: 'warehouses',
-          title: 'Warehouse Management',
-          icon: '🏪',
-          path: '/warehouses',
-          description: 'Manage warehouse operations'
-        }
-      ]
-    },
-    clinical: {
-      title: 'Clinical Operations',
-      icon: '🏥',
-      items: [
-        {
-          id: 'clinics_management',
-          title: 'Clinic Management',
-          icon: '🏥',
-          path: '/clinics-management',
-          description: 'Manage clinic information'
-        },
-        {
-          id: 'clinic_registration',
-          title: 'Clinic Registration',
-          icon: '📝',
-          path: '/clinic-registration',
-          description: 'Register new clinics'
-        }
-      ]
-    },
-    financial: {
-      title: 'Financial Management',
-      icon: '💰',
-      items: [
-        {
-          id: 'unified_financial_dashboard',
-          title: 'Financial Dashboard',
-          icon: '📈',
-          path: '/unified-financial',
-          description: 'Financial overview and reports'
-        },
-        {
-          id: 'debt_collection_management',
-          title: 'Debt Collection',
-          icon: '💳',
-          path: '/debt-collection',
-          description: 'Manage debts and collections'
-        }
-      ]
-    },
-    system: {
-      title: 'System Management',
-      icon: '⚙️',
-      items: [
-        {
-          id: 'user_management',
-          title: 'User Management',
-          icon: '👤',
-          path: '/users',
-          description: 'Manage system users'
-        },
-        {
-          id: 'excel_management',
-          title: 'Excel Management',
-          icon: '📊',
-          path: '/excel-management',
-          description: 'Import/Export Excel data'
-        }
-      ]
-    }
-  };
+  // Get available tabs for current user
+  const availableTabs = useMemo(() => {
+    return getAvailableTabs(currentUser?.role || 'admin');
+  }, [currentUser?.role]);
 
-  // Check if user has permission for a tab
-  const hasPermission = (tab) => {
-    if (!tab.permissions) return true;
-    if (tab.permissions.includes('*')) return true;
-    return tab.permissions.includes(user?.role);
-  };
+  // Group tabs by category
+  const groupedTabs = useMemo(() => {
+    const groups = {
+      core: { 
+        title: language === 'ar' ? 'العمليات الأساسية' : 'Core Operations', 
+        icon: '🏠', 
+        items: [] 
+      },
+      clinical: { 
+        title: language === 'ar' ? 'العمليات الطبية' : 'Clinical Operations', 
+        icon: '🏥', 
+        items: [] 
+      },
+      financial: { 
+        title: language === 'ar' ? 'الإدارة المالية' : 'Financial Management', 
+        icon: '💰', 
+        items: [] 
+      },
+      inventory: { 
+        title: language === 'ar' ? 'المخزون والمنتجات' : 'Inventory & Products', 
+        icon: '📦', 
+        items: [] 
+      },
+      analytics: { 
+        title: language === 'ar' ? 'التحليلات والتقارير' : 'Analytics & Reports', 
+        icon: '📊', 
+        items: [] 
+      },
+      system: { 
+        title: language === 'ar' ? 'إدارة النظام' : 'System Management', 
+        icon: '⚙️', 
+        items: [] 
+      }
+    };
 
-  // Toggle section expansion
-  const toggleSection = (sectionId) => {
-    if (isCollapsed) return;
+    availableTabs.forEach(tab => {
+      const tabData = {
+        id: tab.id,
+        title: tab.name[language] || tab.name.en || tab.id,
+        icon: tab.icon,
+        path: tab.path,
+        description: tab.description[language] || tab.description.en || ''
+      };
+
+      // Categorize tabs
+      if (['dashboard'].includes(tab.id)) {
+        groups.core.items.push(tabData);
+      } else if (['clinic_registration', 'clinics_management', 'visits', 'lines_areas'].includes(tab.id)) {
+        groups.clinical.items.push(tabData);
+      } else if (['integrated_financial', 'accounting', 'debt_collection_management'].includes(tab.id)) {
+        groups.financial.items.push(tabData);
+      } else if (['products', 'orders', 'warehouses'].includes(tab.id)) {
+        groups.inventory.items.push(tabData);
+      } else if (['analytics', 'activity_tracking'].includes(tab.id)) {
+        groups.analytics.items.push(tabData);
+      } else if (['users', 'system_management', 'excel_management'].includes(tab.id)) {
+        groups.system.items.push(tabData);
+      } else {
+        // Default to core for uncategorized items
+        groups.core.items.push(tabData);
+      }
+    });
+
+    // Remove empty groups
+    return Object.fromEntries(
+      Object.entries(groups).filter(([_, group]) => group.items.length > 0)
+    );
+  }, [availableTabs, language]);
+
+  const toggleSection = (sectionKey) => {
     setExpandedSections(prev => ({
       ...prev,
-      [sectionId]: !prev[sectionId]
+      [sectionKey]: !prev[sectionKey]
     }));
   };
-
-  // Auto-expand sections when sidebar is expanded
-  useEffect(() => {
-    if (!isCollapsed) {
-      const defaultExpanded = {};
-      Object.keys(navigationSections).forEach(sectionId => {
-        defaultExpanded[sectionId] = true;
-      });
-      setExpandedSections(defaultExpanded);
-    } else {
-      setExpandedSections({});
-    }
-  }, [isCollapsed]);
 
   return (
     <div className={`
