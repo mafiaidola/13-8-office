@@ -120,7 +120,11 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
   const handleDeleteUser = async (userId) => {
     const userToDelete = users.find(u => u.id === userId);
     
-    if (window.confirm(`هل أنت متأكد من حذف المستخدم: ${userToDelete?.full_name}؟`)) {
+    const confirmMessage = language === 'ar' 
+      ? `هل أنت متأكد من حذف المستخدم: ${userToDelete?.full_name}؟`
+      : `Are you sure you want to delete user: ${userToDelete?.full_name}?`;
+    
+    if (window.confirm(confirmMessage)) {
       try {
         const token = localStorage.getItem('access_token');
         const response = await axios.delete(`${API}/users/${userId}`, {
@@ -128,15 +132,18 @@ const UserManagement = ({ user, language = 'en', isRTL }) => {
         });
         
         if (response.data.success) {
-          alert('تم حذف المستخدم بنجاح');
+          const successMessage = language === 'ar' ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully';
+          alert(successMessage);
           loadUsers(); // Reload users list
         } else {
-          throw new Error(response.data.message || 'فشل في حذف المستخدم');
+          throw new Error(response.data.message || (language === 'ar' ? 'فشل في حذف المستخدم' : 'Failed to delete user'));
         }
       } catch (error) {
         console.error('Error deleting user:', error);
-        const errorMessage = error.response?.data?.detail || error.message || 'حدث خطأ أثناء حذف المستخدم';
-        alert(`خطأ في حذف المستخدم: ${errorMessage}`);
+        const errorMessage = error.response?.data?.detail || error.message || 
+          (language === 'ar' ? 'حدث خطأ أثناء حذف المستخدم' : 'An error occurred while deleting the user');
+        const errorPrefix = language === 'ar' ? 'خطأ في حذف المستخدم: ' : 'Error deleting user: ';
+        alert(`${errorPrefix}${errorMessage}`);
       }
     }
   };
