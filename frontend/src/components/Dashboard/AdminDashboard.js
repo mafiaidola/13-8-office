@@ -133,27 +133,27 @@ const AdminDashboard = ({
       color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
     },
     {
-      label: 'تقارير النظام',
+      label: t('system_reports'),
       icon: '📊📋',
-      onClick: () => console.log('تقارير النظام'),
+      onClick: () => console.log('System Reports'),
       color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
     },
     {
-      label: 'النسخ الاحتياطي',
+      label: t('backup'),
       icon: '💾🔒',
-      onClick: () => console.log('النسخ الاحتياطي'),
+      onClick: () => console.log('Backup'),
       color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
     },
     {
-      label: 'مراقبة النظام',
+      label: t('system_monitoring'),
       icon: '📈🔍',
       onClick: () => loadSystemHealth(),
       color: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200'
     },
     {
-      label: 'إعدادات متقدمة',
+      label: t('advanced_settings'),
       icon: '⚙️🎛️',
-      onClick: () => console.log('إعدادات متقدمة'),
+      onClick: () => console.log('Advanced Settings'),
       color: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
     }
   ];
