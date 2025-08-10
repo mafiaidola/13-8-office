@@ -389,7 +389,10 @@ const ModernSidebar = ({
                 {section.items.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => switchTab(item.id)}
+                    onClick={() => {
+                      console.log(`🎯 Navigating to tab: ${item.id} (${item.title})`);
+                      switchTab(item.id);
+                    }}
                     className={`
                       w-full flex items-center gap-3 px-4 py-3 text-right
                       transition-all duration-200 relative border-r-4 border-transparent
@@ -400,7 +403,16 @@ const ModernSidebar = ({
                       ${isCollapsed ? 'justify-center px-2' : ''}
                       group
                     `}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        switchTab(item.id);
+                      }
+                    }}
                     title={isCollapsed ? item.title : item.description}
+                    aria-label={`Navigate to ${item.title}`}
                   >
                     {/* Active indicator */}
                     {activeTab === item.id && !isCollapsed && (
