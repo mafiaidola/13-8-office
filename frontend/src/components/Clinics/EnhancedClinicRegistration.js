@@ -1208,26 +1208,62 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark' }) => {
     return classification ? classification.label : value;
   };
 
+  // Error boundary
+  if (componentError) {
+    return (
+      <GlobalError 
+        language={language}
+        error={componentError}
+        onRetry={() => {
+          setComponentError(null);
+          setLoading(false);
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg min-h-screen">
+    <div className={`
+      max-w-6xl mx-auto p-6 rounded-lg shadow-lg min-h-screen
+      ${isDark 
+        ? 'bg-gray-800 text-white' 
+        : 'bg-white text-gray-900'
+      }
+    `}>
       {/* العنوان الرئيسي المحسن */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4">
           <span className="text-3xl">🏥</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          تسجيل عيادة جديدة - نظام محسن
+        <h1 className={`
+          text-3xl font-bold mb-2
+          ${isDark ? 'text-white' : 'text-gray-900'}
+        `}>
+          {language === 'ar' 
+            ? 'تسجيل عيادة جديدة - نظام محسن'
+            : 'Enhanced Clinic Registration System'
+          }
         </h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة. 
-          النظام متكامل مع إدارة الخطوط والمناطق لضمان التوافق الكامل.
+        <p className={`
+          max-w-2xl mx-auto
+          ${isDark ? 'text-gray-300' : 'text-gray-600'}
+        `}>
+          {language === 'ar'
+            ? 'يرجى ملء جميع البيانات المطلوبة وتحديد موقع العيادة على الخريطة بدقة. النظام متكامل مع إدارة الخطوط والمناطق لضمان التوافق الكامل.'
+            : 'Please fill in all required information and accurately locate the clinic on the map. The system is integrated with line and area management for complete compatibility.'
+          }
         </p>
       </div>
 
       {/* شريط التقدم */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">مدى اكتمال النموذج</span>
+          <span className={`
+            text-sm font-medium
+            ${isDark ? 'text-gray-300' : 'text-gray-700'}
+          `}>
+            {language === 'ar' ? 'مدى اكتمال النموذج' : 'Form Completion Progress'}
+          </span>
           <span className="text-sm text-gray-500">{getFormCompletionPercentage()}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
