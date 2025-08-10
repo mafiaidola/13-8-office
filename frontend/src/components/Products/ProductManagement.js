@@ -150,8 +150,8 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       alert(tm('updateSuccess'));
     } catch (error) {
       console.error('❌ Error updating product:', error);
-      const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث المنتج';
-      alert(`خطأ في تحديث المنتج: ${errorMessage}`);
+      const errorMessage = error.response?.data?.detail || tc('error');
+      alert(`${tc('error')}: ${errorMessage}`);
     }
   };
 
