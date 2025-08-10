@@ -241,9 +241,20 @@ export const COMPONENT_REGISTRY = {
 
 // Component Renderer - عارض المكونات
 export const ComponentRenderer = ({ componentName, language = 'en', theme = 'dark', ...props }) => {
+  // Debug logging
+  console.log('🔍 ComponentRenderer called with:', {
+    componentName,
+    language,
+    theme,
+    availableComponents: Object.keys(COMPONENT_REGISTRY)
+  });
+
   const Component = COMPONENT_REGISTRY[componentName];
   
   if (!Component) {
+    console.warn('❌ Component not found:', componentName);
+    console.log('📋 Available components:', Object.keys(COMPONENT_REGISTRY));
+    
     // Translation system for error messages
     const t = (key) => {
       const translations = {
@@ -299,6 +310,7 @@ export const ComponentRenderer = ({ componentName, language = 'en', theme = 'dar
     );
   }
 
+  console.log('✅ Component found, rendering:', componentName);
   return <Component language={language} theme={theme} {...props} />;
 };
 
