@@ -32,14 +32,9 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
     fetchProducts();
     fetchLines();
     
-    // Log system access
-    activityLogger.logSystemAccess('إدارة المنتجات', {
-      previousSection: sessionStorage.getItem('previousSection') || '',
-      accessMethod: 'navigation',
-      canSeePrices: canSeePrices
-    });
+    console.log('📦 Product Management accessed by:', user?.role, user?.username);
     
-    sessionStorage.setItem('previousSection', 'إدارة المنتجات');
+    sessionStorage.setItem('previousSection', t('products', 'title'));
   }, []);
 
   const fetchLines = async () => {
