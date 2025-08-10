@@ -88,9 +88,9 @@ const AVAILABLE_THEMES = {
 
 // Theme Provider
 const ThemeProvider = ({ children }) => {
-  const [language, setLanguage] = useState('ar');
+  const [language, setLanguage] = useState('en');
   const [theme, setTheme] = useState('dark');
-  const [isRTL, setIsRTL] = useState(true);
+  const [isRTL, setIsRTL] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   useEffect(() => {
