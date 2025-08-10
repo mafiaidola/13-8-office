@@ -808,126 +808,40 @@ const useTheme = () => {
   return context;
 };
 
-// Login Component
+// Simplified Login Form
 const LoginForm = () => {
+  const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  const { login } = useAuth();
-  const { language } = useTheme();
-  const { t } = useTranslation(language);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔥 handleSubmit called - starting login process');
+    console.log('🔥 LoginForm handleSubmit called');
+    
+    if (!credentials.username.trim() || !credentials.password.trim()) {
+      setError('Please enter both username and password');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
-    console.log('🔑 بدء عملية تسجيل الدخول:', credentials.username);
-
-    // محاولة الحصول على الموقع الجغرافي مع معالجة محسنة
-    let geolocationData = null;
     try {
-      if (navigator.geolocation) {
-        console.log('📍 محاولة الحصول على الموقع الجغرافي...');
-        
-        await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            console.log('⏰ انتهت مهلة الحصول على الموقع، الاستمرار بدون موقع');
-            resolve();
-          }, 3000); // مهلة 3 ثوان فقط
-
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              clearTimeout(timeout);
-              geolocationData = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                timestamp: new Date().toISOString(),
-                city: "Unknown", // يمكن إضافة reverse geocoding لاحقاً
-                country: "Unknown",
-                address: "",
-                altitude: position.coords.altitude,
-                heading: position.coords.heading,
-                speed: position.coords.speed
-              };
-              
-              console.log('✅ تم الحصول على الموقع الجغرافي:', {
-                lat: geolocationData.latitude.toFixed(6),
-                lng: geolocationData.longitude.toFixed(6),
-                accuracy: Math.round(geolocationData.accuracy) + 'm'
-              });
-              resolve();
-            },
-            (error) => {
-              clearTimeout(timeout);
-              console.warn('⚠️ فشل في الحصول على الموقع الجغرافي:', {
-                code: error.code,
-                message: error.message,
-                permission_denied: error.code === 1,
-                position_unavailable: error.code === 2,
-                timeout: error.code === 3
-              });
-              resolve(); // نستمر حتى لو فشل الحصول على الموقع
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 2500,
-              maximumAge: 30000
-            }
-          );
-        });
+      console.log('🔄 Calling login function...');
+      const result = await login(credentials);
+      
+      if (result.success) {
+        console.log('✅ Login successful!');
+        // State update is handled by AuthProvider
       } else {
-        console.warn('⚠️ المتصفح لا يدعم تحديد الموقع الجغرافي');
+        console.error('❌ Login failed:', result.error);
+        setError(result.error);
       }
     } catch (error) {
-      console.warn('⚠️ خطأ في معالجة الموقع الجغرافي:', error.message);
-    }
-
-    // جمع معلومات إضافية عن الجلسة
-    const sessionInfo = {
-      user_agent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform,
-      screen_resolution: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      connection_type: navigator.connection ? navigator.connection.effectiveType : 'unknown'
-    };
-
-    // إضافة معلومات شاملة للطلب
-    const enhancedCredentials = {
-      ...credentials,
-      geolocation: geolocationData,
-      device_info: navigator.userAgent,
-      ip_address: "Unknown", // سيتم الحصول عليه من الخادم
-      login_timestamp: new Date().toISOString(),
-      session_info: sessionInfo,
-      browser_features: {
-        cookies_enabled: navigator.cookieEnabled,
-        java_enabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
-        online: navigator.onLine,
-        touch_support: 'ontouchstart' in window
-      }
-    };
-    
-    console.log('📤 إرسال بيانات تسجيل الدخول:', {
-      username: enhancedCredentials.username,
-      has_geolocation: !!geolocationData,
-      device_info: enhancedCredentials.device_info.substring(0, 50) + '...'
-    });
-    
-    const result = await login(enhancedCredentials);
-    
-    if (result.success) {
-      console.log('✅ نجح تسجيل الدخول، سيتم توجيهك للوحة التحكم');
-      setLoading(false);
-      // The authentication state is already set in the login function
-      // No need for additional timeouts or reloads
-    } else {
-      console.error('❌ فشل تسجيل الدخول:', result.error);
-      setError(result.error);
+      console.error('❌ Login exception:', error);
+      setError('Login failed. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -937,84 +851,64 @@ const LoginForm = () => {
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl border border-white/20">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-3xl">🏥</span>
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+            <span className="text-2xl text-white">🏥</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">نظام الإدارة الطبية المتكامل</h1>
-          <p className="text-white/70">
-            {language === 'ar' ? 'نظام إدارة شامل للمؤسسات الطبية والصيدليات' : 'Comprehensive Medical & Pharmaceutical Management System'}
+          <h1 className="text-2xl font-bold text-white mb-2">
+            نظام الإدارة الطبية المتكامل
+          </h1>
+          <p className="text-white/70 text-sm">
+            Comprehensive Medical & Pharmaceutical Management System
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-200 text-sm">
-              {error}
-            </div>
-          )}
-
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
-              {t('auth', 'username')}
+              Username
             </label>
             <input
               type="text"
               name="username"
-              id="username"
               value={credentials.username}
-              onChange={(e) => {
-                setCredentials(prev => ({ ...prev, username: e.target.value }));
-              }}
+              onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('auth', 'username')}
+              placeholder="Username"
               required
+              disabled={loading}
             />
           </div>
 
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
-              {t('auth', 'password')}
+              Password
             </label>
             <input
               type="password"
               name="password"
-              id="password"
               value={credentials.password}
-              onChange={(e) => {
-                setCredentials(prev => ({ ...prev, password: e.target.value }));
-              }}
+              onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={t('auth', 'password')}
+              placeholder="Password"
               required
+              disabled={loading}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
-            onClick={async (e) => {
-              e.preventDefault();
-              console.log('🔥 Login button clicked directly!');
-              setLoading(true);
-              setError('');
-              
-              const result = await login({
-                username: credentials.username,
-                password: credentials.password
-              });
-              
-              if (result.success) {
-                console.log('✅ Login successful!');
-              } else {
-                console.error('❌ Login failed:', result.error);
-                setError(result.error);
-              }
-              setLoading(false);
-            }}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? t('common', 'loading') : t('auth', 'login')}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
