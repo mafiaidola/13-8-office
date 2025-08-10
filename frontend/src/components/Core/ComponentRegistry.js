@@ -293,26 +293,66 @@ export const COMPONENT_REGISTRY = {
 };
 
 // Component Renderer - عارض المكونات
-export const ComponentRenderer = ({ componentName, ...props }) => {
+export const ComponentRenderer = ({ componentName, language = 'en', theme = 'dark', ...props }) => {
   const Component = COMPONENT_REGISTRY[componentName];
   
   if (!Component) {
+    // Translation system for error messages
+    const t = (key) => {
+      const translations = {
+        ar: {
+          componentNotFound: 'مكون غير موجود',
+          componentNotRegistered: 'المكون "{componentName}" غير مسجل في النظام',
+          availableComponents: 'المكونات المتاحة:',
+          defaultComponentUsed: 'تم استخدام مكون افتراضي لعرض المحتوى'
+        },
+        en: {
+          componentNotFound: 'Component Not Found',
+          componentNotRegistered: 'Component "{componentName}" is not registered in the system',
+          availableComponents: 'Available components:',
+          defaultComponentUsed: 'Default component is being used to display content'
+        }
+      };
+      return translations[language]?.[key]?.replace('{componentName}', componentName) || translations['en'][key]?.replace('{componentName}', componentName) || key;
+    };
+
+    // Theme-based styling
+    const isDark = theme === 'dark';
+    const errorStyles = {
+      container: isDark 
+        ? 'p-8 text-center bg-gray-900 text-white rounded-lg border border-gray-700' 
+        : 'p-8 text-center bg-white text-gray-900 rounded-lg border border-gray-200',
+      icon: 'text-yellow-500 text-6xl mb-4',
+      title: isDark 
+        ? 'text-xl font-bold text-yellow-400 mb-2' 
+        : 'text-xl font-bold text-yellow-600 mb-2',
+      description: isDark 
+        ? 'text-gray-300' 
+        : 'text-gray-600',
+      info: isDark 
+        ? 'mt-4 text-sm text-gray-400' 
+        : 'mt-4 text-sm text-gray-500',
+      box: isDark 
+        ? 'mt-4 p-4 bg-gray-800 rounded-lg border border-gray-700' 
+        : 'mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200'
+    };
+
     return (
-      <div className="p-8 text-center">
-        <div className="text-yellow-600 text-6xl mb-4">❓</div>
-        <h3 className="text-xl font-bold text-yellow-600 mb-2">مكون غير موجود</h3>
-        <p className="text-gray-600">المكون "{componentName}" غير مسجل في النظام</p>
-        <div className="mt-4 text-sm text-gray-500">
-          المكونات المتاحة: {Object.keys(COMPONENT_REGISTRY).join(', ')}
+      <div className={errorStyles.container}>
+        <div className={errorStyles.icon}>❓</div>
+        <h3 className={errorStyles.title}>{t('componentNotFound')}</h3>
+        <p className={errorStyles.description}>{t('componentNotRegistered')}</p>
+        <div className={errorStyles.info}>
+          {t('availableComponents')} {Object.keys(COMPONENT_REGISTRY).join(', ')}
         </div>
-        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm">تم استخدام مكون افتراضي لعرض المحتوى</p>
+        <div className={errorStyles.box}>
+          <p className="text-sm">{t('defaultComponentUsed')}</p>
         </div>
       </div>
     );
   }
 
-  return <Component {...props} />;
+  return <Component language={language} theme={theme} {...props} />;
 };
 
 // Component Preloader - محمل المكونات المسبق
