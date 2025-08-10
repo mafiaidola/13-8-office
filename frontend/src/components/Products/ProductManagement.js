@@ -145,25 +145,9 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
       
       console.log('✅ Product updated successfully:', response.data);
       
-      // تسجيل النشاط
-      await activityLogger.logProductUpdate(
-        productId,
-        currentProduct?.name || productData.name,
-        {
-          old_price: currentProduct?.price,
-          new_price: productData.price,
-          old_unit: currentProduct?.unit,
-          new_unit: productData.unit,
-          changeReason: 'تحديث يدوي من واجهة الإدارة',
-          updateType: 'manual_update',
-          updated_fields: Object.keys(productData),
-          updated_by_role: user?.role
-        }
-      );
-      
       fetchProducts();
       setShowProductModal(false);
-      alert('تم تحديث المنتج بنجاح');
+      alert(tm('updateSuccess'));
     } catch (error) {
       console.error('❌ Error updating product:', error);
       const errorMessage = error.response?.data?.detail || 'حدث خطأ أثناء تحديث المنتج';
