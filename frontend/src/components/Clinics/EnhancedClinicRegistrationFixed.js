@@ -64,7 +64,21 @@ const EnhancedClinicRegistration = ({ language = 'en', theme = 'dark', user }) =
   // Load form options
   useEffect(() => {
     loadFormOptions();
-  }, []);
+    return () => {
+      // Cleanup GPS watch if active
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
+
+  // Initialize Google Maps when available
+  useEffect(() => {
+    if (window.google && !mapLoaded) {
+      initializeGoogleMaps();
+      setMapLoaded(true);
+    }
+  }, [mapLoaded]);
 
   const loadFormOptions = async () => {
     try {
