@@ -53,10 +53,40 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
     loadUsers();
   }, []);
 
-  // Check user permissions
-  const canViewAllVisits = () => {
+  // Check if user is admin to view visit details
+  const canViewVisitDetails = () => {
     const role = user?.role?.toLowerCase();
-    return ['admin', 'gm', 'line_manager', 'area_manager'].includes(role);
+    return ['admin', 'gm'].includes(role);
+  };
+
+  // Handle view visit details (admin only)
+  const handleViewVisitDetails = async (visit) => {
+    if (!canViewVisitDetails()) {
+      alert('ليس لديك صلاحية لعرض تفاصيل الزيارة');
+      return;
+    }
+
+    try {
+      console.log('🔍 جاري جلب تفاصيل الزيارة:', visit.id);
+      const token = localStorage.getItem('access_token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Get full visit details including representative location
+      const response = await axios.get(`${API_BASE}/visits/${visit.id}/details`, { headers });
+      
+      if (response.data.success) {
+        setSelectedVisitDetails(response.data.visit);
+        setShowVisitDetails(true);
+      } else {
+        // Use basic visit data if detailed endpoint not available
+        setSelectedVisitDetails(visit);
+        setShowVisitDetails(true);
+      }
+    } catch (error) {
+      console.warn('⚠️ استخدام البيانات الأساسية للزيارة:', error.message);
+      setSelectedVisitDetails(visit);
+      setShowVisitDetails(true);
+    }
   };
 
   const canCreateVisits = () => {
