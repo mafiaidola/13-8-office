@@ -581,5 +581,161 @@ async def create_clinic(clinic_data: dict, current_user: dict = Depends(get_curr
         print(f"❌ خطأ في تسجيل العيادة: {str(e)}")
         raise HTTPException(status_code=500, detail=f"خطأ في حفظ بيانات العيادة: {str(e)}")
 
+# ============================================================================
+# PAYMENT MANAGEMENT ENDPOINTS - نظام إدارة المدفوعات
+# ============================================================================
+
+@app.get("/api/payments")
+async def get_payments(current_user: dict = Depends(get_current_user)):
+    """Get all payments - إدراج جميع المدفوعات"""
+    try:
+        # Get payments from database
+        payments = []
+        cursor = db.payments.find({}, {"_id": 0}).sort("payment_date", -1)
+        async for payment in cursor:
+            payments.append(payment)
+        
+        return payments
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching payments: {str(e)}")
+
+@app.post("/api/payments/process")
+async def process_payment(payment_data: dict, current_user: dict = Depends(get_current_user)):
+    """Process a payment for a debt - معالجة دفعة لدين"""
+    try:
+        debt_id = payment_data.get("debt_id")
+        payment_amount = float(payment_data.get("payment_amount", 0))
+        payment_method = payment_data.get("payment_method", "cash")
+        payment_notes = payment_data.get("payment_notes", "")
+        
+        if not debt_id or payment_amount <= 0:
+            raise HTTPException(status_code=400, detail="معرف الدين ومبلغ الدفع مطلوبان")
+        
+        # Find the debt
+        debt = await db.debts.find_one({"id": debt_id})
+        if not debt:
+            raise HTTPException(status_code=404, detail="الدين غير موجود")
+        
+        current_remaining = float(debt.get("remaining_amount", 0))
+        if payment_amount > current_remaining:
+            raise HTTPException(status_code=400, detail="مبلغ الدفع أكبر من المبلغ المتبقي")
+        
+        # Create payment record
+        payment_id = str(uuid.uuid4())
+        payment_record = {
+            "id": payment_id,
+            "debt_id": debt_id,
+            "clinic_id": debt.get("clinic_id", ""),
+            "clinic_name": debt.get("clinic_name", ""),
+            "payment_amount": payment_amount,
+            "payment_method": payment_method,
+            "payment_date": datetime.utcnow().isoformat(),
+            "payment_notes": payment_notes,
+            "processed_by": current_user.get("user_id", ""),
+            "processor_name": current_user.get("full_name", current_user.get("username", "")),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        # Insert payment record
+        await db.payments.insert_one(payment_record)
+        
+        # Update debt
+        new_remaining = current_remaining - payment_amount
+        debt_status = "paid" if new_remaining == 0 else "partially_paid"
+        
+        await db.debts.update_one(
+            {"id": debt_id},
+            {
+                "$set": {
+                    "remaining_amount": new_remaining,
+                    "status": debt_status,
+                    "last_payment_date": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.utcnow().isoformat()
+                }
+            }
+        )
+        
+        # Create activity log
+        activity_record = {
+            "_id": str(uuid.uuid4()),
+            "activity_type": "payment_processed",
+            "description": f"معالجة دفعة بمبلغ {payment_amount} ج.م للعيادة {debt.get('clinic_name', 'Unknown')}",
+            "user_id": current_user.get("user_id", ""),
+            "user_name": current_user.get("full_name", current_user.get("username", "")),
+            "user_role": current_user.get("role", ""),
+            "details": f"الدين: {debt_id} - المبلغ المدفوع: {payment_amount} ج.م - المتبقي: {new_remaining} ج.م",
+            "payment_id": payment_id,
+            "debt_id": debt_id,
+            "amount": payment_amount,
+            "timestamp": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        try:
+            await db.activities.insert_one(activity_record)
+        except Exception as activity_error:
+            print(f"⚠️ خطأ في تسجيل نشاط المدفوعات: {activity_error}")
+        
+        return {
+            "success": True,
+            "message": f"تم معالجة الدفعة بنجاح - المبلغ: {payment_amount} ج.م",
+            "payment_id": payment_id,
+            "debt_id": debt_id,
+            "new_remaining_amount": new_remaining,
+            "debt_status": debt_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ خطأ في معالجة الدفعة: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"خطأ في معالجة الدفعة: {str(e)}")
+
+@app.get("/api/payments/statistics")
+async def get_payment_statistics(current_user: dict = Depends(get_current_user)):
+    """Get payment statistics - إحصائيات المدفوعات"""
+    try:
+        # Calculate payment statistics
+        total_payments = await db.payments.count_documents({})
+        
+        # Calculate total amount paid
+        pipeline = [
+            {
+                "$group": {
+                    "_id": None,
+                    "total_amount_paid": {"$sum": "$payment_amount"},
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        
+        result = await db.payments.aggregate(pipeline).to_list(1)
+        total_amount_paid = result[0]["total_amount_paid"] if result else 0
+        
+        # Get payment methods distribution
+        methods_pipeline = [
+            {
+                "$group": {
+                    "_id": "$payment_method",
+                    "count": {"$sum": 1},
+                    "amount": {"$sum": "$payment_amount"}
+                }
+            }
+        ]
+        
+        methods_result = await db.payments.aggregate(methods_pipeline).to_list(10)
+        payment_methods = {method["_id"]: {"count": method["count"], "amount": method["amount"]} for method in methods_result}
+        
+        return {
+            "total_payments": total_payments,
+            "total_amount_paid": total_amount_paid,
+            "payment_methods": payment_methods,
+            "average_payment": round(total_amount_paid / total_payments, 2) if total_payments > 0 else 0
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching payment statistics: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
