@@ -189,40 +189,38 @@ class VisitsManagementQuickTest:
             return False
     
     async def test_visits_statistics_endpoint(self):
-        """اختبار 4: GET /api/visits/statistics - إحصائيات الزيارات"""
-        print("\n📈 اختبار 4: GET /api/visits/statistics - إحصائيات الزيارات")
+        """اختبار 4: GET /api/visits/stats/representatives - إحصائيات الزيارات"""
+        print("\n📈 اختبار 4: GET /api/visits/stats/representatives - إحصائيات الزيارات")
         
-        result = await self.make_request('GET', '/visits/statistics')
+        result = await self.make_request('GET', '/visits/stats/representatives')
         
         if result['success']:
             stats_data = result['data']
-            if isinstance(stats_data, dict):
-                # استخراج الإحصائيات الأساسية
-                total_visits = stats_data.get('total_visits', 0)
-                success_rate = stats_data.get('success_rate', 0)
-                average_duration = stats_data.get('average_duration', 0)
+            if isinstance(stats_data, dict) and 'representatives_stats' in stats_data:
+                reps_stats = stats_data['representatives_stats']
+                reps_count = len(reps_stats)
                 
-                details = f"إحصائيات الزيارات متاحة - إجمالي: {total_visits}, معدل النجاح: {success_rate}%, متوسط المدة: {average_duration} دقيقة"
-                self.log_test_result("GET /api/visits/statistics", True, details, result['response_time'])
+                details = f"إحصائيات المناديب متاحة - عدد المناديب: {reps_count}"
+                self.log_test_result("GET /api/visits/stats/representatives", True, details, result['response_time'])
                 
                 # عرض إحصائيات إضافية
-                if 'monthly_stats' in stats_data:
-                    monthly_data = stats_data['monthly_stats']
-                    print(f"   📅 إحصائيات شهرية متاحة: {len(monthly_data)} شهر")
+                if reps_count > 0:
+                    sample_rep = reps_stats[0]
+                    rep_details = f"مثال مندوب: {sample_rep.get('representative_name', 'N/A')}, الزيارات: {sample_rep.get('total_visits', 0)}, معدل الإنجاز: {sample_rep.get('completion_rate', 0):.1f}%"
+                    print(f"   👤 {rep_details}")
                 
-                if 'rep_performance' in stats_data:
-                    rep_count = len(stats_data['rep_performance'])
-                    print(f"   👥 أداء المناديب: {rep_count} مندوب")
+                time_filter = stats_data.get('time_filter', 'month')
+                print(f"   📅 فترة الإحصائيات: {time_filter}")
                     
                 return True
             else:
                 details = f"تنسيق بيانات الإحصائيات غير متوقع - نوع البيانات: {type(stats_data)}"
-                self.log_test_result("GET /api/visits/statistics", False, details, result['response_time'])
+                self.log_test_result("GET /api/visits/stats/representatives", False, details, result['response_time'])
                 return False
         else:
             error_msg = result['data'].get('detail', 'Unknown error') if isinstance(result['data'], dict) else str(result['data'])
             details = f"فشل في جلب إحصائيات الزيارات - HTTP {result['status_code']}: {error_msg}"
-            self.log_test_result("GET /api/visits/statistics", False, details, result['response_time'])
+            self.log_test_result("GET /api/visits/stats/representatives", False, details, result['response_time'])
             return False
     
     async def test_additional_visits_endpoints(self):
