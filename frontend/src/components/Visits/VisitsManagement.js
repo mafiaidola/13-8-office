@@ -117,7 +117,7 @@ const VisitsManagement = () => {
         return;
       }
 
-      const response = await axios.post(`${API_BASE}/api/visits/`, {
+      const response = await axios.post(`${API_BASE}/visits/`, {
         ...newVisit,
         scheduled_date: new Date(newVisit.scheduled_date).toISOString()
       }, {
