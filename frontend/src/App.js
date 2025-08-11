@@ -21,7 +21,7 @@ import {
   normalizeRole 
 } from './config/systemConfig.js';
 import NavigationSystem from './components/Navigation/NavigationSystem.js';
-import { ComponentRenderer, ComponentRegistry } from './components/Core/ComponentRegistry.js';
+import { renderComponent } from './components/Core/ComponentRegistry.js';
 import { useTranslation } from './localization/translations.js';
 
 // Integrated Financial System
