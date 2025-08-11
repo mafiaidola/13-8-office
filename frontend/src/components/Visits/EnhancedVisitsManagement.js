@@ -153,21 +153,36 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
     try {
       console.log('🔍 بدء تحميل العيادات الحقيقية من قاعدة البيانات...');
       const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        console.error('❌ لا يوجد JWT token - المستخدم غير مسجل دخول');
+        return;
+      }
+      
       const headers = { Authorization: `Bearer ${token}` };
+      console.log('🔑 تم استخدام JWT token للمصادقة');
       
       const response = await axios.get(`${API_BASE}/clinics`, { headers });
-      console.log('📊 استجابة العيادات:', response.data);
+      console.log('📊 استجابة العيادات الكاملة:', response);
+      console.log('📊 بيانات العيادات:', response.data);
       
       // Handle only REAL database data - no dummy/fake data allowed
       let realClinicsData = [];
       
       if (response.data && Array.isArray(response.data)) {
         realClinicsData = response.data;
+        console.log('✅ البيانات في تنسيق array مباشر');
       } else if (response.data && response.data.success && Array.isArray(response.data.clinics)) {
         realClinicsData = response.data.clinics;
+        console.log('✅ البيانات في تنسيق success wrapper');
       } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
         realClinicsData = response.data.data;
+        console.log('✅ البيانات في تنسيق data wrapper');
+      } else {
+        console.error('❌ تنسيق غير متوقع للاستجابة:', response.data);
       }
+      
+      console.log(`📈 تم العثور على ${realClinicsData.length} عيادة خام من API`);
       
       // Filter ONLY valid clinics from the real database (active or pending)
       const validClinics = realClinicsData.filter(clinic => {
@@ -176,6 +191,13 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
         const hasId = clinic.id && clinic.id.trim() !== '';
         const hasName = (clinic.name && clinic.name.trim() !== '') || 
                        (clinic.clinic_name && clinic.clinic_name.trim() !== '');
+        
+        console.log(`🔍 فحص العيادة: ${clinic.name || clinic.clinic_name} - `, {
+          hasValidStatus, hasId, hasName,
+          id: clinic.id,
+          is_active: clinic.is_active
+        });
+        
         return hasValidStatus && hasId && hasName;
       });
       
@@ -204,6 +226,8 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
         registered_by: clinic.registered_by
       }));
       
+      console.log('🏥 العيادات المعالجة النهائية:', processedClinics);
+      
       setAvailableClinics(processedClinics);
       
       if (processedClinics.length === 0) {
@@ -217,6 +241,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       
     } catch (error) {
       console.error('❌ خطأ في تحميل العيادات الحقيقية:', error);
+      console.error('❌ تفاصيل الخطأ:', error.response?.data || error.message);
       // Don't create fallback fake data - show empty state instead
       setAvailableClinics([]);
     }
