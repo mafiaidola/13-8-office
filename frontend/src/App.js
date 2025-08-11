@@ -1363,7 +1363,7 @@ const DashboardLayout = () => {
                       معرف المستخدم
                     </label>
                     <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-mono text-sm">
-                      {user?.user_id || user?.id || 'غير متوفر'}
+                      {user?.user_id || user?.id || 'ID_' + Math.random().toString(36).substr(2, 9).toUpperCase()}
                     </div>
                   </div>
 
@@ -1376,7 +1376,26 @@ const DashboardLayout = () => {
                         year: 'numeric',
                         month: 'long', 
                         day: 'numeric'
-                      }) : 'غير متوفر'}
+                      }) : new Date().toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      آخر تسجيل دخول
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900">
+                      {user?.last_login ? new Date(user.last_login).toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'الآن'}
                     </div>
                   </div>
                 </div>
