@@ -1,5 +1,467 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لنظام تتبع الأنشطة المحسن بعد إصلاح مشكلة Mixed Content Security Error
+Comprehensive Enhanced Activity Tracking System Testing After Mixed Content Security Error Fix
+"""
+
+import asyncio
+import aiohttp
+import json
+import time
+from datetime import datetime
+import uuid
+
+# Configuration
+BACKEND_URL = "https://a41c2fca-1f1f-4701-a590-4467215de5fe.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
+
+class EnhancedActivitySystemTester:
+    def __init__(self):
+        self.session = None
+        self.jwt_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    async def setup_session(self):
+        """إعداد جلسة HTTP"""
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=30),
+            headers={'Content-Type': 'application/json'}
+        )
+        
+    async def cleanup_session(self):
+        """تنظيف الجلسة"""
+        if self.session:
+            await self.session.close()
+            
+    def log_test_result(self, test_name: str, success: bool, response_time: float, details: str = ""):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "response_time_ms": round(response_time * 1000, 2),
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {details} ({result['response_time_ms']}ms)")
+        
+    async def test_admin_login_with_geolocation(self):
+        """اختبار تسجيل الدخول مع البيانات الجغرافية"""
+        test_start = time.time()
+        
+        try:
+            # إعداد بيانات تسجيل الدخول مع معلومات جغرافية شاملة
+            login_data = {
+                "username": "admin",
+                "password": "admin123",
+                "geolocation": {
+                    "latitude": 30.0444,
+                    "longitude": 31.2357,
+                    "accuracy": 10,
+                    "timestamp": datetime.now().isoformat(),
+                    "city": "القاهرة",
+                    "country": "مصر",
+                    "address": "وسط البلد، القاهرة، مصر"
+                },
+                "device_info": "Chrome 120.0.0.0 on Windows 10",
+                "ip_address": "156.160.45.123"
+            }
+            
+            async with self.session.post(f"{API_BASE}/auth/login", json=login_data) as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    self.jwt_token = data.get("access_token")
+                    user_info = data.get("user", {})
+                    
+                    details = f"المستخدم: {user_info.get('full_name', 'Unknown')}, الدور: {user_info.get('role', 'Unknown')}"
+                    self.log_test_result("تسجيل الدخول مع البيانات الجغرافية", True, response_time, details)
+                    
+                    # تحديث headers للطلبات القادمة
+                    self.session.headers.update({"Authorization": f"Bearer {self.jwt_token}"})
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("تسجيل الدخول مع البيانات الجغرافية", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("تسجيل الدخول مع البيانات الجغرافية", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_enhanced_activity_routes(self):
+        """اختبار Enhanced Activity Routes الجديدة"""
+        if not self.jwt_token:
+            print("❌ لا يوجد JWT token - تخطي اختبار Enhanced Activity Routes")
+            return False
+            
+        success_count = 0
+        total_tests = 4
+        
+        # 1. اختبار POST /api/activities/record
+        if await self.test_record_new_activity():
+            success_count += 1
+        
+        # 2. اختبار GET /api/activities
+        if await self.test_get_activities():
+            success_count += 1
+            
+        # 3. اختبار GET /api/activities/stats
+        if await self.test_get_activity_stats():
+            success_count += 1
+            
+        # 4. اختبار GET /api/activities/user/{user_id}
+        if await self.test_get_user_activities():
+            success_count += 1
+            
+        return success_count >= 3  # نجاح إذا نجح 3 من 4 اختبارات
+        
+    async def test_record_new_activity(self):
+        """اختبار تسجيل نشاط جديد"""
+        test_start = time.time()
+        
+        try:
+            activity_data = {
+                "activity_type": "system_test",
+                "description": "اختبار تسجيل نشاط جديد من النظام المحسن",
+                "user_id": "admin-001",
+                "details": "اختبار شامل لنظام الأنشطة المحسن",
+                "geolocation": {
+                    "latitude": 30.0444,
+                    "longitude": 31.2357,
+                    "city": "القاهرة",
+                    "country": "مصر"
+                },
+                "device_info": "Test Chrome Browser",
+                "ip_address": "156.160.45.123"
+            }
+            
+            async with self.session.post(f"{API_BASE}/activities/record", json=activity_data) as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    activity_id = data.get("activity_id", "Unknown")
+                    details = f"Activity ID: {activity_id}, تم تسجيل النشاط بنجاح"
+                    self.log_test_result("POST /api/activities/record", True, response_time, details)
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("POST /api/activities/record", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("POST /api/activities/record", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_get_activities(self):
+        """اختبار جلب قائمة الأنشطة"""
+        test_start = time.time()
+        
+        try:
+            async with self.session.get(f"{API_BASE}/activities") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    activities = data.get("activities", []) if isinstance(data, dict) else data
+                    count = len(activities) if isinstance(activities, list) else 0
+                    details = f"عدد الأنشطة: {count}"
+                    self.log_test_result("GET /api/activities", True, response_time, details)
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("GET /api/activities", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("GET /api/activities", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_get_activity_stats(self):
+        """اختبار إحصائيات الأنشطة"""
+        test_start = time.time()
+        
+        try:
+            async with self.session.get(f"{API_BASE}/activities/stats") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    total = data.get("total_activities", 0)
+                    recent = data.get("recent_activities", 0)
+                    types = data.get("activity_types_count", 0)
+                    details = f"إجمالي: {total}, حديثة: {recent}, أنواع: {types}"
+                    self.log_test_result("GET /api/activities/stats", True, response_time, details)
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("GET /api/activities/stats", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("GET /api/activities/stats", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_get_user_activities(self):
+        """اختبار أنشطة مستخدم محدد"""
+        test_start = time.time()
+        
+        try:
+            user_id = "admin"  # استخدام admin كمستخدم للاختبار
+            async with self.session.get(f"{API_BASE}/activities/user/{user_id}") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    activities = data.get("activities", []) if isinstance(data, dict) else data
+                    count = len(activities) if isinstance(activities, list) else 0
+                    details = f"أنشطة المستخدم {user_id}: {count}"
+                    self.log_test_result("GET /api/activities/user/{user_id}", True, response_time, details)
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("GET /api/activities/user/{user_id}", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("GET /api/activities/user/{user_id}", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_automatic_login_activity_logging(self):
+        """اختبار تسجيل نشاط الدخول التلقائي"""
+        test_start = time.time()
+        
+        try:
+            # فحص أن نشاط تسجيل الدخول تم حفظه تلقائياً
+            async with self.session.get(f"{API_BASE}/activities?activity_type=login&limit=5") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    activities = data.get("activities", []) if isinstance(data, dict) else data
+                    
+                    # البحث عن نشاط تسجيل الدخول الأخير
+                    login_activities = []
+                    if isinstance(activities, list):
+                        login_activities = [a for a in activities if a.get("activity_type") == "login"]
+                    
+                    if login_activities:
+                        latest_login = login_activities[0]
+                        has_geolocation = bool(latest_login.get("geolocation"))
+                        has_device_info = bool(latest_login.get("device_info"))
+                        has_ip = bool(latest_login.get("ip_address"))
+                        
+                        details = f"تم العثور على {len(login_activities)} نشاط دخول، الموقع: {has_geolocation}, الجهاز: {has_device_info}, IP: {has_ip}"
+                        self.log_test_result("تسجيل نشاط الدخول التلقائي", True, response_time, details)
+                        return True
+                    else:
+                        self.log_test_result("تسجيل نشاط الدخول التلقائي", False, response_time, "لم يتم العثور على أنشطة تسجيل دخول")
+                        return False
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("تسجيل نشاط الدخول التلقائي", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("تسجيل نشاط الدخول التلقائي", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_geographic_data_quality(self):
+        """فحص جودة البيانات الجغرافية"""
+        test_start = time.time()
+        
+        try:
+            # جلب الأنشطة الحديثة للفحص
+            async with self.session.get(f"{API_BASE}/activities?limit=10") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    activities = data.get("activities", []) if isinstance(data, dict) else data
+                    
+                    if not isinstance(activities, list):
+                        self.log_test_result("فحص جودة البيانات الجغرافية", False, response_time, "تنسيق البيانات غير صحيح")
+                        return False
+                    
+                    quality_checks = {
+                        "total_activities": len(activities),
+                        "with_geolocation": 0,
+                        "with_ip_address": 0,
+                        "with_device_info": 0,
+                        "with_timestamps": 0,
+                        "with_location_details": 0
+                    }
+                    
+                    for activity in activities:
+                        if activity.get("geolocation"):
+                            quality_checks["with_geolocation"] += 1
+                            geo = activity["geolocation"]
+                            if geo.get("city") and geo.get("country"):
+                                quality_checks["with_location_details"] += 1
+                                
+                        if activity.get("ip_address"):
+                            quality_checks["with_ip_address"] += 1
+                            
+                        if activity.get("device_info"):
+                            quality_checks["with_device_info"] += 1
+                            
+                        if activity.get("timestamp") or activity.get("created_at"):
+                            quality_checks["with_timestamps"] += 1
+                    
+                    # حساب نسب الجودة
+                    total = quality_checks["total_activities"]
+                    if total > 0:
+                        geo_percentage = (quality_checks["with_geolocation"] / total) * 100
+                        ip_percentage = (quality_checks["with_ip_address"] / total) * 100
+                        device_percentage = (quality_checks["with_device_info"] / total) * 100
+                        
+                        details = f"إجمالي: {total}, موقع جغرافي: {geo_percentage:.1f}%, IP: {ip_percentage:.1f}%, جهاز: {device_percentage:.1f}%"
+                        
+                        # اعتبار الاختبار ناجح إذا كان 70% من الأنشطة تحتوي على بيانات جغرافية
+                        success = geo_percentage >= 70 or total == 0
+                        self.log_test_result("فحص جودة البيانات الجغرافية", success, response_time, details)
+                        return success
+                    else:
+                        self.log_test_result("فحص جودة البيانات الجغرافية", True, response_time, "لا توجد أنشطة للفحص")
+                        return True
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("فحص جودة البيانات الجغرافية", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("فحص جودة البيانات الجغرافية", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_database_integration(self):
+        """اختبار التكامل مع قاعدة البيانات"""
+        test_start = time.time()
+        
+        try:
+            # اختبار الاتصال بقاعدة البيانات من خلال health endpoint
+            async with self.session.get(f"{API_BASE}/health") as response:
+                response_time = time.time() - test_start
+                
+                if response.status == 200:
+                    data = await response.json()
+                    db_status = data.get("database", "unknown")
+                    enhanced_routes = data.get("enhanced_routes", False)
+                    stats = data.get("statistics", {})
+                    
+                    details = f"قاعدة البيانات: {db_status}, المسارات المحسنة: {enhanced_routes}, إحصائيات متاحة: {bool(stats)}"
+                    success = db_status == "connected"
+                    self.log_test_result("اختبار التكامل مع قاعدة البيانات", success, response_time, details)
+                    return success
+                else:
+                    error_text = await response.text()
+                    self.log_test_result("اختبار التكامل مع قاعدة البيانات", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = time.time() - test_start
+            self.log_test_result("اختبار التكامل مع قاعدة البيانات", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء اختبار شامل لنظام تتبع الأنشطة المحسن بعد إصلاح مشكلة Mixed Content Security Error")
+        print("=" * 100)
+        
+        await self.setup_session()
+        
+        try:
+            # المرحلة 1: تسجيل الدخول مع البيانات الجغرافية
+            print("\n📍 المرحلة 1: تسجيل الدخول والنشاط التلقائي")
+            login_success = await self.test_admin_login_with_geolocation()
+            
+            if not login_success:
+                print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+                return
+                
+            # المرحلة 2: اختبار Enhanced Activity Routes
+            print("\n🔄 المرحلة 2: Enhanced Activity Routes الجديدة")
+            await self.test_enhanced_activity_routes()
+            
+            # المرحلة 3: اختبار تسجيل النشاط التلقائي
+            print("\n📝 المرحلة 3: تسجيل الأنشطة مع المعلومات الجغرافية")
+            await self.test_automatic_login_activity_logging()
+            
+            # المرحلة 4: فحص جودة البيانات
+            print("\n🔍 المرحلة 4: فحص جودة البيانات")
+            await self.test_geographic_data_quality()
+            
+            # المرحلة 5: اختبار التكامل مع قاعدة البيانات
+            print("\n💾 المرحلة 5: التكامل مع قاعدة البيانات")
+            await self.test_database_integration()
+            
+        finally:
+            await self.cleanup_session()
+            
+        # عرض النتائج النهائية
+        self.display_final_results()
+        
+    def display_final_results(self):
+        """عرض النتائج النهائية"""
+        print("\n" + "=" * 100)
+        print("📊 النتائج النهائية لاختبار نظام تتبع الأنشطة المحسن")
+        print("=" * 100)
+        
+        successful_tests = [r for r in self.test_results if r["success"]]
+        failed_tests = [r for r in self.test_results if not r["success"]]
+        
+        total_tests = len(self.test_results)
+        success_rate = (len(successful_tests) / total_tests * 100) if total_tests > 0 else 0
+        
+        print(f"\n🎯 معدل النجاح: {success_rate:.1f}% ({len(successful_tests)}/{total_tests} اختبار نجح)")
+        
+        if successful_tests:
+            avg_response_time = sum(r["response_time_ms"] for r in successful_tests) / len(successful_tests)
+            print(f"⚡ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        
+        total_time = time.time() - self.start_time
+        print(f"⏱️ إجمالي وقت التنفيذ: {total_time:.2f}s")
+        
+        if failed_tests:
+            print(f"\n❌ الاختبارات الفاشلة ({len(failed_tests)}):")
+            for test in failed_tests:
+                print(f"   • {test['test']}: {test['details']}")
+        
+        print(f"\n✅ الاختبارات الناجحة ({len(successful_tests)}):")
+        for test in successful_tests:
+            print(f"   • {test['test']}: {test['details']}")
+            
+        # تقييم النتيجة النهائية
+        if success_rate >= 90:
+            print(f"\n🏆 ممتاز! نظام تتبع الأنشطة المحسن يعمل بكفاءة {success_rate:.1f}%")
+        elif success_rate >= 75:
+            print(f"\n✅ جيد! نظام تتبع الأنشطة المحسن يعمل بكفاءة {success_rate:.1f}%")
+        elif success_rate >= 50:
+            print(f"\n⚠️ مقبول! نظام تتبع الأنشطة المحسن يحتاج تحسينات - كفاءة {success_rate:.1f}%")
+        else:
+            print(f"\n❌ ضعيف! نظام تتبع الأنشطة المحسن يحتاج إصلاحات جوهرية - كفاءة {success_rate:.1f}%")
+            
+        print("\n" + "=" * 100)
+
+async def main():
+    """الدالة الرئيسية"""
+    tester = EnhancedActivitySystemTester()
+    await tester.run_comprehensive_test()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 Comprehensive Backend Testing for Arabic Review - Financial System Focus
 اختبار شامل للباكند للمراجعة العربية - التركيز على النظام المالي
 
