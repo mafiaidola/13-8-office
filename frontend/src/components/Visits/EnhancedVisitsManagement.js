@@ -169,10 +169,14 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
         realClinicsData = response.data.data;
       }
       
-      // Filter ONLY active clinics from the real database
-      const activeClinics = realClinicsData.filter(clinic => {
-        // Only include real registered clinics that are active
-        return clinic.is_active !== false && clinic.id && (clinic.name || clinic.clinic_name);
+      // Filter ONLY valid clinics from the real database (active or pending)
+      const validClinics = realClinicsData.filter(clinic => {
+        // Include both active and pending clinics for visit scheduling
+        const hasValidStatus = clinic.is_active !== false;
+        const hasId = clinic.id && clinic.id.trim() !== '';
+        const hasName = (clinic.name && clinic.name.trim() !== '') || 
+                       (clinic.clinic_name && clinic.clinic_name.trim() !== '');
+        return hasValidStatus && hasId && hasName;
       });
       
       console.log('🏥 العيادات الحقيقية النشطة:', activeClinics);
