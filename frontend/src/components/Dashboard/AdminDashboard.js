@@ -144,7 +144,7 @@ const AdminDashboard = ({
   ];
 
   return (
-    <div className="space-y-6 p-4" dir={isRTL ? 'rtl' : 'ltr'}> {/* Reduced padding and space */}
+    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}> {/* Added padding back for proper spacing */}
       {/* Enhanced Dashboard Header */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
         <div className="flex justify-between items-center">
