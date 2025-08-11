@@ -116,7 +116,15 @@ class FinancialSystemTester:
             response_time = time.time() - start_time
             
             if response.status_code == 200:
-                debts = response.json()
+                data = response.json()
+                # Handle both simple array and complex object responses
+                if isinstance(data, list):
+                    debts = data
+                elif isinstance(data, dict) and 'debts' in data:
+                    debts = data['debts']
+                else:
+                    debts = []
+                
                 details = f"تم العثور على {len(debts)} دين"
                 if debts:
                     total_remaining = sum(float(d.get('remaining_amount', 0)) for d in debts)
