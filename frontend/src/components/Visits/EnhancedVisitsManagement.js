@@ -477,58 +477,87 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Debug Info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                  <h4 className="text-yellow-300 font-semibold mb-2">🔍 معلومات Debug:</h4>
+                  <p className="text-sm text-slate-300">عدد العيادات المتاحة: {availableClinics.length}</p>
+                  <p className="text-sm text-slate-300">API Base: {API_BASE}</p>
+                  {availableClinics.length > 0 && (
+                    <p className="text-sm text-slate-300">أول عيادة: {availableClinics[0].name || availableClinics[0].clinic_name}</p>
+                  )}
+                </div>
+              )}
+
               {/* Clinic Selection - Card Style */}
               <div>
                 <label className="block text-white font-semibold mb-4 text-lg">
-                  🏥 اختيار العيادة *
+                  🏥 اختيار العيادة * <span className="text-sm text-slate-400">({availableClinics.length} عيادة متاحة)</span>
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
-                  {availableClinics.map((clinic) => (
-                    <div
-                      key={clinic.id}
-                      onClick={() => handleClinicSelect(clinic)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
-                        newVisit.clinic_id === clinic.id
-                          ? 'border-blue-400 bg-blue-500/20 scale-105 shadow-lg'
-                          : 'border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-white text-lg">
-                            {clinic.name || clinic.clinic_name}
-                          </h4>
-                          <p className="text-slate-300 text-sm mt-1">
-                            د. {clinic.doctor_name || 'غير محدد'}
-                          </p>
-                          <p className="text-slate-400 text-xs mt-2">
-                            {clinic.address || 'العنوان غير متوفر'}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex gap-2">
-                            <span 
-                              className={`w-4 h-4 rounded-full ${getClassificationColor(clinic.classification)}`}
-                              title={`تصنيف: ${clinic.classification}`}
-                            ></span>
-                            <span 
-                              className={`w-4 h-4 rounded-full ${getCreditColor(clinic.credit_classification)}`}
-                              title={`ائتماني: ${clinic.credit_classification}`}
-                            ></span>
+                
+                {loading ? (
+                  <div className="p-8 text-center">
+                    <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-300">جاري تحميل العيادات...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
+                    {availableClinics.map((clinic) => (
+                      <div
+                        key={clinic.id}
+                        onClick={() => handleClinicSelect(clinic)}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                          newVisit.clinic_id === clinic.id
+                            ? 'border-blue-400 bg-blue-500/20 scale-105 shadow-lg'
+                            : 'border-slate-600 bg-slate-700 hover:bg-slate-600 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-white text-lg">
+                              {clinic.name || clinic.clinic_name}
+                            </h4>
+                            <p className="text-slate-300 text-sm mt-1">
+                              د. {clinic.doctor_name || 'غير محدد'}
+                            </p>
+                            <p className="text-slate-400 text-xs mt-2">
+                              {clinic.address || 'العنوان غير متوفر'}
+                            </p>
                           </div>
-                          {newVisit.clinic_id === clinic.id && (
-                            <span className="text-blue-400 text-2xl">✓</span>
-                          )}
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex gap-2">
+                              <span 
+                                className={`w-4 h-4 rounded-full ${getClassificationColor(clinic.classification)}`}
+                                title={`تصنيف: ${clinic.classification}`}
+                              ></span>
+                              <span 
+                                className={`w-4 h-4 rounded-full ${getCreditColor(clinic.credit_classification)}`}
+                                title={`ائتماني: ${clinic.credit_classification}`}
+                              ></span>
+                            </div>
+                            {newVisit.clinic_id === clinic.id && (
+                              <span className="text-blue-400 text-2xl">✓</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {availableClinics.length === 0 && (
-                    <div className="col-span-2 p-8 text-center text-slate-400">
-                      لا توجد عيادات مسجلة حالياً
-                    </div>
-                  )}
-                </div>
+                    ))}
+                    
+                    {availableClinics.length === 0 && (
+                      <div className="col-span-2 p-8 text-center">
+                        <div className="text-6xl mb-4">🏥</div>
+                        <h3 className="text-xl font-semibold text-slate-300 mb-2">لا توجد عيادات متاحة</h3>
+                        <p className="text-slate-400 mb-4">لم يتم العثور على عيادات مسجلة في النظام</p>
+                        <button 
+                          onClick={loadRealClinics}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                        >
+                          🔄 إعادة تحميل العيادات
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Selected Clinic Info */}
