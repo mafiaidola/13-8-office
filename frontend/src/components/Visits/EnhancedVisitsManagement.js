@@ -255,7 +255,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const response = await axios.get(`${API_BASE}/users`, { headers });
+      const response = await axios.get(`${API_BASE}/api/users`, { headers });
       
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
