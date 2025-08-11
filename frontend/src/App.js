@@ -27,6 +27,7 @@ import { useTranslation } from './localization/translations.js';
 // Integrated Financial System
 import IntegratedFinancialDashboard from './components/Financial/IntegratedFinancialDashboard.js';
 import ActivityService from './services/ActivityService';
+import comprehensiveActivityService from './services/ComprehensiveActivityService';
 
 // API Configuration
 const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
