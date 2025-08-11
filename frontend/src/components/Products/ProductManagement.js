@@ -17,7 +17,7 @@ const ProductManagement = ({ user, language = 'en', theme = 'dark', isRTL }) => 
   const [filterLine, setFilterLine] = useState('all');
   const [componentError, setComponentError] = useState(null);
   
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   // Check if user can see prices
   const canSeePrices = user && (
