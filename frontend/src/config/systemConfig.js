@@ -35,9 +35,9 @@ export const SYSTEM_TABS = {
     id: 'users',
     path: '/users',
     icon: '👥',
-    name: { ar: 'إدارة المستخدمين', en: 'User Management' },
-    component: 'UserManagement',
-    description: { ar: 'إدارة المستخدمين والأدوار والصلاحيات', en: 'Manage users, roles and permissions' },
+    name: { ar: 'إدارة المستخدمين الاحترافية', en: 'Professional User Management' },
+    component: 'ProfessionalUserManagement',
+    description: { ar: 'نظام شامل لإدارة المستخدمين مع الكروت المفخمة والمعلومات التفصيلية', en: 'Comprehensive user management system with premium cards and detailed information' },
     permissions: ['admin', 'gm'],
     priority: 2
   },

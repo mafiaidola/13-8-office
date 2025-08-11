@@ -4,6 +4,7 @@ import React from 'react';
 // Import all components
 import Dashboard from '../Dashboard/Dashboard';
 import UserManagement from '../Users/UserManagement';
+import ProfessionalUserManagement from '../Users/ProfessionalUserManagement';
 import EnhancedClinicRegistrationAdvanced from '../Clinics/EnhancedClinicRegistrationAdvanced';
 import ClinicsManagement from '../Clinics/ClinicsManagement';
 import EnhancedVisitsManagement from '../Visits/EnhancedVisitsManagement';
@@ -24,6 +25,7 @@ const COMPONENT_REGISTRY = {
   
   // User Management
   'UserManagement': UserManagement,
+  'ProfessionalUserManagement': ProfessionalUserManagement,
   
   // Clinic Management
   'EnhancedClinicRegistrationAdvanced': EnhancedClinicRegistrationAdvanced,
