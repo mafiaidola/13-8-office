@@ -29,7 +29,7 @@ import IntegratedFinancialDashboard from './components/Financial/IntegratedFinan
 import ActivityService from './services/ActivityService';
 
 // API Configuration
-const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
 // Context Definitions
 const ThemeContext = createContext();
