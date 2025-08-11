@@ -566,9 +566,9 @@ const ModernProfessionalHeader = ({
                   <div className="py-2">
                     <button
                       onClick={() => {
-                        setShowProfileModal(true);
                         setShowUserMenu(false);
-                        loadUserProfile();
+                        // Send event to show profile modal in App.js
+                        window.dispatchEvent(new CustomEvent('showUserProfile', { detail: true }));
                       }}
                       className="w-full flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group"
                     >
