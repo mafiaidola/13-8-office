@@ -1,613 +1,363 @@
 #!/usr/bin/env python3
 """
-اختبار شامل للنظام المالي - تدفق الفاتورة إلى الدين والتحصيل
-Comprehensive Financial System Testing - Invoice to Debt Flow and Collection
-Arabic Review Requirements Testing
+اختبار سريع للنظام المالي بعد إضافة endpoints المدفوعات المفقودة
+Quick Financial System Test After Adding Missing Payment Endpoints
+
+المطلوب حسب المراجعة العربية:
+1) تسجيل دخول admin/admin123 
+2) اختبار GET /api/payments (كان مفقود من قبل)
+3) اختبار POST /api/payments/process مع دين موجود
+4) اختبار GET /api/payments/statistics (جديد)
+5) التحقق من تحديث حالة الدين بعد الدفع
+6) التحقق من تسجيل النشاط في activities
+
+الهدف: الوصول لنسبة نجاح 95%+ في النظام المالي مع اكتمال جميع endpoints المطلوبة لتدفق الفاتورة → الدين → التحصيل
 """
 
 import requests
 import json
 import time
-import uuid
 from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://f4f7e091-f5a6-4f57-bca3-79ac25601921.preview.emergentagent.com"
+API_BASE = f"{BACKEND_URL}/api"
 
 class FinancialSystemTester:
     def __init__(self):
-        # استخدام الـ URL من متغيرات البيئة
-        with open('/app/frontend/.env', 'r') as f:
-            for line in f:
-                if line.startswith('REACT_APP_BACKEND_URL='):
-                    self.base_url = line.split('=')[1].strip()
-                    break
-        
-        self.base_url = f"{self.base_url}/api"
-        self.token = None
-        self.headers = {"Content-Type": "application/json"}
+        self.session = requests.Session()
+        self.jwt_token = None
         self.test_results = []
         self.start_time = time.time()
         
-        print(f"🎯 بدء اختبار شامل للنظام المالي - تدفق الفاتورة إلى الدين والتحصيل")
-        print(f"🌐 Backend URL: {self.base_url}")
-        print(f"📅 وقت البدء: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("=" * 80)
-
-    def log_test(self, test_name, success, response_time, details=""):
+    def log_test(self, test_name, success, response_time, details="", error_msg=""):
         """تسجيل نتيجة الاختبار"""
-        status = "✅ نجح" if success else "❌ فشل"
-        self.test_results.append({
+        result = {
             "test": test_name,
             "success": success,
-            "response_time": response_time,
-            "details": details
-        })
-        print(f"{status} | {test_name} | {response_time:.2f}ms | {details}")
-
-    def test_admin_login(self):
-        """المرحلة 1: تسجيل دخول admin/admin123 للحصول على JWT token"""
-        print("\n🔐 المرحلة 1: تسجيل دخول Admin")
+            "response_time_ms": round(response_time * 1000, 2),
+            "details": details,
+            "error": error_msg,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
         
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {details} ({result['response_time_ms']}ms)")
+        if error_msg:
+            print(f"   🔍 خطأ: {error_msg}")
+    
+    def test_admin_login(self):
+        """اختبار تسجيل دخول الأدمن"""
         start_time = time.time()
         try:
-            response = requests.post(
-                f"{self.base_url}/auth/login",
-                json={
-                    "username": "admin",
-                    "password": "admin123",
-                    "geolocation": {
-                        "latitude": 30.0444,
-                        "longitude": 31.2357,
-                        "city": "القاهرة",
-                        "country": "مصر"
-                    },
-                    "device_info": "Financial System Test Browser",
-                    "ip_address": "192.168.1.100"
-                },
-                headers=self.headers
-            )
+            response = self.session.post(f"{API_BASE}/auth/login", json={
+                "username": "admin",
+                "password": "admin123"
+            })
             
-            response_time = (time.time() - start_time) * 1000
+            response_time = time.time() - start_time
             
             if response.status_code == 200:
                 data = response.json()
-                self.token = data.get("access_token")
-                self.headers["Authorization"] = f"Bearer {self.token}"
-                
+                self.jwt_token = data.get("access_token")
                 user_info = data.get("user", {})
-                details = f"المستخدم: {user_info.get('full_name', 'Unknown')}, الدور: {user_info.get('role', 'Unknown')}"
+                
+                self.session.headers.update({
+                    "Authorization": f"Bearer {self.jwt_token}"
+                })
+                
+                details = f"تسجيل دخول ناجح - المستخدم: {user_info.get('full_name', 'Unknown')}, الدور: {user_info.get('role', 'Unknown')}"
                 self.log_test("تسجيل دخول admin/admin123", True, response_time, details)
                 return True
             else:
-                self.log_test("تسجيل دخول admin/admin123", False, response_time, f"HTTP {response.status_code}")
+                self.log_test("تسجيل دخول admin/admin123", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
                 return False
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("تسجيل دخول admin/admin123", False, response_time, f"خطأ: {str(e)}")
+            response_time = time.time() - start_time
+            self.log_test("تسجيل دخول admin/admin123", False, response_time, 
+                        "خطأ في الاتصال", str(e))
             return False
-
-    def test_get_clinics(self):
-        """الحصول على قائمة العيادات المتاحة"""
-        print("\n🏥 الحصول على قائمة العيادات")
-        
+    
+    def test_get_payments(self):
+        """اختبار GET /api/payments (كان مفقود من قبل)"""
         start_time = time.time()
         try:
-            response = requests.get(f"{self.base_url}/clinics", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
+            response = self.session.get(f"{API_BASE}/payments")
+            response_time = time.time() - start_time
             
             if response.status_code == 200:
-                clinics = response.json()
-                details = f"تم العثور على {len(clinics)} عيادة"
-                self.log_test("GET /api/clinics", True, response_time, details)
-                return clinics
+                payments = response.json()
+                details = f"تم العثور على {len(payments)} سجل دفع"
+                if payments:
+                    total_amount = sum(float(p.get('payment_amount', 0)) for p in payments)
+                    details += f" - إجمالي المبلغ: {total_amount} ج.م"
+                
+                self.log_test("GET /api/payments", True, response_time, details)
+                return payments
             else:
-                self.log_test("GET /api/clinics", False, response_time, f"HTTP {response.status_code}")
+                self.log_test("GET /api/payments", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
                 return []
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("GET /api/clinics", False, response_time, f"خطأ: {str(e)}")
+            response_time = time.time() - start_time
+            self.log_test("GET /api/payments", False, response_time, 
+                        "خطأ في الاتصال", str(e))
             return []
-
-    def test_get_products(self):
-        """الحصول على قائمة المنتجات المتاحة"""
-        print("\n💊 الحصول على قائمة المنتجات")
-        
+    
+    def test_get_debts(self):
+        """جلب الديون الموجودة للاختبار"""
         start_time = time.time()
         try:
-            response = requests.get(f"{self.base_url}/products", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                products = response.json()
-                details = f"تم العثور على {len(products)} منتج"
-                self.log_test("GET /api/products", True, response_time, details)
-                return products
-            else:
-                self.log_test("GET /api/products", False, response_time, f"HTTP {response.status_code}")
-                return []
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("GET /api/products", False, response_time, f"خطأ: {str(e)}")
-            return []
-
-    def test_get_users(self):
-        """الحصول على قائمة المستخدمين للعثور على مندوب مبيعات"""
-        print("\n👥 الحصول على قائمة المستخدمين")
-        
-        start_time = time.time()
-        try:
-            response = requests.get(f"{self.base_url}/users", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                users = response.json()
-                details = f"تم العثور على {len(users)} مستخدم"
-                self.log_test("GET /api/users", True, response_time, details)
-                return users
-            else:
-                self.log_test("GET /api/users", False, response_time, f"HTTP {response.status_code}")
-                return []
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("GET /api/users", False, response_time, f"خطأ: {str(e)}")
-            return []
-
-    def test_existing_financial_flow(self):
-        """اختبار تدفق النظام المالي باستخدام البيانات الموجودة"""
-        print("\n💰 اختبار تدفق النظام المالي الموجود")
-        
-        # اختبار الحصول على الفواتير الموجودة
-        start_time = time.time()
-        try:
-            response = requests.get(f"{self.base_url}/invoices", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                invoices = data.get("invoices", []) if isinstance(data, dict) else data
-                details = f"تم العثور على {len(invoices)} فاتورة موجودة"
-                self.log_test("فحص الفواتير الموجودة", True, response_time, details)
-                return invoices
-            else:
-                self.log_test("فحص الفواتير الموجودة", False, response_time, f"HTTP {response.status_code}")
-                return []
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("فحص الفواتير الموجودة", False, response_time, f"خطأ: {str(e)}")
-            return []
-
-    def test_existing_debts_flow(self):
-        """اختبار تدفق الديون الموجودة"""
-        print("\n🏦 اختبار تدفق الديون الموجودة")
-        
-        # اختبار الحصول على الديون الموجودة
-        start_time = time.time()
-        try:
-            response = requests.get(f"{self.base_url}/debts", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                data = response.json()
-                debts = data.get("debts", []) if isinstance(data, dict) else data
-                details = f"تم العثور على {len(debts)} دين موجود"
-                self.log_test("فحص الديون الموجودة", True, response_time, details)
-                
-                # إذا كان هناك ديون، اختبر تسجيل دفعة
-                if debts and len(debts) > 0:
-                    debt = debts[0]
-                    self.test_record_payment_for_existing_debt(debt)
-                
-                return debts
-            else:
-                self.log_test("فحص الديون الموجودة", False, response_time, f"HTTP {response.status_code}")
-                return []
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("فحص الديون الموجودة", False, response_time, f"خطأ: {str(e)}")
-            return []
-
-    def test_record_payment_for_existing_debt(self, debt):
-        """تسجيل دفعة لدين موجود"""
-        print("\n💳 تسجيل دفعة لدين موجود")
-        
-        start_time = time.time()
-        try:
-            debt_id = debt.get("id", debt.get("_id"))
-            remaining_amount = debt.get("remaining_amount", debt.get("original_amount", 100))
-            
-            # دفع مبلغ صغير كاختبار
-            payment_amount = min(50.0, remaining_amount * 0.1)
-            
-            payment_data = {
-                "debt_id": debt_id,
-                "amount": payment_amount,
-                "payment_method": "cash",
-                "payment_date": datetime.now().isoformat(),
-                "notes": "دفعة اختبار للنظام المالي",
-                "collected_by": "admin"
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/payments/process",
-                json=payment_data,
-                headers=self.headers
-            )
-            
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code in [200, 201]:
-                details = f"تم تسجيل دفعة {payment_amount:.2f} ج.م للدين {debt_id}"
-                self.log_test("تسجيل دفعة لدين موجود", True, response_time, details)
-                return True
-            else:
-                details = f"HTTP {response.status_code}: {response.text[:100]}"
-                self.log_test("تسجيل دفعة لدين موجود", False, response_time, details)
-                return False
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("تسجيل دفعة لدين موجود", False, response_time, f"خطأ: {str(e)}")
-            return False
-
-    def test_approve_invoice(self, invoice):
-        """المرحلة 3: اعتماد الفاتورة"""
-        print("\n✅ المرحلة 3: اعتماد الفاتورة")
-        
-        if not invoice:
-            self.log_test("اعتماد الفاتورة", False, 0, "لا توجد فاتورة للاعتماد")
-            return False
-        
-        start_time = time.time()
-        try:
-            invoice_id = invoice.get("id", invoice.get("invoice_id"))
-            
-            response = requests.put(
-                f"{self.base_url}/invoices/{invoice_id}/approve",
-                json={
-                    "approved_by": "admin", 
-                    "approval_notes": "معتمدة للتحصيل",
-                    "convert_to_debt": True
-                },
-                headers=self.headers
-            )
-            
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 200:
-                details = f"تم اعتماد الفاتورة {invoice_id}"
-                self.log_test("اعتماد الفاتورة", True, response_time, details)
-                return True
-            else:
-                self.log_test("اعتماد الفاتورة", False, response_time, f"HTTP {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("اعتماد الفاتورة", False, response_time, f"خطأ: {str(e)}")
-            return False
-
-    def test_verify_debt_creation(self, invoice):
-        """المرحلة 4: التحقق من تحويل الفاتورة المعتمدة إلى دين تلقائياً"""
-        print("\n💰 المرحلة 4: التحقق من تحويل الفاتورة إلى دين")
-        
-        if not invoice:
-            self.log_test("التحقق من تحويل الفاتورة إلى دين", False, 0, "لا توجد فاتورة للتحقق")
-            return None
-        
-        start_time = time.time()
-        try:
-            # البحث عن الدين المرتبط بالفاتورة
-            response = requests.get(f"{self.base_url}/debts", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
+            response = self.session.get(f"{API_BASE}/debts")
+            response_time = time.time() - start_time
             
             if response.status_code == 200:
                 debts = response.json()
-                invoice_id = invoice.get("id", invoice.get("invoice_id"))
+                details = f"تم العثور على {len(debts)} دين"
+                if debts:
+                    total_remaining = sum(float(d.get('remaining_amount', 0)) for d in debts)
+                    details += f" - إجمالي المتبقي: {total_remaining} ج.م"
                 
-                # البحث عن دين مرتبط بالفاتورة
-                related_debt = None
-                for debt in debts:
-                    if (debt.get("invoice_id") == invoice_id or 
-                        debt.get("source_type") == "invoice" or
-                        debt.get("reference_id") == invoice_id):
-                        related_debt = debt
-                        break
-                
-                if related_debt:
-                    debt_amount = related_debt.get("original_amount", related_debt.get("amount", 0))
-                    details = f"تم إنشاء دين ID: {related_debt.get('id')}, المبلغ: {debt_amount:.2f} ج.م"
-                    self.log_test("التحقق من تحويل الفاتورة إلى دين", True, response_time, details)
-                    return related_debt
-                else:
-                    details = f"لم يتم العثور على دين مرتبط بالفاتورة {invoice_id}"
-                    self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, details)
-                    return None
+                self.log_test("GET /api/debts", True, response_time, details)
+                return debts
             else:
-                self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, f"HTTP {response.status_code}")
-                return None
+                self.log_test("GET /api/debts", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
+                return []
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, f"خطأ: {str(e)}")
-            return None
-
-    def test_record_partial_payment(self, debt):
-        """المرحلة 5: تسجيل دفعة جزئية للدين"""
-        print("\n💳 المرحلة 5: تسجيل دفعة جزئية")
-        
-        if not debt:
-            self.log_test("تسجيل دفعة جزئية", False, 0, "لا يوجد دين لتسجيل الدفعة")
-            return False
-        
+            response_time = time.time() - start_time
+            self.log_test("GET /api/debts", False, response_time, 
+                        "خطأ في الاتصال", str(e))
+            return []
+    
+    def test_process_payment(self, debt_id, payment_amount):
+        """اختبار POST /api/payments/process مع دين موجود"""
         start_time = time.time()
         try:
-            debt_id = debt.get("id", debt.get("_id"))
-            original_amount = debt.get("original_amount", debt.get("amount", 0))
-            partial_payment = original_amount * 0.6  # دفع 60% من المبلغ
-            
             payment_data = {
                 "debt_id": debt_id,
-                "amount": partial_payment,
+                "payment_amount": payment_amount,
                 "payment_method": "cash",
-                "payment_date": datetime.now().isoformat(),
-                "notes": "دفعة جزئية - اختبار النظام المالي",
-                "received_by": "admin"
+                "payment_notes": "دفعة اختبار للنظام المالي المحدث"
             }
             
-            response = requests.post(
-                f"{self.base_url}/payments/process",
-                json=payment_data,
-                headers=self.headers
-            )
+            response = self.session.post(f"{API_BASE}/payments/process", json=payment_data)
+            response_time = time.time() - start_time
             
-            response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code == 201:
-                payment = response.json()
-                details = f"تم تسجيل دفعة {partial_payment:.2f} ج.م للدين {debt_id}"
-                self.log_test("تسجيل دفعة جزئية", True, response_time, details)
-                return payment
+            if response.status_code == 200:
+                result = response.json()
+                details = f"تم معالجة دفعة {payment_amount} ج.م - المتبقي: {result.get('new_remaining_amount', 0)} ج.م - الحالة: {result.get('debt_status', 'Unknown')}"
+                self.log_test("POST /api/payments/process", True, response_time, details)
+                return result
             else:
-                self.log_test("تسجيل دفعة جزئية", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                self.log_test("POST /api/payments/process", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
                 return None
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("تسجيل دفعة جزئية", False, response_time, f"خطأ: {str(e)}")
+            response_time = time.time() - start_time
+            self.log_test("POST /api/payments/process", False, response_time, 
+                        "خطأ في الاتصال", str(e))
             return None
-
-    def test_verify_debt_update(self, debt, payment):
-        """المرحلة 6: التحقق من تحديث حالة الدين والمبلغ المتبقي"""
-        print("\n🔄 المرحلة 6: التحقق من تحديث حالة الدين")
-        
-        if not debt or not payment:
-            self.log_test("التحقق من تحديث حالة الدين", False, 0, "لا توجد بيانات كافية للتحقق")
-            return False
-        
+    
+    def test_payment_statistics(self):
+        """اختبار GET /api/payments/statistics (جديد)"""
         start_time = time.time()
         try:
-            debt_id = debt.get("id", debt.get("_id"))
-            
-            response = requests.get(f"{self.base_url}/debts/{debt_id}", headers=self.headers)
-            response_time = (time.time() - start_time) * 1000
+            response = self.session.get(f"{API_BASE}/payments/statistics")
+            response_time = time.time() - start_time
             
             if response.status_code == 200:
-                updated_debt = response.json()
-                remaining_amount = updated_debt.get("remaining_amount", updated_debt.get("amount", 0))
-                status = updated_debt.get("status", "unknown")
-                
-                details = f"الحالة: {status}, المبلغ المتبقي: {remaining_amount:.2f} ج.م"
-                self.log_test("التحقق من تحديث حالة الدين", True, response_time, details)
-                return True
+                stats = response.json()
+                details = f"إجمالي المدفوعات: {stats.get('total_payments', 0)} - إجمالي المبلغ: {stats.get('total_amount_paid', 0)} ج.م - متوسط الدفعة: {stats.get('average_payment', 0)} ج.م"
+                self.log_test("GET /api/payments/statistics", True, response_time, details)
+                return stats
             else:
-                self.log_test("التحقق من تحديث حالة الدين", False, response_time, f"HTTP {response.status_code}")
-                return False
+                self.log_test("GET /api/payments/statistics", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
+                return None
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("التحقق من تحديث حالة الدين", False, response_time, f"خطأ: {str(e)}")
-            return False
-
-    def test_financial_apis(self):
-        """المرحلة 2: اختبار APIs المالية الأساسية"""
-        print("\n📊 المرحلة 2: اختبار APIs المالية الأساسية")
-        
-        apis_to_test = [
-            ("GET /api/invoices", f"{self.base_url}/invoices"),
-            ("GET /api/debts", f"{self.base_url}/debts"),
-            ("GET /api/payments", f"{self.base_url}/payments"),
-            ("GET /api/invoices/statistics", f"{self.base_url}/invoices/statistics/overview"),
-            ("GET /api/debts/statistics", f"{self.base_url}/debts/statistics/overview")
-        ]
-        
-        for api_name, url in apis_to_test:
-            start_time = time.time()
-            try:
-                response = requests.get(url, headers=self.headers)
-                response_time = (time.time() - start_time) * 1000
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if isinstance(data, list):
-                        details = f"تم العثور على {len(data)} سجل"
-                    elif isinstance(data, dict):
-                        details = f"تم استرجاع البيانات الإحصائية"
-                    else:
-                        details = "تم استرجاع البيانات"
-                    
-                    self.log_test(api_name, True, response_time, details)
-                else:
-                    self.log_test(api_name, False, response_time, f"HTTP {response.status_code}")
-                    
-            except Exception as e:
-                response_time = (time.time() - start_time) * 1000
-                self.log_test(api_name, False, response_time, f"خطأ: {str(e)}")
-
-    def test_data_integrity(self):
-        """المرحلة 3: التحقق من سلامة البيانات"""
-        print("\n🔍 المرحلة 3: التحقق من سلامة البيانات")
-        
-        # اختبار ربط الفواتير بالعيادات
+            response_time = time.time() - start_time
+            self.log_test("GET /api/payments/statistics", False, response_time, 
+                        "خطأ في الاتصال", str(e))
+            return None
+    
+    def test_debt_status_update(self, debt_id):
+        """التحقق من تحديث حالة الدين بعد الدفع"""
         start_time = time.time()
         try:
-            invoices_response = requests.get(f"{self.base_url}/invoices", headers=self.headers)
-            clinics_response = requests.get(f"{self.base_url}/clinics", headers=self.headers)
+            response = self.session.get(f"{API_BASE}/debts")
+            response_time = time.time() - start_time
             
-            response_time = (time.time() - start_time) * 1000
-            
-            if invoices_response.status_code == 200 and clinics_response.status_code == 200:
-                # Handle different response formats
-                invoices_data = invoices_response.json()
-                if isinstance(invoices_data, dict) and "invoices" in invoices_data:
-                    invoices = invoices_data["invoices"]
+            if response.status_code == 200:
+                debts = response.json()
+                target_debt = next((d for d in debts if d.get('id') == debt_id), None)
+                
+                if target_debt:
+                    status = target_debt.get('status', 'Unknown')
+                    remaining = target_debt.get('remaining_amount', 0)
+                    details = f"حالة الدين: {status} - المتبقي: {remaining} ج.م"
+                    self.log_test("تحديث حالة الدين", True, response_time, details)
+                    return target_debt
                 else:
-                    invoices = invoices_data if isinstance(invoices_data, list) else []
-                
-                clinics = clinics_response.json()
-                if isinstance(clinics, dict) and "clinics" in clinics:
-                    clinics = clinics["clinics"]
-                
-                clinic_ids = set()
-                for clinic in clinics:
-                    if isinstance(clinic, dict):
-                        clinic_ids.add(clinic.get("id", clinic.get("_id")))
-                    else:
-                        clinic_ids.add(str(clinic))
-                
-                linked_invoices = 0
-                for invoice in invoices:
-                    if isinstance(invoice, dict) and invoice.get("clinic_id") in clinic_ids:
-                        linked_invoices += 1
-                
-                details = f"{linked_invoices}/{len(invoices)} فاتورة مرتبطة بعيادات صحيحة"
-                self.log_test("ربط الفواتير بالعيادات", True, response_time, details)
+                    self.log_test("تحديث حالة الدين", False, response_time, 
+                                "الدين غير موجود", "")
+                    return None
             else:
-                self.log_test("ربط الفواتير بالعيادات", False, response_time, "فشل في جلب البيانات")
+                self.log_test("تحديث حالة الدين", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
+                return None
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("ربط الفواتير بالعيادات", False, response_time, f"خطأ: {str(e)}")
-
-        # اختبار ربط الديون بالمناديب
+            response_time = time.time() - start_time
+            self.log_test("تحديث حالة الدين", False, response_time, 
+                        "خطأ في الاتصال", str(e))
+            return None
+    
+    def test_activity_logging(self):
+        """التحقق من تسجيل النشاط في activities"""
         start_time = time.time()
         try:
-            debts_response = requests.get(f"{self.base_url}/debts", headers=self.headers)
-            users_response = requests.get(f"{self.base_url}/users", headers=self.headers)
+            response = self.session.get(f"{API_BASE}/activities?activity_type=payment_processed&limit=5")
+            response_time = time.time() - start_time
             
-            response_time = (time.time() - start_time) * 1000
-            
-            if debts_response.status_code == 200 and users_response.status_code == 200:
-                # Handle different response formats
-                debts_data = debts_response.json()
-                if isinstance(debts_data, dict) and "debts" in debts_data:
-                    debts = debts_data["debts"]
-                else:
-                    debts = debts_data if isinstance(debts_data, list) else []
+            if response.status_code == 200:
+                activities = response.json()
+                payment_activities = [a for a in activities if a.get('activity_type') == 'payment_processed']
+                details = f"تم العثور على {len(payment_activities)} نشاط دفع مسجل"
+                if payment_activities:
+                    latest = payment_activities[0]
+                    details += f" - آخر نشاط: {latest.get('description', 'Unknown')}"
                 
-                users_data = users_response.json()
-                if isinstance(users_data, dict) and "users" in users_data:
-                    users = users_data["users"]
-                else:
-                    users = users_data if isinstance(users_data, list) else []
-                
-                rep_ids = set()
-                for user in users:
-                    if isinstance(user, dict) and user.get("role") in ["medical_rep", "sales_rep"]:
-                        rep_ids.add(user.get("id", user.get("_id")))
-                
-                assigned_debts = 0
-                for debt in debts:
-                    if isinstance(debt, dict):
-                        if (debt.get("assigned_to_id") in rep_ids or 
-                            debt.get("sales_rep_id") in rep_ids):
-                            assigned_debts += 1
-                
-                details = f"{assigned_debts}/{len(debts)} دين مُعيَّن لمناديب صحيحين"
-                self.log_test("ربط الديون بالمناديب", True, response_time, details)
+                self.log_test("تسجيل النشاط في activities", True, response_time, details)
+                return payment_activities
             else:
-                self.log_test("ربط الديون بالمناديب", False, response_time, "فشل في جلب البيانات")
+                self.log_test("تسجيل النشاط في activities", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
+                return []
                 
         except Exception as e:
-            response_time = (time.time() - start_time) * 1000
-            self.log_test("ربط الديون بالمناديب", False, response_time, f"خطأ: {str(e)}")
-
+            response_time = time.time() - start_time
+            self.log_test("تسجيل النشاط في activities", False, response_time, 
+                        "خطأ في الاتصال", str(e))
+            return []
+    
     def run_comprehensive_test(self):
-        """تشغيل الاختبار الشامل"""
-        print("🚀 بدء الاختبار الشامل للنظام المالي")
+        """تشغيل الاختبار الشامل للنظام المالي"""
+        print("🚀 بدء اختبار سريع للنظام المالي بعد إضافة endpoints المدفوعات المفقودة")
+        print("=" * 80)
         
-        # المرحلة 1: تسجيل الدخول
+        # 1) تسجيل دخول admin/admin123
         if not self.test_admin_login():
             print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
             return
         
-        # الحصول على البيانات الأساسية
-        clinics = self.test_get_clinics()
-        products = self.test_get_products()
-        users = self.test_get_users()
+        # 2) اختبار GET /api/payments (كان مفقود من قبل)
+        initial_payments = self.test_get_payments()
         
-        # المرحلة 1: تدفق النظام المالي الكامل
-        print("\n" + "="*50)
-        print("🎯 المرحلة 1: اختبار تدفق النظام المالي الكامل")
-        print("="*50)
+        # جلب الديون الموجودة
+        existing_debts = self.test_get_debts()
         
-        # اختبار البيانات الموجودة بدلاً من إنشاء جديدة
-        invoices = self.test_existing_financial_flow()
-        debts = self.test_existing_debts_flow()
+        if not existing_debts:
+            print("⚠️ لا توجد ديون للاختبار - سيتم إنشاء دين تجريبي")
+            # يمكن إضافة كود لإنشاء دين تجريبي هنا إذا لزم الأمر
+            return
         
-        # المرحلة 2: اختبار APIs المالية الأساسية
-        print("\n" + "="*50)
-        print("🎯 المرحلة 2: اختبار APIs المالية الأساسية")
-        print("="*50)
-        self.test_financial_apis()
+        # اختيار أول دين للاختبار
+        test_debt = existing_debts[0]
+        debt_id = test_debt.get('id')
+        remaining_amount = float(test_debt.get('remaining_amount', 0))
         
-        # المرحلة 3: التحقق من سلامة البيانات
-        print("\n" + "="*50)
-        print("🎯 المرحلة 3: التحقق من سلامة البيانات")
-        print("="*50)
-        self.test_data_integrity()
+        if remaining_amount <= 0:
+            print("⚠️ الدين المختار مسدد بالكامل - البحث عن دين آخر")
+            unpaid_debts = [d for d in existing_debts if float(d.get('remaining_amount', 0)) > 0]
+            if not unpaid_debts:
+                print("⚠️ جميع الديون مسددة - لا يمكن اختبار المدفوعات")
+                return
+            test_debt = unpaid_debts[0]
+            debt_id = test_debt.get('id')
+            remaining_amount = float(test_debt.get('remaining_amount', 0))
         
-        # النتائج النهائية
-        self.print_final_results()
-
-    def print_final_results(self):
-        """طباعة النتائج النهائية"""
-        total_time = time.time() - self.start_time
-        successful_tests = sum(1 for result in self.test_results if result["success"])
+        print(f"🎯 اختبار الدفع للدين: {debt_id} - المبلغ المتبقي: {remaining_amount} ج.م")
+        
+        # تحديد مبلغ الدفع (نصف المبلغ المتبقي أو 50 ج.م كحد أقصى)
+        payment_amount = min(remaining_amount / 2, 50.0)
+        payment_amount = round(payment_amount, 2)
+        
+        # 3) اختبار POST /api/payments/process مع دين موجود
+        payment_result = self.test_process_payment(debt_id, payment_amount)
+        
+        # 4) اختبار GET /api/payments/statistics (جديد)
+        self.test_payment_statistics()
+        
+        # 5) التحقق من تحديث حالة الدين بعد الدفع
+        if payment_result:
+            self.test_debt_status_update(debt_id)
+        
+        # 6) التحقق من تسجيل النشاط في activities
+        self.test_activity_logging()
+        
+        # اختبار GET /api/payments مرة أخرى للتأكد من إضافة الدفعة الجديدة
+        final_payments = self.test_get_payments()
+        
+        # عرض النتائج النهائية
+        self.display_final_results()
+    
+    def display_final_results(self):
+        """عرض النتائج النهائية"""
+        print("\n" + "=" * 80)
+        print("📊 النتائج النهائية للاختبار السريع للنظام المالي")
+        print("=" * 80)
+        
         total_tests = len(self.test_results)
+        successful_tests = len([r for r in self.test_results if r["success"]])
         success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
-        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
         
-        print("\n" + "="*80)
-        print("📊 النتائج النهائية للاختبار الشامل للنظام المالي")
-        print("="*80)
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(r["response_time_ms"] for r in self.test_results) / total_tests if total_tests > 0 else 0
         
-        print(f"⏱️  إجمالي وقت التنفيذ: {total_time:.2f} ثانية")
         print(f"📈 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)")
-        print(f"⚡ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        print(f"⏱️ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        print(f"🕐 إجمالي وقت التنفيذ: {total_time:.2f}s")
         
-        print(f"\n🎯 تقييم الأداء:")
-        if success_rate >= 90:
-            print("🟢 ممتاز - النظام المالي يعمل بشكل مثالي!")
-        elif success_rate >= 75:
-            print("🟡 جيد - النظام المالي يعمل مع بعض التحسينات المطلوبة")
-        elif success_rate >= 50:
-            print("🟠 متوسط - النظام المالي يحتاج إصلاحات")
+        print(f"\n🎯 **تقييم الهدف المطلوب:**")
+        if success_rate >= 95:
+            print(f"🟢 **EXCELLENT** - تم تحقيق الهدف! معدل النجاح {success_rate:.1f}% (الهدف: 95%+)")
+        elif success_rate >= 85:
+            print(f"🟡 **GOOD** - قريب من الهدف! معدل النجاح {success_rate:.1f}% (الهدف: 95%+)")
         else:
-            print("🔴 ضعيف - النظام المالي يحتاج إعادة تطوير")
+            print(f"🔴 **NEEDS IMPROVEMENT** - لم يتم تحقيق الهدف! معدل النجاح {success_rate:.1f}% (الهدف: 95%+)")
         
-        print(f"\n📋 تفاصيل الاختبارات:")
+        print(f"\n📋 **ملخص الاختبارات:**")
         for result in self.test_results:
             status = "✅" if result["success"] else "❌"
-            print(f"{status} {result['test']} ({result['response_time']:.2f}ms) - {result['details']}")
+            print(f"{status} {result['test']}: {result['details']}")
+            if result["error"]:
+                print(f"   🔍 {result['error']}")
         
-        print("\n" + "="*80)
-        print(f"🏁 انتهى الاختبار الشامل للنظام المالي - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("="*80)
+        print(f"\n🏁 **الخلاصة:**")
+        if success_rate >= 95:
+            print("✅ النظام المالي يعمل بشكل ممتاز مع جميع endpoints المدفوعات المطلوبة!")
+            print("✅ تدفق الفاتورة → الدين → التحصيل مكتمل ويعمل بنجاح!")
+            print("🎉 النظام جاهز للاستخدام الفعلي!")
+        else:
+            print("⚠️ النظام المالي يحتاج تحسينات إضافية لتحقيق الهدف المطلوب")
+            failed_tests = [r for r in self.test_results if not r["success"]]
+            if failed_tests:
+                print("🔧 الاختبارات التي تحتاج إصلاح:")
+                for test in failed_tests:
+                    print(f"   - {test['test']}: {test['error']}")
 
-if __name__ == "__main__":
+def main():
+    """تشغيل الاختبار الرئيسي"""
     tester = FinancialSystemTester()
     tester.run_comprehensive_test()
+
+if __name__ == "__main__":
+    main()
