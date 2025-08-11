@@ -328,20 +328,35 @@ const ModernSidebar = ({
       }}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
-      {/* Header */}
+      {/* Header - EP Group with Professional Logo */}
       <div className={`flex items-center justify-between p-4 text-white shadow-lg ${themeStyles.header}`}>
         {!isCollapsed && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">🏥</span>
+            {/* Professional EP Group Logo */}
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/30">
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-white font-black text-lg leading-none">EP</span>
+                <div className="w-6 h-0.5 bg-white/80 rounded-full"></div>
+              </div>
             </div>
             <div className="text-white">
-              <h2 className="text-lg font-bold leading-tight">
-                {language === 'ar' ? 'نظام الإدارة الطبية' : 'Medical Management'}
+              <h2 className="text-xl font-black leading-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                EP Group
               </h2>
-              <p className="text-blue-100 text-sm">
-                {language === 'ar' ? 'حل شامل للرعاية الصحية' : 'Comprehensive Healthcare Solution'}
+              <p className="text-blue-100 text-sm font-semibold">
+                {language === 'ar' ? 'المجموعة الاحترافية للحلول الطبية' : 'Professional Medical Solutions'}
               </p>
+            </div>
+          </div>
+        )}
+        {isCollapsed && (
+          <div className="flex items-center justify-center w-full">
+            {/* Collapsed Logo */}
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/30">
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-white font-black text-sm leading-none">EP</span>
+                <div className="w-4 h-0.5 bg-white/80 rounded-full"></div>
+              </div>
             </div>
           </div>
         )}
