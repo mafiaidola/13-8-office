@@ -1232,15 +1232,12 @@ const DashboardLayout = () => {
                 availableTabs: Object.values(SYSTEM_TABS).map(t => ({ id: t.id, component: t.component }))
               });
               
-              return (
-                <ComponentRenderer
-                  componentName={componentName}
-                  user={user}
-                  language={language}
-                  isRTL={isRTL}
-                  theme={theme}
-                />
-              );
+              return renderComponent(componentName, {
+                user,
+                language,
+                isRTL,
+                theme
+              });
             })()}
           </div>
         </main>
