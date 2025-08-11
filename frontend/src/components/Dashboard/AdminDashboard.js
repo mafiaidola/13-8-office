@@ -464,38 +464,16 @@ const AdminDashboard = ({
         </div>
       )}
 
-      {/* Enhanced Activity Log */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-2">
-        <div className="p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-            <span className="text-indigo-600 mr-3 text-3xl">📊</span>
-            {language === 'ar' ? 'سجل أنشطة النظام الحديثة' : 'Recent System Activity Log'}
-          </h3>
-          <p className="text-gray-700 font-medium mb-6">
-            {language === 'ar' ? 'متابعة شاملة لجميع الأنشطة والعمليات في النظام' : 'Comprehensive tracking of all system activities and operations'}
-          </p>
-        </div>
-        
-        <ActivityLog 
+      {/* Enhanced Activity Log - Professional System Heart */}
+      <div className="mb-8">
+        <EnhancedActivityLog 
           activities={dashboardData.recent_activities || []}
-          title=""
+          title={language === 'ar' ? 'سجل أنشطة النظام الحديثة' : 'Recent System Activity Log'}
+          maxItems={15}
           showFilters={true}
           showRefresh={true}
           onRefresh={onRefresh}
-          quickActions={[
-            {
-              label: language === 'ar' ? 'تصدير السجل الكامل' : 'Export Full Log',
-              icon: '📋💾',
-              onClick: () => console.log('Export full log'),
-              color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
-            },
-            {
-              label: language === 'ar' ? 'إعدادات التنبيهات' : 'Alert Settings',
-              icon: '🔔⚙️',
-              onClick: () => console.log('Alert settings'),
-              color: 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200'
-            }
-          ]}
+          language={language}
         />
       </div>
     </div>
