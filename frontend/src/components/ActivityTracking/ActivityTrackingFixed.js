@@ -24,7 +24,7 @@ const ActivityTracking = ({ language = 'en', theme = 'dark', user }) => {
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const response = await axios.get(`${API_URL}/api/activities`, { 
+      const response = await axios.get(`${API_URL}/activities`, { 
         headers,
         params: { filter, limit: 100 }
       });
