@@ -1094,9 +1094,20 @@ const DashboardLayout = () => {
   useEffect(() => {
     window.switchToTab = switchToTab;
     console.log('🌍 switchToTab function made globally available');
+    
+    // Add event listener for navigation from Quick Actions and Activity Log
+    const handleNavigateToSection = (event) => {
+      const sectionName = event.detail;
+      console.log(`🚀 Quick Action Navigation: ${sectionName}`);
+      switchToTab(sectionName);
+    };
+    
+    window.addEventListener('navigateToSection', handleNavigateToSection);
+    
     return () => {
       delete window.switchToTab;
-      console.log('🌍 switchToTab function removed from global scope');
+      window.removeEventListener('navigateToSection', handleNavigateToSection);
+      console.log('🌍 switchToTab function and navigation listeners removed');
     };
   }, [switchToTab]);
 
