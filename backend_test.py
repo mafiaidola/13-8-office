@@ -270,13 +270,22 @@ class FinancialSystemTester:
             return None
 
     def test_activity_logging(self):
+        """التحقق من تسجيل النشاط في activities"""
         start_time = time.time()
         try:
             response = self.session.get(f"{API_BASE}/activities?activity_type=payment_processed&limit=5")
             response_time = time.time() - start_time
             
             if response.status_code == 200:
-                activities = response.json()
+                data = response.json()
+                # Handle both simple array and complex object responses
+                if isinstance(data, list):
+                    activities = data
+                elif isinstance(data, dict) and 'activities' in data:
+                    activities = data['activities']
+                else:
+                    activities = []
+                
                 payment_activities = [a for a in activities if a.get('activity_type') == 'payment_processed']
                 details = f"تم العثور على {len(payment_activities)} نشاط دفع مسجل"
                 if payment_activities:
