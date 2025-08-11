@@ -153,40 +153,39 @@ class VisitsManagementQuickTest:
             return False
     
     async def test_visits_dashboard_endpoint(self):
-        """اختبار 3: GET /api/visits/dashboard - بيانات لوحة التحكم للزيارات"""
-        print("\n📊 اختبار 3: GET /api/visits/dashboard - بيانات لوحة التحكم للزيارات")
+        """اختبار 3: GET /api/visits/dashboard/overview - بيانات لوحة التحكم للزيارات"""
+        print("\n📊 اختبار 3: GET /api/visits/dashboard/overview - بيانات لوحة التحكم للزيارات")
         
-        result = await self.make_request('GET', '/visits/dashboard')
+        result = await self.make_request('GET', '/visits/dashboard/overview')
         
         if result['success']:
             dashboard_data = result['data']
-            if isinstance(dashboard_data, dict):
-                # استخراج المعلومات الأساسية من لوحة التحكم
-                total_visits = dashboard_data.get('total_visits', 0)
-                successful_visits = dashboard_data.get('successful_visits', 0)
-                pending_visits = dashboard_data.get('pending_visits', 0)
+            if isinstance(dashboard_data, dict) and 'overview' in dashboard_data:
+                overview = dashboard_data['overview']
+                today_stats = overview.get('today', {})
+                week_stats = overview.get('this_week', {})
                 
-                details = f"بيانات لوحة التحكم متاحة - إجمالي الزيارات: {total_visits}, الناجحة: {successful_visits}, المعلقة: {pending_visits}"
-                self.log_test_result("GET /api/visits/dashboard", True, details, result['response_time'])
+                details = f"بيانات لوحة التحكم متاحة - اليوم: {today_stats.get('total_visits', 0)} زيارة, الأسبوع: {week_stats.get('total_visits', 0)} زيارة"
+                self.log_test_result("GET /api/visits/dashboard/overview", True, details, result['response_time'])
                 
                 # عرض تفاصيل إضافية
-                if 'widgets' in dashboard_data:
-                    widgets_count = len(dashboard_data['widgets'])
-                    print(f"   🎛️ عدد widgets لوحة التحكم: {widgets_count}")
+                if 'available_clinics' in overview:
+                    clinics_count = len(overview['available_clinics'])
+                    print(f"   🏥 العيادات المتاحة: {clinics_count}")
                 
-                if 'recent_visits' in dashboard_data:
-                    recent_count = len(dashboard_data['recent_visits'])
-                    print(f"   🕒 الزيارات الحديثة: {recent_count}")
+                if 'upcoming_visits' in overview:
+                    upcoming_count = len(overview['upcoming_visits'])
+                    print(f"   📅 الزيارات القادمة: {upcoming_count}")
                     
                 return True
             else:
                 details = f"تنسيق بيانات لوحة التحكم غير متوقع - نوع البيانات: {type(dashboard_data)}"
-                self.log_test_result("GET /api/visits/dashboard", False, details, result['response_time'])
+                self.log_test_result("GET /api/visits/dashboard/overview", False, details, result['response_time'])
                 return False
         else:
             error_msg = result['data'].get('detail', 'Unknown error') if isinstance(result['data'], dict) else str(result['data'])
             details = f"فشل في جلب بيانات لوحة التحكم - HTTP {result['status_code']}: {error_msg}"
-            self.log_test_result("GET /api/visits/dashboard", False, details, result['response_time'])
+            self.log_test_result("GET /api/visits/dashboard/overview", False, details, result['response_time'])
             return False
     
     async def test_visits_statistics_endpoint(self):
