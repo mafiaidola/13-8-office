@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGlobalTranslation } from '../../localization/completeTranslations';
 import CommonDashboardComponents from './CommonDashboardComponents';
-import ActivityLog from './ActivityLog';
+import EnhancedActivityLog from './EnhancedActivityLog';
 import SalesPerformance from './SalesPerformance';
 import LineCharts from './LineCharts';
 
