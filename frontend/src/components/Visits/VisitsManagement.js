@@ -155,7 +155,7 @@ const VisitsManagement = () => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
-            const response = await axios.post(`${API_BASE}/api/visits/check-in`, {
+            const response = await axios.post(`${API_BASE}/visits/check-in`, {
               visit_id: visitId,
               gps_latitude: lat,
               gps_longitude: lng,
