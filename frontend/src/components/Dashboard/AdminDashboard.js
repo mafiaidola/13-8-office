@@ -336,145 +336,226 @@ const AdminDashboard = ({
         </div>
       )}
 
-      {/* Charts and Analytics - Full Width Layout for Better Data Display */}
-      <div className="space-y-8 mb-8">
-        {/* System Performance - Full Width */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 flex items-center">
-              <span className="text-blue-600 mr-3 text-3xl">📈</span>
-              {language === 'ar' ? 'أداء النظام العام' : 'Overall System Performance'}
-            </h3>
-            <p className="text-gray-700 font-medium mt-2">
-              {language === 'ar' ? 'تحليل شامل لأداء النظام والمبيعات - عرض محسن للبيانات' : 'Comprehensive analysis of system and sales performance - Enhanced data display'}
-            </p>
+      {/* Charts and Analytics - Professional Separated Layout */}
+      <div className="space-y-8">
+        {/* Overall System Performance Section - Full Width with Enhanced Spacing */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 flex items-center mb-2">
+                  <span className="text-blue-600 mr-3 text-3xl">📈</span>
+                  {language === 'ar' ? 'أداء النظام العام' : 'Overall System Performance'}
+                </h3>
+                <p className="text-gray-700 font-medium">
+                  {language === 'ar' ? 'تحليل شامل لأداء النظام والمبيعات - عرض محسن للبيانات' : 'Comprehensive analysis of system and sales performance - Enhanced data display'}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold">
+                  📊 تصدير البيانات
+                </button>
+                <button className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors text-sm font-semibold">
+                  🔍 عرض التفاصيل
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="w-full h-80">
-            <SalesPerformance 
-              data={[
-                { period: language === 'ar' ? 'يناير' : 'January', sales: 15000, target: 12000, orders: 45 },
-                { period: language === 'ar' ? 'فبراير' : 'February', sales: 18500, target: 15000, orders: 52 },
-                { period: language === 'ar' ? 'مارس' : 'March', sales: 22000, target: 18000, orders: 67 },
-                { period: language === 'ar' ? 'أبريل' : 'April', sales: 19000, target: 20000, orders: 58 },
-                { period: language === 'ar' ? 'مايو' : 'May', sales: 25000, target: 22000, orders: 75 },
-                { period: language === 'ar' ? 'يونيو' : 'June', sales: 28000, target: 25000, orders: 82 },
-                { period: language === 'ar' ? 'يوليو' : 'July', sales: 31000, target: 28000, orders: 90 },
-                { period: language === 'ar' ? 'أغسطس' : 'August', sales: 33500, target: 30000, orders: 98 }
-              ]}
-              title=""
-              timeFilter={timeFilter}
-              fullWidth={true}
-              enhanced={true}
-              onExport={(data) => console.log('Export performance data:', data)}
-              onViewDetails={(data) => console.log('View performance details:', data)}
-            />
+          
+          {/* Chart Content */}
+          <div className="p-8">
+            <div className="w-full h-80 bg-gray-50 rounded-lg p-4">
+              <SalesPerformance 
+                data={[
+                  { period: language === 'ar' ? 'يناير' : 'January', sales: 15000, target: 12000, orders: 45 },
+                  { period: language === 'ar' ? 'فبراير' : 'February', sales: 18500, target: 15000, orders: 52 },
+                  { period: language === 'ar' ? 'مارس' : 'March', sales: 22000, target: 18000, orders: 67 },
+                  { period: language === 'ar' ? 'أبريل' : 'April', sales: 19000, target: 20000, orders: 58 },
+                  { period: language === 'ar' ? 'مايو' : 'May', sales: 25000, target: 22000, orders: 75 },
+                  { period: language === 'ar' ? 'يونيو' : 'June', sales: 28000, target: 25000, orders: 82 },
+                  { period: language === 'ar' ? 'يوليو' : 'July', sales: 31000, target: 28000, orders: 90 },
+                  { period: language === 'ar' ? 'أغسطس' : 'August', sales: 33500, target: 30000, orders: 98 }
+                ]}
+                title=""
+                timeFilter={timeFilter}
+                fullWidth={true}
+                enhanced={true}
+                onExport={(data) => console.log('Export performance data:', data)}
+                onViewDetails={(data) => console.log('View performance details:', data)}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Usage Trends - Full Width */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 flex items-center">
-              <span className="text-purple-600 mr-3 text-3xl">📊</span>
-              {language === 'ar' ? 'اتجاهات استخدام النظام' : 'System Usage Trends'}
-            </h3>
-            <p className="text-gray-700 font-medium mt-2">
-              {language === 'ar' ? 'معدل استخدام النظام على مدار الأسبوع - عرض تفصيلي شامل' : 'System usage rate throughout the week - Comprehensive detailed view'}
-            </p>
+        {/* System Usage Trends Section - Full Width with Enhanced Spacing */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-200 px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 flex items-center mb-2">
+                  <span className="text-purple-600 mr-3 text-3xl">📊</span>
+                  {language === 'ar' ? 'اتجاهات استخدام النظام' : 'System Usage Trends'}
+                </h3>
+                <p className="text-gray-700 font-medium">
+                  {language === 'ar' ? 'معدل استخدام النظام على مدار الأسبوع - عرض تفصيلي شامل' : 'System usage rate throughout the week - Comprehensive detailed view'}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <button className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-semibold">
+                  📈 تحليل الاتجاهات
+                </button>
+                <button className="px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors text-sm font-semibold">
+                  ⏰ عرض الفترات
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="w-full h-80">
-            <LineCharts 
-              data={[
-                { x: language === 'ar' ? 'السبت' : 'Saturday', y: 120, users: 45, sessions: 280 },
-                { x: language === 'ar' ? 'الأحد' : 'Sunday', y: 150, users: 58, sessions: 320 },
-                { x: language === 'ar' ? 'الإثنين' : 'Monday', y: 180, users: 72, sessions: 410 },
-                { x: language === 'ar' ? 'الثلاثاء' : 'Tuesday', y: 165, users: 65, sessions: 380 },
-                { x: language === 'ar' ? 'الأربعاء' : 'Wednesday', y: 200, users: 80, sessions: 450 },
-                { x: language === 'ar' ? 'الخميس' : 'Thursday', y: 145, users: 55, sessions: 320 },
-                { x: language === 'ar' ? 'الجمعة' : 'Friday', y: 110, users: 42, sessions: 260 }
-              ]}
-              title=""
-              xAxisLabel={language === 'ar' ? 'أيام الأسبوع' : 'Days of the week'}
-              yAxisLabel={language === 'ar' ? 'عدد المستخدمين النشطين' : 'Number of active users'}
-              fullWidth={true}
-              enhanced={true}
-              interactive={true}
-              onDataPointClick={(item, index) => console.log('Clicked on:', item)}
-            />
+          
+          {/* Chart Content */}
+          <div className="p-8">
+            <div className="w-full h-80 bg-gray-50 rounded-lg p-4">
+              <LineCharts 
+                data={[
+                  { x: language === 'ar' ? 'السبت' : 'Saturday', y: 120, users: 45, sessions: 280 },
+                  { x: language === 'ar' ? 'الأحد' : 'Sunday', y: 150, users: 58, sessions: 320 },
+                  { x: language === 'ar' ? 'الإثنين' : 'Monday', y: 180, users: 72, sessions: 410 },
+                  { x: language === 'ar' ? 'الثلاثاء' : 'Tuesday', y: 165, users: 65, sessions: 380 },
+                  { x: language === 'ar' ? 'الأربعاء' : 'Wednesday', y: 200, users: 80, sessions: 450 },
+                  { x: language === 'ar' ? 'الخميس' : 'Thursday', y: 145, users: 55, sessions: 320 },
+                  { x: language === 'ar' ? 'الجمعة' : 'Friday', y: 110, users: 42, sessions: 260 }
+                ]}
+                title=""
+                xAxisLabel={language === 'ar' ? 'أيام الأسبوع' : 'Days of the week'}
+                yAxisLabel={language === 'ar' ? 'عدد المستخدمين النشطين' : 'Number of active users'}
+                fullWidth={true}
+                enhanced={true}
+                interactive={true}
+                onDataPointClick={(item, index) => console.log('Clicked on:', item)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Financial Overview - Improved Horizontal Layout */}
+      {/* Comprehensive Financial Overview Section - Professional Separated Layout */}
       {dashboardData.financial_overview && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
-            <span className="text-green-600 mr-3 text-3xl">💰</span>
-            {language === 'ar' ? 'الملخص المالي الشامل' : 'Comprehensive Financial Overview'}
-          </h3>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200 px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 flex items-center mb-2">
+                  <span className="text-green-600 mr-3 text-3xl">💰</span>
+                  {language === 'ar' ? 'الملخص المالي الشامل' : 'Comprehensive Financial Overview'}
+                </h3>
+                <p className="text-gray-700 font-medium">
+                  {language === 'ar' ? 'نظرة شاملة على الحالة المالية للشركة والتحصيلات' : 'Comprehensive view of company financial status and collections'}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <button className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-semibold">
+                  💹 التقرير المالي
+                </button>
+                <button className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors text-sm font-semibold">
+                  📋 تفاصيل التحصيل
+                </button>
+              </div>
+            </div>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8 shadow-lg border border-green-200 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">
-                  {language === 'ar' ? 'إجمالي الديون' : 'Total Outstanding'}
-                </h4>
-                <span className="text-green-600 text-4xl">💳</span>
+          {/* Financial Content */}
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8 shadow-lg border border-green-200 hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-xl font-bold text-gray-900">
+                    {language === 'ar' ? 'إجمالي الديون' : 'Total Outstanding'}
+                  </h4>
+                  <span className="text-green-600 text-4xl">💳</span>
+                </div>
+                <p className="text-4xl font-black text-green-700 mb-3">
+                  {(dashboardData.financial_overview.total_outstanding || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
+                </p>
+                <p className="text-base font-semibold text-gray-800">
+                  {dashboardData.financial_overview.total_debts || 0} {language === 'ar' ? 'دين نشط' : 'active debts'}
+                </p>
               </div>
-              <p className="text-4xl font-black text-green-700 mb-3">
-                {(dashboardData.financial_overview.total_outstanding || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
-              </p>
-              <p className="text-base font-semibold text-gray-800">
-                {dashboardData.financial_overview.total_debts || 0} {language === 'ar' ? 'دين نشط' : 'active debts'}
-              </p>
-            </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8 shadow-lg border border-blue-200 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">
-                  {language === 'ar' ? 'المبلغ المحصل' : 'Amount Collected'}
-                </h4>
-                <span className="text-blue-600 text-4xl">💰</span>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8 shadow-lg border border-blue-200 hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-xl font-bold text-gray-900">
+                    {language === 'ar' ? 'المبلغ المحصل' : 'Amount Collected'}
+                  </h4>
+                  <span className="text-blue-600 text-4xl">💰</span>
+                </div>
+                <p className="text-4xl font-black text-blue-700 mb-3">
+                  {(dashboardData.financial_overview.total_settled || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
+                </p>
+                <p className="text-base font-semibold text-gray-800">
+                  {language === 'ar' ? 'تم تحصيله بنجاح' : 'Successfully collected'}
+                </p>
               </div>
-              <p className="text-4xl font-black text-blue-700 mb-3">
-                {(dashboardData.financial_overview.total_settled || 0).toLocaleString()} {language === 'ar' ? 'ج.م' : 'EGP'}
-              </p>
-              <p className="text-base font-semibold text-gray-800">
-                {language === 'ar' ? 'تم تحصيله بنجاح' : 'Successfully collected'}
-              </p>
-            </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-8 shadow-lg border border-purple-200 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xl font-bold text-gray-900">
-                  {language === 'ar' ? 'معدل التحصيل' : 'Collection Rate'}
-                </h4>
-                <span className="text-purple-600 text-4xl">📊</span>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-8 shadow-lg border border-purple-200 hover:shadow-xl transition-shadow">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-xl font-bold text-gray-900">
+                    {language === 'ar' ? 'معدل التحصيل' : 'Collection Rate'}
+                  </h4>
+                  <span className="text-purple-600 text-4xl">📊</span>
+                </div>
+                <p className="text-4xl font-black text-purple-700 mb-3">
+                  {dashboardData.financial_overview.total_outstanding > 0 ? 
+                    Math.round((dashboardData.financial_overview.total_settled / 
+                      (dashboardData.financial_overview.total_outstanding + dashboardData.financial_overview.total_settled)) * 100) : 0}%
+                </p>
+                <p className="text-base font-semibold text-gray-800">
+                  {language === 'ar' ? 'من إجمالي المبلغ' : 'of total amount'}
+                </p>
               </div>
-              <p className="text-4xl font-black text-purple-700 mb-3">
-                {dashboardData.financial_overview.total_outstanding > 0 ? 
-                  Math.round((dashboardData.financial_overview.total_settled / 
-                    (dashboardData.financial_overview.total_outstanding + dashboardData.financial_overview.total_settled)) * 100) : 0}%
-              </p>
-              <p className="text-base font-semibold text-gray-800">
-                {language === 'ar' ? 'من إجمالي المبلغ' : 'of total amount'}
-              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Enhanced Activity Log - Professional System Heart */}
-      <div className="mb-8">
-        <EnhancedActivityLog 
-          activities={dashboardData.recent_activities || []}
-          title={language === 'ar' ? 'سجل أنشطة النظام الحديثة' : 'Recent System Activity Log'}
-          maxItems={15}
-          showFilters={true}
-          showRefresh={true}
-          onRefresh={onRefresh}
-          language={language}
-        />
+      {/* Recent System Activity Log Section - Professional Layout */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        {/* Section Header */}
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200 px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center mb-2">
+                <span className="text-indigo-600 mr-3 text-3xl">📊</span>
+                {language === 'ar' ? 'سجل أنشطة النظام الحديثة' : 'Recent System Activity Log'}
+              </h3>
+              <p className="text-gray-700 font-medium">
+                {language === 'ar' ? 'القلب النابض للنظام - متابعة شاملة لجميع الأنشطة والعمليات بشكل احترافي' : 'The beating heart of the system - comprehensive tracking of all activities professionally'}
+              </p>
+            </div>
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <button className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors text-sm font-semibold">
+                📋 تصدير السجل
+              </button>
+              <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold">
+                🔔 إعدادات التنبيهات
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Activity Log Content */}
+        <div className="p-0">
+          <EnhancedActivityLog 
+            activities={dashboardData.recent_activities || []}
+            title=""
+            maxItems={15}
+            showFilters={true}
+            showRefresh={true}
+            onRefresh={onRefresh}
+            language={language}
+          />
+        </div>
       </div>
     </div>
   );
