@@ -94,7 +94,6 @@ const EnhancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
           priority: 'medium'
         });
       }
-      }
     } catch (error) {
       console.error('Error creating visit:', error);
     }
