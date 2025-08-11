@@ -242,26 +242,29 @@ class EnhancedActivitySystemTester:
         test_start = time.time()
         
         try:
-            # فحص أن نشاط تسجيل الدخول تم حفظه تلقائياً
-            async with self.session.get(f"{API_BASE}/activities?activity_type=login&limit=5") as response:
+            # فحص أن نشاط تسجيل الدخول تم حفظه تلقائياً باستخدام action=login
+            async with self.session.get(f"{API_BASE}/activities?action=login&limit=5") as response:
                 response_time = time.time() - test_start
                 
                 if response.status == 200:
-                    data = await response.json()
-                    activities = data.get("activities", []) if isinstance(data, dict) else data
+                    activities = await response.json()
                     
                     # البحث عن نشاط تسجيل الدخول الأخير
-                    login_activities = []
-                    if isinstance(activities, list):
-                        login_activities = [a for a in activities if a.get("activity_type") == "login"]
-                    
-                    if login_activities:
-                        latest_login = login_activities[0]
-                        has_geolocation = bool(latest_login.get("geolocation"))
+                    if isinstance(activities, list) and len(activities) > 0:
+                        latest_login = activities[0]
+                        has_location = bool(latest_login.get("location"))
                         has_device_info = bool(latest_login.get("device_info"))
                         has_ip = bool(latest_login.get("ip_address"))
                         
-                        details = f"تم العثور على {len(login_activities)} نشاط دخول، الموقع: {has_geolocation}, الجهاز: {has_device_info}, IP: {has_ip}"
+                        # فحص تفاصيل الموقع الجغرافي
+                        location_details = ""
+                        if has_location:
+                            location = latest_login["location"]
+                            city = location.get("city", "Unknown")
+                            country = location.get("country", "Unknown")
+                            location_details = f"الموقع: {city}, {country}"
+                        
+                        details = f"تم العثور على {len(activities)} نشاط دخول، {location_details}, الجهاز: {has_device_info}, IP: {has_ip}"
                         self.log_test_result("تسجيل نشاط الدخول التلقائي", True, response_time, details)
                         return True
                     else:
