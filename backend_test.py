@@ -305,8 +305,16 @@ class FinancialSystemTester:
         
         if not existing_debts:
             print("⚠️ لا توجد ديون للاختبار - سيتم إنشاء دين تجريبي")
-            # يمكن إضافة كود لإنشاء دين تجريبي هنا إذا لزم الأمر
-            return
+            test_debt_id = self.create_test_debt()
+            if test_debt_id:
+                # جلب الديون مرة أخرى بعد الإنشاء
+                existing_debts = self.test_get_debts()
+                if not existing_debts:
+                    print("❌ فشل في إنشاء دين تجريبي - إيقاف الاختبار")
+                    return
+            else:
+                print("❌ فشل في إنشاء دين تجريبي - إيقاف الاختبار")
+                return
         
         # اختيار أول دين للاختبار
         test_debt = existing_debts[0]
