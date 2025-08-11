@@ -172,7 +172,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       // Filter ONLY active clinics from the real database
       const activeClinics = realClinicsData.filter(clinic => {
         // Only include real registered clinics that are active
-        return clinic.is_active !== false && clinic.id && clinic.name;
+        return clinic.is_active !== false && clinic.id && (clinic.name || clinic.clinic_name);
       });
       
       console.log('🏥 العيادات الحقيقية النشطة:', activeClinics);
