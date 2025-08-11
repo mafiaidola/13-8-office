@@ -85,14 +85,14 @@ const AdminDashboard = ({
     }
   ];
 
-  // Admin quick actions with proper navigation
+  // Admin quick actions with correct navigation to systemConfig IDs
   const adminQuickActions = [
     {
       label: language === 'ar' ? 'إضافة مستخدم' : 'Add User',
       icon: '👤➕',
       onClick: () => {
-        // Navigate to User Management section
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'UserManagement' }));
+        // Navigate to User Management section using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'users' }));
       },
       color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
     },
@@ -100,8 +100,8 @@ const AdminDashboard = ({
       label: language === 'ar' ? 'إدارة العيادات' : 'Manage Clinics',
       icon: '🏥⚙️',
       onClick: () => {
-        // Navigate to Clinics Management section
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ClinicsManagement' }));
+        // Navigate to Clinics Management section using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'clinics_management' }));
       },
       color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
     },
@@ -109,8 +109,8 @@ const AdminDashboard = ({
       label: language === 'ar' ? 'النظام المالي' : 'Financial Management',
       icon: '💰📊',
       onClick: () => {
-        // Navigate to Financial Management section
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'UnifiedFinancialDashboard' }));
+        // Navigate to Integrated Financial System using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'integrated_financial' }));
       },
       color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
     },
@@ -118,8 +118,8 @@ const AdminDashboard = ({
       label: language === 'ar' ? 'إدارة الزيارات' : 'Visits Management',
       icon: '🏥📋',
       onClick: () => {
-        // Navigate to Visits Management section  
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'EnhancedVisitsManagement' }));
+        // Navigate to Visits Management section using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'visits_management' }));
       },
       color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
     },
@@ -127,8 +127,8 @@ const AdminDashboard = ({
       label: language === 'ar' ? 'إدارة المنتجات' : 'Products Management',
       icon: '📦🔧',
       onClick: () => {
-        // Navigate to Products Management section
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ProductManagement' }));
+        // Navigate to Products Management section using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'products' }));
       },
       color: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200'
     },
@@ -136,8 +136,8 @@ const AdminDashboard = ({
       label: language === 'ar' ? 'تتبع الأنشطة' : 'Activity Tracking',
       icon: '📈🔍',
       onClick: () => {
-        // Navigate to Activity Tracking section
-        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ActivityTrackingFixed' }));
+        // Navigate to Advanced Activity Tracking section using correct ID from systemConfig
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'activity_tracking' }));
       },
       color: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
     }
