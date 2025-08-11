@@ -753,5 +753,222 @@ async def get_payment_statistics(current_user: dict = Depends(get_current_user))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching payment statistics: {str(e)}")
 
+# ============================================================================
+# VISITS MANAGEMENT ENDPOINTS - نظام إدارة الزيارات المحسن
+# ============================================================================
+
+@app.get("/api/visits/")
+async def get_visits(
+    assigned_to: str = None,
+    status: str = None,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get visits with filtering options - جلب الزيارات مع خيارات الفلترة"""
+    try:
+        # Build filter query
+        filter_query = {"is_active": {"$ne": False}}
+        
+        # Apply user-based filtering for permissions
+        user_role = current_user.get("role", "").lower()
+        if user_role not in ["admin", "gm", "line_manager"]:
+            # Non-admin users can only see their own visits
+            filter_query["assigned_to"] = current_user.get("user_id")
+        elif assigned_to:
+            filter_query["assigned_to"] = assigned_to
+            
+        if status:
+            filter_query["status"] = status
+        
+        # Get visits from database
+        visits = []
+        cursor = db.visits.find(filter_query, {"_id": 0}).sort("scheduled_date", -1).limit(limit)
+        async for visit in cursor:
+            visits.append(visit)
+        
+        return {"success": True, "visits": visits}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching visits: {str(e)}")
+
+@app.post("/api/visits/")
+async def create_visit(visit_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new visit - إنشاء زيارة جديدة"""
+    try:
+        # Verify user has permission to create visits
+        user_role = current_user.get("role", "")
+        if user_role not in ["medical_rep", "admin", "manager", "line_manager", "gm"]:
+            raise HTTPException(status_code=403, detail="غير مسموح لك بإنشاء الزيارات")
+        
+        # Generate unique visit ID
+        visit_id = str(uuid.uuid4())
+        
+        # Prepare visit document
+        visit_document = {
+            "id": visit_id,
+            "visit_number": visit_data.get("visit_number", f"V-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"),
+            
+            # Basic visit information
+            "clinic_id": visit_data.get("clinic_id"),
+            "clinic_name": visit_data.get("clinic_name"),
+            "doctor_name": visit_data.get("doctor_name"),
+            "clinic_address": visit_data.get("clinic_address"),
+            "clinic_phone": visit_data.get("clinic_phone"),
+            "clinic_classification": visit_data.get("clinic_classification"),
+            "credit_classification": visit_data.get("credit_classification"),
+            
+            # Visit details
+            "visit_type": visit_data.get("visit_type", "routine"),
+            "scheduled_date": visit_data.get("scheduled_date"),
+            "visit_purpose": visit_data.get("visit_purpose"),
+            "visit_notes": visit_data.get("visit_notes", ""),
+            "estimated_duration": visit_data.get("estimated_duration", 30),
+            "priority_level": visit_data.get("priority_level", "normal"),
+            
+            # Representative information and tracking
+            "assigned_to": visit_data.get("assigned_to", current_user.get("user_id")),
+            "assigned_to_name": visit_data.get("assigned_to_name"),
+            "assigned_to_role": visit_data.get("assigned_to_role"),
+            "created_by": visit_data.get("created_by", current_user.get("user_id")),
+            "created_by_name": visit_data.get("created_by_name"),
+            
+            # GPS tracking for representative (ADMIN ONLY visibility)
+            "representative_location": visit_data.get("representative_location"),
+            
+            # Visit status and timestamps
+            "status": visit_data.get("status", "planned"),
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            "is_active": True,
+            
+            # Link to clinic's line and area if available
+            "line_id": visit_data.get("line_id"),
+            "area_id": visit_data.get("area_id")
+        }
+        
+        # Insert into database
+        result = await db.visits.insert_one(visit_document)
+        
+        if result.inserted_id:
+            print(f"✅ تم إنشاء الزيارة بنجاح: {visit_data.get('clinic_name', 'Unknown')} - ID: {visit_id}")
+            
+            # Create activity log
+            activity_record = {
+                "_id": str(uuid.uuid4()),
+                "activity_type": "visit_created",
+                "description": f"إنشاء زيارة جديدة للعيادة: {visit_data.get('clinic_name', 'Unknown')}",
+                "user_id": current_user.get("user_id", ""),
+                "user_name": current_user.get("full_name", current_user.get("username", "")),
+                "user_role": current_user.get("role", ""),
+                "details": f"زيارة: {visit_data.get('clinic_name', 'Unknown')} - نوع: {visit_data.get('visit_type', 'routine')}",
+                "visit_id": visit_id,
+                "clinic_id": visit_data.get("clinic_id"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            try:
+                await db.activities.insert_one(activity_record)
+                print(f"✅ تم تسجيل نشاط إنشاء الزيارة")
+            except Exception as activity_error:
+                print(f"⚠️ خطأ في تسجيل النشاط: {activity_error}")
+            
+            return {
+                "success": True,
+                "message": "تم إنشاء الزيارة بنجاح",
+                "visit_id": visit_id,
+                "visit_number": visit_document["visit_number"],
+                "status": "planned"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="فشل في حفظ الزيارة")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ خطأ في إنشاء الزيارة: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"خطأ في حفظ بيانات الزيارة: {str(e)}")
+
+@app.get("/api/visits/{visit_id}/details")
+async def get_visit_details(visit_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed visit information - admin only for GPS data"""
+    try:
+        # Check if user is admin to view sensitive data
+        user_role = current_user.get("role", "").lower()
+        is_admin = user_role in ["admin", "gm"]
+        
+        # Find visit
+        visit = await db.visits.find_one({"id": visit_id}, {"_id": 0})
+        if not visit:
+            raise HTTPException(status_code=404, detail="الزيارة غير موجودة")
+        
+        # Remove sensitive GPS data if user is not admin
+        if not is_admin and "representative_location" in visit:
+            del visit["representative_location"]
+        
+        return {"success": True, "visit": visit}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"خطأ في جلب تفاصيل الزيارة: {str(e)}")
+
+@app.get("/api/visits/dashboard/overview")
+async def get_visits_dashboard(
+    user_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get visits dashboard statistics"""
+    try:
+        # Build filter for user permissions
+        filter_query = {"is_active": {"$ne": False}}
+        user_role = current_user.get("role", "").lower()
+        
+        if user_role not in ["admin", "gm", "line_manager"]:
+            filter_query["assigned_to"] = current_user.get("user_id")
+        elif user_id:
+            filter_query["assigned_to"] = user_id
+        
+        # Get statistics
+        total_visits = await db.visits.count_documents(filter_query)
+        
+        # Today's visits
+        today = datetime.now().date()
+        today_start = datetime.combine(today, datetime.min.time()).isoformat()
+        today_end = datetime.combine(today, datetime.max.time()).isoformat()
+        
+        today_filter = dict(filter_query)
+        today_filter["scheduled_date"] = {"$gte": today_start, "$lte": today_end}
+        today_visits = await db.visits.count_documents(today_filter)
+        
+        # Status counts
+        completed_filter = dict(filter_query)
+        completed_filter["status"] = "completed"
+        completed_visits = await db.visits.count_documents(completed_filter)
+        
+        in_progress_filter = dict(filter_query)
+        in_progress_filter["status"] = "in_progress"
+        in_progress_visits = await db.visits.count_documents(in_progress_filter)
+        
+        # This month visits
+        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_filter = dict(filter_query)
+        month_filter["scheduled_date"] = {"$gte": month_start.isoformat()}
+        month_visits = await db.visits.count_documents(month_filter)
+        
+        return {
+            "success": True,
+            "overview": {
+                "today": today_visits,
+                "completed": completed_visits,
+                "in_progress": in_progress_visits,
+                "this_month": month_visits,
+                "total": total_visits
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching visits dashboard: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
