@@ -204,7 +204,15 @@ class FinancialSystemTester:
             response_time = time.time() - start_time
             
             if response.status_code == 200:
-                debts = response.json()
+                data = response.json()
+                # Handle both simple array and complex object responses
+                if isinstance(data, list):
+                    debts = data
+                elif isinstance(data, dict) and 'debts' in data:
+                    debts = data['debts']
+                else:
+                    debts = []
+                
                 target_debt = next((d for d in debts if d.get('id') == debt_id), None)
                 
                 if target_debt:
