@@ -12,7 +12,7 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  const API_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   useEffect(() => {
     loadEnhancedActivities();
@@ -28,7 +28,7 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
       
       // محاولة تحميل الأنشطة من API المحسن الجديد
       try {
-        const response = await axios.get(`${API_URL}/api/activities`, { 
+        const response = await axios.get(`${API}/activities`, { 
           headers,
           params: { filter, limit: 50 }
         });
@@ -117,105 +117,6 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
             os: 'iOS 16.6.1',
             device_type: 'Mobile',
             screen_resolution: '390x844',
-            timezone: 'Africa/Cairo'
-          }
-        },
-        {
-          id: '3',
-          user_name: 'محمد سمير',
-          user_role: 'accountant',
-          action: 'invoice_create',
-          description: 'إنشاء فاتورة جديدة رقم INV-2025-001',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          ip_address: '192.168.1.78',
-          device_info: {
-            browser: 'Firefox 121.0',
-            os: 'Ubuntu 22.04',
-            device_type: 'Desktop',
-            user_agent: 'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0'
-          },
-          location: {
-            city: 'الإسكندرية',
-            district: 'سموحة',
-            country: 'مصر',
-            latitude: 31.2001,
-            longitude: 29.9187,
-            address: 'شارع فؤاد، سموحة، الإسكندرية'
-          },
-          invoice_number: 'INV-2025-001',
-          amount: '2,500 ج.م',
-          success: true,
-          details: {
-            browser: 'Firefox',
-            os: 'Ubuntu 22.04',
-            device_type: 'Desktop',
-            screen_resolution: '1366x768',
-            timezone: 'Africa/Cairo'
-          }
-        },
-        {
-          id: '4',
-          user_name: 'علاء الدين',
-          user_role: 'medical_rep',
-          action: 'product_update',
-          description: 'تحديث معلومات المنتج Panadol Extra',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          ip_address: '192.168.0.22',
-          device_info: {
-            browser: 'Edge 120.0.2210.144',
-            os: 'Windows 10',
-            device_type: 'Desktop',
-            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.144'
-          },
-          location: {
-            city: 'طنطا',
-            district: 'وسط البلد',
-            country: 'مصر',
-            latitude: 30.7865,
-            longitude: 31.0004,
-            address: 'شارع الجمهورية، طنطا'
-          },
-          product_name: 'Panadol Extra',
-          update_type: 'price_update',
-          success: true,
-          details: {
-            browser: 'Edge',
-            os: 'Windows 10',
-            device_type: 'Desktop',
-            screen_resolution: '1600x900',
-            timezone: 'Africa/Cairo'
-          }
-        },
-        {
-          id: '5',
-          user_name: 'نورا حسن',
-          user_role: 'manager',
-          action: 'user_create',
-          description: 'إضافة مستخدم جديد: سمير أحمد',
-          timestamp: new Date(Date.now() - 10800000).toISOString(),
-          ip_address: '192.168.1.200',
-          device_info: {
-            browser: 'Chrome 120.0.6099.110',
-            os: 'macOS Sonoma',
-            device_type: 'Desktop',
-            user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          },
-          location: {
-            city: 'القاهرة',
-            district: 'التجمع الخامس',
-            country: 'مصر',
-            latitude: 30.0131,
-            longitude: 31.4286,
-            address: 'التجمع الخامس، القاهرة الجديدة'
-          },
-          new_user_name: 'سمير أحمد',
-          new_user_role: 'medical_rep',
-          success: true,
-          details: {
-            browser: 'Chrome',
-            os: 'macOS Sonoma',
-            device_type: 'Desktop',
-            screen_resolution: '2560x1440',
             timezone: 'Africa/Cairo'
           }
         }
@@ -502,40 +403,6 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
                       <span className="ml-2">{selectedActivity.success ? '✅' : '❌'}</span>
                       {selectedActivity.success ? 'نجح' : 'فشل'}
                     </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Technical Information */}
-              <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <span className="ml-3 text-2xl">💻</span>
-                  المعلومات التقنية
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <strong className="text-gray-700">عنوان IP:</strong>
-                    <p className="text-gray-900 mt-1 font-mono bg-gray-100 px-3 py-1 rounded">{selectedActivity.ip_address}</p>
-                  </div>
-                  <div>
-                    <strong className="text-gray-700">معلومات الجهاز:</strong>
-                    <p className="text-gray-900 mt-1">{selectedActivity.device_info}</p>
-                  </div>
-                  <div>
-                    <strong className="text-gray-700">المتصفح:</strong>
-                    <p className="text-gray-900 mt-1">{selectedActivity.details?.browser}</p>
-                  </div>
-                  <div>
-                    <strong className="text-gray-700">نظام التشغيل:</strong>
-                    <p className="text-gray-900 mt-1">{selectedActivity.details?.os}</p>
-                  </div>
-                  <div>
-                    <strong className="text-gray-700">دقة الشاشة:</strong>
-                    <p className="text-gray-900 mt-1">{selectedActivity.details?.screen_resolution}</p>
-                  </div>
-                  <div>
-                    <strong className="text-gray-700">المنطقة الزمنية:</strong>
-                    <p className="text-gray-900 mt-1">{selectedActivity.details?.timezone}</p>
                   </div>
                 </div>
               </div>
