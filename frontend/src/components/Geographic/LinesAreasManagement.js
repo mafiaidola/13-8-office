@@ -14,7 +14,7 @@ const LinesAreasManagement = ({ user, language, isRTL }) => {
   const [selectedArea, setSelectedArea] = useState(null);
   
   const { t } = useTranslation(language);
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   useEffect(() => {
     fetchLines();
