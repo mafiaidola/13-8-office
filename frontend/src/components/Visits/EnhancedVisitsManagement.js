@@ -839,6 +839,226 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
           </div>
         </div>
       )}
+
+      {/* Visit Details Modal (Admin Only) */}
+      {showVisitDetails && selectedVisitDetails && canViewVisitDetails() && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl w-full max-w-4xl max-h-screen overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b border-slate-700">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">🔍 تفاصيل الزيارة</h2>
+                  <p className="text-slate-300 mt-1">معلومات شاملة للأدمن فقط</p>
+                </div>
+                <button
+                  onClick={() => setShowVisitDetails(false)}
+                  className="text-slate-400 hover:text-white text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Basic Visit Information */}
+              <div className="bg-slate-700/50 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-white mb-4">📋 معلومات الزيارة الأساسية</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400">رقم الزيارة:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.visit_number || selectedVisitDetails.id}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">الحالة:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.status === 'planned' && 'مجدولة'}
+                      {selectedVisitDetails.status === 'in_progress' && 'جارية'}
+                      {selectedVisitDetails.status === 'completed' && 'مكتملة'}
+                      {selectedVisitDetails.status === 'cancelled' && 'ملغاة'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">التاريخ المجدول:</span>
+                    <span className="text-white font-medium mr-2">
+                      {new Date(selectedVisitDetails.scheduled_date).toLocaleString('ar-EG')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">النوع:</span>
+                    <span className="text-white font-medium mr-2">{selectedVisitDetails.visit_type}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clinic Information */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-blue-300 mb-4">🏥 معلومات العيادة</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400">اسم العيادة:</span>
+                    <span className="text-white font-medium mr-2">{selectedVisitDetails.clinic_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">اسم الطبيب:</span>
+                    <span className="text-white font-medium mr-2">{selectedVisitDetails.doctor_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">العنوان:</span>
+                    <span className="text-white font-medium mr-2">{selectedVisitDetails.clinic_address}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">الهاتف:</span>
+                    <span className="text-white font-medium mr-2">{selectedVisitDetails.clinic_phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">التصنيف:</span>
+                    <span className={`mr-2 px-2 py-1 rounded text-xs font-medium ${getClassificationColor(selectedVisitDetails.clinic_classification)} text-white`}>
+                      {selectedVisitDetails.clinic_classification}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">التصنيف الائتماني:</span>
+                    <span className={`mr-2 px-2 py-1 rounded text-xs font-medium ${getCreditColor(selectedVisitDetails.credit_classification)} text-white`}>
+                      {selectedVisitDetails.credit_classification}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Representative Information */}
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-green-300 mb-4">👤 معلومات المندوب</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400">اسم المندوب:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.assigned_to_name || 'غير محدد'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">دور المندوب:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.assigned_to_role || 'غير محدد'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">تم إنشاؤها بواسطة:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.created_by_name || 'غير محدد'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">تاريخ الإنشاء:</span>
+                    <span className="text-white font-medium mr-2">
+                      {selectedVisitDetails.created_at ? 
+                        new Date(selectedVisitDetails.created_at).toLocaleString('ar-EG') : 
+                        'غير محدد'
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* GPS Location (Admin Only) */}
+              {selectedVisitDetails.representative_location && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6">
+                  <h3 className="text-xl font-bold text-red-300 mb-4">📍 موقع المندوب (سري - أدمن فقط)</h3>
+                  <div className="bg-red-900/20 p-4 rounded-lg mb-4">
+                    <p className="text-red-200 text-sm">
+                      🔒 هذه المعلومات سرية ولا تظهر إلا للأدمن فقط
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-slate-400">خط العرض:</span>
+                      <span className="text-white font-medium mr-2">
+                        {selectedVisitDetails.representative_location.latitude}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">خط الطول:</span>
+                      <span className="text-white font-medium mr-2">
+                        {selectedVisitDetails.representative_location.longitude}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">دقة الموقع:</span>
+                      <span className="text-white font-medium mr-2">
+                        {selectedVisitDetails.representative_location.accuracy}م
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">وقت التسجيل:</span>
+                      <span className="text-white font-medium mr-2">
+                        {new Date(selectedVisitDetails.representative_location.recorded_at).toLocaleString('ar-EG')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <a
+                      href={`https://maps.google.com/?q=${selectedVisitDetails.representative_location.latitude},${selectedVisitDetails.representative_location.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                    >
+                      🗺️ عرض على خريطة جوجل
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Visit Purpose and Notes */}
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-purple-300 mb-4">📝 تفاصيل الزيارة</h3>
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-slate-400 block mb-2">الغرض من الزيارة:</span>
+                    <p className="text-white bg-slate-700/50 p-3 rounded-lg">
+                      {selectedVisitDetails.visit_purpose || 'غير محدد'}
+                    </p>
+                  </div>
+                  {selectedVisitDetails.visit_notes && (
+                    <div>
+                      <span className="text-slate-400 block mb-2">ملاحظات إضافية:</span>
+                      <p className="text-white bg-slate-700/50 p-3 rounded-lg">
+                        {selectedVisitDetails.visit_notes}
+                      </p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-slate-400">المدة المتوقعة:</span>
+                      <span className="text-white font-medium mr-2">
+                        {selectedVisitDetails.estimated_duration || 30} دقيقة
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">مستوى الأولوية:</span>
+                      <span className="text-white font-medium mr-2">
+                        {selectedVisitDetails.priority_level === 'low' && 'منخفضة'}
+                        {selectedVisitDetails.priority_level === 'normal' && 'عادية'}
+                        {selectedVisitDetails.priority_level === 'high' && 'عالية'}
+                        {selectedVisitDetails.priority_level === 'urgent' && 'عاجلة'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-700 flex justify-end">
+              <button
+                onClick={() => setShowVisitDetails(false)}
+                className="px-6 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-500 transition-all duration-200"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
