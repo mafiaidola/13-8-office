@@ -76,10 +76,10 @@ app.include_router(debt_router)
 
 # Include enhanced routes if available
 if ENHANCED_ROUTES_AVAILABLE:
-    app.include_router(enhanced_clinic_router, prefix="/api")
-    app.include_router(unified_financial_router, prefix="/api")
-    app.include_router(visit_management_router, prefix="/api")
-    print("✅ Enhanced routes included successfully with /api prefix")
+    app.include_router(enhanced_clinic_router)
+    app.include_router(unified_financial_router)
+    app.include_router(visit_management_router)
+    print("✅ Enhanced routes included successfully")
 else:
     print("⚠️ Enhanced routes not included - using basic functionality")
 
