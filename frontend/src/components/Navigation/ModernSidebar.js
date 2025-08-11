@@ -447,12 +447,12 @@ const ModernSidebar = ({
         ))}
       </div>
 
-      {/* Footer - Enhanced with EP Group System */}
-      <div className={`p-4 border-t ${themeStyles.footer}`}>
+      {/* Footer - Compact EP Group System */}
+      <div className={`p-3 border-t ${themeStyles.footer}`}>
         {!isCollapsed ? (
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <span className="text-2xl">🏥</span>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-xl">🏥</span>
               <div>
                 <p className={`text-sm font-bold ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
                   EP Group System
@@ -463,16 +463,16 @@ const ModernSidebar = ({
               </div>
             </div>
             
-            {/* Professional Copyright Section */}
-            <div className="mt-3 p-2 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-gray-200">
+            {/* Compact Professional Copyright Section */}
+            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-gray-200">
               <a 
                 href="https://facebook.com/mafiaidola" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block group transition-all duration-300 hover:scale-105"
               >
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-lg group-hover:animate-bounce">👨‍💻</span>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-sm group-hover:animate-bounce">👨‍💻</span>
                   <div className="text-center">
                     <p className="text-xs font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
                       Coded By
@@ -481,39 +481,15 @@ const ModernSidebar = ({
                       Mahmoud M. E.
                     </p>
                   </div>
-                  <span className="text-lg group-hover:animate-pulse">✨</span>
-                </div>
-                
-                <div className="flex items-center justify-center gap-1 text-xs">
-                  <span className="animate-pulse">🌟</span>
-                  <span className="font-medium bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
-                    Creative Developer
-                  </span>
-                  <span className="animate-pulse">🌟</span>
-                </div>
-                
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
-                  <span className="text-xs font-semibold text-blue-600 group-hover:text-blue-800">
-                    Professional Solutions
-                  </span>
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-ping"></div>
+                  <span className="text-sm group-hover:animate-pulse">✨</span>
                 </div>
               </a>
-            </div>
-            
-            <div className={`flex items-center justify-center gap-2 text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
-              <span>🇪🇬</span>
-              <span>{language === 'ar' ? 'مصر' : 'Egypt'}</span>
-              <span>•</span>
-              <span>2025</span>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xl">🏥</span>
-            <span className="text-sm font-bold text-blue-600">EP</span>
-            <span className="text-lg">🇪🇬</span>
+            <span className="text-lg">🏥</span>
+            <span className="text-xs font-bold text-blue-600">EP</span>
           </div>
         )}
       </div>
