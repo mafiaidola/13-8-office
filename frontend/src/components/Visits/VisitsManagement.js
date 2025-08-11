@@ -192,7 +192,7 @@ const VisitsManagement = () => {
         return;
       }
 
-      const response = await axios.post(`${API_BASE}/api/visits/complete`, {
+      const response = await axios.post(`${API_BASE}/visits/complete`, {
         visit_id: visitId,
         ...completionData
       }, {
