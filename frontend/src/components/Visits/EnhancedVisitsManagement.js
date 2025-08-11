@@ -198,13 +198,50 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
     }
   };
 
-  // Create new visit
+  // Create new visit with GPS location tracking
   const createVisit = async () => {
     try {
       if (!newVisit.clinic_id || !newVisit.visit_purpose) {
         alert('يرجى اختيار العيادة وتحديد الغرض من الزيارة');
         return;
       }
+
+      console.log('🆔 إنشاء زيارة للعيادة:', newVisit.clinic_id);
+      console.log('👤 المستخدم:', user);
+
+      // Get current GPS location for representative tracking
+      const getCurrentLocation = () => {
+        return new Promise((resolve, reject) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  timestamp: new Date().toISOString()
+                });
+              },
+              (error) => {
+                console.warn('⚠️ تعذر الحصول على موقع المندوب:', error.message);
+                resolve(null); // Don't fail if GPS is not available
+              },
+              { 
+                enableHighAccuracy: true, 
+                timeout: 10000, 
+                maximumAge: 60000 
+              }
+            );
+          } else {
+            console.warn('⚠️ المتصفح لا يدعم تحديد الموقع الجغرافي');
+            resolve(null);
+          }
+        });
+      };
+
+      // Get representative's current location
+      const repLocation = await getCurrentLocation();
+      console.log('📍 موقع المندوب عند إنشاء الزيارة:', repLocation);
 
       const token = localStorage.getItem('access_token');
       const headers = { 
@@ -215,26 +252,74 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       // Combine date and time
       const scheduledDateTime = `${newVisit.scheduled_date}T${newVisit.scheduled_time}:00`;
       
+      // Find selected clinic data for complete information
+      const selectedClinic = availableClinics.find(clinic => clinic.id === newVisit.clinic_id);
+      
       const visitData = {
-        ...newVisit,
+        // Basic visit information
+        clinic_id: newVisit.clinic_id,
+        clinic_name: selectedClinic?.name || newVisit.clinic_name,
+        doctor_name: selectedClinic?.doctor_name || 'غير محدد',
+        clinic_address: selectedClinic?.address || 'غير محدد',
+        clinic_phone: selectedClinic?.phone || '',
+        clinic_classification: selectedClinic?.classification || 'class_b',
+        credit_classification: selectedClinic?.credit_classification || 'yellow',
+        
+        // Visit details
+        visit_type: newVisit.visit_type,
         scheduled_date: scheduledDateTime,
+        visit_purpose: newVisit.visit_purpose,
+        visit_notes: newVisit.visit_notes,
+        estimated_duration: newVisit.estimated_duration,
+        priority_level: newVisit.priority_level,
+        
+        // Representative information and tracking
         assigned_to: user?.user_id,
+        assigned_to_name: user?.full_name || user?.username,
+        assigned_to_role: user?.role,
         created_by: user?.user_id,
-        status: 'planned'
+        created_by_name: user?.full_name || user?.username,
+        
+        // GPS tracking for representative (ADMIN ONLY visibility)
+        representative_location: repLocation ? {
+          latitude: repLocation.latitude,
+          longitude: repLocation.longitude,
+          accuracy: repLocation.accuracy,
+          recorded_at: repLocation.timestamp,
+          privacy_level: 'admin_only', // Only admin can view this
+          location_source: 'visit_creation'
+        } : null,
+        
+        // Visit status and timestamps
+        status: 'planned',
+        created_at: new Date().toISOString(),
+        
+        // Link to clinic's line and area if available
+        line_id: selectedClinic?.line_id,
+        area_id: selectedClinic?.area_id,
+        
+        // Generate unique visit number
+        visit_number: `V-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
       };
+
+      console.log('📝 بيانات الزيارة التي سيتم إرسالها:', visitData);
 
       const response = await axios.post(`${API_BASE}/visits/`, visitData, { headers });
       
       if (response.data.success) {
+        console.log('✅ تم إنشاء الزيارة بنجاح:', response.data);
         alert('تم إنشاء الزيارة بنجاح');
         setShowCreateModal(false);
         resetForm();
         loadVisits();
         loadDashboardData();
+      } else {
+        console.error('❌ فشل إنشاء الزيارة:', response.data);
+        alert('حدث خطأ أثناء إنشاء الزيارة: ' + (response.data.message || 'خطأ غير معروف'));
       }
     } catch (error) {
-      console.error('Error creating visit:', error);
-      alert('حدث خطأ أثناء إنشاء الزيارة');
+      console.error('❌ خطأ في إنشاء الزيارة:', error);
+      alert('حدث خطأ أثناء إنشاء الزيارة. يرجى المحاولة مرة أخرى.');
     }
   };
 
