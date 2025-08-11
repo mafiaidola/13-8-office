@@ -199,7 +199,10 @@ class FinancialSystemTester:
                         "discount_percentage": 0,
                         "discount_amount": 0,
                         "tax_percentage": 14,
-                        "tax_amount": 5 * product.get("price", 50.0) * 0.14
+                        "tax_amount": 5 * product.get("price", 50.0) * 0.14,
+                        "subtotal": 5 * product.get("price", 50.0),
+                        "total": 5 * product.get("price", 50.0) * 1.14,
+                        "description": "منتج اختبار للنظام المالي"
                     }
                 ],
                 "subtotal": 5 * product.get("price", 50.0),
