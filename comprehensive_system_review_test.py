@@ -254,8 +254,8 @@ class ComprehensiveSystemReviewTester:
         print("\n🏦 المرحلة 2: اختبار النظام المالي الموحد")
         
         unified_endpoints = [
-            ("/api/unified-financial/dashboard/overview", "Unified Financial Dashboard"),
-            ("/api/unified-financial/records", "Unified Financial Records")
+            ("/unified-financial/dashboard/overview", "Unified Financial Dashboard"),
+            ("/unified-financial/records", "Unified Financial Records")
         ]
         
         for endpoint, name in unified_endpoints:
