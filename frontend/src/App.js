@@ -1171,12 +1171,12 @@ const DashboardLayout = () => {
         theme={theme}
       />
 
-      {/* Main Dashboard Content with modern layout */}
+      {/* Main Dashboard Content with improved layout - fixed header overlap */}
       <div className={`dashboard-content transition-all duration-300 ${
         sidebarCollapsed ? 'mr-16' : 'mr-80'
-      } mt-16`}>
+      } mt-20`}> {/* Increased margin-top to avoid header overlap */}
         {/* Main Content */}
-        <main className="dashboard-main flex-1 p-6 overflow-auto">
+        <main className="dashboard-main flex-1 p-6 overflow-auto min-h-screen">
           {/* Current Tab Component */}
           <div className="tab-content">
             {(() => {
