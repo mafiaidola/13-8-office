@@ -192,6 +192,12 @@ export const COMPONENT_REGISTRY = {
     'جاري تحميل إدارة الزيارات المحسنة...'
   ),
 
+  // Enhanced Visits Management - Professional
+  EnhancedVisitsManagement: createLazyComponent(
+    () => import('../Visits/EnhancedVisitsManagement'),
+    'جاري تحميل نظام إدارة الزيارات الاحترافي...'
+  ),
+
   // Visit Management
   VisitRegistration: createLazyComponent(
     () => import('../Visits/VisitRegistration'),
