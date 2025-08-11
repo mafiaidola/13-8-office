@@ -283,7 +283,7 @@ class ComprehensiveSystemReviewTester:
             "due_date": "2025-01-15"
         }
         
-        response, response_time = self.make_request("POST", "/api/unified-financial/records", test_record)
+        response, response_time = self.make_request("POST", "/unified-financial/records", test_record)
         
         if response and response.status_code in [200, 201]:
             data = response.json()
