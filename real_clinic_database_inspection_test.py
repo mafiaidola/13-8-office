@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://f4f7e091-f5a6-4f57-bca3-79ac25601921.preview.emergentagent.com"
+BACKEND_URL = "https://4a9f720a-2892-4a4a-8a02-0abb64f3fd62.preview.emergentagent.com"
 BASE_URL = f"{BACKEND_URL}/api"
 
 def print_section(title):
