@@ -18,7 +18,7 @@ const VisitManagement = ({ user, language, isRTL }) => {
   const [filterDate, setFilterDate] = useState('');
   
   const { t } = useTranslation(language);
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
   
   // Check user permissions for GPS viewing
   const canViewGPS = ['admin', 'gm'].includes(user?.role);
