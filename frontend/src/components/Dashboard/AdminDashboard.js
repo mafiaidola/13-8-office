@@ -85,42 +85,60 @@ const AdminDashboard = ({
     }
   ];
 
-  // Admin quick actions with translations
+  // Admin quick actions with proper navigation
   const adminQuickActions = [
     {
       label: language === 'ar' ? 'إضافة مستخدم' : 'Add User',
       icon: '👤➕',
-      onClick: () => console.log('Add user'),
+      onClick: () => {
+        // Navigate to User Management section
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'UserManagement' }));
+      },
       color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
     },
     {
       label: language === 'ar' ? 'إدارة العيادات' : 'Manage Clinics',
       icon: '🏥⚙️',
-      onClick: () => console.log('Manage clinics'),
+      onClick: () => {
+        // Navigate to Clinics Management section
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ClinicsManagement' }));
+      },
       color: 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
     },
     {
-      label: language === 'ar' ? 'تقارير النظام' : 'System Reports',
-      icon: '📊📋',
-      onClick: () => console.log('System Reports'),
+      label: language === 'ar' ? 'النظام المالي' : 'Financial Management',
+      icon: '💰📊',
+      onClick: () => {
+        // Navigate to Financial Management section
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'UnifiedFinancialDashboard' }));
+      },
       color: 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
     },
     {
-      label: language === 'ar' ? 'النسخ الاحتياطي' : 'Backup',
-      icon: '💾🔒',
-      onClick: () => console.log('Backup'),
+      label: language === 'ar' ? 'إدارة الزيارات' : 'Visits Management',
+      icon: '🏥📋',
+      onClick: () => {
+        // Navigate to Visits Management section  
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'EnhancedVisitsManagement' }));
+      },
       color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
     },
     {
-      label: language === 'ar' ? 'مراقبة النظام' : 'System Monitoring',
-      icon: '📈🔍',
-      onClick: () => loadSystemHealth(),
+      label: language === 'ar' ? 'إدارة المنتجات' : 'Products Management',
+      icon: '📦🔧',
+      onClick: () => {
+        // Navigate to Products Management section
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ProductManagement' }));
+      },
       color: 'bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200'
     },
     {
-      label: language === 'ar' ? 'إعدادات متقدمة' : 'Advanced Settings',
-      icon: '⚙️🎛️',
-      onClick: () => console.log('Advanced Settings'),
+      label: language === 'ar' ? 'تتبع الأنشطة' : 'Activity Tracking',
+      icon: '📈🔍',
+      onClick: () => {
+        // Navigate to Activity Tracking section
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'ActivityTrackingFixed' }));
+      },
       color: 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
     }
   ];
