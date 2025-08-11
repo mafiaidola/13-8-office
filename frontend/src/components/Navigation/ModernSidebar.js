@@ -316,12 +316,13 @@ const ModernSidebar = ({
   return (
     <div 
       className={`
-        fixed top-0 right-0 h-full shadow-2xl border-l z-40
+        fixed top-16 right-0 shadow-2xl border-l z-40
         transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-16' : 'w-80'}
         flex flex-col
         ${themeStyles.sidebar} ${themeStyles.border}
       `}
+      style={{ height: 'calc(100vh - 4rem)' }} // Set height to full viewport minus header (4rem = 64px)
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       {/* Header */}
