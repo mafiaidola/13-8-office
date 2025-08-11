@@ -123,19 +123,20 @@ class VisitsManagementQuickTest:
         """اختبار 2: GET /api/visits - قائمة الزيارات"""
         print("\n📋 اختبار 2: GET /api/visits - قائمة الزيارات")
         
-        result = await self.make_request('GET', '/visits')
+        result = await self.make_request('GET', '/visits/')
         
         if result['success']:
             visits_data = result['data']
-            if isinstance(visits_data, list):
-                visits_count = len(visits_data)
+            if isinstance(visits_data, dict) and 'visits' in visits_data:
+                visits_list = visits_data['visits']
+                visits_count = len(visits_list)
                 details = f"تم جلب قائمة الزيارات بنجاح - العدد: {visits_count} زيارة"
                 self.log_test_result("GET /api/visits", True, details, result['response_time'])
                 
                 # عرض تفاصيل بعض الزيارات إذا كانت متوفرة
                 if visits_count > 0:
-                    sample_visit = visits_data[0]
-                    visit_details = f"مثال زيارة: ID={sample_visit.get('id', 'N/A')}, العيادة={sample_visit.get('clinic_name', 'N/A')}, التاريخ={sample_visit.get('visit_date', 'N/A')}"
+                    sample_visit = visits_list[0]
+                    visit_details = f"مثال زيارة: ID={sample_visit.get('id', 'N/A')}, العيادة={sample_visit.get('clinic_name', 'N/A')}, التاريخ={sample_visit.get('scheduled_date', 'N/A')}"
                     print(f"   📝 {visit_details}")
                 else:
                     print(f"   ℹ️ لا توجد زيارات مسجلة في النظام")
