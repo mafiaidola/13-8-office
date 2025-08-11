@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple FastAPI server for testing dashboard APIs
+Simple FastAPI server for testing dashboard APIs - Fixed with missing routers
 """
 
 from fastapi import FastAPI, HTTPException, Depends, status
@@ -30,7 +30,14 @@ from routers.invoice_management_routes import router as invoice_router
 from routers.debt_management_routes import router as debt_router
 
 # Import clinic routes from routes directory
-from routes.enhanced_clinic_routes import router as clinic_router
+try:
+    from routes.enhanced_clinic_routes import router as enhanced_clinic_router
+    from routes.unified_financial_routes import router as unified_financial_router
+    from routes.visit_management_routes import router as visit_management_router
+    ENHANCED_ROUTES_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Enhanced routes not available: {e}")
+    ENHANCED_ROUTES_AVAILABLE = False
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -66,7 +73,15 @@ app.include_router(visits_router)
 app.include_router(activities_router)
 app.include_router(invoice_router)
 app.include_router(debt_router)
-app.include_router(clinic_router)
+
+# Include enhanced routes if available
+if ENHANCED_ROUTES_AVAILABLE:
+    app.include_router(enhanced_clinic_router)
+    app.include_router(unified_financial_router)
+    app.include_router(visit_management_router)
+    print("✅ Enhanced routes included successfully")
+else:
+    print("⚠️ Enhanced routes not included - using basic functionality")
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
@@ -111,6 +126,7 @@ async def health_check():
         return {
             "status": "healthy",
             "database": "connected",
+            "enhanced_routes": ENHANCED_ROUTES_AVAILABLE,
             "statistics": {
                 "users": users_count,
                 "clinics": clinics_count,
@@ -502,12 +518,12 @@ async def create_clinic(clinic_data: dict, current_user: dict = Depends(get_curr
         clinic_document = {
             "id": clinic_id,
             "registration_number": registration_number,
-            "clinic_name": clinic_data.get("clinic_name", ""),
-            "clinic_phone": clinic_data.get("clinic_phone", ""),
-            "clinic_email": clinic_data.get("clinic_email", ""),
+            "name": clinic_data.get("clinic_name", ""),
+            "phone": clinic_data.get("clinic_phone", ""),
+            "email": clinic_data.get("clinic_email", ""),
             "doctor_name": clinic_data.get("doctor_name", ""),
             "doctor_phone": clinic_data.get("doctor_phone", ""),
-            "clinic_address": clinic_data.get("clinic_address", ""),
+            "address": clinic_data.get("clinic_address", ""),
             "line_id": clinic_data.get("line_id", ""),
             "area_id": clinic_data.get("area_id", ""),
             "classification": clinic_data.get("classification", "class_b"),
