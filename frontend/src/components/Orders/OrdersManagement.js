@@ -14,7 +14,7 @@ const OrdersManagement = ({ user, language, isRTL }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const { t } = useTranslation(language);
-  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+  const API = process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001/api';
 
   useEffect(() => {
     fetchOrders();
