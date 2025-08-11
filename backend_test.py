@@ -497,13 +497,14 @@ class FinancialSystemTester:
         # الحصول على البيانات الأساسية
         clinics = self.test_get_clinics()
         products = self.test_get_products()
+        users = self.test_get_users()
         
         # المرحلة 1: تدفق النظام المالي الكامل
         print("\n" + "="*50)
         print("🎯 المرحلة 1: اختبار تدفق النظام المالي الكامل")
         print("="*50)
         
-        invoice = self.test_create_invoice(clinics, products)
+        invoice = self.test_create_invoice(clinics, products, users)
         if invoice:
             approved = self.test_approve_invoice(invoice)
             if approved:
