@@ -48,53 +48,64 @@ export const SYSTEM_TABS = {
     icon: '🏥',
     name: { ar: 'تسجيل العيادات المحسن', en: 'Enhanced Clinic Registration' },
     component: 'EnhancedClinicRegistrationAdvanced',
-    description: { ar: 'تسجيل عيادات جديدة مع خرائط جوجل التفاعلية والتصنيفات المتقدمة', en: 'Register new clinics with interactive Google Maps and advanced classifications' },
+    description: { ar: 'تسجيل العيادات مع خرائط تفاعلية وتصنيفات شاملة', en: 'Register clinics with interactive maps and comprehensive classifications' },
     permissions: ['admin', 'gm', 'medical_rep'],
     priority: 3
-  },
-
-  products: {
-    id: 'products',
-    path: '/products',
-    icon: '📦',
-    name: { ar: 'إدارة المنتجات', en: 'Product Management' },
-    component: 'ProductManagement',
-    description: { ar: 'إدارة المنتجات والأسعار والمخزون', en: 'Manage products, prices and inventory' },
-    permissions: ['admin', 'gm', 'line_manager'],
-    priority: 4
-  },
-
-  orders: {
-    id: 'orders',
-    path: '/orders',
-    icon: '📋',
-    name: { ar: 'إدارة الطلبات', en: 'Orders Management' },
-    component: 'OrdersManagement',
-    description: { ar: 'إدارة الطلبات والموافقات والتسليم', en: 'Manage orders, approvals and delivery' },
-    permissions: ['admin', 'gm', 'line_manager', 'medical_rep'],
-    priority: 5
-  },
-
-  warehouses: {
-    id: 'warehouses',
-    path: '/warehouses',
-    icon: '🏪',
-    name: { ar: 'إدارة المخازن', en: 'Warehouse Management' },
-    component: 'WarehouseManagement',
-    description: { ar: 'إدارة المخازن والمخزون وحركة البضائع', en: 'Manage warehouses, inventory and goods movement' },
-    permissions: ['admin', 'gm', 'warehouse_manager'],
-    priority: 6
   },
 
   clinics_management: {
     id: 'clinics_management',
     path: '/clinics-management',
-    icon: '🏥',
+    icon: '🏢',
     name: { ar: 'إدارة العيادات', en: 'Clinics Management' },
     component: 'ClinicsManagement',
-    description: { ar: 'إدارة شاملة للعيادات مع التصنيفات والحالة الائتمانية', en: 'Comprehensive clinic management with classifications and credit status' },
+    description: { ar: 'إدارة شاملة للعيادات المسجلة والتحكم بها', en: 'Comprehensive management of registered clinics' },
+    permissions: ['admin', 'gm', 'line_manager', 'area_manager'],
+    priority: 4
+  },
+
+  visits_management: {
+    id: 'visits_management',
+    path: '/visits-management',
+    icon: '🩺',
+    name: { ar: 'إدارة الزيارات', en: 'Visits Management' },
+    component: 'EnhancedVisitsManagement',
+    description: { ar: 'نظام إدارة زيارات المناديب مع تتبع GPS والتقارير', en: 'Representative visits management system with GPS tracking and reports' },
+    permissions: ['admin', 'gm', 'line_manager', 'area_manager', 'medical_rep'],
+    priority: 5
+  },
+
+  products: {
+    id: 'products',
+    path: '/products',
+    icon: '💊',
+    name: { ar: 'إدارة المنتجات', en: 'Product Management' },
+    component: 'ProductManagement',
+    description: { ar: 'إدارة قاعدة بيانات المنتجات والأدوية', en: 'Manage products and medicines database' },
     permissions: ['admin', 'gm', 'line_manager'],
+    priority: 6
+  },
+
+  integrated_financial: {
+    id: 'integrated_financial',
+    path: '/integrated-financial',
+    icon: '💰',
+    name: { ar: 'النظام المالي المتكامل', en: 'Integrated Financial System' },
+    component: 'IntegratedFinancialDashboard',
+    description: { ar: 'إدارة شاملة للأمور المالية والفواتير والديون', en: 'Comprehensive financial management including invoices and debts' },
+    permissions: ['admin', 'gm', 'accounting', 'finance'],
     priority: 7
+  },
+
+  excel_management: {
+    id: 'excel_management',
+    path: '/excel-management',
+    icon: '📊',
+    name: { ar: 'إدارة ملفات Excel', en: 'Excel Management' },
+    component: 'ExcelDashboard',
+    description: { ar: 'استيراد وتصدير البيانات من وإلى ملفات Excel', en: 'Import and export data from/to Excel files' },
+    permissions: ['admin', 'gm'],
+    priority: 8
   },
 
   lines_areas: {
@@ -103,19 +114,19 @@ export const SYSTEM_TABS = {
     icon: '🗺️',
     name: { ar: 'إدارة الخطوط والمناطق', en: 'Lines & Areas Management' },
     component: 'LinesAreasManagement',
-    description: { ar: 'إدارة الخطوط الجغرافية والمناطق التابعة', en: 'Manage geographical lines and associated areas' },
+    description: { ar: 'إدارة التقسيم الجغرافي للخطوط والمناطق', en: 'Manage geographical division of lines and areas' },
     permissions: ['admin', 'gm'],
-    priority: 8
+    priority: 9
   },
 
-  system_management: {
-    id: 'system_management',
-    path: '/system-management',
-    icon: '⚙️',
-    name: { ar: 'إدارة النظام', en: 'System Management' },
-    component: 'Settings',
-    description: { ar: 'إعدادات النظام والأمان والنسخ الاحتياطي', en: 'System settings, security and backup configuration' },
-    permissions: ['admin'],
+  warehouses: {
+    id: 'warehouses',
+    path: '/warehouses',
+    icon: '🏬',
+    name: { ar: 'إدارة المخازن', en: 'Warehouse Management' },
+    component: 'WarehouseManagement',
+    description: { ar: 'إدارة المخازن والمخزون والحركات', en: 'Manage warehouses, inventory and movements' },
+    permissions: ['admin', 'gm', 'warehouse_manager'],
     priority: 10
   },
 
@@ -132,105 +143,56 @@ export const SYSTEM_TABS = {
     priority: 12
   },
 
-  integrated_financial: {
-    id: 'integrated_financial',
-    path: '/financial',
-    icon: '💰',
-    name: { ar: 'النظام المالي المتكامل', en: 'Integrated Financial System' },
-    component: 'IntegratedFinancialDashboard',
-    description: { ar: 'إدارة شاملة للفواتير والديون والتحصيل', en: 'Comprehensive management of invoices, debts and collections' },
-    permissions: ['admin', 'gm', 'accounting', 'finance'],
-    priority: 6
+  super_admin_monitoring: {
+    id: 'super_admin_monitoring',
+    path: '/super-admin-monitoring',
+    icon: '🛡️',
+    name: { ar: 'مركز المراقبة والتحكم الشامل', en: 'Super Admin Monitoring Center' },
+    component: 'SuperAdminActivityDashboard',
+    description: { ar: 'نظام مراقبة احترافي متطور لجميع الأنشطة والحركات مع التحليلات المتقدمة والخرائط الجغرافية والتنبيهات الأمنية', en: 'Advanced professional monitoring system for all activities with analytics, geographic maps and security alerts' },
+    permissions: ['admin'],
+    priority: 11
   },
 
-  accounting: {
-    id: 'accounting',
-    path: '/accounting',
-    name: { ar: 'الحسابات', en: 'Accounting' },
-    module: 'النظام المالي الموحد',
-    icon: '💰',
-    component: 'UnifiedFinancialDashboard',
-    enabled: true,
-    description: { ar: 'إدارة شاملة للفواتير والديون والتحصيلات', en: 'Comprehensive invoices, debts and collections management' },
-    permissions: ['admin', 'gm', 'accounting', 'finance'],
-    priority: 5
-  },
-  visits: {
-    id: 'visits',
-    path: '/visits',
-    name: { ar: 'إدارة الزيارات', en: 'Visits Management' },
-    module: 'زيارات المناديب',
-    icon: '🏥', 
-    component: 'EnhancedVisitsManagement',
-    enabled: true,
-    description: { ar: 'نظام إدارة وتتبع الزيارات المحسن مع صلاحيات وربط احترافي', en: 'Enhanced visits management system with permissions and professional integration' },
-    permissions: ['admin', 'gm', 'medical_rep', 'line_manager'],
-    priority: 4
-  },
-
-  analytics: {
-    id: 'analytics',
-    path: '/analytics',
-    icon: '📊',
-    name: { ar: 'التحليلات المتقدمة', en: 'Advanced Analytics' },
-    component: 'AdvancedAnalytics',
-    description: { ar: 'تحليلات متقدمة للبيانات والتقارير التفصيلية', en: 'Advanced data analytics and detailed reporting' },
-    permissions: ['admin', 'gm', 'manager', 'medical_rep', 'key_account'],
-    priority: 15
-  },
-
-  debt_collection_management: {
-    id: 'debt_collection_management',
-    path: '/debt-collection',
-    icon: '💰',
-    name: { ar: 'إدارة الديون والتحصيل', en: 'Debt Collection Management' },
-    component: 'DebtCollectionManagement',
-    description: { ar: 'إدارة شاملة للديون والمديونيات ومعالجة المدفوعات مع ربط الفواتير والمستخدمين', en: 'Comprehensive debt and collection management with invoice and user integration' },
-    permissions: ['admin', 'gm', 'accounting', 'manager'],
-    priority: 16
-  },
-
-  excel_management: {
-    id: 'excel_management',
-    path: '/excel-management',
-    name: { ar: 'إدارة Excel', en: 'Excel Management' },
-    icon: '📊',
-    permissions: ['admin', 'gm', 'manager', 'accounting'],
-    component: 'ExcelDashboard',
-    description: { ar: 'تصدير واستيراد البيانات بصيغة Excel', en: 'Export and import data in Excel format' },
-    priority: 17
+  settings: {
+    id: 'settings',
+    path: '/settings',
+    icon: '⚙️',
+    name: { ar: 'الإعدادات العامة', en: 'General Settings' },
+    component: 'Settings',
+    description: { ar: 'إعدادات النظام العامة والتخصيصات', en: 'General system settings and customizations' },
+    permissions: ['admin', 'gm'],
+    priority: 13
   }
 };
 
-// Permission Checking Function
-export const hasPermission = (userRole, tabId) => {
+// Helper function to get available tabs for a user based on their role
+export const getAvailableTabs = (userRole) => {
+  if (!userRole) return [];
+  
   const normalizedRole = normalizeRole(userRole);
-  const tab = Object.values(SYSTEM_TABS).find(t => t.id === tabId);
   
-  if (!tab) return false;
-  if (tab.permissions.includes('*')) return true;
-  
-  return tab.permissions.includes(normalizedRole);
+  return Object.values(SYSTEM_TABS).filter(tab => {
+    if (tab.permissions.includes('*')) return true;
+    return tab.permissions.some(permission => 
+      normalizeRole(permission) === normalizedRole
+    );
+  }).sort((a, b) => (a.priority || 999) - (b.priority || 999));
 };
 
-// Get tabs for specific user role
-export const getAvailableTabs = (userRole) => {
-  const normalizedRole = normalizeRole(userRole);
+// Helper function to check if user has permission for a specific tab
+export const hasTabPermission = (userRole, tabId) => {
+  if (!userRole || !tabId) return false;
   
-  // Return all tabs for admin, or filter by permissions for other roles
-  return Object.values(SYSTEM_TABS)
-    .filter(tab => {
-      // Skip tabs without permissions defined (safety check)
-      if (!tab.permissions || !Array.isArray(tab.permissions)) {
-        console.warn(`Tab ${tab.id} missing permissions array, skipping`);
-        return false;
-      }
-      
-      // Allow access if permissions include '*' or the user's role
-      if (tab.permissions.includes('*')) return true;
-      return tab.permissions.includes(normalizedRole);
-    })
-    .sort((a, b) => (a.priority || 999) - (b.priority || 999));
+  const tab = SYSTEM_TABS[tabId];
+  if (!tab) return false;
+  
+  if (tab.permissions.includes('*')) return true;
+  
+  const normalizedRole = normalizeRole(userRole);
+  return tab.permissions.some(permission => 
+    normalizeRole(permission) === normalizedRole
+  );
 };
 
 export default SYSTEM_TABS;

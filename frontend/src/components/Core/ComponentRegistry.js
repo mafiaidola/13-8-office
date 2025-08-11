@@ -1,368 +1,129 @@
-// Medical Management System - Central Component Registry
-// سجل المكونات المركزي
+// Component Registry - سجل المكونات المركزي
+import React from 'react';
 
-import React, { Suspense, lazy } from 'react';
+// Import all components
+import Dashboard from '../Dashboard/Dashboard';
+import UserManagement from '../Users/UserManagement';
+import EnhancedClinicRegistrationAdvanced from '../Clinics/EnhancedClinicRegistrationAdvanced';
+import ClinicsManagement from '../Clinics/ClinicsManagement';
+import EnhancedVisitsManagement from '../Visits/EnhancedVisitsManagement';
+import ProductManagement from '../Products/ProductManagement';
+import IntegratedFinancialDashboard from '../Financial/IntegratedFinancialDashboard';
+import ExcelDashboard from '../Excel/ExcelDashboard';
+import LinesAreasManagement from '../Geographic/LinesAreasManagement';
+import WarehouseManagement from '../Warehouses/WarehouseManagement';
+import EnhancedActivityTracking from '../ActivityTracking/EnhancedActivityTracking';
+import SuperAdminActivityDashboard from '../ActivityTracking/SuperAdminActivityDashboard';
+import Settings from '../Settings/Settings';
 
-// Loading Component
-const LoadingSpinner = ({ message = 'جاري التحميل...' }) => (
-  <div className="flex items-center justify-center p-8">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600">{message}</p>
-    </div>
-  </div>
-);
-
-// Error Boundary Component
-class ComponentErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Component Error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-8 text-center">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-bold text-red-600 mb-2">خطأ في تحميل المكون</h3>
-          <p className="text-gray-600 mb-4">حدث خطأ أثناء تحميل هذا القسم</p>
-          <button 
-            onClick={() => this.setState({ hasError: false, error: null })}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Lazy Load Components with Error Boundaries
-const createLazyComponent = (importFunc, fallbackMessage) => {
-  const LazyComponent = lazy(importFunc);
-  
-  return (props) => (
-    <ComponentErrorBoundary>
-      <Suspense fallback={<LoadingSpinner message={fallbackMessage} />}>
-        <LazyComponent {...props} />
-      </Suspense>
-    </ComponentErrorBoundary>
-  );
-};
-
-// Component Registry - سجل المكونات
-export const COMPONENT_REGISTRY = {
+// Component Registry Object
+const COMPONENT_REGISTRY = {
   // Core Components
-  Dashboard: createLazyComponent(
-    () => import('../Dashboard/Dashboard'),
-    'جاري تحميل لوحة التحكم...'  
-  ),
-  EnhancedDashboard: createLazyComponent(
-    () => import('../Dashboard/EnhancedDashboard'),
-    'جاري تحميل لوحة التحكم المحسنة...'
-  ),
-  RoleBasedDashboard: createLazyComponent(
-    () => import('../Dashboard/RoleBasedDashboard'),
-    'جاري تحميل لوحة التحكم حسب الدور...'
-  ),
-  AdminDashboard: createLazyComponent(
-    () => import('../Dashboard/AdminDashboard'),
-    'جاري تحميل لوحة تحكم المدير...'
-  ),
-  GMDashboard: createLazyComponent(
-    () => import('../Dashboard/GMDashboard'),
-    'جاري تحميل لوحة تحكم المدير العام...'
-  ),
-  MedicalRepDashboard: createLazyComponent(
-    () => import('../Dashboard/MedicalRepDashboard'),
-    'جاري تحميل لوحة تحكم المندوب الطبي...'
-  ),
-  AccountingDashboard: createLazyComponent(
-    () => import('../Dashboard/AccountingDashboard'),
-    'جاري تحميل لوحة تحكم المحاسبة...'
-  ),
-  ManagerDashboard: createLazyComponent(
-    () => import('../Dashboard/ManagerDashboard'),
-    'جاري تحميل لوحة تحكم المدير...'
-  ),
-  SalesRepresentativeDashboard: createLazyComponent(
-    () => import('../Dashboard/SalesRepresentativeDashboard'),
-    'جاري تحميل لوحة تحكم المندوب التجاري...'
-  ),
-  MedicalRepresentativeDashboard: createLazyComponent(
-    () => import('../Dashboard/MedicalRepresentativeDashboard'),
-    'جاري تحميل لوحة تحكم المندوب الطبي...'
-  ),
-
+  'Dashboard': Dashboard,
+  
   // User Management
-  UserManagement: createLazyComponent(
-    () => import('../Users/UserManagement'),
-    'جاري تحميل إدارة المستخدمين...'
-  ),
-  AddUserModal: createLazyComponent(
-    () => import('../Users/AddUserModal'),
-    'جاري تحميل نافذة إضافة مستخدم...'
-  ),
-
+  'UserManagement': UserManagement,
+  
   // Clinic Management
-  RepClinicRegistration: createLazyComponent(
-    () => import('../Clinics/RepClinicRegistration'),
-    'جاري تحميل تسجيل العيادات...'
-  ),
+  'EnhancedClinicRegistrationAdvanced': EnhancedClinicRegistrationAdvanced,
+  'ClinicsManagement': ClinicsManagement,
   
-  ClinicsManagement: createLazyComponent(
-    () => import('../Clinics/ClinicsManagement'),
-    'جاري تحميل إدارة العيادات...'
-  ),
-
-  // Enhanced Clinic Management System
-  EnhancedClinicRegistration: createLazyComponent(
-    () => import('../Clinics/EnhancedClinicRegistration'),
-    'جاري تحميل تسجيل العيادات المحسن...'
-  ),
-  EnhancedClinicRegistrationFixed: createLazyComponent(
-    () => import('../Clinics/EnhancedClinicRegistrationFixed'),
-    'جاري تحميل تسجيل العيادات المحسن...'
-  ),
-  EnhancedClinicRegistrationAdvanced: createLazyComponent(
-    () => import('../Clinics/EnhancedClinicRegistrationAdvanced'),
-    'جاري تحميل تسجيل العيادات المتقدم...'
-  ),
-
-  // Product Management
-  ProductManagement: createLazyComponent(
-    () => import('../Products/ProductManagement'),
-    'جاري تحميل إدارة المنتجات...'
-  ),
-
-  // Warehouse Management
-  WarehouseManagement: createLazyComponent(
-    () => import('../Warehouses/WarehouseManagement'),
-    'جاري تحميل إدارة المخازن...'
-  ),
-
-  // User Profile Components
-  UserProfile: createLazyComponent(
-    () => import('../Profile/UserProfile'),
-    'جاري تحميل الملف الشخصي...'
-  ),
-
-  UserSettings: createLazyComponent(
-    () => import('../Profile/UserSettings'),
-    'جاري تحميل إعدادات المستخدم...'
-  ),
-
-  // Accounting Management
-  AccountingManagement: createLazyComponent(
-    () => import('../Accounting/AccountingManagement'),
-    'جاري تحميل إدارة الحسابات والفواتير...'
-  ),
-
-  // Debt and Collection Management - Phase 2
-  AdvancedAnalytics: createLazyComponent(
-    () => import('../Analytics/AdvancedAnalytics'),
-    'جاري تحميل التحليلات المتقدمة...'
-  ),
-
-  // Activity Tracking System
-  ActivityTracking: createLazyComponent(
-    () => import('../ActivityTracking/ActivityTracking'),
-    'جاري تحميل تتبع الأنشطة والحركات...'
-  ),
-  // Enhanced Activity Tracking
-  EnhancedActivityTracking: createLazyComponent(
-    () => import('../ActivityTracking/EnhancedActivityTracking'),
-    'جاري تحميل تتبع الأنشطة والحركات المحسن...'
-  ),
-
-  // Legacy Activity Tracking (keep as fallback)
-  ActivityTrackingFixed: createLazyComponent(
-    () => import('../ActivityTracking/ActivityTrackingFixed'),
-    'جاري تحميل تتبع الأنشطة والحركات...'
-  ),
-
   // Visits Management
-  VisitsManagement: createLazyComponent(
-    () => import('../Visits/VisitsManagement'),
-    'جاري تحميل إدارة الزيارات المحسنة...'
-  ),
-
-  // Enhanced Visits Management - Professional
-  EnhancedVisitsManagement: createLazyComponent(
-    () => import('../Visits/EnhancedVisitsManagement'),
-    'جاري تحميل نظام إدارة الزيارات الاحترافي...'
-  ),
-
-  // Visit Management
-  VisitRegistration: createLazyComponent(
-    () => import('../Visits/VisitRegistration'),
-    'جاري تحميل تسجيل الزيارات...'
-  ),
-
-  // Orders Management
-  OrdersManagement: createLazyComponent(
-    () => import('../Orders/OrdersManagement'),
-    'جاري تحميل إدارة الطلبات...'
-  ),
-
+  'EnhancedVisitsManagement': EnhancedVisitsManagement,
+  
+  // Product Management
+  'ProductManagement': ProductManagement,
+  
+  // Financial Management
+  'IntegratedFinancialDashboard': IntegratedFinancialDashboard,
+  
+  // Excel Management
+  'ExcelDashboard': ExcelDashboard,
+  
   // Geographic Management
-  LinesAreasManagement: createLazyComponent(
-    () => import('../Geographic/LinesAreasManagement'),
-    'جاري تحميل إدارة الخطوط والمناطق...'
-  ),
-
-  // Planning
-  SalesRepPlanManagement: createLazyComponent(
-    () => import('../Planning/SalesRepPlanManagement'),
-    'جاري تحميل التخطيط الشهري...'
-  ),
-
-  // Reports & Analytics
-  ReportsManagement: createLazyComponent(
-    () => import('../Reports/ReportsManagement'),
-    'جاري تحميل التقارير والتحليلات...'
-  ),
-
-  // Administrative Functions
-  GamificationSystem: createLazyComponent(
-    () => import('../Gamification/GamificationSystem'),
-    'جاري تحميل نظام التحفيز...'
-  ),
-
-  // Debt Collection Management
-  DebtCollectionManagement: createLazyComponent(
-    () => import('../DebtCollection/DebtCollectionManagement'),
-    'جاري تحميل إدارة الديون والتحصيل...'
-  ),
-
-  // Integrated Financial System
-  IntegratedFinancialDashboard: createLazyComponent(
-    () => import('../Financial/IntegratedFinancialDashboard'),
-    'جاري تحميل النظام المالي المتكامل...'
-  ),
+  'LinesAreasManagement': LinesAreasManagement,
   
-  // Enhanced Financial System  
-  UnifiedFinancialDashboard: createLazyComponent(
-    () => import('../Financial/UnifiedFinancialDashboard'),
-    'جاري تحميل النظام المالي الموحد...'
-  ),
+  // Warehouse Management
+  'WarehouseManagement': WarehouseManagement,
   
-  // Excel Management System
-  ExcelManager: createLazyComponent(
-    () => import('../Excel/ExcelManager'),
-    'جاري تحميل نظام إدارة Excel...'
-  ),
-  ExcelDashboard: createLazyComponent(
-    () => import('../Excel/ExcelDashboard'),
-    'جاري تحميل لوحة تحكم Excel...'
-  ),
-
+  // Activity Tracking & Monitoring
+  'EnhancedActivityTracking': EnhancedActivityTracking,
+  'SuperAdminActivityDashboard': SuperAdminActivityDashboard,
+  
   // System Settings
-  Settings: createLazyComponent(
-    () => import('../Settings/Settings'),
-    'جاري تحميل إعدادات النظام...'
-  )
+  'Settings': Settings
 };
 
-// Component Renderer - عارض المكونات
-export const ComponentRenderer = ({ componentName, language = 'en', theme = 'dark', ...props }) => {
-  // Debug logging
-  console.log('🔍 ComponentRenderer called with:', {
-    componentName,
-    language,
-    theme,
-    availableComponents: Object.keys(COMPONENT_REGISTRY)
-  });
-
+/**
+ * Dynamic Component Renderer
+ * @param {string} componentName - Name of the component to render
+ * @param {object} props - Props to pass to the component
+ * @returns {React.Component} - The rendered component
+ */
+export const renderComponent = (componentName, props = {}) => {
   const Component = COMPONENT_REGISTRY[componentName];
   
   if (!Component) {
-    console.warn('❌ Component not found:', componentName);
-    console.log('📋 Available components:', Object.keys(COMPONENT_REGISTRY));
-    
-    // Translation system for error messages
-    const t = (key) => {
-      const translations = {
-        ar: {
-          componentNotFound: 'مكون غير موجود',
-          componentNotRegistered: 'المكون "{componentName}" غير مسجل في النظام',
-          availableComponents: 'المكونات المتاحة:',
-          defaultComponentUsed: 'تم استخدام مكون افتراضي لعرض المحتوى'
-        },
-        en: {
-          componentNotFound: 'Component Not Found',
-          componentNotRegistered: 'Component "{componentName}" is not registered in the system',
-          availableComponents: 'Available components:',
-          defaultComponentUsed: 'Default component is being used to display content'
-        }
-      };
-      return translations[language]?.[key]?.replace('{componentName}', componentName) || translations['en'][key]?.replace('{componentName}', componentName) || key;
-    };
-
-    // Theme-based styling
-    const isDark = theme === 'dark';
-    const errorStyles = {
-      container: isDark 
-        ? 'p-8 text-center bg-gray-900 text-white rounded-lg border border-gray-700' 
-        : 'p-8 text-center bg-white text-gray-900 rounded-lg border border-gray-200',
-      icon: 'text-yellow-500 text-6xl mb-4',
-      title: isDark 
-        ? 'text-xl font-bold text-yellow-400 mb-2' 
-        : 'text-xl font-bold text-yellow-600 mb-2',
-      description: isDark 
-        ? 'text-gray-300' 
-        : 'text-gray-600',
-      info: isDark 
-        ? 'mt-4 text-sm text-gray-400' 
-        : 'mt-4 text-sm text-gray-500',
-      box: isDark 
-        ? 'mt-4 p-4 bg-gray-800 rounded-lg border border-gray-700' 
-        : 'mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200'
-    };
-
+    console.error(`Component "${componentName}" not found in registry`);
     return (
-      <div className={errorStyles.container}>
-        <div className={errorStyles.icon}>❓</div>
-        <h3 className={errorStyles.title}>{t('componentNotFound')}</h3>
-        <p className={errorStyles.description}>{t('componentNotRegistered')}</p>
-        <div className={errorStyles.info}>
-          {t('availableComponents')} {Object.keys(COMPONENT_REGISTRY).join(', ')}
-        </div>
-        <div className={errorStyles.box}>
-          <p className="text-sm">{t('defaultComponentUsed')}</p>
+      <div className="flex items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
+        <div className="text-center">
+          <div className="text-4xl mb-4 text-red-500">❌</div>
+          <h3 className="text-lg font-semibold text-red-700 mb-2">
+            خطأ في تحميل المكون
+          </h3>
+          <p className="text-red-600">
+            المكون "{componentName}" غير موجود في السجل
+          </p>
         </div>
       </div>
     );
   }
-
-  console.log('✅ Component found, rendering:', componentName);
-  return <Component language={language} theme={theme} {...props} />;
+  
+  return <Component {...props} />;
 };
 
-// Component Preloader - محمل المكونات المسبق
-export const preloadComponent = (componentName) => {
-  const Component = COMPONENT_REGISTRY[componentName];
-  if (Component && Component.preload) {
-    Component.preload();
+/**
+ * Get all registered component names
+ * @returns {Array<string>} - Array of component names
+ */
+export const getRegisteredComponents = () => {
+  return Object.keys(COMPONENT_REGISTRY);
+};
+
+/**
+ * Check if component is registered
+ * @param {string} componentName - Name of the component to check
+ * @returns {boolean} - Whether the component is registered
+ */
+export const isComponentRegistered = (componentName) => {
+  return COMPONENT_REGISTRY.hasOwnProperty(componentName);
+};
+
+/**
+ * Register a new component dynamically
+ * @param {string} name - Component name
+ * @param {React.Component} component - Component to register
+ */
+export const registerComponent = (name, component) => {
+  if (COMPONENT_REGISTRY[name]) {
+    console.warn(`Component "${name}" is already registered. Overwriting...`);
   }
+  COMPONENT_REGISTRY[name] = component;
+  console.log(`Component "${name}" registered successfully`);
 };
 
-// Preload critical components
-export const preloadCriticalComponents = () => {
-  const criticalComponents = ['Dashboard', 'UserManagement', 'RepClinicRegistration'];
-  criticalComponents.forEach(preloadComponent);
+/**
+ * Unregister a component
+ * @param {string} name - Component name to unregister
+ */
+export const unregisterComponent = (name) => {
+  if (COMPONENT_REGISTRY[name]) {
+    delete COMPONENT_REGISTRY[name];
+    console.log(`Component "${name}" unregistered successfully`);
+  } else {
+    console.warn(`Component "${name}" is not registered`);
+  }
 };
 
 export default COMPONENT_REGISTRY;
