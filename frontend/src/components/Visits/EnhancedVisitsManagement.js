@@ -13,6 +13,8 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
   const [availableClinics, setAvailableClinics] = useState([]);
   const [users, setUsers] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showVisitDetails, setShowVisitDetails] = useState(false);
+  const [selectedVisitDetails, setSelectedVisitDetails] = useState(null);
   
   // Enhanced form state with all required fields
   const [newVisit, setNewVisit] = useState({
