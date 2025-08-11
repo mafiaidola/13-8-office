@@ -1239,37 +1239,152 @@ const DashboardLayout = () => {
         )}
       </div>
 
-      {/* User Profile Modal */}
+      {/* Enhanced User Profile Modal with Professional Design */}
       {showUserProfile && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md mx-4 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold">الملف الشخصي</h3>
-              <button
-                onClick={() => setShowUserProfile(false)}
-                className="text-white/70 hover:text-white text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">الاسم الكامل</label>
-                <input 
-                  type="text" 
-                  value={user?.full_name || user?.username || ''} 
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg"
-                  readOnly
-                />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-2xl mx-4 border border-gray-200 overflow-hidden">
+            {/* Header Section */}
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 space-x-reverse">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                    👤
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">الملف الشخصي</h3>
+                    <p className="text-blue-100">معلومات المستخدم الشاملة</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowUserProfile(false)}
+                  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors text-xl"
+                >
+                  ✕
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">الدور</label>
-                <input 
-                  type="text" 
-                  value={user?.role || ''} 
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg"
-                  readOnly
-                />
+            </div>
+
+            {/* Content Section */}
+            <div className="p-8 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Personal Information */}
+                <div className="space-y-6">
+                  <h4 className="text-lg font-bold text-gray-900 border-b border-gray-300 pb-2">
+                    معلومات شخصية
+                  </h4>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      الاسم الكامل
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-medium">
+                      {user?.full_name || user?.username || 'غير متوفر'}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      اسم المستخدم
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-medium">
+                      {user?.username || 'غير متوفر'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      البريد الإلكتروني
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-medium">
+                      {user?.email || 'غير متوفر'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* System Information */}
+                <div className="space-y-6">
+                  <h4 className="text-lg font-bold text-gray-900 border-b border-gray-300 pb-2">
+                    معلومات النظام
+                  </h4>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      الدور
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        user?.role === 'admin' ? 'bg-red-100 text-red-800' :
+                        user?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                        user?.role === 'medical_rep' ? 'bg-green-100 text-green-800' :
+                        user?.role === 'accountant' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {user?.role === 'admin' ? '👨‍💼 مدير النظام' :
+                         user?.role === 'manager' ? '👨‍💼 مدير' :
+                         user?.role === 'medical_rep' ? '👨‍⚕️ مندوب طبي' :
+                         user?.role === 'accountant' ? '💰 محاسب' :
+                         user?.role || 'غير محدد'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      حالة الحساب
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        user?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user?.is_active ? '✅ نشط' : '❌ غير نشط'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      معرف المستخدم
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-mono text-sm">
+                      {user?.user_id || user?.id || 'غير متوفر'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      تاريخ الإنشاء
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900">
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString('ar-EG', {
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric'
+                      }) : 'غير متوفر'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="bg-white border-t border-gray-200 px-8 py-4">
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setShowUserProfile(false);
+                    // Navigate to User Management section to edit profile
+                    window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 'users' }));
+                  }}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                >
+                  📝 تعديل الملف الشخصي
+                </button>
+                <button
+                  onClick={() => setShowUserProfile(false)}
+                  className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  إغلاق
+                </button>
               </div>
             </div>
           </div>
