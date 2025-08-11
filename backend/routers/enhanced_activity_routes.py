@@ -6,8 +6,6 @@ import uuid
 import json
 from pymongo import MongoClient
 import os
-from ..models.activity_models import ActivityCreate, ActivityResponse, ActivityFilter, LocationData, DeviceInfo
-from user_agent import parse
 import requests
 
 router = APIRouter(prefix="/api/activities", tags=["Enhanced Activity Tracking"])
