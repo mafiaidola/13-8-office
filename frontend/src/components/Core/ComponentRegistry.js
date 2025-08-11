@@ -254,6 +254,12 @@ export const COMPONENT_REGISTRY = {
   ExcelDashboard: createLazyComponent(
     () => import('../Excel/ExcelDashboard'),
     'جاري تحميل لوحة تحكم Excel...'
+  ),
+
+  // System Settings
+  Settings: createLazyComponent(
+    () => import('../Settings/Settings'),
+    'جاري تحميل إعدادات النظام...'
   )
 };
 
