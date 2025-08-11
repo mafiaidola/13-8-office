@@ -161,9 +161,9 @@ export const SYSTEM_TABS = {
     name: { ar: 'إدارة الزيارات', en: 'Visits Management' },
     module: 'زيارات المناديب',
     icon: '🏥', 
-    component: 'VisitsManagement',
+    component: 'EnhancedVisitsManagement',
     enabled: true,
-    description: { ar: 'إدارة وتتبع زيارات المناديب للعيادات', en: 'Manage and track medical rep visits to clinics' },
+    description: { ar: 'نظام إدارة وتتبع الزيارات المحسن مع صلاحيات وربط احترافي', en: 'Enhanced visits management system with permissions and professional integration' },
     permissions: ['admin', 'gm', 'medical_rep', 'line_manager'],
     priority: 4
   },
