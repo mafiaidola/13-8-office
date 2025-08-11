@@ -12,7 +12,7 @@ const ComprehensiveUserModal = ({ user, mode, onClose, onUserUpdated, language =
   const [availableAreas, setAvailableAreas] = useState([]);
   const [availableClinics, setAvailableClinics] = useState([]);
 
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   useEffect(() => {
     if (user?.id) {
