@@ -260,7 +260,8 @@ class FinancialSystemTester:
             self.log_test("إنشاء دين تجريبي", False, response_time, 
                         "خطأ في الاتصال", str(e))
             return None
-        """التحقق من تسجيل النشاط في activities"""
+
+    def test_activity_logging(self):
         start_time = time.time()
         try:
             response = self.session.get(f"{API_BASE}/activities?activity_type=payment_processed&limit=5")
