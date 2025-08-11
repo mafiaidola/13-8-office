@@ -179,11 +179,11 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
         return hasValidStatus && hasId && hasName;
       });
       
-      console.log('🏥 العيادات الحقيقية النشطة:', activeClinics);
-      console.log(`📈 تم العثور على ${activeClinics.length} عيادة حقيقية في قاعدة البيانات`);
+      console.log('🏥 العيادات الحقيقية المتاحة:', validClinics);
+      console.log(`📈 تم العثور على ${validClinics.length} عيادة متاحة في قاعدة البيانات`);
       
       // Process real clinic data to match our interface
-      const processedClinics = activeClinics.map(clinic => ({
+      const processedClinics = validClinics.map(clinic => ({
         id: clinic.id,
         name: clinic.name || clinic.clinic_name,
         clinic_name: clinic.name || clinic.clinic_name,
