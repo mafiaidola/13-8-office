@@ -181,6 +181,13 @@ export const COMPONENT_REGISTRY = {
     () => import('../ActivityTracking/ActivityTracking'),
     'جاري تحميل تتبع الأنشطة والحركات...'
   ),
+  // Enhanced Activity Tracking
+  EnhancedActivityTracking: createLazyComponent(
+    () => import('../ActivityTracking/EnhancedActivityTracking'),
+    'جاري تحميل تتبع الأنشطة والحركات المحسن...'
+  ),
+
+  // Legacy Activity Tracking (keep as fallback)
   ActivityTrackingFixed: createLazyComponent(
     () => import('../ActivityTracking/ActivityTrackingFixed'),
     'جاري تحميل تتبع الأنشطة والحركات...'
