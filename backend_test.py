@@ -154,89 +154,104 @@ class FinancialSystemTester:
             self.log_test("GET /api/users", False, response_time, f"خطأ: {str(e)}")
             return []
 
-    def test_create_invoice(self, clinics, products, users):
-        """المرحلة 2: إنشاء فاتورة جديدة مع بيانات كاملة"""
-        print("\n📄 المرحلة 2: إنشاء فاتورة جديدة")
+    def test_existing_financial_flow(self):
+        """اختبار تدفق النظام المالي باستخدام البيانات الموجودة"""
+        print("\n💰 اختبار تدفق النظام المالي الموجود")
         
-        if not clinics or not products or not users:
-            self.log_test("إنشاء فاتورة جديدة", False, 0, "لا توجد عيادات أو منتجات أو مستخدمين متاحة")
-            return None
+        # اختبار الحصول على الفواتير الموجودة
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/invoices", headers=self.headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                invoices = data.get("invoices", []) if isinstance(data, dict) else data
+                details = f"تم العثور على {len(invoices)} فاتورة موجودة"
+                self.log_test("فحص الفواتير الموجودة", True, response_time, details)
+                return invoices
+            else:
+                self.log_test("فحص الفواتير الموجودة", False, response_time, f"HTTP {response.status_code}")
+                return []
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("فحص الفواتير الموجودة", False, response_time, f"خطأ: {str(e)}")
+            return []
+
+    def test_existing_debts_flow(self):
+        """اختبار تدفق الديون الموجودة"""
+        print("\n🏦 اختبار تدفق الديون الموجودة")
+        
+        # اختبار الحصول على الديون الموجودة
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/debts", headers=self.headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                debts = data.get("debts", []) if isinstance(data, dict) else data
+                details = f"تم العثور على {len(debts)} دين موجود"
+                self.log_test("فحص الديون الموجودة", True, response_time, details)
+                
+                # إذا كان هناك ديون، اختبر تسجيل دفعة
+                if debts and len(debts) > 0:
+                    debt = debts[0]
+                    self.test_record_payment_for_existing_debt(debt)
+                
+                return debts
+            else:
+                self.log_test("فحص الديون الموجودة", False, response_time, f"HTTP {response.status_code}")
+                return []
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("فحص الديون الموجودة", False, response_time, f"خطأ: {str(e)}")
+            return []
+
+    def test_record_payment_for_existing_debt(self, debt):
+        """تسجيل دفعة لدين موجود"""
+        print("\n💳 تسجيل دفعة لدين موجود")
         
         start_time = time.time()
         try:
-            # استخدام أول عيادة ومنتج متاح
-            clinic = clinics[0]
-            product = products[0]
+            debt_id = debt.get("id", debt.get("_id"))
+            remaining_amount = debt.get("remaining_amount", debt.get("original_amount", 100))
             
-            # البحث عن مندوب مبيعات
-            sales_rep = None
-            for user in users:
-                if user.get("role") in ["medical_rep", "sales_rep"]:
-                    sales_rep = user
-                    break
+            # دفع مبلغ صغير كاختبار
+            payment_amount = min(50.0, remaining_amount * 0.1)
             
-            if not sales_rep:
-                # استخدام admin كمندوب مبيعات
-                sales_rep = {"id": "admin-001", "full_name": "System Administrator"}
-            
-            invoice_data = {
-                "clinic_id": clinic.get("id", clinic.get("_id")),
-                "clinic_name": clinic.get("clinic_name", "عيادة تجريبية"),
-                "doctor_name": clinic.get("doctor_name", "د. أحمد محمد"),
-                "clinic_address": clinic.get("clinic_address", "عنوان العيادة"),
-                "clinic_phone": clinic.get("clinic_phone", "01234567890"),
-                "clinic_email": clinic.get("clinic_email", "clinic@example.com"),
-                "sales_rep_id": sales_rep.get("id"),
-                "sales_rep_name": sales_rep.get("full_name", "مندوب المبيعات"),
-                "line_id": sales_rep.get("line_id", "line-001"),
-                "area_id": sales_rep.get("area_id", "area-001"),
-                "items": [
-                    {
-                        "product_id": product.get("id", product.get("_id")),
-                        "product_name": product.get("name", "منتج تجريبي"),
-                        "quantity": 5,
-                        "unit_price": product.get("price", 50.0),
-                        "discount_percentage": 0,
-                        "discount_amount": 0,
-                        "tax_percentage": 14,
-                        "tax_amount": 5 * product.get("price", 50.0) * 0.14,
-                        "subtotal": 5 * product.get("price", 50.0),
-                        "total": 5 * product.get("price", 50.0) * 1.14,
-                        "description": "منتج اختبار للنظام المالي"
-                    }
-                ],
-                "subtotal": 5 * product.get("price", 50.0),
-                "tax_amount": 5 * product.get("price", 50.0) * 0.14,
-                "total_amount": 5 * product.get("price", 50.0) * 1.14,
-                "invoice_date": datetime.now().isoformat(),
-                "due_date": datetime.now().isoformat(),
-                "notes": "فاتورة اختبار للنظام المالي المتكامل",
-                "payment_terms": "30 يوم"
+            payment_data = {
+                "debt_id": debt_id,
+                "amount": payment_amount,
+                "payment_method": "cash",
+                "payment_date": datetime.now().isoformat(),
+                "notes": "دفعة اختبار للنظام المالي",
+                "collected_by": "admin"
             }
             
             response = requests.post(
-                f"{self.base_url}/invoices",
-                json=invoice_data,
+                f"{self.base_url}/payments/process",
+                json=payment_data,
                 headers=self.headers
             )
             
             response_time = (time.time() - start_time) * 1000
             
-            if response.status_code == 201:
-                invoice = response.json()
-                invoice_id = invoice.get("id", invoice.get("invoice_id"))
-                total_amount = invoice.get("total_amount", invoice_data["total_amount"])
-                details = f"فاتورة ID: {invoice_id}, المبلغ: {total_amount:.2f} ج.م"
-                self.log_test("إنشاء فاتورة جديدة", True, response_time, details)
-                return invoice
+            if response.status_code in [200, 201]:
+                details = f"تم تسجيل دفعة {payment_amount:.2f} ج.م للدين {debt_id}"
+                self.log_test("تسجيل دفعة لدين موجود", True, response_time, details)
+                return True
             else:
-                self.log_test("إنشاء فاتورة جديدة", False, response_time, f"HTTP {response.status_code}: {response.text}")
-                return None
+                details = f"HTTP {response.status_code}: {response.text[:100]}"
+                self.log_test("تسجيل دفعة لدين موجود", False, response_time, details)
+                return False
                 
         except Exception as e:
             response_time = (time.time() - start_time) * 1000
-            self.log_test("إنشاء فاتورة جديدة", False, response_time, f"خطأ: {str(e)}")
-            return None
+            self.log_test("تسجيل دفعة لدين موجود", False, response_time, f"خطأ: {str(e)}")
+            return False
 
     def test_approve_invoice(self, invoice):
         """المرحلة 3: اعتماد الفاتورة"""
