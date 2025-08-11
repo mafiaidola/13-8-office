@@ -914,7 +914,7 @@ const LoginForm = () => {
     setError('');
 
     try {
-      const API_URL = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+      const API_URL = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
