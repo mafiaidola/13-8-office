@@ -385,6 +385,24 @@ const AuthProvider = ({ children }) => {
         console.log('✅ Login successful, updating state:', user);
         
         setAuthState({ loading: false, isAuthenticated: true, user });
+
+        // 🌍 طلب إذن الموقع الجغرافي وتسجيل نشاط تسجيل الدخول
+        try {
+          console.log('🌍 طلب إذن الموقع الجغرافي للمستخدم...');
+          await ActivityService.requestLocationPermission();
+          
+          // تسجيل نشاط تسجيل الدخول مع الموقع
+          const loginResult = await ActivityService.logLogin(user);
+          if (loginResult) {
+            console.log('📝 تم تسجيل نشاط تسجيل الدخول بنجاح:', loginResult);
+          } else {
+            console.warn('⚠️ فشل في تسجيل نشاط تسجيل الدخول');
+          }
+        } catch (activityError) {
+          console.error('❌ خطأ في تسجيل النشاط:', activityError);
+          // لا نوقف تسجيل الدخول بسبب فشل تسجيل النشاط
+        }
+
         return { success: true, user };
       }
 
