@@ -228,7 +228,38 @@ class FinancialSystemTester:
                         "خطأ في الاتصال", str(e))
             return None
     
-    def test_activity_logging(self):
+    def create_test_debt(self):
+        """إنشاء دين تجريبي للاختبار"""
+        start_time = time.time()
+        try:
+            debt_data = {
+                "clinic_id": "test-clinic-001",
+                "clinic_name": "عيادة الاختبار",
+                "original_amount": 100.0,
+                "remaining_amount": 100.0,
+                "description": "دين تجريبي للاختبار",
+                "due_date": datetime.now().isoformat()
+            }
+            
+            response = self.session.post(f"{API_BASE}/debts", json=debt_data)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                result = response.json()
+                debt_id = result.get('debt_id') or result.get('id')
+                details = f"تم إنشاء دين تجريبي - ID: {debt_id}"
+                self.log_test("إنشاء دين تجريبي", True, response_time, details)
+                return debt_id
+            else:
+                self.log_test("إنشاء دين تجريبي", False, response_time, 
+                            f"HTTP {response.status_code}", response.text)
+                return None
+                
+        except Exception as e:
+            response_time = time.time() - start_time
+            self.log_test("إنشاء دين تجريبي", False, response_time, 
+                        "خطأ في الاتصال", str(e))
+            return None
         """التحقق من تسجيل النشاط في activities"""
         start_time = time.time()
         try:
