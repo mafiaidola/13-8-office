@@ -81,7 +81,9 @@ const EnhancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
 
       if (response.ok) {
         const newVisit = await response.json();
-        setVisits([...visits, newVisit]);
+        // Handle response format for new visit
+        const visitData = newVisit.visit || newVisit;
+        setVisits([...visits, visitData]);
         setShowCreateModal(false);
         setFormData({
           clinic_id: '',
@@ -91,6 +93,7 @@ const EnhancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
           notes: '',
           priority: 'medium'
         });
+      }
       }
     } catch (error) {
       console.error('Error creating visit:', error);
