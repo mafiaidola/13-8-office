@@ -488,17 +488,49 @@ async def get_dashboard_widgets(role_type: str, current_user: dict = Depends(get
 
 @app.get("/api/clinics")
 async def get_clinics(current_user: dict = Depends(get_current_user)):
-    """Get all clinics - Fixed endpoint"""
+    """Get all clinics - Fixed endpoint with standardized field names"""
     try:
         # Get clinics from database
         clinics = []
         cursor = db.clinics.find({"is_active": {"$ne": False}}, {"_id": 0})
         async for clinic in cursor:
-            clinics.append(clinic)
+            # Standardize field names for frontend consistency
+            standardized_clinic = {
+                "id": clinic.get("id"),
+                "name": clinic.get("name") or clinic.get("clinic_name") or "عيادة غير محددة",
+                "clinic_name": clinic.get("name") or clinic.get("clinic_name") or "عيادة غير محددة",
+                "doctor_name": clinic.get("doctor_name") or clinic.get("owner_name") or "غير محدد",
+                "phone": clinic.get("phone") or clinic.get("clinic_phone") or "",
+                "email": clinic.get("email") or clinic.get("clinic_email") or "",
+                "address": clinic.get("address") or clinic.get("location") or "العنوان غير متوفر",
+                "classification": clinic.get("classification") or "class_b",
+                "credit_classification": clinic.get("credit_classification") or "yellow",
+                "is_active": clinic.get("is_active", True),
+                "status": clinic.get("status") or "active",
+                "line_id": clinic.get("line_id"),
+                "area_id": clinic.get("area_id"),
+                # GPS coordinates if available
+                "clinic_latitude": clinic.get("clinic_latitude"),
+                "clinic_longitude": clinic.get("clinic_longitude"),
+                # Registration info
+                "created_at": clinic.get("created_at"),
+                "updated_at": clinic.get("updated_at"),
+                "registered_by": clinic.get("registered_by"),
+                "registration_number": clinic.get("registration_number")
+            }
+            
+            # Only include clinics with valid ID and name
+            if standardized_clinic["id"] and standardized_clinic["name"] != "عيادة غير محددة":
+                clinics.append(standardized_clinic)
+        
+        print(f"✅ تم جلب {len(clinics)} عيادة مع توحيد الحقول")
+        for i, clinic in enumerate(clinics[:3], 1):  # Log first 3 clinics
+            print(f"   {i}. {clinic['name']} - د. {clinic['doctor_name']} (ID: {clinic['id']})")
         
         return clinics
         
     except Exception as e:
+        print(f"❌ خطأ في جلب العيادات: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching clinics: {str(e)}")
 
 @app.post("/api/clinics")
