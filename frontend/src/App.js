@@ -390,18 +390,18 @@ const AuthProvider = ({ children }) => {
         // 🌍 طلب إذن الموقع الجغرافي وتسجيل نشاط تسجيل الدخول
         try {
           console.log('🌍 طلب إذن الموقع الجغرافي للمستخدم...');
-          await ActivityService.requestLocationPermission();
           
-          // تسجيل نشاط تسجيل الدخول مع الموقع
-          const loginResult = await ActivityService.logLogin(user);
-          if (loginResult) {
-            console.log('📝 تم تسجيل نشاط تسجيل الدخول بنجاح:', loginResult);
-          } else {
-            console.warn('⚠️ فشل في تسجيل نشاط تسجيل الدخول');
-          }
+          // تسجيل نشاط تسجيل الدخول الشامل
+          const loginResult = await comprehensiveActivityService.recordLogin(user);
+          console.log('✅ تم تسجيل نشاط تسجيل الدخول الشامل:', loginResult);
+          
+          // تسجيل إضافي باستخدام الخدمة القديمة للتوافق
+          await ActivityService.requestLocationPermission();
+          const oldLoginResult = await ActivityService.logLogin(user);
+          console.log('✅ تم تسجيل نشاط تسجيل الدخول (النظام القديم):', oldLoginResult);
+          
         } catch (activityError) {
-          console.error('❌ خطأ في تسجيل النشاط:', activityError);
-          // لا نوقف تسجيل الدخول بسبب فشل تسجيل النشاط
+          console.warn('⚠️ خطأ في تسجيل نشاط تسجيل الدخول:', activityError.message);
         }
 
         return { success: true, user };
