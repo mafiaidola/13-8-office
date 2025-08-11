@@ -68,9 +68,9 @@ export const SYSTEM_TABS = {
     id: 'visits_management',
     path: '/visits-management',
     icon: '🩺',
-    name: { ar: 'إدارة الزيارات', en: 'Visits Management' },
-    component: 'EnhancedVisitsManagement',
-    description: { ar: 'نظام إدارة زيارات المناديب مع تتبع GPS والتقارير', en: 'Representative visits management system with GPS tracking and reports' },
+    name: { ar: 'إدارة الزيارات المتطورة', en: 'Advanced Visits Management' },
+    component: 'AdvancedVisitsManagement',
+    description: { ar: 'نظام متطور لإدارة زيارات المناديب مع التنظيم الهرمي الذكي والتخطيط المتقدم', en: 'Advanced system for managing representative visits with smart hierarchical organization and advanced planning' },
     permissions: ['admin', 'gm', 'line_manager', 'area_manager', 'medical_rep'],
     priority: 5
   },
@@ -130,7 +130,16 @@ export const SYSTEM_TABS = {
     priority: 10
   },
 
-
+  super_admin_monitoring: {
+    id: 'super_admin_monitoring',
+    path: '/super-admin-monitoring',
+    icon: '🛡️',
+    name: { ar: 'مركز المراقبة والتحكم الشامل', en: 'Super Admin Monitoring Center' },
+    component: 'SuperAdminActivityDashboard',
+    description: { ar: 'نظام مراقبة احترافي متطور لجميع الأنشطة والحركات مع التحليلات المتقدمة والخرائط الجغرافية والتنبيهات الأمنية', en: 'Advanced professional monitoring system for all activities with analytics, geographic maps and security alerts' },
+    permissions: ['admin'],
+    priority: 11
+  },
 
   activity_tracking: {
     id: 'activity_tracking',
@@ -141,17 +150,6 @@ export const SYSTEM_TABS = {
     description: { ar: 'مراقبة احترافية شاملة لجميع الأنشطة مع تفاصيل تقنية وخرائط جوجل وتتبع الموقع', en: 'Professional comprehensive monitoring with technical details, Google Maps and location tracking' },
     permissions: ['admin', 'gm'],
     priority: 12
-  },
-
-  super_admin_monitoring: {
-    id: 'super_admin_monitoring',
-    path: '/super-admin-monitoring',
-    icon: '🛡️',
-    name: { ar: 'مركز المراقبة والتحكم الشامل', en: 'Super Admin Monitoring Center' },
-    component: 'SuperAdminActivityDashboard',
-    description: { ar: 'نظام مراقبة احترافي متطور لجميع الأنشطة والحركات مع التحليلات المتقدمة والخرائط الجغرافية والتنبيهات الأمنية', en: 'Advanced professional monitoring system for all activities with analytics, geographic maps and security alerts' },
-    permissions: ['admin'],
-    priority: 11
   },
 
   settings: {

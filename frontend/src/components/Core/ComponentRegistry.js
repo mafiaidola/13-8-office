@@ -7,6 +7,7 @@ import UserManagement from '../Users/UserManagement';
 import EnhancedClinicRegistrationAdvanced from '../Clinics/EnhancedClinicRegistrationAdvanced';
 import ClinicsManagement from '../Clinics/ClinicsManagement';
 import EnhancedVisitsManagement from '../Visits/EnhancedVisitsManagement';
+import AdvancedVisitsManagement from '../Visits/AdvancedVisitsManagement';
 import ProductManagement from '../Products/ProductManagement';
 import IntegratedFinancialDashboard from '../Financial/IntegratedFinancialDashboard';
 import ExcelDashboard from '../Excel/ExcelDashboard';
@@ -30,6 +31,7 @@ const COMPONENT_REGISTRY = {
   
   // Visits Management
   'EnhancedVisitsManagement': EnhancedVisitsManagement,
+  'AdvancedVisitsManagement': AdvancedVisitsManagement,
   
   // Product Management
   'ProductManagement': ProductManagement,
