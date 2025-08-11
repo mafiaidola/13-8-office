@@ -91,7 +91,7 @@ const UserManagement = ({ language = 'ar', theme = 'dark', user }) => {
     <div className="user-management p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          {t.userManagement.title || 'إدارة المستخدمين'}
+          {t.userManagementTitle || 'إدارة المستخدمين'}
         </h1>
         <button
           onClick={() => setShowAddModal(true)}
