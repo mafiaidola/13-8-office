@@ -28,12 +28,48 @@ def get_client_ip(request: Request) -> str:
 def parse_user_agent(user_agent: str) -> dict:
     """تحليل User Agent لاستخراج معلومات الجهاز"""
     try:
-        parsed = parse(user_agent)
+        # Simple user agent parsing without external library
+        user_agent_lower = user_agent.lower()
+        
+        # Detect browser
+        if 'chrome' in user_agent_lower:
+            browser = "Chrome"
+        elif 'firefox' in user_agent_lower:
+            browser = "Firefox"
+        elif 'safari' in user_agent_lower:
+            browser = "Safari"
+        elif 'edge' in user_agent_lower:
+            browser = "Edge"
+        else:
+            browser = "Unknown"
+        
+        # Detect OS
+        if 'windows' in user_agent_lower:
+            os = "Windows"
+        elif 'mac' in user_agent_lower or 'darwin' in user_agent_lower:
+            os = "macOS"
+        elif 'linux' in user_agent_lower:
+            os = "Linux"
+        elif 'android' in user_agent_lower:
+            os = "Android"
+        elif 'ios' in user_agent_lower or 'iphone' in user_agent_lower or 'ipad' in user_agent_lower:
+            os = "iOS"
+        else:
+            os = "Unknown"
+        
+        # Detect device type
+        if 'mobile' in user_agent_lower or 'iphone' in user_agent_lower:
+            device_type = "Mobile"
+        elif 'tablet' in user_agent_lower or 'ipad' in user_agent_lower:
+            device_type = "Tablet"
+        else:
+            device_type = "Desktop"
+        
         return {
-            "browser": f"{parsed.browser.family} {parsed.browser.version_string}",
-            "os": f"{parsed.os.family} {parsed.os.version_string}",
-            "device_type": "Mobile" if parsed.is_mobile else "Tablet" if parsed.is_tablet else "Desktop",
-            "device_family": parsed.device.family
+            "browser": browser,
+            "os": os,
+            "device_type": device_type,
+            "device_family": "Unknown"
         }
     except:
         return {
