@@ -228,9 +228,9 @@ class VisitsManagementQuickTest:
         print("\n🔍 اختبار 5: endpoints إضافية للزيارات")
         
         additional_endpoints = [
-            '/visits/overview',
+            '/visits/dashboard/overview',
             '/visits/available-clinics',
-            '/visits/representatives'
+            '/visits/stats/representatives'
         ]
         
         additional_results = []
