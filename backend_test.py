@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Comprehensive Medical Management System Backend Testing
-Testing all major components as requested in the review
+اختبار شامل للنظام المالي - تدفق الفاتورة إلى الدين والتحصيل
+Comprehensive Financial System Testing - Invoice to Debt Flow and Collection
+Arabic Review Requirements Testing
 """
 
 import requests
@@ -10,9 +11,9 @@ import time
 import uuid
 from datetime import datetime
 
-class MedicalSystemBackendTester:
+class FinancialSystemTester:
     def __init__(self):
-        # Get backend URL from frontend .env
+        # استخدام الـ URL من متغيرات البيئة
         with open('/app/frontend/.env', 'r') as f:
             for line in f:
                 if line.startswith('REACT_APP_BACKEND_URL='):
@@ -21,631 +22,503 @@ class MedicalSystemBackendTester:
         
         self.base_url = f"{self.base_url}/api"
         self.token = None
+        self.headers = {"Content-Type": "application/json"}
         self.test_results = []
         self.start_time = time.time()
         
-        print(f"🚀 Starting Comprehensive Medical Management System Backend Testing")
-        print(f"🔗 Backend URL: {self.base_url}")
-        print(f"📅 Test Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"🎯 بدء اختبار شامل للنظام المالي - تدفق الفاتورة إلى الدين والتحصيل")
+        print(f"🌐 Backend URL: {self.base_url}")
+        print(f"📅 وقت البدء: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 80)
 
-    def log_test(self, test_name, success, response_time, details="", status_code=None):
-        """Log test results"""
-        status = "✅ PASS" if success else "❌ FAIL"
+    def log_test(self, test_name, success, response_time, details=""):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ نجح" if success else "❌ فشل"
         self.test_results.append({
-            'test': test_name,
-            'success': success,
-            'response_time': response_time,
-            'details': details,
-            'status_code': status_code
+            "test": test_name,
+            "success": success,
+            "response_time": response_time,
+            "details": details
         })
-        
-        time_str = f"({response_time:.2f}ms)" if response_time else ""
-        status_str = f"[{status_code}]" if status_code else ""
-        print(f"{status} {test_name} {time_str} {status_str}")
-        if details and not success:
-            print(f"    💬 {details}")
+        print(f"{status} | {test_name} | {response_time:.2f}ms | {details}")
 
-    def test_authentication(self):
-        """Test 1: Authentication Testing"""
-        print("\n🔐 === AUTHENTICATION TESTING ===")
+    def test_admin_login(self):
+        """المرحلة 1: تسجيل دخول admin/admin123 للحصول على JWT token"""
+        print("\n🔐 المرحلة 1: تسجيل دخول Admin")
         
-        # Test admin login
         start_time = time.time()
         try:
-            response = requests.post(f"{self.base_url}/auth/login", 
+            response = requests.post(
+                f"{self.base_url}/auth/login",
                 json={
                     "username": "admin",
                     "password": "admin123",
                     "geolocation": {
                         "latitude": 30.0444,
                         "longitude": 31.2357,
-                        "city": "Cairo",
-                        "country": "Egypt"
+                        "city": "القاهرة",
+                        "country": "مصر"
                     },
-                    "device_info": "Backend Test Client",
-                    "ip_address": "127.0.0.1"
+                    "device_info": "Financial System Test Browser",
+                    "ip_address": "192.168.1.100"
                 },
-                timeout=10
+                headers=self.headers
             )
+            
             response_time = (time.time() - start_time) * 1000
             
             if response.status_code == 200:
                 data = response.json()
-                self.token = data.get('access_token')
-                user_info = data.get('user', {})
+                self.token = data.get("access_token")
+                self.headers["Authorization"] = f"Bearer {self.token}"
                 
-                self.log_test(
-                    "Admin Login (admin/admin123)",
-                    True,
-                    response_time,
-                    f"User: {user_info.get('full_name')}, Role: {user_info.get('role')}",
-                    response.status_code
-                )
-                
-                # Test JWT token validation
-                if self.token:
-                    headers = {"Authorization": f"Bearer {self.token}"}
-                    start_time = time.time()
-                    test_response = requests.get(f"{self.base_url}/users", headers=headers, timeout=10)
-                    response_time = (time.time() - start_time) * 1000
-                    
-                    self.log_test(
-                        "JWT Token Validation",
-                        test_response.status_code == 200,
-                        response_time,
-                        "Token accepted by protected endpoint" if test_response.status_code == 200 else "Token rejected",
-                        test_response.status_code
-                    )
-                else:
-                    self.log_test("JWT Token Generation", False, 0, "No token received")
-                    
+                user_info = data.get("user", {})
+                details = f"المستخدم: {user_info.get('full_name', 'Unknown')}, الدور: {user_info.get('role', 'Unknown')}"
+                self.log_test("تسجيل دخول admin/admin123", True, response_time, details)
+                return True
             else:
-                self.log_test(
-                    "Admin Login (admin/admin123)",
-                    False,
-                    response_time,
-                    f"Login failed: {response.text[:100]}",
-                    response.status_code
-                )
+                self.log_test("تسجيل دخول admin/admin123", False, response_time, f"HTTP {response.status_code}")
+                return False
                 
         except Exception as e:
-            self.log_test("Admin Login (admin/admin123)", False, 0, f"Connection error: {str(e)}")
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل دخول admin/admin123", False, response_time, f"خطأ: {str(e)}")
+            return False
 
-        # Test protected routes access
-        if self.token:
-            headers = {"Authorization": f"Bearer {self.token}"}
-            protected_endpoints = [
-                ("/dashboard/stats/admin", "Admin Dashboard Stats"),
-                ("/users", "Users Management"),
-                ("/products", "Products Management")
-            ]
-            
-            for endpoint, name in protected_endpoints:
-                start_time = time.time()
-                try:
-                    response = requests.get(f"{self.base_url}{endpoint}", headers=headers, timeout=10)
-                    response_time = (time.time() - start_time) * 1000
-                    
-                    self.log_test(
-                        f"Protected Route Access: {name}",
-                        response.status_code == 200,
-                        response_time,
-                        f"Data received" if response.status_code == 200 else f"Access denied: {response.text[:50]}",
-                        response.status_code
-                    )
-                except Exception as e:
-                    self.log_test(f"Protected Route Access: {name}", False, 0, f"Error: {str(e)}")
-
-    def test_api_endpoints(self):
-        """Test 2: API Endpoints Testing"""
-        print("\n🌐 === API ENDPOINTS TESTING ===")
+    def test_get_clinics(self):
+        """الحصول على قائمة العيادات المتاحة"""
+        print("\n🏥 الحصول على قائمة العيادات")
         
-        if not self.token:
-            print("❌ Skipping API tests - no authentication token")
-            return
-            
-        headers = {"Authorization": f"Bearer {self.token}"}
-        
-        # Core API endpoints to test
-        endpoints = [
-            ("GET", "/users", "Users List"),
-            ("GET", "/products", "Products List"),
-            ("GET", "/clinics", "Clinics List"),
-            ("GET", "/health", "System Health Check"),
-            ("GET", "/lines", "Lines Management"),
-            ("GET", "/areas", "Areas Management"),
-            ("GET", "/visits", "Visits Management"),
-            ("GET", "/activities", "Activities Log"),
-            ("GET", "/debts", "Debt Management"),
-            ("GET", "/invoices", "Invoice Management")
-        ]
-        
-        for method, endpoint, name in endpoints:
-            start_time = time.time()
-            try:
-                if method == "GET":
-                    response = requests.get(f"{self.base_url}{endpoint}", headers=headers, timeout=10)
-                
-                response_time = (time.time() - start_time) * 1000
-                
-                if response.status_code == 200:
-                    try:
-                        data = response.json()
-                        if isinstance(data, list):
-                            count = len(data)
-                            details = f"{count} records found"
-                        elif isinstance(data, dict):
-                            if 'status' in data:
-                                details = f"Status: {data.get('status')}"
-                            else:
-                                details = f"{len(data)} fields returned"
-                        else:
-                            details = "Data received"
-                    except:
-                        details = "Response received"
-                        
-                    self.log_test(f"{method} {endpoint}", True, response_time, details, response.status_code)
-                else:
-                    self.log_test(
-                        f"{method} {endpoint}",
-                        False,
-                        response_time,
-                        f"HTTP {response.status_code}: {response.text[:100]}",
-                        response.status_code
-                    )
-                    
-            except Exception as e:
-                self.log_test(f"{method} {endpoint}", False, 0, f"Connection error: {str(e)}")
-
-    def test_database_connectivity(self):
-        """Test 3: Database Connectivity"""
-        print("\n🗄️ === DATABASE CONNECTIVITY TESTING ===")
-        
-        if not self.token:
-            print("❌ Skipping database tests - no authentication token")
-            return
-            
-        headers = {"Authorization": f"Bearer {self.token}"}
-        
-        # Test health endpoint for database status
         start_time = time.time()
         try:
-            response = requests.get(f"{self.base_url}/health", timeout=10)
+            response = requests.get(f"{self.base_url}/clinics", headers=self.headers)
             response_time = (time.time() - start_time) * 1000
             
             if response.status_code == 200:
-                data = response.json()
-                db_status = data.get('database', 'unknown')
-                stats = data.get('statistics', {})
-                
-                self.log_test(
-                    "MongoDB Connection Status",
-                    db_status == 'connected',
-                    response_time,
-                    f"DB Status: {db_status}, Users: {stats.get('users', 0)}, Clinics: {stats.get('clinics', 0)}",
-                    response.status_code
-                )
+                clinics = response.json()
+                details = f"تم العثور على {len(clinics)} عيادة"
+                self.log_test("GET /api/clinics", True, response_time, details)
+                return clinics
             else:
-                self.log_test("MongoDB Connection Status", False, response_time, "Health check failed", response.status_code)
+                self.log_test("GET /api/clinics", False, response_time, f"HTTP {response.status_code}")
+                return []
                 
         except Exception as e:
-            self.log_test("MongoDB Connection Status", False, 0, f"Error: {str(e)}")
-
-        # Test data persistence by creating and retrieving a test record
-        test_user_data = {
-            "username": f"test_user_{int(time.time())}",
-            "password": "test123",
-            "full_name": "Test User for Backend Testing",
-            "role": "medical_rep",
-            "is_active": True
-        }
-        
-        # Create test user
-        start_time = time.time()
-        try:
-            response = requests.post(f"{self.base_url}/users", json=test_user_data, headers=headers, timeout=10)
             response_time = (time.time() - start_time) * 1000
-            
-            if response.status_code in [200, 201]:
-                data = response.json()
-                test_user_id = data.get('id') or data.get('user_id')
-                
-                self.log_test(
-                    "Data Persistence - Create User",
-                    True,
-                    response_time,
-                    f"User created with ID: {test_user_id}",
-                    response.status_code
-                )
-                
-                # Retrieve the created user
-                if test_user_id:
-                    start_time = time.time()
-                    get_response = requests.get(f"{self.base_url}/users", headers=headers, timeout=10)
-                    response_time = (time.time() - start_time) * 1000
-                    
-                    if get_response.status_code == 200:
-                        users = get_response.json()
-                        user_found = any(user.get('id') == test_user_id or user.get('username') == test_user_data['username'] for user in users)
-                        
-                        self.log_test(
-                            "Data Retrieval - Find Created User",
-                            user_found,
-                            response_time,
-                            f"User found in database" if user_found else "User not found in list",
-                            get_response.status_code
-                        )
-                        
-                        # Clean up - delete test user
-                        if user_found:
-                            try:
-                                delete_response = requests.delete(f"{self.base_url}/users/{test_user_id}", headers=headers, timeout=10)
-                                self.log_test(
-                                    "Data Cleanup - Delete Test User",
-                                    delete_response.status_code in [200, 204],
-                                    0,
-                                    "Test user cleaned up" if delete_response.status_code in [200, 204] else "Cleanup failed",
-                                    delete_response.status_code
-                                )
-                            except:
-                                pass  # Cleanup failure is not critical
-                    else:
-                        self.log_test("Data Retrieval - Find Created User", False, response_time, "Failed to retrieve users", get_response.status_code)
-            else:
-                self.log_test("Data Persistence - Create User", False, response_time, f"Creation failed: {response.text[:100]}", response.status_code)
-                
-        except Exception as e:
-            self.log_test("Data Persistence - Create User", False, 0, f"Error: {str(e)}")
+            self.log_test("GET /api/clinics", False, response_time, f"خطأ: {str(e)}")
+            return []
 
-    def test_data_validation(self):
-        """Test 4: Data Validation"""
-        print("\n✅ === DATA VALIDATION TESTING ===")
-        
-        if not self.token:
-            print("❌ Skipping validation tests - no authentication token")
-            return
-            
-        headers = {"Authorization": f"Bearer {self.token}"}
-        
-        # Test invalid user creation
-        invalid_user_data = {
-            "username": "",  # Empty username
-            "password": "123",  # Too short
-            "role": "invalid_role"  # Invalid role
-        }
+    def test_get_products(self):
+        """الحصول على قائمة المنتجات المتاحة"""
+        print("\n💊 الحصول على قائمة المنتجات")
         
         start_time = time.time()
         try:
-            response = requests.post(f"{self.base_url}/users", json=invalid_user_data, headers=headers, timeout=10)
-            response_time = (time.time() - start_time) * 1000
-            
-            # Should fail validation
-            self.log_test(
-                "Input Validation - Invalid User Data",
-                response.status_code in [400, 422],
-                response_time,
-                f"Validation correctly rejected invalid data" if response.status_code in [400, 422] else "Validation failed to catch errors",
-                response.status_code
-            )
-        except Exception as e:
-            self.log_test("Input Validation - Invalid User Data", False, 0, f"Error: {str(e)}")
-
-        # Test missing required fields
-        incomplete_data = {"username": "test_incomplete"}  # Missing password and role
-        
-        start_time = time.time()
-        try:
-            response = requests.post(f"{self.base_url}/users", json=incomplete_data, headers=headers, timeout=10)
-            response_time = (time.time() - start_time) * 1000
-            
-            self.log_test(
-                "Required Fields Validation",
-                response.status_code in [400, 422],
-                response_time,
-                f"Missing fields correctly rejected" if response.status_code in [400, 422] else "Missing fields not caught",
-                response.status_code
-            )
-        except Exception as e:
-            self.log_test("Required Fields Validation", False, 0, f"Error: {str(e)}")
-
-        # Test unauthorized access (no token)
-        start_time = time.time()
-        try:
-            response = requests.get(f"{self.base_url}/users", timeout=10)  # No headers
-            response_time = (time.time() - start_time) * 1000
-            
-            self.log_test(
-                "Authorization Validation",
-                response.status_code in [401, 403],
-                response_time,
-                f"Unauthorized access correctly blocked" if response.status_code in [401, 403] else "Security issue: unauthorized access allowed",
-                response.status_code
-            )
-        except Exception as e:
-            self.log_test("Authorization Validation", False, 0, f"Error: {str(e)}")
-
-    def test_api_responses(self):
-        """Test 5: API Response Testing"""
-        print("\n📊 === API RESPONSE TESTING ===")
-        
-        if not self.token:
-            print("❌ Skipping response tests - no authentication token")
-            return
-            
-        headers = {"Authorization": f"Bearer {self.token}"}
-        
-        # Test response formats and status codes
-        test_endpoints = [
-            ("/users", "Users API Response Format"),
-            ("/products", "Products API Response Format"),
-            ("/dashboard/stats/admin", "Dashboard Stats Response Format"),
-            ("/health", "Health Check Response Format")
-        ]
-        
-        for endpoint, test_name in test_endpoints:
-            start_time = time.time()
-            try:
-                response = requests.get(f"{self.base_url}{endpoint}", headers=headers, timeout=10)
-                response_time = (time.time() - start_time) * 1000
-                
-                if response.status_code == 200:
-                    try:
-                        data = response.json()
-                        content_type = response.headers.get('content-type', '')
-                        
-                        # Check if response is valid JSON
-                        is_valid_json = 'application/json' in content_type
-                        has_data = data is not None
-                        
-                        details = f"JSON: {is_valid_json}, Data: {has_data}"
-                        if isinstance(data, list):
-                            details += f", Count: {len(data)}"
-                        elif isinstance(data, dict):
-                            details += f", Fields: {len(data)}"
-                            
-                        self.log_test(
-                            test_name,
-                            is_valid_json and has_data,
-                            response_time,
-                            details,
-                            response.status_code
-                        )
-                    except json.JSONDecodeError:
-                        self.log_test(test_name, False, response_time, "Invalid JSON response", response.status_code)
-                else:
-                    self.log_test(test_name, False, response_time, f"HTTP {response.status_code}", response.status_code)
-                    
-            except Exception as e:
-                self.log_test(test_name, False, 0, f"Error: {str(e)}")
-
-        # Test pagination and filtering (if supported)
-        start_time = time.time()
-        try:
-            response = requests.get(f"{self.base_url}/activities?limit=5", headers=headers, timeout=10)
+            response = requests.get(f"{self.base_url}/products", headers=self.headers)
             response_time = (time.time() - start_time) * 1000
             
             if response.status_code == 200:
-                data = response.json()
-                self.log_test(
-                    "Pagination Support",
-                    isinstance(data, list) and len(data) <= 5,
-                    response_time,
-                    f"Returned {len(data)} items (limit=5)" if isinstance(data, list) else "Pagination not supported",
-                    response.status_code
-                )
+                products = response.json()
+                details = f"تم العثور على {len(products)} منتج"
+                self.log_test("GET /api/products", True, response_time, details)
+                return products
             else:
-                self.log_test("Pagination Support", False, response_time, "Activities endpoint not available", response.status_code)
+                self.log_test("GET /api/products", False, response_time, f"HTTP {response.status_code}")
+                return []
+                
         except Exception as e:
-            self.log_test("Pagination Support", False, 0, f"Error: {str(e)}")
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/products", False, response_time, f"خطأ: {str(e)}")
+            return []
 
-    def test_financial_system(self):
-        """Test 6: Financial System Testing"""
-        print("\n💰 === FINANCIAL SYSTEM TESTING ===")
+    def test_create_invoice(self, clinics, products):
+        """المرحلة 2: إنشاء فاتورة جديدة مع بيانات كاملة"""
+        print("\n📄 المرحلة 2: إنشاء فاتورة جديدة")
         
-        if not self.token:
-            print("❌ Skipping financial tests - no authentication token")
-            return
+        if not clinics or not products:
+            self.log_test("إنشاء فاتورة جديدة", False, 0, "لا توجد عيادات أو منتجات متاحة")
+            return None
+        
+        start_time = time.time()
+        try:
+            # استخدام أول عيادة ومنتج متاح
+            clinic = clinics[0]
+            product = products[0]
             
-        headers = {"Authorization": f"Bearer {self.token}"}
+            invoice_data = {
+                "clinic_id": clinic.get("id", clinic.get("_id")),
+                "clinic_name": clinic.get("clinic_name", "عيادة تجريبية"),
+                "doctor_name": clinic.get("doctor_name", "د. أحمد محمد"),
+                "items": [
+                    {
+                        "product_id": product.get("id", product.get("_id")),
+                        "product_name": product.get("name", "منتج تجريبي"),
+                        "quantity": 5,
+                        "unit_price": product.get("price", 50.0),
+                        "total_price": 5 * product.get("price", 50.0)
+                    }
+                ],
+                "subtotal": 5 * product.get("price", 50.0),
+                "tax_amount": 5 * product.get("price", 50.0) * 0.14,
+                "total_amount": 5 * product.get("price", 50.0) * 1.14,
+                "invoice_date": datetime.now().isoformat(),
+                "due_date": datetime.now().isoformat(),
+                "notes": "فاتورة اختبار للنظام المالي المتكامل",
+                "payment_terms": "30 يوم"
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/invoices",
+                json=invoice_data,
+                headers=self.headers
+            )
+            
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 201:
+                invoice = response.json()
+                invoice_id = invoice.get("id", invoice.get("invoice_id"))
+                total_amount = invoice.get("total_amount", invoice_data["total_amount"])
+                details = f"فاتورة ID: {invoice_id}, المبلغ: {total_amount:.2f} ج.م"
+                self.log_test("إنشاء فاتورة جديدة", True, response_time, details)
+                return invoice
+            else:
+                self.log_test("إنشاء فاتورة جديدة", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("إنشاء فاتورة جديدة", False, response_time, f"خطأ: {str(e)}")
+            return None
+
+    def test_approve_invoice(self, invoice):
+        """المرحلة 3: اعتماد الفاتورة"""
+        print("\n✅ المرحلة 3: اعتماد الفاتورة")
         
-        # Test invoice management endpoints
-        financial_endpoints = [
-            ("/invoices", "Invoice Management"),
-            ("/debts", "Debt Management"),
-            ("/payments", "Payment Processing"),
-            ("/debts/statistics/overview", "Financial Statistics")
+        if not invoice:
+            self.log_test("اعتماد الفاتورة", False, 0, "لا توجد فاتورة للاعتماد")
+            return False
+        
+        start_time = time.time()
+        try:
+            invoice_id = invoice.get("id", invoice.get("invoice_id"))
+            
+            response = requests.put(
+                f"{self.base_url}/invoices/{invoice_id}/approve",
+                json={"approved_by": "admin", "approval_notes": "معتمدة للتحصيل"},
+                headers=self.headers
+            )
+            
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                details = f"تم اعتماد الفاتورة {invoice_id}"
+                self.log_test("اعتماد الفاتورة", True, response_time, details)
+                return True
+            else:
+                self.log_test("اعتماد الفاتورة", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("اعتماد الفاتورة", False, response_time, f"خطأ: {str(e)}")
+            return False
+
+    def test_verify_debt_creation(self, invoice):
+        """المرحلة 4: التحقق من تحويل الفاتورة المعتمدة إلى دين تلقائياً"""
+        print("\n💰 المرحلة 4: التحقق من تحويل الفاتورة إلى دين")
+        
+        if not invoice:
+            self.log_test("التحقق من تحويل الفاتورة إلى دين", False, 0, "لا توجد فاتورة للتحقق")
+            return None
+        
+        start_time = time.time()
+        try:
+            # البحث عن الدين المرتبط بالفاتورة
+            response = requests.get(f"{self.base_url}/debts", headers=self.headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                debts = response.json()
+                invoice_id = invoice.get("id", invoice.get("invoice_id"))
+                
+                # البحث عن دين مرتبط بالفاتورة
+                related_debt = None
+                for debt in debts:
+                    if (debt.get("invoice_id") == invoice_id or 
+                        debt.get("source_type") == "invoice" or
+                        debt.get("reference_id") == invoice_id):
+                        related_debt = debt
+                        break
+                
+                if related_debt:
+                    debt_amount = related_debt.get("original_amount", related_debt.get("amount", 0))
+                    details = f"تم إنشاء دين ID: {related_debt.get('id')}, المبلغ: {debt_amount:.2f} ج.م"
+                    self.log_test("التحقق من تحويل الفاتورة إلى دين", True, response_time, details)
+                    return related_debt
+                else:
+                    details = f"لم يتم العثور على دين مرتبط بالفاتورة {invoice_id}"
+                    self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, details)
+                    return None
+            else:
+                self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, f"HTTP {response.status_code}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("التحقق من تحويل الفاتورة إلى دين", False, response_time, f"خطأ: {str(e)}")
+            return None
+
+    def test_record_partial_payment(self, debt):
+        """المرحلة 5: تسجيل دفعة جزئية للدين"""
+        print("\n💳 المرحلة 5: تسجيل دفعة جزئية")
+        
+        if not debt:
+            self.log_test("تسجيل دفعة جزئية", False, 0, "لا يوجد دين لتسجيل الدفعة")
+            return False
+        
+        start_time = time.time()
+        try:
+            debt_id = debt.get("id", debt.get("_id"))
+            original_amount = debt.get("original_amount", debt.get("amount", 0))
+            partial_payment = original_amount * 0.6  # دفع 60% من المبلغ
+            
+            payment_data = {
+                "debt_id": debt_id,
+                "amount": partial_payment,
+                "payment_method": "cash",
+                "payment_date": datetime.now().isoformat(),
+                "notes": "دفعة جزئية - اختبار النظام المالي",
+                "received_by": "admin"
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/payments/process",
+                json=payment_data,
+                headers=self.headers
+            )
+            
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 201:
+                payment = response.json()
+                details = f"تم تسجيل دفعة {partial_payment:.2f} ج.م للدين {debt_id}"
+                self.log_test("تسجيل دفعة جزئية", True, response_time, details)
+                return payment
+            else:
+                self.log_test("تسجيل دفعة جزئية", False, response_time, f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل دفعة جزئية", False, response_time, f"خطأ: {str(e)}")
+            return None
+
+    def test_verify_debt_update(self, debt, payment):
+        """المرحلة 6: التحقق من تحديث حالة الدين والمبلغ المتبقي"""
+        print("\n🔄 المرحلة 6: التحقق من تحديث حالة الدين")
+        
+        if not debt or not payment:
+            self.log_test("التحقق من تحديث حالة الدين", False, 0, "لا توجد بيانات كافية للتحقق")
+            return False
+        
+        start_time = time.time()
+        try:
+            debt_id = debt.get("id", debt.get("_id"))
+            
+            response = requests.get(f"{self.base_url}/debts/{debt_id}", headers=self.headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                updated_debt = response.json()
+                remaining_amount = updated_debt.get("remaining_amount", updated_debt.get("amount", 0))
+                status = updated_debt.get("status", "unknown")
+                
+                details = f"الحالة: {status}, المبلغ المتبقي: {remaining_amount:.2f} ج.م"
+                self.log_test("التحقق من تحديث حالة الدين", True, response_time, details)
+                return True
+            else:
+                self.log_test("التحقق من تحديث حالة الدين", False, response_time, f"HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("التحقق من تحديث حالة الدين", False, response_time, f"خطأ: {str(e)}")
+            return False
+
+    def test_financial_apis(self):
+        """المرحلة 2: اختبار APIs المالية الأساسية"""
+        print("\n📊 المرحلة 2: اختبار APIs المالية الأساسية")
+        
+        apis_to_test = [
+            ("GET /api/invoices", f"{self.base_url}/invoices"),
+            ("GET /api/debts", f"{self.base_url}/debts"),
+            ("GET /api/payments", f"{self.base_url}/payments"),
+            ("GET /api/invoices/statistics", f"{self.base_url}/invoices/statistics/overview"),
+            ("GET /api/debts/statistics", f"{self.base_url}/debts/statistics/overview")
         ]
         
-        for endpoint, test_name in financial_endpoints:
+        for api_name, url in apis_to_test:
             start_time = time.time()
             try:
-                response = requests.get(f"{self.base_url}{endpoint}", headers=headers, timeout=10)
+                response = requests.get(url, headers=self.headers)
                 response_time = (time.time() - start_time) * 1000
                 
                 if response.status_code == 200:
                     data = response.json()
                     if isinstance(data, list):
-                        details = f"{len(data)} records found"
+                        details = f"تم العثور على {len(data)} سجل"
                     elif isinstance(data, dict):
-                        if 'total_amount' in data or 'outstanding_amount' in data:
-                            details = f"Financial data: {data.get('total_amount', 0)} total"
-                        else:
-                            details = f"{len(data)} fields returned"
+                        details = f"تم استرجاع البيانات الإحصائية"
                     else:
-                        details = "Data received"
-                        
-                    self.log_test(test_name, True, response_time, details, response.status_code)
+                        details = "تم استرجاع البيانات"
+                    
+                    self.log_test(api_name, True, response_time, details)
                 else:
-                    self.log_test(test_name, False, response_time, f"HTTP {response.status_code}: {response.text[:50]}", response.status_code)
+                    self.log_test(api_name, False, response_time, f"HTTP {response.status_code}")
                     
             except Exception as e:
-                self.log_test(test_name, False, 0, f"Error: {str(e)}")
+                response_time = (time.time() - start_time) * 1000
+                self.log_test(api_name, False, response_time, f"خطأ: {str(e)}")
 
-        # Test debt management and collection tracking
+    def test_data_integrity(self):
+        """المرحلة 3: التحقق من سلامة البيانات"""
+        print("\n🔍 المرحلة 3: التحقق من سلامة البيانات")
+        
+        # اختبار ربط الفواتير بالعيادات
         start_time = time.time()
         try:
-            response = requests.get(f"{self.base_url}/debts", headers=headers, timeout=10)
+            invoices_response = requests.get(f"{self.base_url}/invoices", headers=self.headers)
+            clinics_response = requests.get(f"{self.base_url}/clinics", headers=self.headers)
+            
             response_time = (time.time() - start_time) * 1000
             
-            if response.status_code == 200:
-                debts = response.json()
-                total_debts = len(debts) if isinstance(debts, list) else 0
+            if invoices_response.status_code == 200 and clinics_response.status_code == 200:
+                invoices = invoices_response.json()
+                clinics = clinics_response.json()
                 
-                # Calculate financial metrics if data exists
-                if total_debts > 0 and isinstance(debts, list):
-                    total_amount = sum(debt.get('original_amount', 0) for debt in debts)
-                    remaining_amount = sum(debt.get('remaining_amount', 0) for debt in debts)
-                    
-                    details = f"Debts: {total_debts}, Total: {total_amount:.2f}, Outstanding: {remaining_amount:.2f}"
-                else:
-                    details = f"No debts found (system clean)"
-                    
-                self.log_test(
-                    "Debt Collection Tracking",
-                    True,
-                    response_time,
-                    details,
-                    response.status_code
-                )
+                clinic_ids = {clinic.get("id", clinic.get("_id")) for clinic in clinics}
+                linked_invoices = 0
+                
+                for invoice in invoices:
+                    if invoice.get("clinic_id") in clinic_ids:
+                        linked_invoices += 1
+                
+                details = f"{linked_invoices}/{len(invoices)} فاتورة مرتبطة بعيادات صحيحة"
+                self.log_test("ربط الفواتير بالعيادات", True, response_time, details)
             else:
-                self.log_test("Debt Collection Tracking", False, response_time, "Debt system not available", response.status_code)
+                self.log_test("ربط الفواتير بالعيادات", False, response_time, "فشل في جلب البيانات")
                 
         except Exception as e:
-            self.log_test("Debt Collection Tracking", False, 0, f"Error: {str(e)}")
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("ربط الفواتير بالعيادات", False, response_time, f"خطأ: {str(e)}")
 
-        # Test financial calculations and data integrity
+        # اختبار ربط الديون بالمناديب
         start_time = time.time()
         try:
-            # Test creating a simple financial record (if endpoint exists)
-            test_debt = {
-                "clinic_id": "test-clinic-001",
-                "original_amount": 1000.0,
-                "remaining_amount": 1000.0,
-                "description": "Backend Test Debt Record",
-                "due_date": (datetime.now()).isoformat()
-            }
+            debts_response = requests.get(f"{self.base_url}/debts", headers=self.headers)
+            users_response = requests.get(f"{self.base_url}/users", headers=self.headers)
             
-            response = requests.post(f"{self.base_url}/debts", json=test_debt, headers=headers, timeout=10)
             response_time = (time.time() - start_time) * 1000
             
-            if response.status_code in [200, 201]:
-                data = response.json()
-                debt_id = data.get('id') or data.get('debt_id')
+            if debts_response.status_code == 200 and users_response.status_code == 200:
+                debts = debts_response.json()
+                users = users_response.json()
                 
-                self.log_test(
-                    "Financial Data Integrity",
-                    True,
-                    response_time,
-                    f"Test debt created: {debt_id}",
-                    response.status_code
-                )
+                rep_ids = {user.get("id", user.get("_id")) for user in users if user.get("role") in ["medical_rep", "sales_rep"]}
+                assigned_debts = 0
                 
-                # Clean up test debt
-                if debt_id:
-                    try:
-                        requests.delete(f"{self.base_url}/debts/{debt_id}", headers=headers, timeout=5)
-                    except:
-                        pass  # Cleanup failure is not critical
+                for debt in debts:
+                    if debt.get("assigned_to_id") in rep_ids or debt.get("sales_rep_id") in rep_ids:
+                        assigned_debts += 1
+                
+                details = f"{assigned_debts}/{len(debts)} دين مُعيَّن لمناديب صحيحين"
+                self.log_test("ربط الديون بالمناديب", True, response_time, details)
             else:
-                self.log_test("Financial Data Integrity", False, response_time, "Cannot create test financial record", response.status_code)
+                self.log_test("ربط الديون بالمناديب", False, response_time, "فشل في جلب البيانات")
                 
         except Exception as e:
-            self.log_test("Financial Data Integrity", False, 0, f"Error: {str(e)}")
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("ربط الديون بالمناديب", False, response_time, f"خطأ: {str(e)}")
 
-    def generate_report(self):
-        """Generate comprehensive test report"""
-        print("\n" + "=" * 80)
-        print("📋 === COMPREHENSIVE TEST REPORT ===")
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء الاختبار الشامل للنظام المالي")
         
-        total_tests = len(self.test_results)
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        failed_tests = total_tests - passed_tests
-        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        # المرحلة 1: تسجيل الدخول
+        if not self.test_admin_login():
+            print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+            return
         
+        # الحصول على البيانات الأساسية
+        clinics = self.test_get_clinics()
+        products = self.test_get_products()
+        
+        # المرحلة 1: تدفق النظام المالي الكامل
+        print("\n" + "="*50)
+        print("🎯 المرحلة 1: اختبار تدفق النظام المالي الكامل")
+        print("="*50)
+        
+        invoice = self.test_create_invoice(clinics, products)
+        if invoice:
+            approved = self.test_approve_invoice(invoice)
+            if approved:
+                debt = self.test_verify_debt_creation(invoice)
+                if debt:
+                    payment = self.test_record_partial_payment(debt)
+                    if payment:
+                        self.test_verify_debt_update(debt, payment)
+        
+        # المرحلة 2: اختبار APIs المالية الأساسية
+        print("\n" + "="*50)
+        print("🎯 المرحلة 2: اختبار APIs المالية الأساسية")
+        print("="*50)
+        self.test_financial_apis()
+        
+        # المرحلة 3: التحقق من سلامة البيانات
+        print("\n" + "="*50)
+        print("🎯 المرحلة 3: التحقق من سلامة البيانات")
+        print("="*50)
+        self.test_data_integrity()
+        
+        # النتائج النهائية
+        self.print_final_results()
+
+    def print_final_results(self):
+        """طباعة النتائج النهائية"""
         total_time = time.time() - self.start_time
-        avg_response_time = sum(r['response_time'] for r in self.test_results if r['response_time']) / max(1, len([r for r in self.test_results if r['response_time']]))
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        total_tests = len(self.test_results)
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
         
-        print(f"🎯 **FINAL RESULTS:**")
-        print(f"   Total Tests: {total_tests}")
-        print(f"   Passed: {passed_tests} ✅")
-        print(f"   Failed: {failed_tests} ❌")
-        print(f"   Success Rate: {success_rate:.1f}%")
-        print(f"   Average Response Time: {avg_response_time:.2f}ms")
-        print(f"   Total Execution Time: {total_time:.2f}s")
+        print("\n" + "="*80)
+        print("📊 النتائج النهائية للاختبار الشامل للنظام المالي")
+        print("="*80)
         
-        print(f"\n📊 **TEST CATEGORIES SUMMARY:**")
+        print(f"⏱️  إجمالي وقت التنفيذ: {total_time:.2f} ثانية")
+        print(f"📈 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)")
+        print(f"⚡ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
         
-        categories = {
-            "Authentication": ["Admin Login", "JWT Token", "Protected Route"],
-            "API Endpoints": ["GET /users", "GET /products", "GET /clinics", "GET /health"],
-            "Database": ["MongoDB Connection", "Data Persistence", "Data Retrieval"],
-            "Validation": ["Input Validation", "Required Fields", "Authorization"],
-            "Response Format": ["JSON Response", "Status Codes", "Pagination"],
-            "Financial System": ["Invoice Management", "Debt Management", "Financial Integrity"]
-        }
-        
-        for category, keywords in categories.items():
-            category_tests = [r for r in self.test_results if any(keyword in r['test'] for keyword in keywords)]
-            if category_tests:
-                category_passed = sum(1 for r in category_tests if r['success'])
-                category_total = len(category_tests)
-                category_rate = (category_passed / category_total * 100) if category_total > 0 else 0
-                status = "✅" if category_rate >= 80 else "⚠️" if category_rate >= 60 else "❌"
-                print(f"   {status} {category}: {category_passed}/{category_total} ({category_rate:.1f}%)")
-        
-        if failed_tests > 0:
-            print(f"\n❌ **FAILED TESTS:**")
-            for result in self.test_results:
-                if not result['success']:
-                    print(f"   • {result['test']}: {result['details']}")
-        
-        print(f"\n🏆 **OVERALL ASSESSMENT:**")
+        print(f"\n🎯 تقييم الأداء:")
         if success_rate >= 90:
-            print("   EXCELLENT - System is production ready!")
-        elif success_rate >= 80:
-            print("   GOOD - System is mostly functional with minor issues")
-        elif success_rate >= 70:
-            print("   ACCEPTABLE - System needs some improvements")
+            print("🟢 ممتاز - النظام المالي يعمل بشكل مثالي!")
+        elif success_rate >= 75:
+            print("🟡 جيد - النظام المالي يعمل مع بعض التحسينات المطلوبة")
+        elif success_rate >= 50:
+            print("🟠 متوسط - النظام المالي يحتاج إصلاحات")
         else:
-            print("   NEEDS WORK - System has significant issues requiring attention")
+            print("🔴 ضعيف - النظام المالي يحتاج إعادة تطوير")
         
-        print("=" * 80)
+        print(f"\n📋 تفاصيل الاختبارات:")
+        for result in self.test_results:
+            status = "✅" if result["success"] else "❌"
+            print(f"{status} {result['test']} ({result['response_time']:.2f}ms) - {result['details']}")
         
-        return {
-            'total_tests': total_tests,
-            'passed_tests': passed_tests,
-            'success_rate': success_rate,
-            'avg_response_time': avg_response_time,
-            'total_time': total_time
-        }
-
-    def run_all_tests(self):
-        """Run all comprehensive tests"""
-        try:
-            self.test_authentication()
-            self.test_api_endpoints()
-            self.test_database_connectivity()
-            self.test_data_validation()
-            self.test_api_responses()
-            self.test_financial_system()
-            
-            return self.generate_report()
-            
-        except KeyboardInterrupt:
-            print("\n⚠️ Testing interrupted by user")
-            return self.generate_report()
-        except Exception as e:
-            print(f"\n❌ Critical error during testing: {str(e)}")
-            return self.generate_report()
-
-def main():
-    """Main testing function"""
-    tester = MedicalSystemBackendTester()
-    results = tester.run_all_tests()
-    
-    # Return results for potential integration with other systems
-    return results
+        print("\n" + "="*80)
+        print(f"🏁 انتهى الاختبار الشامل للنظام المالي - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("="*80)
 
 if __name__ == "__main__":
-    main()
+    tester = FinancialSystemTester()
+    tester.run_comprehensive_test()
