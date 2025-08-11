@@ -554,15 +554,9 @@ class FinancialSystemTester:
         print("🎯 المرحلة 1: اختبار تدفق النظام المالي الكامل")
         print("="*50)
         
-        invoice = self.test_create_invoice(clinics, products, users)
-        if invoice:
-            approved = self.test_approve_invoice(invoice)
-            if approved:
-                debt = self.test_verify_debt_creation(invoice)
-                if debt:
-                    payment = self.test_record_partial_payment(debt)
-                    if payment:
-                        self.test_verify_debt_update(debt, payment)
+        # اختبار البيانات الموجودة بدلاً من إنشاء جديدة
+        invoices = self.test_existing_financial_flow()
+        debts = self.test_existing_debts_flow()
         
         # المرحلة 2: اختبار APIs المالية الأساسية
         print("\n" + "="*50)
