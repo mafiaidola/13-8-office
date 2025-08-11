@@ -131,12 +131,35 @@ class FinancialSystemTester:
             self.log_test("GET /api/products", False, response_time, f"خطأ: {str(e)}")
             return []
 
-    def test_create_invoice(self, clinics, products):
+    def test_get_users(self):
+        """الحصول على قائمة المستخدمين للعثور على مندوب مبيعات"""
+        print("\n👥 الحصول على قائمة المستخدمين")
+        
+        start_time = time.time()
+        try:
+            response = requests.get(f"{self.base_url}/users", headers=self.headers)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                users = response.json()
+                details = f"تم العثور على {len(users)} مستخدم"
+                self.log_test("GET /api/users", True, response_time, details)
+                return users
+            else:
+                self.log_test("GET /api/users", False, response_time, f"HTTP {response.status_code}")
+                return []
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/users", False, response_time, f"خطأ: {str(e)}")
+            return []
+
+    def test_create_invoice(self, clinics, products, users):
         """المرحلة 2: إنشاء فاتورة جديدة مع بيانات كاملة"""
         print("\n📄 المرحلة 2: إنشاء فاتورة جديدة")
         
-        if not clinics or not products:
-            self.log_test("إنشاء فاتورة جديدة", False, 0, "لا توجد عيادات أو منتجات متاحة")
+        if not clinics or not products or not users:
+            self.log_test("إنشاء فاتورة جديدة", False, 0, "لا توجد عيادات أو منتجات أو مستخدمين متاحة")
             return None
         
         start_time = time.time()
@@ -145,17 +168,38 @@ class FinancialSystemTester:
             clinic = clinics[0]
             product = products[0]
             
+            # البحث عن مندوب مبيعات
+            sales_rep = None
+            for user in users:
+                if user.get("role") in ["medical_rep", "sales_rep"]:
+                    sales_rep = user
+                    break
+            
+            if not sales_rep:
+                # استخدام admin كمندوب مبيعات
+                sales_rep = {"id": "admin-001", "full_name": "System Administrator"}
+            
             invoice_data = {
                 "clinic_id": clinic.get("id", clinic.get("_id")),
                 "clinic_name": clinic.get("clinic_name", "عيادة تجريبية"),
                 "doctor_name": clinic.get("doctor_name", "د. أحمد محمد"),
+                "clinic_address": clinic.get("clinic_address", "عنوان العيادة"),
+                "clinic_phone": clinic.get("clinic_phone", "01234567890"),
+                "clinic_email": clinic.get("clinic_email", "clinic@example.com"),
+                "sales_rep_id": sales_rep.get("id"),
+                "sales_rep_name": sales_rep.get("full_name", "مندوب المبيعات"),
+                "line_id": sales_rep.get("line_id", "line-001"),
+                "area_id": sales_rep.get("area_id", "area-001"),
                 "items": [
                     {
                         "product_id": product.get("id", product.get("_id")),
                         "product_name": product.get("name", "منتج تجريبي"),
                         "quantity": 5,
                         "unit_price": product.get("price", 50.0),
-                        "total_price": 5 * product.get("price", 50.0)
+                        "discount_percentage": 0,
+                        "discount_amount": 0,
+                        "tax_percentage": 14,
+                        "tax_amount": 5 * product.get("price", 50.0) * 0.14
                     }
                 ],
                 "subtotal": 5 * product.get("price", 50.0),
