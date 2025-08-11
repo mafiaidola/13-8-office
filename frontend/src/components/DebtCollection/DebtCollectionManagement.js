@@ -35,7 +35,7 @@ const DebtCollectionManagement = ({ user, language = 'ar', isRTL = true }) => {
     collection_rate: 0
   });
 
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   // Check permissions
   const canManageDebts = ['admin', 'accounting', 'gm'].includes(user?.role);
