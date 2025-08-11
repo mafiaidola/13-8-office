@@ -24,22 +24,36 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      // محاولة تحميل الأنشطة من API الحقيقي
+      console.log('🔄 تحميل الأنشطة الحقيقية من قاعدة البيانات المحسنة...');
+      
+      // محاولة تحميل الأنشطة من API المحسن الجديد
       try {
         const response = await axios.get(`${API_URL}/api/activities`, { 
           headers,
           params: { filter, limit: 50 }
         });
         
-        if (response.data && Array.isArray(response.data)) {
-          setActivities(response.data);
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          console.log('✅ تم تحميل الأنشطة الحقيقية بنجاح:', response.data.length);
+          // تحويل البيانات إلى التنسيق المطلوب
+          const formattedActivities = response.data.map(activity => ({
+            ...activity,
+            details: {
+              browser: activity.device_info?.browser || 'Unknown',
+              os: activity.device_info?.os || 'Unknown',
+              device_type: activity.device_info?.device_type || 'Unknown',
+              screen_resolution: activity.device_info?.screen_resolution || 'Unknown',
+              timezone: activity.device_info?.timezone || 'Unknown'
+            }
+          }));
+          setActivities(formattedActivities);
           return;
         }
       } catch (apiError) {
-        console.log('API activities not available, using enhanced demo data');
+        console.log('⚠️ API الجديد للأنشطة غير متاح، سيتم استخدام البيانات البديلة');
       }
       
-      // Enhanced demo data with comprehensive details
+      // Enhanced demo data with comprehensive real-like details
       const enhancedActivities = [
         {
           id: '1',
@@ -49,8 +63,12 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
           description: 'تسجيل دخول إلى النظام',
           timestamp: new Date().toISOString(),
           ip_address: '192.168.1.105',
-          device_info: 'Chrome 120.0.6099.110 on Windows 11',
-          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          device_info: {
+            browser: 'Chrome 120.0.6099.110',
+            os: 'Windows 11',
+            device_type: 'Desktop',
+            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
           location: {
             city: 'القاهرة',
             district: 'مدينة نصر',
@@ -77,8 +95,12 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
           description: 'زيارة عيادة الدكتور محمود سعد',
           timestamp: new Date(Date.now() - 1800000).toISOString(),
           ip_address: '10.0.0.45',
-          device_info: 'Mobile Safari on iPhone 14',
-          user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6_1 like Mac OS X)',
+          device_info: {
+            browser: 'Safari Mobile',
+            os: 'iOS 16.6.1',
+            device_type: 'Mobile',
+            user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
+          },
           location: {
             city: 'الجيزة',
             district: 'المهندسين',
@@ -106,8 +128,12 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
           description: 'إنشاء فاتورة جديدة رقم INV-2025-001',
           timestamp: new Date(Date.now() - 3600000).toISOString(),
           ip_address: '192.168.1.78',
-          device_info: 'Firefox 121.0 on Ubuntu 22.04',
-          user_agent: 'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+          device_info: {
+            browser: 'Firefox 121.0',
+            os: 'Ubuntu 22.04',
+            device_type: 'Desktop',
+            user_agent: 'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0'
+          },
           location: {
             city: 'الإسكندرية',
             district: 'سموحة',
@@ -135,8 +161,12 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
           description: 'تحديث معلومات المنتج Panadol Extra',
           timestamp: new Date(Date.now() - 7200000).toISOString(),
           ip_address: '192.168.0.22',
-          device_info: 'Edge 120.0.2210.144 on Windows 10',
-          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.144',
+          device_info: {
+            browser: 'Edge 120.0.2210.144',
+            os: 'Windows 10',
+            device_type: 'Desktop',
+            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.144'
+          },
           location: {
             city: 'طنطا',
             district: 'وسط البلد',
@@ -164,8 +194,12 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
           description: 'إضافة مستخدم جديد: سمير أحمد',
           timestamp: new Date(Date.now() - 10800000).toISOString(),
           ip_address: '192.168.1.200',
-          device_info: 'Chrome 120.0.6099.110 on macOS Sonoma',
-          user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          device_info: {
+            browser: 'Chrome 120.0.6099.110',
+            os: 'macOS Sonoma',
+            device_type: 'Desktop',
+            user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
           location: {
             city: 'القاهرة',
             district: 'التجمع الخامس',
@@ -187,6 +221,7 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
         }
       ];
       
+      console.log('📊 تم تحميل البيانات التجريبية المحسنة:', enhancedActivities.length);
       setActivities(enhancedActivities);
     } catch (error) {
       console.error('Error loading activities:', error);
