@@ -1185,7 +1185,7 @@ const DashboardLayout = () => {
       {/* Main Dashboard Content - Perfect alignment without empty spaces */}
       <div className={`dashboard-content transition-all duration-300 ${
         sidebarCollapsed ? 'mr-16' : 'mr-80'
-      }`} style={{ paddingTop: '64px' }}> {/* Use inline style for exact padding */}
+      }`} style={{ paddingTop: '64px', marginTop: '0' }}> {/* Exact padding, no margin */}
         {/* Main Content */}
         <main className="dashboard-main flex-1 overflow-auto min-h-screen"> 
           {/* Current Tab Component */}
