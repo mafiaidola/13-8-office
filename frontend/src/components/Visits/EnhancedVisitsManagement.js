@@ -37,7 +37,8 @@ const EnhancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
 
       if (response.ok) {
         const data = await response.json();
-        setVisits(data);
+        // Handle API response format: {success: true, visits: [...]}
+        setVisits(data.visits || data || []);
       }
     } catch (error) {
       console.error('Error loading visits:', error);
