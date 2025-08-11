@@ -36,7 +36,7 @@ const AddUserModal = ({ onClose, onUserAdded, language = 'ar' }) => {
   const [areas, setAreas] = useState([]);
   const [lines, setLines] = useState([]);
 
-  const API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+  const API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
 
   const roles = [
     { value: 'admin', labelAr: 'مدير النظام', labelEn: 'Admin' },
