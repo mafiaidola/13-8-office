@@ -438,14 +438,27 @@ class FinancialSystemTester:
             response_time = (time.time() - start_time) * 1000
             
             if invoices_response.status_code == 200 and clinics_response.status_code == 200:
-                invoices = invoices_response.json()
+                # Handle different response formats
+                invoices_data = invoices_response.json()
+                if isinstance(invoices_data, dict) and "invoices" in invoices_data:
+                    invoices = invoices_data["invoices"]
+                else:
+                    invoices = invoices_data if isinstance(invoices_data, list) else []
+                
                 clinics = clinics_response.json()
+                if isinstance(clinics, dict) and "clinics" in clinics:
+                    clinics = clinics["clinics"]
                 
-                clinic_ids = {clinic.get("id", clinic.get("_id")) for clinic in clinics}
+                clinic_ids = set()
+                for clinic in clinics:
+                    if isinstance(clinic, dict):
+                        clinic_ids.add(clinic.get("id", clinic.get("_id")))
+                    else:
+                        clinic_ids.add(str(clinic))
+                
                 linked_invoices = 0
-                
                 for invoice in invoices:
-                    if invoice.get("clinic_id") in clinic_ids:
+                    if isinstance(invoice, dict) and invoice.get("clinic_id") in clinic_ids:
                         linked_invoices += 1
                 
                 details = f"{linked_invoices}/{len(invoices)} فاتورة مرتبطة بعيادات صحيحة"
@@ -466,15 +479,30 @@ class FinancialSystemTester:
             response_time = (time.time() - start_time) * 1000
             
             if debts_response.status_code == 200 and users_response.status_code == 200:
-                debts = debts_response.json()
-                users = users_response.json()
+                # Handle different response formats
+                debts_data = debts_response.json()
+                if isinstance(debts_data, dict) and "debts" in debts_data:
+                    debts = debts_data["debts"]
+                else:
+                    debts = debts_data if isinstance(debts_data, list) else []
                 
-                rep_ids = {user.get("id", user.get("_id")) for user in users if user.get("role") in ["medical_rep", "sales_rep"]}
+                users_data = users_response.json()
+                if isinstance(users_data, dict) and "users" in users_data:
+                    users = users_data["users"]
+                else:
+                    users = users_data if isinstance(users_data, list) else []
+                
+                rep_ids = set()
+                for user in users:
+                    if isinstance(user, dict) and user.get("role") in ["medical_rep", "sales_rep"]:
+                        rep_ids.add(user.get("id", user.get("_id")))
+                
                 assigned_debts = 0
-                
                 for debt in debts:
-                    if debt.get("assigned_to_id") in rep_ids or debt.get("sales_rep_id") in rep_ids:
-                        assigned_debts += 1
+                    if isinstance(debt, dict):
+                        if (debt.get("assigned_to_id") in rep_ids or 
+                            debt.get("sales_rep_id") in rep_ids):
+                            assigned_debts += 1
                 
                 details = f"{assigned_debts}/{len(debts)} دين مُعيَّن لمناديب صحيحين"
                 self.log_test("ربط الديون بالمناديب", True, response_time, details)
