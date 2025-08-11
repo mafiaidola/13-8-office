@@ -113,96 +113,70 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
   // Load real registered clinics with full details
   const loadRealClinics = async () => {
     try {
-      console.log('🔍 بدء تحميل العيادات...');
+      console.log('🔍 بدء تحميل العيادات الحقيقية من قاعدة البيانات...');
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
       
       const response = await axios.get(`${API_BASE}/clinics`, { headers });
       console.log('📊 استجابة العيادات:', response.data);
       
-      // Handle different response formats
-      let clinicsData = [];
+      // Handle only REAL database data - no dummy/fake data allowed
+      let realClinicsData = [];
       
       if (response.data && Array.isArray(response.data)) {
-        clinicsData = response.data;
+        realClinicsData = response.data;
       } else if (response.data && response.data.success && Array.isArray(response.data.clinics)) {
-        clinicsData = response.data.clinics;
+        realClinicsData = response.data.clinics;
       } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        clinicsData = response.data.data;
+        realClinicsData = response.data.data;
       }
       
-      // Filter active clinics only
-      const activeClinics = clinicsData.filter(clinic => clinic.is_active !== false);
-      console.log('🏥 العيادات النشطة:', activeClinics);
+      // Filter ONLY active clinics from the real database
+      const activeClinics = realClinicsData.filter(clinic => {
+        // Only include real registered clinics that are active
+        return clinic.is_active !== false && clinic.id && clinic.name;
+      });
       
-      setAvailableClinics(activeClinics);
+      console.log('🏥 العيادات الحقيقية النشطة:', activeClinics);
+      console.log(`📈 تم العثور على ${activeClinics.length} عيادة حقيقية في قاعدة البيانات`);
       
-      // If no clinics found, try to create some test data for demonstration
-      if (activeClinics.length === 0) {
-        console.log('⚠️ لا توجد عيادات، سيتم إنشاء بيانات تجريبية');
-        const testClinics = [
-          {
-            id: 'test_1',
-            name: 'عيادة الدكتور أحمد',
-            clinic_name: 'عيادة الدكتور أحمد',
-            doctor_name: 'د. أحمد محمد',
-            address: '123 شارع النيل، القاهرة',
-            classification: 'class_a',
-            credit_classification: 'green',
-            is_active: true
-          },
-          {
-            id: 'test_2', 
-            name: 'عيادة الدكتور سارة',
-            clinic_name: 'عيادة الدكتور سارة',
-            doctor_name: 'د. سارة أحمد',
-            address: '456 شارع الجمهورية، الجيزة',
-            classification: 'class_b',
-            credit_classification: 'yellow',
-            is_active: true
-          },
-          {
-            id: 'test_3',
-            name: 'مستشفى النور',
-            clinic_name: 'مستشفى النور',
-            doctor_name: 'د. محمد علي',
-            address: '789 شارع السلام، الإسكندرية',
-            classification: 'class_a',
-            credit_classification: 'green',
-            is_active: true
-          }
-        ];
-        setAvailableClinics(testClinics);
+      // Process real clinic data to match our interface
+      const processedClinics = activeClinics.map(clinic => ({
+        id: clinic.id,
+        name: clinic.name || clinic.clinic_name,
+        clinic_name: clinic.name || clinic.clinic_name,
+        doctor_name: clinic.doctor_name || clinic.owner_name || 'غير محدد',
+        address: clinic.address || clinic.location || 'العنوان غير متوفر',
+        phone: clinic.phone || clinic.clinic_phone,
+        email: clinic.email || clinic.clinic_email,
+        classification: clinic.classification || 'class_b',
+        credit_classification: clinic.credit_classification || 'yellow',
+        is_active: clinic.is_active,
+        line_id: clinic.line_id,
+        area_id: clinic.area_id,
+        // GPS coordinates if available
+        clinic_latitude: clinic.clinic_latitude,
+        clinic_longitude: clinic.clinic_longitude,
+        // Registration info
+        created_at: clinic.created_at,
+        registered_by: clinic.registered_by
+      }));
+      
+      setAvailableClinics(processedClinics);
+      
+      if (processedClinics.length === 0) {
+        console.log('⚠️ لا توجد عيادات حقيقية مسجلة في قاعدة البيانات');
+      } else {
+        console.log(`✅ تم تحميل ${processedClinics.length} عيادة حقيقية بنجاح`);
+        processedClinics.forEach((clinic, index) => {
+          console.log(`   ${index + 1}. ${clinic.name} - د. ${clinic.doctor_name} (ID: ${clinic.id})`);
+        });
       }
       
     } catch (error) {
-      console.error('❌ خطأ في تحميل العيادات:', error);
-      
-      // Create fallback test data
-      console.log('🔧 إنشاء بيانات احتياطية للعيادات...');
-      const fallbackClinics = [
-        {
-          id: 'fallback_1',
-          name: 'عيادة تجريبية 1',
-          clinic_name: 'عيادة تجريبية 1', 
-          doctor_name: 'د. مثال الأول',
-          address: 'عنوان تجريبي',
-          classification: 'class_b',
-          credit_classification: 'yellow',
-          is_active: true
-        },
-        {
-          id: 'fallback_2',
-          name: 'عيادة تجريبية 2',
-          clinic_name: 'عيادة تجريبية 2',
-          doctor_name: 'د. مثال الثاني', 
-          address: 'عنوان تجريبي 2',
-          classification: 'class_a',
-          credit_classification: 'green',
-          is_active: true
-        }
-      ];
-      setAvailableClinics(fallbackClinics);
+      console.error('❌ خطأ في تحميل العيادات الحقيقية:', error);
+      // Don't create fallback fake data - show empty state instead
+      setAvailableClinics([]);
     }
   };
 
