@@ -1102,11 +1102,19 @@ const DashboardLayout = () => {
       switchToTab(sectionName);
     };
     
+    // Add event listener for showing user profile modal
+    const handleShowUserProfile = (event) => {
+      console.log('📄 Show User Profile triggered from header');
+      setShowUserProfile(true);
+    };
+    
     window.addEventListener('navigateToSection', handleNavigateToSection);
+    window.addEventListener('showUserProfile', handleShowUserProfile);
     
     return () => {
       delete window.switchToTab;
       window.removeEventListener('navigateToSection', handleNavigateToSection);
+      window.removeEventListener('showUserProfile', handleShowUserProfile);
       console.log('🌍 switchToTab function and navigation listeners removed');
     };
   }, [switchToTab]);
