@@ -361,8 +361,8 @@ class ComprehensiveSystemReviewTester:
         print("\n🏥+ المرحلة 3: اختبار العيادات المحسنة")
         
         enhanced_endpoints = [
-            ("/enhanced-clinics/available-for-user", "Enhanced Clinics List"),
-            ("/enhanced-clinics/registration/form-data", "Enhanced Clinic Registration Form Data")
+            ("/api/enhanced-clinics/available-for-user", "Enhanced Clinics List"),
+            ("/api/enhanced-clinics/registration/form-data", "Enhanced Clinic Registration Form Data")
         ]
         
         for endpoint, name in enhanced_endpoints:
