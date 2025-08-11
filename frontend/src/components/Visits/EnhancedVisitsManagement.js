@@ -544,9 +544,19 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
                         </span>
                       </td>
                       <td className="p-4">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm">
-                          عرض
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleViewVisitDetails(visit)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm"
+                          >
+                            {canViewVisitDetails() ? 'تفاصيل' : 'عرض'}
+                          </button>
+                          {visit.status === 'planned' && (
+                            <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm">
+                              بدء
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
