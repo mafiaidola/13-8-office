@@ -125,9 +125,9 @@ export const SYSTEM_TABS = {
     id: 'activity_tracking',
     path: '/activity-tracking',
     icon: '📊',
-    name: { ar: 'تتبع الأنشطة والحركات', en: 'Activity Tracking' },
-    component: 'ActivityTrackingFixed',
-    description: { ar: 'مراقبة شاملة لجميع الأنشطة مع تتبع الموقع والوقت', en: 'Comprehensive monitoring of all activities with location and time tracking' },
+    name: { ar: 'تتبع الأنشطة والحركات المتقدم', en: 'Advanced Activity Tracking' },
+    component: 'EnhancedActivityTracking',
+    description: { ar: 'مراقبة احترافية شاملة لجميع الأنشطة مع تفاصيل تقنية وخرائط جوجل وتتبع الموقع', en: 'Professional comprehensive monitoring with technical details, Google Maps and location tracking' },
     permissions: ['admin', 'gm'],
     priority: 12
   },
