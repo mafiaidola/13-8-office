@@ -336,60 +336,72 @@ const AdminDashboard = ({
         </div>
       )}
 
-      {/* Charts and Analytics - Side by Side Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* System Performance */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      {/* Charts and Analytics - Full Width Layout for Better Data Display */}
+      <div className="space-y-8 mb-8">
+        {/* System Performance - Full Width */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center">
-              <span className="text-blue-600 mr-3 text-2xl">📈</span>
+            <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+              <span className="text-blue-600 mr-3 text-3xl">📈</span>
               {language === 'ar' ? 'أداء النظام العام' : 'Overall System Performance'}
             </h3>
             <p className="text-gray-700 font-medium mt-2">
-              {language === 'ar' ? 'تحليل شامل لأداء النظام والمبيعات' : 'Comprehensive analysis of system and sales performance'}
+              {language === 'ar' ? 'تحليل شامل لأداء النظام والمبيعات - عرض محسن للبيانات' : 'Comprehensive analysis of system and sales performance - Enhanced data display'}
             </p>
           </div>
-          <SalesPerformance 
-            data={[
-              { period: language === 'ar' ? 'اليوم' : 'Today', sales: 15000, target: 12000, orders: 45 },
-              { period: language === 'ar' ? 'أمس' : 'Yesterday', sales: 8500, target: 12000, orders: 32 },
-              { period: language === 'ar' ? 'قبل يومين' : '2 days ago', sales: 22000, target: 12000, orders: 67 },
-              { period: language === 'ar' ? 'قبل 3 أيام' : '3 days ago', sales: 18000, target: 12000, orders: 54 }
-            ]}
-            title=""
-            timeFilter={timeFilter}
-            onExport={(data) => console.log('Export performance data:', data)}
-            onViewDetails={(data) => console.log('View performance details:', data)}
-          />
+          <div className="w-full h-80">
+            <SalesPerformance 
+              data={[
+                { period: language === 'ar' ? 'يناير' : 'January', sales: 15000, target: 12000, orders: 45 },
+                { period: language === 'ar' ? 'فبراير' : 'February', sales: 18500, target: 15000, orders: 52 },
+                { period: language === 'ar' ? 'مارس' : 'March', sales: 22000, target: 18000, orders: 67 },
+                { period: language === 'ar' ? 'أبريل' : 'April', sales: 19000, target: 20000, orders: 58 },
+                { period: language === 'ar' ? 'مايو' : 'May', sales: 25000, target: 22000, orders: 75 },
+                { period: language === 'ar' ? 'يونيو' : 'June', sales: 28000, target: 25000, orders: 82 },
+                { period: language === 'ar' ? 'يوليو' : 'July', sales: 31000, target: 28000, orders: 90 },
+                { period: language === 'ar' ? 'أغسطس' : 'August', sales: 33500, target: 30000, orders: 98 }
+              ]}
+              title=""
+              timeFilter={timeFilter}
+              fullWidth={true}
+              enhanced={true}
+              onExport={(data) => console.log('Export performance data:', data)}
+              onViewDetails={(data) => console.log('View performance details:', data)}
+            />
+          </div>
         </div>
 
-        {/* Usage Trends */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+        {/* Usage Trends - Full Width */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center">
-              <span className="text-purple-600 mr-3 text-2xl">📊</span>
+            <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+              <span className="text-purple-600 mr-3 text-3xl">📊</span>
               {language === 'ar' ? 'اتجاهات استخدام النظام' : 'System Usage Trends'}
             </h3>
             <p className="text-gray-700 font-medium mt-2">
-              {language === 'ar' ? 'معدل استخدام النظام خلال الأسبوع' : 'System usage rate throughout the week'}
+              {language === 'ar' ? 'معدل استخدام النظام على مدار الأسبوع - عرض تفصيلي شامل' : 'System usage rate throughout the week - Comprehensive detailed view'}
             </p>
           </div>
-          <LineCharts 
-            data={[
-              { x: language === 'ar' ? 'الإثنين' : 'Monday', y: 120 },
-              { x: language === 'ar' ? 'الثلاثاء' : 'Tuesday', y: 150 },
-              { x: language === 'ar' ? 'الأربعاء' : 'Wednesday', y: 180 },
-              { x: language === 'ar' ? 'الخميس' : 'Thursday', y: 165 },
-              { x: language === 'ar' ? 'الجمعة' : 'Friday', y: 200 },
-              { x: language === 'ar' ? 'السبت' : 'Saturday', y: 145 },
-              { x: language === 'ar' ? 'الأحد' : 'Sunday', y: 110 }
-            ]}
-            title=""
-            xAxisLabel={language === 'ar' ? 'أيام الأسبوع' : 'Days of the week'}
-            yAxisLabel={language === 'ar' ? 'عدد المستخدمين النشطين' : 'Number of active users'}
-            interactive={true}
-            onDataPointClick={(item, index) => console.log('Clicked on:', item)}
-          />
+          <div className="w-full h-80">
+            <LineCharts 
+              data={[
+                { x: language === 'ar' ? 'السبت' : 'Saturday', y: 120, users: 45, sessions: 280 },
+                { x: language === 'ar' ? 'الأحد' : 'Sunday', y: 150, users: 58, sessions: 320 },
+                { x: language === 'ar' ? 'الإثنين' : 'Monday', y: 180, users: 72, sessions: 410 },
+                { x: language === 'ar' ? 'الثلاثاء' : 'Tuesday', y: 165, users: 65, sessions: 380 },
+                { x: language === 'ar' ? 'الأربعاء' : 'Wednesday', y: 200, users: 80, sessions: 450 },
+                { x: language === 'ar' ? 'الخميس' : 'Thursday', y: 145, users: 55, sessions: 320 },
+                { x: language === 'ar' ? 'الجمعة' : 'Friday', y: 110, users: 42, sessions: 260 }
+              ]}
+              title=""
+              xAxisLabel={language === 'ar' ? 'أيام الأسبوع' : 'Days of the week'}
+              yAxisLabel={language === 'ar' ? 'عدد المستخدمين النشطين' : 'Number of active users'}
+              fullWidth={true}
+              enhanced={true}
+              interactive={true}
+              onDataPointClick={(item, index) => console.log('Clicked on:', item)}
+            />
+          </div>
         </div>
       </div>
 
