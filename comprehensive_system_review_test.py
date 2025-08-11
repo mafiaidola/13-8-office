@@ -298,9 +298,9 @@ class ComprehensiveSystemReviewTester:
         print("\n🏥 المرحلة 3: اختبار نظام الزيارات")
         
         visits_endpoints = [
-            ("/api/visits/dashboard/overview", "Visits Dashboard Overview"),
-            ("/api/visits/available-clinics", "Available Clinics for Visits"),
-            ("/api/visits/representatives/stats", "Representatives Stats")
+            ("/visits/dashboard/overview", "Visits Dashboard Overview"),
+            ("/visits/available-clinics", "Available Clinics for Visits"),
+            ("/visits/representatives/stats", "Representatives Stats")
         ]
         
         for endpoint, name in visits_endpoints:
