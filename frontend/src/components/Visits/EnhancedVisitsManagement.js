@@ -53,6 +53,12 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
     loadUsers();
   }, []);
 
+  // Check user permissions
+  const canViewAllVisits = () => {
+    const role = user?.role?.toLowerCase();
+    return ['admin', 'gm', 'line_manager', 'area_manager'].includes(role);
+  };
+
   // Check if user is admin to view visit details
   const canViewVisitDetails = () => {
     const role = user?.role?.toLowerCase();
