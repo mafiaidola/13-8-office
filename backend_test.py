@@ -252,7 +252,11 @@ class FinancialSystemTester:
             
             response = requests.put(
                 f"{self.base_url}/invoices/{invoice_id}/approve",
-                json={"approved_by": "admin", "approval_notes": "معتمدة للتحصيل"},
+                json={
+                    "approved_by": "admin", 
+                    "approval_notes": "معتمدة للتحصيل",
+                    "convert_to_debt": True
+                },
                 headers=self.headers
             )
             
