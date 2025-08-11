@@ -447,22 +447,62 @@ const ModernSidebar = ({
         ))}
       </div>
 
-      {/* Footer */}
+      {/* Footer - Enhanced with EP Group System */}
       <div className={`p-4 border-t ${themeStyles.footer}`}>
         {!isCollapsed ? (
           <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex items-center justify-center gap-2 mb-3">
               <span className="text-2xl">🏥</span>
               <div>
-                <p className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                  {language === 'ar' ? 'نظام الإدارة الطبية' : 'Medical Management System'}
+                <p className={`text-sm font-bold ${isDark ? 'text-blue-300' : 'text-blue-600'}`}>
+                  EP Group System
                 </p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {language === 'ar' ? 'الإصدار 2.1.0' : 'Version 2.1.0'}
+                <p className={`text-xs font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                  Version 3.2.0
                 </p>
               </div>
             </div>
-            <div className={`flex items-center justify-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
+            
+            {/* Professional Copyright Section */}
+            <div className="mt-3 p-2 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-gray-200">
+              <a 
+                href="https://facebook.com/mafiaidola" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block group transition-all duration-300 hover:scale-105"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <span className="text-lg group-hover:animate-bounce">👨‍💻</span>
+                  <div className="text-center">
+                    <p className="text-xs font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      Coded By
+                    </p>
+                    <p className="text-sm font-black bg-gradient-to-r from-purple-700 via-blue-700 to-indigo-700 bg-clip-text text-transparent group-hover:from-pink-600 group-hover:to-violet-600 transition-all duration-300">
+                      Mahmoud M. E.
+                    </p>
+                  </div>
+                  <span className="text-lg group-hover:animate-pulse">✨</span>
+                </div>
+                
+                <div className="flex items-center justify-center gap-1 text-xs">
+                  <span className="animate-pulse">🌟</span>
+                  <span className="font-medium bg-gradient-to-r from-gray-600 to-gray-800 bg-clip-text text-transparent">
+                    Creative Developer
+                  </span>
+                  <span className="animate-pulse">🌟</span>
+                </div>
+                
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
+                  <span className="text-xs font-semibold text-blue-600 group-hover:text-blue-800">
+                    Professional Solutions
+                  </span>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-ping"></div>
+                </div>
+              </a>
+            </div>
+            
+            <div className={`flex items-center justify-center gap-2 text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>
               <span>🇪🇬</span>
               <span>{language === 'ar' ? 'مصر' : 'Egypt'}</span>
               <span>•</span>
@@ -472,6 +512,7 @@ const ModernSidebar = ({
         ) : (
           <div className="flex flex-col items-center gap-1">
             <span className="text-xl">🏥</span>
+            <span className="text-sm font-bold text-blue-600">EP</span>
             <span className="text-lg">🇪🇬</span>
           </div>
         )}
