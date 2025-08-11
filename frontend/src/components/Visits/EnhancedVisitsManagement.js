@@ -371,7 +371,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
 
       console.log('📝 بيانات الزيارة التي سيتم إرسالها:', visitData);
 
-      const response = await axios.post(`${API_BASE}/visits/`, visitData, { headers });
+      const response = await axios.post(`${API_BASE}/api/visits/`, visitData, { headers });
       
       if (response.data.success) {
         console.log('✅ تم إنشاء الزيارة بنجاح:', response.data);
