@@ -144,7 +144,7 @@ const AdminDashboard = ({
   ];
 
   return (
-    <div className="space-y-6 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="space-y-8 p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Enhanced Dashboard Header */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
         <div className="flex justify-between items-center">
@@ -183,8 +183,8 @@ const AdminDashboard = ({
         </div>
       </div>
 
-      {/* Stats Grid with Better Layout - Enhanced Horizontal Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+      {/* Stats Grid with Better Layout - Fixed spacing between blocks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8">
         {adminStats.map((stat, index) => (
           <div key={index} className={`${stat.color} rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
             <div className="flex items-center justify-between mb-4">
@@ -204,28 +204,28 @@ const AdminDashboard = ({
         ))}
       </div>
 
-      {/* Quick Actions Grid - Horizontal Layout */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+      {/* Quick Actions Grid - Fixed spacing */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
           <span className="text-blue-600 mr-3 text-3xl">⚡</span>
           {language === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'}
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {adminQuickActions.map((action, index) => (
             <button
               key={index}
               onClick={action.onClick}
-              className={`${action.color} border-2 rounded-xl p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg`}
+              className={`${action.color} border-2 rounded-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-lg`}
             >
-              <div className="text-2xl mb-2">{action.icon}</div>
+              <div className="text-2xl mb-3">{action.icon}</div>
               <div className="text-sm font-semibold">{action.label}</div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* System Health Indicators - Improved Horizontal Layout */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+      {/* System Health Indicators - Fixed spacing */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-2xl font-bold text-gray-900 flex items-center">
             <span className="text-green-600 mr-3 text-3xl">💚</span>
@@ -243,7 +243,7 @@ const AdminDashboard = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 shadow-lg hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -297,15 +297,15 @@ const AdminDashboard = ({
         </div>
       </div>
 
-      {/* User Distribution by Roles - Improved Layout */}
+      {/* User Distribution by Roles - Fixed spacing */}
       {dashboardData.user_roles_distribution && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
           <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center">
             <span className="text-blue-600 mr-3 text-3xl">👥</span>
             {language === 'ar' ? 'توزيع المستخدمين حسب الأدوار' : 'User Distribution by Roles'}
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {dashboardData.user_roles_distribution.map((role, index) => (
               <div key={role._id || index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-all hover:border-blue-400">
                 <div className="flex items-center justify-between mb-4">
