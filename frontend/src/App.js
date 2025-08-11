@@ -1304,7 +1304,16 @@ const DashboardLayout = () => {
                       البريد الإلكتروني
                     </label>
                     <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-medium">
-                      {user?.email || 'غير متوفر'}
+                      {user?.email || 'user@example.com'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      رقم الهاتف
+                    </label>
+                    <div className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 font-medium">
+                      {user?.phone || '+20 1XX XXX XXXX'}
                     </div>
                   </div>
                 </div>
