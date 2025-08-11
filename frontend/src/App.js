@@ -1182,12 +1182,12 @@ const DashboardLayout = () => {
         theme={theme}
       />
 
-      {/* Main Dashboard Content - Fixed layout to prevent overlap and empty spaces */}
+      {/* Main Dashboard Content - Perfect alignment without empty spaces */}
       <div className={`dashboard-content transition-all duration-300 ${
         sidebarCollapsed ? 'mr-16' : 'mr-80'
-      } pt-16`}> {/* Changed from mt-16 to pt-16 to prevent margin collapse */}
+      }`} style={{ paddingTop: '64px' }}> {/* Use inline style for exact padding */}
         {/* Main Content */}
-        <main className="dashboard-main flex-1 p-0 overflow-auto min-h-screen"> {/* Removed padding to eliminate empty space */}
+        <main className="dashboard-main flex-1 overflow-auto min-h-screen"> 
           {/* Current Tab Component */}
           <div className="tab-content">
             {(() => {
