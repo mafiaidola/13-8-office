@@ -55,7 +55,7 @@ const VisitsManagement = () => {
 
   const loadDashboardData = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/api/visits/dashboard/overview`, {
+      const response = await axios.get(`${API_BASE}/visits/dashboard/overview`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -78,7 +78,7 @@ const VisitsManagement = () => {
         if (value) params.append(key, value);
       });
       
-      const response = await axios.get(`${API_BASE}/api/visits/?${params}`, {
+      const response = await axios.get(`${API_BASE}/visits/?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -96,7 +96,7 @@ const VisitsManagement = () => {
 
   const loadAvailableClinics = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/api/visits/available-clinics`, {
+      const response = await axios.get(`${API_BASE}/visits/available-clinics`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
