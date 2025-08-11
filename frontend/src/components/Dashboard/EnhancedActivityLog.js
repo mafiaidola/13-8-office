@@ -245,9 +245,25 @@ const EnhancedActivityLog = ({
   // معالجة النقر على زر التفاصيل
   const handleDetailsClick = (activity) => {
     if (activity.navigation_target) {
-      // إرسال حدث للتنقل إلى القسم المناسب
+      // إرسال حدث للتنقل إلى القسم المناسب باستخدام IDs الصحيحة من systemConfig
+      let targetId = activity.navigation_target;
+      
+      // تحويل أسماء المكونات إلى IDs الصحيحة
+      const componentToIdMap = {
+        'IntegratedFinancialDashboard': 'integrated_financial',
+        'EnhancedVisitsManagement': 'visits_management', 
+        'ClinicsManagement': 'clinics_management',
+        'UserManagement': 'users',
+        'ActivityTrackingFixed': 'activity_tracking',
+        'EnhancedActivityTracking': 'activity_tracking',
+        'ProductManagement': 'products'
+      };
+      
+      targetId = componentToIdMap[activity.navigation_target] || activity.navigation_target;
+      
+      console.log(`🔄 Enhanced Activity Log Navigation: ${activity.navigation_target} → ${targetId}`);
       window.dispatchEvent(new CustomEvent('navigateToSection', { 
-        detail: activity.navigation_target 
+        detail: targetId 
       }));
     }
   };
