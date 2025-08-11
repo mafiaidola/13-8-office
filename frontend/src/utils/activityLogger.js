@@ -5,7 +5,7 @@ import axios from 'axios';
 
 class ActivityLogger {
   constructor() {
-    this.API = (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001') + '/api';
+    this.API = (process.env.REACT_APP_BACKEND_URL || 'https://localhost:8001') + '/api';
     this.isEnabled = true;
     this.currentPosition = null;
     this.retryQueue = [];
