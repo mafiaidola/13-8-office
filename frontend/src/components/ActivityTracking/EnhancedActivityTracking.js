@@ -189,8 +189,16 @@ const EnhancedActivityTracking = ({ language = 'ar', theme = 'dark', user }) => 
 
   // Get device type icon
   const getDeviceIcon = (deviceInfo) => {
-    if (deviceInfo.includes('iPhone') || deviceInfo.includes('Mobile')) return '📱';
-    if (deviceInfo.includes('iPad') || deviceInfo.includes('Tablet')) return '💻';
+    // Handle both string and object device info
+    let deviceString = '';
+    if (typeof deviceInfo === 'string') {
+      deviceString = deviceInfo;
+    } else if (typeof deviceInfo === 'object' && deviceInfo) {
+      deviceString = deviceInfo.device_type || deviceInfo.user_agent || deviceInfo.browser || '';
+    }
+    
+    if (deviceString.toLowerCase().includes('iphone') || deviceString.toLowerCase().includes('mobile')) return '📱';
+    if (deviceString.toLowerCase().includes('ipad') || deviceString.toLowerCase().includes('tablet')) return '💻';
     return '🖥️';
   };
 
