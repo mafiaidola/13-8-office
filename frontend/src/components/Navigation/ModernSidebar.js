@@ -420,11 +420,11 @@ const ModernSidebar = ({
                       <div className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 rounded-l-full ${isDark ? 'bg-blue-400' : 'bg-blue-600'}`}></div>
                     )}
                     
-                    <span className={`text-lg flex-shrink-0 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-105'} transition-transform`}>
+                    <span className={`text-lg flex-shrink-0 z-10 relative ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-105'} transition-transform`}>
                       {getEnhancedIcon(item.id)}
                     </span>
                     {!isCollapsed && (
-                      <div className="flex-1 min-w-0 text-right">
+                      <div className="flex-1 min-w-0 text-right z-10 relative">
                         <div className={`font-medium text-sm truncate ${activeTab === item.id ? 'font-bold' : ''}`}>
                           {item.title}
                         </div>
@@ -436,9 +436,9 @@ const ModernSidebar = ({
                       </div>
                     )}
 
-                    {/* Active Tab Ripple Effect */}
+                    {/* Active Tab Subtle Background Effect */}
                     {activeTab === item.id && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-xl animate-pulse"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-xl pointer-events-none"></div>
                     )}
                   </button>
                 ))}
