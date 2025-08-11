@@ -59,7 +59,8 @@ const EnhancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
 
       if (response.ok) {
         const data = await response.json();
-        setClinics(data);
+        // Handle API response format for clinics
+        setClinics(data.clinics || data || []);
       }
     } catch (error) {
       console.error('Error loading clinics:', error);
