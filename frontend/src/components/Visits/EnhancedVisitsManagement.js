@@ -107,9 +107,9 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       const token = localStorage.getItem('access_token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      let endpoint = '/visits/dashboard/overview';
+      let endpoint = '/api/visits/dashboard/overview';
       if (!canViewAllVisits()) {
-        endpoint = `/visits/dashboard/overview?user_id=${user?.user_id}`;
+        endpoint = `/api/visits/dashboard/overview?user_id=${user?.user_id}`;
       }
       
       const response = await axios.get(`${API_BASE}${endpoint}`, { headers });
