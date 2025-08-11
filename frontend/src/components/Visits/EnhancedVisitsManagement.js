@@ -78,7 +78,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       const headers = { Authorization: `Bearer ${token}` };
       
       // Get full visit details including representative location
-      const response = await axios.get(`${API_BASE}/visits/${visit.id}/details`, { headers });
+      const response = await axios.get(`${API_BASE}/api/visits/${visit.id}/details`, { headers });
       
       if (response.data.success) {
         setSelectedVisitDetails(response.data.visit);
