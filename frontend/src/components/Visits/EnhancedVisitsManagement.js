@@ -162,7 +162,7 @@ const EnhancedVisitsManagement = ({ user, language = 'ar', theme = 'dark' }) => 
       const headers = { Authorization: `Bearer ${token}` };
       console.log('🔑 تم استخدام JWT token للمصادقة');
       
-      const response = await axios.get(`${API_BASE}/clinics`, { headers });
+      const response = await axios.get(`${API_BASE}/api/clinics`, { headers });
       console.log('📊 استجابة العيادات الكاملة:', response);
       console.log('📊 بيانات العيادات:', response.data);
       
