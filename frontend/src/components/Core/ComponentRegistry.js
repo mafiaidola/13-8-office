@@ -7,6 +7,7 @@ import UserManagement from '../Users/UserManagement';
 import ProfessionalUserManagement from '../Users/ProfessionalUserManagement';
 import ProfessionalAccountingSystem from '../Accounting/ProfessionalAccountingSystem';
 import EnhancedClinicRegistrationAdvanced from '../Clinics/EnhancedClinicRegistrationAdvanced';
+import ProfessionalClinicProfile from '../Clinics/ProfessionalClinicProfile';
 import ClinicsManagement from '../Clinics/ClinicsManagement';
 import EnhancedVisitsManagement from '../Visits/EnhancedVisitsManagement';
 import AdvancedVisitsManagement from '../Visits/AdvancedVisitsManagement';
