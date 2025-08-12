@@ -1,7 +1,7 @@
 // Activity Service - خدمة تسجيل الأنشطة الشاملة
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://a41c2fca-1f1f-4701-a590-4467215de5fe.preview.emergentagent.com';
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://epgroup-health.preview.emergentagent.com';
 
 class ActivityService {
   constructor() {

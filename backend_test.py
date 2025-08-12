@@ -12,7 +12,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://a41c2fca-1f1f-4701-a590-4467215de5fe.preview.emergentagent.com"
+BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class EnhancedActivitySystemTester:
@@ -487,7 +487,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://a41c2fca-1f1f-4701-a590-4467215de5fe.preview.emergentagent.com"
+BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class BackendTester:
