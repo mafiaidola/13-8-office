@@ -314,6 +314,7 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             "rep_name": self.representative_data.get("full_name"),
             "original_amount": 750.0,
             "remaining_amount": 750.0,
+            "total_amount": 750.0,  # Added required field
             "due_date": datetime.now().isoformat(),
             "description": "دين اختبار للنظام المحاسبي الاحترافي",
             "priority": "medium",
