@@ -273,20 +273,10 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm mb-1">غير النشطين</p>
-                <p className="text-3xl font-bold text-red-600">{userStats.inactive}</p>
+                <p className="text-gray-600 text-sm mb-1">النشطون اليوم</p>
+                <p className="text-3xl font-bold text-emerald-600">{userStats.activeToday}</p>
               </div>
-              <div className="text-4xl">❌</div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm mb-1">المدراء</p>
-                <p className="text-3xl font-bold text-purple-600">{userStats.admins}</p>
-              </div>
-              <div className="text-4xl">👑</div>
+              <div className="text-4xl">🟢</div>
             </div>
           </div>
 
@@ -303,10 +293,63 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm mb-1">مدراء الخطوط</p>
-                <p className="text-3xl font-bold text-indigo-600">{userStats.managers}</p>
+                <p className="text-gray-600 text-sm mb-1">المدراء</p>
+                <p className="text-3xl font-bold text-purple-600">{userStats.admins + userStats.managers}</p>
               </div>
-              <div className="text-4xl">📊</div>
+              <div className="text-4xl">👑</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm mb-1">غير النشطين</p>
+                <p className="text-3xl font-bold text-red-600">{userStats.inactive}</p>
+              </div>
+              <div className="text-4xl">❌</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm mb-1">إجمالي الزيارات</p>
+                <p className="text-3xl font-bold">{userStats.totalVisits.toLocaleString()}</p>
+              </div>
+              <div className="text-4xl">🚗</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm mb-1">إجمالي المبيعات</p>
+                <p className="text-3xl font-bold">{userStats.totalSales.toLocaleString()} ج.م</p>
+              </div>
+              <div className="text-4xl">💰</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm mb-1">إجمالي التحصيل</p>
+                <p className="text-3xl font-bold">{userStats.totalCollections.toLocaleString()} ج.م</p>
+              </div>
+              <div className="text-4xl">💎</div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm mb-1">العيادات المضافة</p>
+                <p className="text-3xl font-bold">{userStats.totalClinics.toLocaleString()}</p>
+              </div>
+              <div className="text-4xl">🏥</div>
             </div>
           </div>
         </div>
