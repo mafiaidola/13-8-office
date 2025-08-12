@@ -1,5 +1,463 @@
 #!/usr/bin/env python3
 """
+اختبار شامل للنظام المحاسبي الاحترافي المحسن الجديد - Arabic Review
+Comprehensive Enhanced Professional Accounting System Testing
+"""
+
+import asyncio
+import aiohttp
+import json
+import time
+from datetime import datetime
+import uuid
+
+# Configuration
+BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+TEST_CREDENTIALS = {
+    "username": "admin",
+    "password": "admin123"
+}
+
+class ProfessionalAccountingSystemTester:
+    def __init__(self):
+        self.session = None
+        self.auth_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        self.test_invoice_id = None
+        self.available_clinics = []
+        self.available_reps = []
+        self.available_products = []
+
+    async def setup_session(self):
+        """إعداد جلسة HTTP"""
+        self.session = aiohttp.ClientSession()
+
+    async def cleanup_session(self):
+        """تنظيف جلسة HTTP"""
+        if self.session:
+            await self.session.close()
+
+    async def make_request(self, method, endpoint, data=None, headers=None):
+        """إجراء طلب HTTP مع معالجة الأخطاء"""
+        url = f"{BASE_URL}{endpoint}"
+        request_headers = {"Content-Type": "application/json"}
+        
+        if self.auth_token:
+            request_headers["Authorization"] = f"Bearer {self.auth_token}"
+        
+        if headers:
+            request_headers.update(headers)
+
+        start_time = time.time()
+        try:
+            async with self.session.request(method, url, json=data, headers=request_headers) as response:
+                response_time = round((time.time() - start_time) * 1000, 2)
+                response_data = await response.json() if response.content_type == 'application/json' else await response.text()
+                
+                return {
+                    "status_code": response.status,
+                    "data": response_data,
+                    "response_time": response_time,
+                    "success": 200 <= response.status < 300
+                }
+        except Exception as e:
+            return {
+                "status_code": 0,
+                "data": {"error": str(e)},
+                "response_time": round((time.time() - start_time) * 1000, 2),
+                "success": False
+            }
+
+    async def test_admin_login(self):
+        """اختبار تسجيل الدخول admin/admin123"""
+        print("🔐 اختبار تسجيل الدخول admin/admin123...")
+        
+        result = await self.make_request("POST", "/auth/login", TEST_CREDENTIALS)
+        
+        if result["success"] and "access_token" in result["data"]:
+            self.auth_token = result["data"]["access_token"]
+            user_info = result["data"].get("user", {})
+            
+            self.test_results.append({
+                "test": "تسجيل دخول admin/admin123",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')}"
+            })
+            print(f"   ✅ تسجيل دخول ناجح - المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')} ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "تسجيل دخول admin/admin123",
+                "status": "❌ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ❌ فشل تسجيل الدخول - HTTP {result['status_code']}: {result['data']}")
+            return False
+
+    async def test_professional_accounting_dashboard(self):
+        """اختبار لوحة التحكم الجديدة"""
+        print("📊 اختبار لوحة التحكم الجديدة...")
+        
+        result = await self.make_request("GET", "/professional-accounting/dashboard")
+        
+        if result["success"]:
+            dashboard_data = result["data"]
+            stats_count = len(dashboard_data) if isinstance(dashboard_data, dict) else 0
+            
+            self.test_results.append({
+                "test": "GET /api/professional-accounting/dashboard",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"تم جلب لوحة التحكم مع {stats_count} إحصائية"
+            })
+            print(f"   ✅ لوحة التحكم تعمل - {stats_count} إحصائية ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "GET /api/professional-accounting/dashboard",
+                "status": "❌ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ❌ فشل في جلب لوحة التحكم - HTTP {result['status_code']}: {result['data']}")
+            return False
+
+    async def load_supporting_data(self):
+        """تحميل البيانات الداعمة (العيادات، المناديب، المنتجات)"""
+        print("📋 تحميل البيانات الداعمة...")
+        
+        # جلب العيادات
+        clinics_result = await self.make_request("GET", "/clinics")
+        if clinics_result["success"] and isinstance(clinics_result["data"], list):
+            self.available_clinics = clinics_result["data"]
+            print(f"   ✅ تم جلب {len(self.available_clinics)} عيادة")
+        else:
+            print(f"   ⚠️ فشل في جلب العيادات - HTTP {clinics_result['status_code']}")
+
+        # جلب المناديب (المستخدمين)
+        users_result = await self.make_request("GET", "/users")
+        if users_result["success"] and isinstance(users_result["data"], list):
+            self.available_reps = [user for user in users_result["data"] if user.get("role") in ["medical_rep", "sales_rep"]]
+            print(f"   ✅ تم جلب {len(self.available_reps)} مندوب من {len(users_result['data'])} مستخدم")
+        else:
+            print(f"   ⚠️ فشل في جلب المستخدمين - HTTP {users_result['status_code']}")
+
+        # جلب المنتجات
+        products_result = await self.make_request("GET", "/products")
+        if products_result["success"] and isinstance(products_result["data"], list):
+            self.available_products = products_result["data"]
+            print(f"   ✅ تم جلب {len(self.available_products)} منتج")
+        else:
+            print(f"   ⚠️ فشل في جلب المنتجات - HTTP {products_result['status_code']}")
+
+        # تسجيل النتائج
+        self.test_results.append({
+            "test": "تحميل البيانات الداعمة",
+            "status": "✅ نجح جزئياً" if any([self.available_clinics, self.available_reps, self.available_products]) else "❌ فشل",
+            "response_time": "متعدد",
+            "details": f"العيادات: {len(self.available_clinics)}، المناديب: {len(self.available_reps)}، المنتجات: {len(self.available_products)}"
+        })
+
+        return len(self.available_clinics) > 0 and len(self.available_products) > 0
+
+    async def test_comprehensive_invoice_creation(self):
+        """اختبار إنشاء فاتورة شاملة جديدة"""
+        print("🧾 اختبار إنشاء فاتورة شاملة جديدة...")
+        
+        if not self.available_clinics or not self.available_products:
+            print("   ⚠️ لا توجد بيانات كافية لإنشاء فاتورة")
+            self.test_results.append({
+                "test": "إنشاء فاتورة شاملة",
+                "status": "❌ فشل",
+                "response_time": "0ms",
+                "details": "لا توجد عيادات أو منتجات متاحة"
+            })
+            return False
+
+        # اختيار بيانات عشوائية
+        selected_clinic = self.available_clinics[0]
+        selected_rep = self.available_reps[0] if self.available_reps else None
+        selected_products = self.available_products[:2]  # أول منتجين
+
+        # إعداد بيانات الفاتورة الشاملة
+        invoice_data = {
+            "clinic_id": selected_clinic.get("id"),
+            "rep_id": selected_rep.get("id") if selected_rep else None,
+            "items": [
+                {
+                    "product_id": product.get("id"),
+                    "product_name": product.get("name", "منتج غير محدد"),
+                    "quantity": 5,
+                    "unit_price": float(product.get("price", 50.0)),
+                    "total_price": 5 * float(product.get("price", 50.0))
+                }
+                for product in selected_products
+            ],
+            "discount_type": "percentage",
+            "discount_value": 10.0,
+            "payment_terms": "credit",
+            "notes": "فاتورة تجريبية شاملة للاختبار - تتضمن خصم 10% ودفع آجل",
+            "created_by_name": "System Administrator"
+        }
+
+        # حساب المجموع
+        subtotal = sum(item["total_price"] for item in invoice_data["items"])
+        discount_amount = subtotal * (invoice_data["discount_value"] / 100)
+        total_amount = subtotal - discount_amount
+
+        print(f"   📋 بيانات الفاتورة:")
+        print(f"      العيادة: {selected_clinic.get('name', 'غير محددة')}")
+        print(f"      المندوب: {selected_rep.get('full_name', 'غير محدد') if selected_rep else 'غير محدد'}")
+        print(f"      عدد المنتجات: {len(invoice_data['items'])}")
+        print(f"      المجموع الفرعي: {subtotal:.2f} ج.م")
+        print(f"      الخصم: {discount_amount:.2f} ج.م ({invoice_data['discount_value']}%)")
+        print(f"      المجموع النهائي: {total_amount:.2f} ج.م")
+
+        result = await self.make_request("POST", "/professional-accounting/invoices", invoice_data)
+        
+        if result["success"]:
+            response_data = result["data"]
+            self.test_invoice_id = response_data.get("invoice_id") or response_data.get("id")
+            
+            self.test_results.append({
+                "test": "إنشاء فاتورة شاملة",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"تم إنشاء فاتورة بمبلغ {total_amount:.2f} ج.م - ID: {self.test_invoice_id}"
+            })
+            print(f"   ✅ تم إنشاء الفاتورة بنجاح - ID: {self.test_invoice_id} ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "إنشاء فاتورة شاملة",
+                "status": "❌ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ❌ فشل في إنشاء الفاتورة - HTTP {result['status_code']}: {result['data']}")
+            return False
+
+    async def test_invoice_retrieval(self):
+        """اختبار جلب الفواتير"""
+        print("📄 اختبار جلب الفواتير...")
+        
+        result = await self.make_request("GET", "/professional-accounting/invoices")
+        
+        if result["success"]:
+            invoices_data = result["data"]
+            invoices_count = len(invoices_data) if isinstance(invoices_data, list) else 0
+            
+            # البحث عن الفاتورة المُنشأة
+            test_invoice_found = False
+            if self.test_invoice_id and isinstance(invoices_data, list):
+                test_invoice_found = any(
+                    invoice.get("id") == self.test_invoice_id or invoice.get("invoice_id") == self.test_invoice_id
+                    for invoice in invoices_data
+                )
+
+            self.test_results.append({
+                "test": "جلب الفواتير",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"تم جلب {invoices_count} فاتورة، الفاتورة التجريبية: {'موجودة' if test_invoice_found else 'غير موجودة'}"
+            })
+            print(f"   ✅ تم جلب {invoices_count} فاتورة - الفاتورة التجريبية: {'موجودة' if test_invoice_found else 'غير موجودة'} ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "جلب الفواتير",
+                "status": "❌ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ❌ فشل في جلب الفواتير - HTTP {result['status_code']}: {result['data']}")
+            return False
+
+    async def test_activity_logging(self):
+        """اختبار تسجيل الأنشطة"""
+        print("📝 اختبار تسجيل الأنشطة...")
+        
+        result = await self.make_request("GET", "/activities")
+        
+        if result["success"]:
+            activities_data = result["data"]
+            activities_count = len(activities_data) if isinstance(activities_data, list) else 0
+            
+            # البحث عن أنشطة إنشاء الفاتورة
+            invoice_activities = []
+            if isinstance(activities_data, list):
+                invoice_activities = [
+                    activity for activity in activities_data
+                    if "فاتورة" in activity.get("description", "") or "invoice" in activity.get("activity_type", "")
+                ]
+
+            self.test_results.append({
+                "test": "تسجيل الأنشطة",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"إجمالي الأنشطة: {activities_count}، أنشطة الفواتير: {len(invoice_activities)}"
+            })
+            print(f"   ✅ تم جلب {activities_count} نشاط - أنشطة الفواتير: {len(invoice_activities)} ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "تسجيل الأنشطة",
+                "status": "❌ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ❌ فشل في جلب الأنشطة - HTTP {result['status_code']}: {result['data']}")
+            return False
+
+    async def test_supporting_data_endpoints(self):
+        """اختبار البيانات الداعمة"""
+        print("🔧 اختبار البيانات الداعمة...")
+        
+        endpoints_to_test = [
+            ("/clinics", "العيادات"),
+            ("/products", "المنتجات"),
+            ("/users", "المناديب")
+        ]
+        
+        successful_tests = 0
+        total_tests = len(endpoints_to_test)
+        
+        for endpoint, name in endpoints_to_test:
+            result = await self.make_request("GET", endpoint)
+            
+            if result["success"]:
+                data_count = len(result["data"]) if isinstance(result["data"], list) else 0
+                print(f"   ✅ {name}: {data_count} عنصر ({result['response_time']}ms)")
+                successful_tests += 1
+            else:
+                print(f"   ❌ {name}: HTTP {result['status_code']} ({result['response_time']}ms)")
+
+        success_rate = (successful_tests / total_tests) * 100
+        self.test_results.append({
+            "test": "البيانات الداعمة",
+            "status": f"✅ نجح {successful_tests}/{total_tests}" if successful_tests > 0 else "❌ فشل",
+            "response_time": "متعدد",
+            "details": f"معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests})"
+        })
+        
+        return successful_tests > 0
+
+    async def cleanup_test_data(self):
+        """تنظيف البيانات التجريبية"""
+        print("🧹 تنظيف البيانات التجريبية...")
+        
+        if not self.test_invoice_id:
+            print("   ℹ️ لا توجد بيانات تجريبية للحذف")
+            return True
+
+        # محاولة حذف الفاتورة التجريبية
+        result = await self.make_request("DELETE", f"/professional-accounting/invoices/{self.test_invoice_id}")
+        
+        if result["success"]:
+            self.test_results.append({
+                "test": "تنظيف البيانات التجريبية",
+                "status": "✅ نجح",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"تم حذف الفاتورة التجريبية: {self.test_invoice_id}"
+            })
+            print(f"   ✅ تم حذف الفاتورة التجريبية: {self.test_invoice_id} ({result['response_time']}ms)")
+            return True
+        else:
+            self.test_results.append({
+                "test": "تنظيف البيانات التجريبية",
+                "status": "⚠️ فشل",
+                "response_time": f"{result['response_time']}ms",
+                "details": f"لم يتم حذف الفاتورة - HTTP {result['status_code']}: {result['data']}"
+            })
+            print(f"   ⚠️ لم يتم حذف الفاتورة - HTTP {result['status_code']}: {result['data']} ({result['response_time']}ms)")
+            return False
+
+    async def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء اختبار شامل للنظام المحاسبي الاحترافي المحسن الجديد")
+        print("=" * 80)
+        
+        await self.setup_session()
+        
+        try:
+            # 1. تسجيل الدخول
+            login_success = await self.test_admin_login()
+            if not login_success:
+                print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+                return
+            
+            # 2. اختبار لوحة التحكم الجديدة
+            await self.test_professional_accounting_dashboard()
+            
+            # 3. تحميل البيانات الداعمة
+            supporting_data_loaded = await self.load_supporting_data()
+            
+            # 4. اختبار إنشاء فاتورة شاملة
+            if supporting_data_loaded:
+                await self.test_comprehensive_invoice_creation()
+            
+            # 5. اختبار جلب الفواتير
+            await self.test_invoice_retrieval()
+            
+            # 6. اختبار تسجيل الأنشطة
+            await self.test_activity_logging()
+            
+            # 7. اختبار البيانات الداعمة
+            await self.test_supporting_data_endpoints()
+            
+            # 8. تنظيف البيانات التجريبية
+            await self.cleanup_test_data()
+            
+        finally:
+            await self.cleanup_session()
+        
+        # عرض النتائج النهائية
+        await self.display_final_results()
+
+    async def display_final_results(self):
+        """عرض النتائج النهائية"""
+        print("\n" + "=" * 80)
+        print("📊 النتائج النهائية للاختبار الشامل")
+        print("=" * 80)
+        
+        successful_tests = sum(1 for result in self.test_results if "✅" in result["status"])
+        total_tests = len(self.test_results)
+        success_rate = (successful_tests / total_tests) * 100 if total_tests > 0 else 0
+        
+        print(f"📈 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests})")
+        print(f"⏱️ إجمالي وقت التنفيذ: {time.time() - self.start_time:.2f}s")
+        print()
+        
+        for i, result in enumerate(self.test_results, 1):
+            print(f"{i:2d}. {result['test']}")
+            print(f"    الحالة: {result['status']}")
+            print(f"    وقت الاستجابة: {result['response_time']}")
+            print(f"    التفاصيل: {result['details']}")
+            print()
+        
+        # تقييم شامل
+        if success_rate >= 90:
+            print("🎉 تقييم شامل: ممتاز - النظام المحاسبي الاحترافي يعمل بكامل وظائفه!")
+        elif success_rate >= 75:
+            print("✅ تقييم شامل: جيد جداً - النظام يعمل مع بعض التحسينات المطلوبة")
+        elif success_rate >= 50:
+            print("⚠️ تقييم شامل: مقبول - النظام يحتاج إصلاحات")
+        else:
+            print("❌ تقييم شامل: ضعيف - النظام يحتاج إعادة تطوير")
+        
+        print("=" * 80)
+
+async def main():
+    """الدالة الرئيسية"""
+    tester = ProfessionalAccountingSystemTester()
+    await tester.run_comprehensive_test()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 اختبار شامل لنظام تسجيل الأنشطة التفصيلي المحسن - Arabic Review
 Comprehensive Enhanced Activity Logging System Testing
 """
