@@ -519,6 +519,10 @@ async def create_comprehensive_collection(collection_data: CollectionModel, curr
         
         # حفظ في قاعدة البيانات
         result = await db.collections.insert_one(collection)
+        collection["_id"] = str(result.inserted_id)  # تحويل ObjectId إلى string
+        
+        # تنظيف البيانات لإرجاعها
+        clean_collection = serialize_doc(dict(collection))
         
         # تسجيل النشاط
         activity = {
