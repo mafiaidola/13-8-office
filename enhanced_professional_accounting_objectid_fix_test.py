@@ -340,7 +340,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
                 print(f"🔍 Debug: استجابة إنشاء الدين: {data}")
-                debt_id = data.get("debt_id") or data.get("id") or data.get("_id")
+                # Extract ID from nested debt object
+                debt_id = None
+                if 'debt' in data and isinstance(data['debt'], dict):
+                    debt_id = data['debt'].get('id')
+                else:
+                    debt_id = data.get("debt_id") or data.get("id") or data.get("_id")
+                
                 if debt_id:
                     self.test_data_ids.append(("debt", debt_id))
                     print(f"🔍 Debug: تم حفظ معرف الدين: {debt_id}")
