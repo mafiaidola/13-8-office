@@ -46,7 +46,11 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
         cursor = db.users.find({}, {"password": 0}).sort("full_name", 1)
         
         async for user in cursor:
-            user_id = user["id"]
+            user_id = user.get("id")
+            
+            # Convert ObjectId to string if present
+            if "_id" in user:
+                del user["_id"]
             
             # إحصائيات الزيارات
             visits_count = await db.visits.count_documents({"rep_id": user_id})
