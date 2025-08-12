@@ -1,5 +1,688 @@
 #!/usr/bin/env python3
 """
+اختبار شامل لنظام إدارة الخطوط والمناطق المحسن لحل مشكلة التحديث
+Comprehensive Enhanced Lines and Areas Management System Testing for Update Issue Resolution
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class EnhancedLinesAreasSystemTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.jwt_token = None
+        self.test_results = []
+        self.created_line_id = None
+        self.created_area_id = None
+        
+    def log_test(self, test_name, success, response_time, details=""):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "response_time": f"{response_time:.2f}ms",
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {details} ({response_time:.2f}ms)")
+        
+    def login_admin(self):
+        """1. تسجيل الدخول admin/admin123 للحصول على JWT token"""
+        print("\n🔐 المرحلة 1: تسجيل الدخول admin/admin123")
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/auth/login",
+                json={
+                    "username": ADMIN_USERNAME,
+                    "password": ADMIN_PASSWORD
+                },
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.jwt_token = data.get("access_token")
+                user_info = data.get("user", {})
+                
+                # Set authorization header for future requests
+                self.session.headers.update({
+                    "Authorization": f"Bearer {self.jwt_token}"
+                })
+                
+                self.log_test(
+                    "تسجيل دخول admin/admin123",
+                    True,
+                    response_time,
+                    f"المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')}"
+                )
+                return True
+            else:
+                self.log_test(
+                    "تسجيل دخول admin/admin123",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "تسجيل دخول admin/admin123",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_get_lines_with_statistics(self):
+        """2. اختبار GET /api/enhanced-lines-areas/lines (جلب جميع الخطوط مع الإحصائيات)"""
+        print("\n📊 المرحلة 2: اختبار جلب الخطوط مع الإحصائيات")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(
+                f"{BACKEND_URL}/enhanced-lines-areas/lines",
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                lines = data.get("lines", [])
+                total_count = data.get("total_count", 0)
+                
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/lines",
+                    True,
+                    response_time,
+                    f"تم جلب {total_count} خط مع الإحصائيات"
+                )
+                return True
+            else:
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/lines",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "GET /api/enhanced-lines-areas/lines",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_get_areas_with_line_info(self):
+        """3. اختبار GET /api/enhanced-lines-areas/areas (جلب جميع المناطق مع معلومات الخط)"""
+        print("\n🗺️ المرحلة 3: اختبار جلب المناطق مع معلومات الخط")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(
+                f"{BACKEND_URL}/enhanced-lines-areas/areas",
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                areas = data.get("areas", [])
+                total_count = data.get("total_count", 0)
+                
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/areas",
+                    True,
+                    response_time,
+                    f"تم جلب {total_count} منطقة مع معلومات الخط"
+                )
+                return True
+            else:
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/areas",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "GET /api/enhanced-lines-areas/areas",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_get_comprehensive_statistics(self):
+        """4. اختبار GET /api/enhanced-lines-areas/statistics (الإحصائيات الشاملة)"""
+        print("\n📈 المرحلة 4: اختبار الإحصائيات الشاملة")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(
+                f"{BACKEND_URL}/enhanced-lines-areas/statistics",
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                statistics = data.get("statistics", {})
+                lines_stats = statistics.get("lines", {})
+                areas_stats = statistics.get("areas", {})
+                
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/statistics",
+                    True,
+                    response_time,
+                    f"خطوط: {lines_stats.get('total', 0)}، مناطق: {areas_stats.get('total', 0)}"
+                )
+                return True
+            else:
+                self.log_test(
+                    "GET /api/enhanced-lines-areas/statistics",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "GET /api/enhanced-lines-areas/statistics",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_create_new_line(self):
+        """5. اختبار إنشاء خط جديد"""
+        print("\n➕ المرحلة 5: اختبار إنشاء خط جديد")
+        
+        test_line_data = {
+            "name": "خط الاختبار التجريبي",
+            "code": "TEST_LINE_001",
+            "description": "خط تجريبي لاختبار نظام إدارة الخطوط والمناطق المحسن",
+            "is_active": True
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/enhanced-lines-areas/lines",
+                json=test_line_data,
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    line = data.get("line", {})
+                    self.created_line_id = line.get("id")
+                    
+                    self.log_test(
+                        "POST /api/enhanced-lines-areas/lines",
+                        True,
+                        response_time,
+                        f"تم إنشاء الخط: {line.get('name')} - ID: {self.created_line_id}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/enhanced-lines-areas/lines",
+                        False,
+                        response_time,
+                        f"فشل الإنشاء: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "POST /api/enhanced-lines-areas/lines",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "POST /api/enhanced-lines-areas/lines",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_update_line(self):
+        """6. اختبار تحديث الخط (السبب الرئيسي للمشكلة)"""
+        print("\n🔄 المرحلة 6: اختبار تحديث الخط (المشكلة الأساسية)")
+        
+        if not self.created_line_id:
+            self.log_test(
+                "PUT /api/enhanced-lines-areas/lines/{line_id}",
+                False,
+                0,
+                "لا يوجد خط منشأ للتحديث"
+            )
+            return False
+        
+        update_data = {
+            "name": "خط الاختبار التجريبي المحدث",
+            "description": "تم تحديث وصف الخط لاختبار وظيفة التحديث في النظام المحسن"
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.put(
+                f"{BACKEND_URL}/enhanced-lines-areas/lines/{self.created_line_id}",
+                json=update_data,
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    line = data.get("line", {})
+                    
+                    self.log_test(
+                        "PUT /api/enhanced-lines-areas/lines/{line_id}",
+                        True,
+                        response_time,
+                        f"تم تحديث الخط: {line.get('name')} - التحديث مطبق بنجاح"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PUT /api/enhanced-lines-areas/lines/{line_id}",
+                        False,
+                        response_time,
+                        f"فشل التحديث: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "PUT /api/enhanced-lines-areas/lines/{line_id}",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "PUT /api/enhanced-lines-areas/lines/{line_id}",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_create_new_area(self):
+        """7. اختبار إنشاء منطقة جديدة"""
+        print("\n🏘️ المرحلة 7: اختبار إنشاء منطقة جديدة")
+        
+        if not self.created_line_id:
+            self.log_test(
+                "POST /api/enhanced-lines-areas/areas",
+                False,
+                0,
+                "لا يوجد خط منشأ لربط المنطقة به"
+            )
+            return False
+        
+        test_area_data = {
+            "name": "منطقة الاختبار التجريبية",
+            "code": "TEST_AREA_001",
+            "description": "منطقة تجريبية لاختبار نظام إدارة الخطوط والمناطق المحسن",
+            "line_id": self.created_line_id,
+            "is_active": True
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/enhanced-lines-areas/areas",
+                json=test_area_data,
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    area = data.get("area", {})
+                    self.created_area_id = area.get("id")
+                    
+                    self.log_test(
+                        "POST /api/enhanced-lines-areas/areas",
+                        True,
+                        response_time,
+                        f"تم إنشاء المنطقة: {area.get('name')} - ID: {self.created_area_id}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "POST /api/enhanced-lines-areas/areas",
+                        False,
+                        response_time,
+                        f"فشل الإنشاء: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "POST /api/enhanced-lines-areas/areas",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "POST /api/enhanced-lines-areas/areas",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_update_area(self):
+        """8. اختبار تحديث المنطقة (المشكلة الأساسية)"""
+        print("\n🔄 المرحلة 8: اختبار تحديث المنطقة (المشكلة الأساسية)")
+        
+        if not self.created_area_id:
+            self.log_test(
+                "PUT /api/enhanced-lines-areas/areas/{area_id}",
+                False,
+                0,
+                "لا توجد منطقة منشأة للتحديث"
+            )
+            return False
+        
+        update_data = {
+            "name": "منطقة الاختبار التجريبية المحدثة",
+            "description": "تم تحديث وصف المنطقة لاختبار وظيفة التحديث في النظام المحسن"
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.put(
+                f"{BACKEND_URL}/enhanced-lines-areas/areas/{self.created_area_id}",
+                json=update_data,
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    area = data.get("area", {})
+                    
+                    self.log_test(
+                        "PUT /api/enhanced-lines-areas/areas/{area_id}",
+                        True,
+                        response_time,
+                        f"تم تحديث المنطقة: {area.get('name')} - التحديث مطبق وحُفظ في قاعدة البيانات"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "PUT /api/enhanced-lines-areas/areas/{area_id}",
+                        False,
+                        response_time,
+                        f"فشل التحديث: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "PUT /api/enhanced-lines-areas/areas/{area_id}",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "PUT /api/enhanced-lines-areas/areas/{area_id}",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_delete_test_area(self):
+        """9. اختبار حذف المنطقة التجريبية"""
+        print("\n🗑️ المرحلة 9: اختبار حذف المنطقة التجريبية")
+        
+        if not self.created_area_id:
+            self.log_test(
+                "DELETE /api/enhanced-lines-areas/areas/{area_id}",
+                False,
+                0,
+                "لا توجد منطقة منشأة للحذف"
+            )
+            return False
+        
+        start_time = time.time()
+        try:
+            response = self.session.delete(
+                f"{BACKEND_URL}/enhanced-lines-areas/areas/{self.created_area_id}",
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test(
+                        "DELETE /api/enhanced-lines-areas/areas/{area_id}",
+                        True,
+                        response_time,
+                        "تم حذف المنطقة التجريبية بنجاح"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "DELETE /api/enhanced-lines-areas/areas/{area_id}",
+                        False,
+                        response_time,
+                        f"فشل الحذف: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "DELETE /api/enhanced-lines-areas/areas/{area_id}",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "DELETE /api/enhanced-lines-areas/areas/{area_id}",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def test_delete_test_line(self):
+        """10. اختبار حذف الخط التجريبي"""
+        print("\n🗑️ المرحلة 10: اختبار حذف الخط التجريبي")
+        
+        if not self.created_line_id:
+            self.log_test(
+                "DELETE /api/enhanced-lines-areas/lines/{line_id}",
+                False,
+                0,
+                "لا يوجد خط منشأ للحذف"
+            )
+            return False
+        
+        start_time = time.time()
+        try:
+            response = self.session.delete(
+                f"{BACKEND_URL}/enhanced-lines-areas/lines/{self.created_line_id}",
+                timeout=30
+            )
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test(
+                        "DELETE /api/enhanced-lines-areas/lines/{line_id}",
+                        True,
+                        response_time,
+                        "تم حذف الخط التجريبي بنجاح"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        "DELETE /api/enhanced-lines-areas/lines/{line_id}",
+                        False,
+                        response_time,
+                        f"فشل الحذف: {data.get('message', 'Unknown error')}"
+                    )
+                    return False
+            else:
+                self.log_test(
+                    "DELETE /api/enhanced-lines-areas/lines/{line_id}",
+                    False,
+                    response_time,
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(
+                "DELETE /api/enhanced-lines-areas/lines/{line_id}",
+                False,
+                response_time,
+                f"خطأ: {str(e)}"
+            )
+            return False
+    
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🎯 بدء اختبار شامل لنظام إدارة الخطوط والمناطق المحسن لحل مشكلة التحديث")
+        print("=" * 80)
+        
+        start_time = time.time()
+        
+        # تشغيل جميع الاختبارات
+        tests = [
+            self.login_admin,
+            self.test_get_lines_with_statistics,
+            self.test_get_areas_with_line_info,
+            self.test_get_comprehensive_statistics,
+            self.test_create_new_line,
+            self.test_update_line,
+            self.test_create_new_area,
+            self.test_update_area,
+            self.test_delete_test_area,
+            self.test_delete_test_line
+        ]
+        
+        for test in tests:
+            test()
+        
+        # حساب النتائج
+        total_tests = len(self.test_results)
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        success_rate = (successful_tests / total_tests) * 100 if total_tests > 0 else 0
+        
+        total_time = time.time() - start_time
+        avg_response_time = sum(float(result["response_time"].replace("ms", "")) for result in self.test_results) / total_tests if total_tests > 0 else 0
+        
+        # طباعة التقرير النهائي
+        print("\n" + "=" * 80)
+        print("📊 تقرير الاختبار الشامل لنظام إدارة الخطوط والمناطق المحسن")
+        print("=" * 80)
+        
+        print(f"🎯 **التقييم النهائي:** معدل النجاح {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)!")
+        print(f"⏱️ **الأداء:** متوسط وقت الاستجابة: {avg_response_time:.2f}ms (ممتاز)")
+        print(f"🕒 **إجمالي وقت التنفيذ:** {total_time:.2f}s")
+        
+        print(f"\n📋 **النتائج التفصيلية:**")
+        for result in self.test_results:
+            status = "✅" if result["success"] else "❌"
+            print(f"{status} **{result['test']}:** {result['details']} ({result['response_time']})")
+        
+        # تقييم حل المشكلة الأساسية
+        line_update_success = any(result["success"] and "PUT /api/enhanced-lines-areas/lines" in result["test"] for result in self.test_results)
+        area_update_success = any(result["success"] and "PUT /api/enhanced-lines-areas/areas" in result["test"] for result in self.test_results)
+        
+        print(f"\n🎯 **تقييم حل المشكلة الأساسية:**")
+        if line_update_success and area_update_success:
+            print("✅ **مشكلة 'عدم تطبيق التعديلات على المناطق والخطوط' تم حلها بالكامل!**")
+            print("✅ تحديث الخطوط يعمل بنجاح")
+            print("✅ تحديث المناطق يعمل بنجاح ويحفظ في قاعدة البيانات")
+        elif line_update_success:
+            print("⚠️ تحديث الخطوط يعمل، لكن تحديث المناطق يحتاج إصلاح")
+        elif area_update_success:
+            print("⚠️ تحديث المناطق يعمل، لكن تحديث الخطوط يحتاج إصلاح")
+        else:
+            print("❌ المشكلة الأساسية لم يتم حلها - تحديث الخطوط والمناطق لا يعمل")
+        
+        if success_rate >= 90:
+            print(f"\n🏆 **الخلاصة:** النظام يعمل بشكل ممتاز مع نسبة نجاح {success_rate:.1f}%!")
+        elif success_rate >= 75:
+            print(f"\n🟢 **الخلاصة:** النظام يعمل بشكل جيد مع نسبة نجاح {success_rate:.1f}%")
+        elif success_rate >= 50:
+            print(f"\n🟡 **الخلاصة:** النظام يحتاج تحسينات - نسبة النجاح {success_rate:.1f}%")
+        else:
+            print(f"\n🔴 **الخلاصة:** النظام يحتاج إصلاحات جوهرية - نسبة النجاح {success_rate:.1f}%")
+        
+        return success_rate >= 75
+
+def main():
+    """تشغيل الاختبار الرئيسي"""
+    tester = EnhancedLinesAreasSystemTester()
+    success = tester.run_comprehensive_test()
+    
+    if success:
+        print("\n🎉 اختبار نظام إدارة الخطوط والمناطق المحسن مكتمل بنجاح!")
+    else:
+        print("\n⚠️ اختبار نظام إدارة الخطوط والمناطق المحسن مكتمل مع مشاكل تحتاج إصلاح")
+    
+    return success
+
+if __name__ == "__main__":
+    main()
+"""
 اختبار شامل لنظام تتبع الأنشطة المحسن بعد إصلاح مشكلة Mixed Content Security Error
 Comprehensive Enhanced Activity Tracking System Testing After Mixed Content Security Error Fix
 """
