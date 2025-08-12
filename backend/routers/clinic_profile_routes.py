@@ -352,7 +352,7 @@ async def create_clinic_debt(clinic_id: str, debt_data: DebtModel, current_user:
                 "amount": debt_data.amount,
                 "category": debt_data.category
             },
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.utcnow().isoformat(),
             "success": True
         }
         await db.activities.insert_one(activity)
