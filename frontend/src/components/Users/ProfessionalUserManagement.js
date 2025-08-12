@@ -476,8 +476,28 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
                               <span className="font-medium">{user.visits_count || 0}</span>
                             </div>
                             <div className="flex justify-between">
+                              <span className="text-gray-600">الزيارات هذا الشهر:</span>
+                              <span className="font-medium text-green-600">{user.visits_this_month || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">العيادات المضافة:</span>
+                              <span className="font-medium">{user.clinics_count || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
                               <span className="text-gray-600">المبيعات:</span>
                               <span className="font-medium">{user.sales_count || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">إجمالي المبيعات:</span>
+                              <span className="font-medium text-blue-600">{(user.total_sales || 0).toLocaleString()} ج.م</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">التحصيل:</span>
+                              <span className="font-medium text-green-600">{(user.total_collections || 0).toLocaleString()} ج.م</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">الديون:</span>
+                              <span className="font-medium text-red-600">{(user.total_debts || 0).toLocaleString()} ج.م</span>
                             </div>
                           </div>
                         </div>
