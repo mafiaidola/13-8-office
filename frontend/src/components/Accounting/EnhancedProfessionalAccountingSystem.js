@@ -691,8 +691,199 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
                 </div>
               )}
 
-              {/* Other tabs will be continued in the next part... */}
-              {activeTab !== 'dashboard' && activeTab !== 'invoices' && (
+              {/* Debts Tab */}
+              {activeTab === 'debts' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800">إدارة الديون الاحترافية</h2>
+                    {(user?.role === 'admin' || user?.role === 'accounting' || user?.role === 'finance') && (
+                      <button
+                        onClick={() => setShowCreateDebtModal(true)}
+                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg flex items-center space-x-2 space-x-reverse"
+                      >
+                        <span>💳</span>
+                        <span>إضافة دين جديد</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Debts List */}
+                  <div className="grid gap-6">
+                    {debts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">💳</div>
+                        <h3 className="text-xl font-bold text-gray-700 mb-2">لا توجد ديون</h3>
+                        <p className="text-gray-600">لا توجد ديون مسجلة حالياً</p>
+                      </div>
+                    ) : (
+                      debts.map((debt) => {
+                        const clinic = clinics.find(c => c.id === debt.clinic_id);
+                        const rep = users.find(u => u.id === debt.rep_id);
+                        
+                        return (
+                          <div key={debt.id} className={`bg-white border-l-4 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow ${
+                            debt.is_overdue ? 'border-red-500 bg-red-50' :
+                            debt.priority === 'high' ? 'border-orange-500' :
+                            'border-gray-300'
+                          }`}>
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-800">{debt.description}</h4>
+                                <p className="text-gray-600">🏥 {clinic?.clinic_name || debt.clinic_name || 'عيادة غير محددة'}</p>
+                                <p className="text-gray-600">👨‍⚕️ {clinic?.doctor_name || 'طبيب غير محدد'}</p>
+                                <p className="text-gray-600">👤 المندوب: {rep?.full_name || debt.rep_name || 'مندوب غير محدد'}</p>
+                                <p className="text-gray-600">📅 تاريخ الاستحقاق: {new Date(debt.due_date).toLocaleDateString('ar-EG')}</p>
+                                {debt.is_overdue && (
+                                  <p className="text-red-600 font-semibold">⚠️ متأخر السداد</p>
+                                )}
+                              </div>
+                              
+                              <div className="text-right">
+                                <p className="text-3xl font-bold text-red-600 mb-2">
+                                  {(debt.total_amount || 0).toLocaleString()} ج.م
+                                </p>
+                                <span className={`px-3 py-1 rounded-full text-sm ${
+                                  debt.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                  debt.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}>
+                                  {debt.priority === 'high' ? 'عالي' :
+                                   debt.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="border-t pt-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-600">عدد الأصناف:</span>
+                                  <span className="font-bold mr-2">{debt.items?.length || 0}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">المجموع الفرعي:</span>
+                                  <span className="font-bold mr-2">{(debt.subtotal || 0).toLocaleString()} ج.م</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">الخصم:</span>
+                                  <span className="font-bold mr-2 text-orange-600">{(debt.discount_amount || 0).toLocaleString()} ج.م</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">الفئة:</span>
+                                  <span className="font-bold mr-2 text-blue-600">{debt.category}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Collections Tab */}
+              {activeTab === 'collections' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800">إدارة التحصيل الذكية</h2>
+                    <button
+                      onClick={() => setShowCollectionModal(true)}
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg flex items-center space-x-2 space-x-reverse"
+                    >
+                      <span>💰</span>
+                      <span>تسجيل تحصيل جديد</span>
+                    </button>
+                  </div>
+
+                  {/* Collections List */}
+                  <div className="grid gap-6">
+                    {collections.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">💰</div>
+                        <h3 className="text-xl font-bold text-gray-700 mb-2">لا توجد تحصيلات</h3>
+                        <p className="text-gray-600">لم يتم تسجيل أي تحصيلات بعد</p>
+                      </div>
+                    ) : (
+                      collections.map((collection) => (
+                        <div key={collection.id} className="bg-white border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h4 className="text-lg font-bold text-gray-800">{collection.description}</h4>
+                              <p className="text-gray-600">📄 من {collection.source_type === 'invoice' ? 'فاتورة' : 'دين'} #{collection.source_number}</p>
+                              <p className="text-gray-600">🏥 {collection.clinic_name || 'عيادة غير محددة'}</p>
+                              <p className="text-gray-600">👤 المحصل: {collection.collector_name || 'غير محدد'}</p>
+                              <p className="text-gray-600">📅 {new Date(collection.created_at).toLocaleDateString('ar-EG')}</p>
+                              <p className="text-gray-600">💳 طريقة الدفع: {collection.payment_method}</p>
+                            </div>
+                            
+                            <div className="text-right">
+                              <p className="text-3xl font-bold text-green-600 mb-2">
+                                {(collection.amount || 0).toLocaleString()} ج.م
+                              </p>
+                              <div className="space-x-2 space-x-reverse">
+                                <span className={`px-3 py-1 rounded-full text-sm ${
+                                  collection.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  collection.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {collection.status === 'pending' ? 'في انتظار الموافقة' :
+                                   collection.status === 'approved' ? 'مُوافق عليه' : 'مرفوض'}
+                                </span>
+                                {collection.status === 'pending' && (user?.role === 'admin' || user?.role === 'gm') && (
+                                  <button
+                                    onClick={() => handleApproveCollection(collection.id)}
+                                    className="mr-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded"
+                                  >
+                                    ✅ موافقة
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600">نوع الدفع:</span>
+                                <span className="font-bold mr-2">{collection.payment_type === 'full' ? 'كامل' : 'جزئي'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">رقم الإيصال:</span>
+                                <span className="font-bold mr-2">{collection.receipt_number || 'غير محدد'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">المُوافق:</span>
+                                <span className="font-bold mr-2 text-blue-600">{collection.approver_name || 'لم يوافق بعد'}</span>
+                              </div>
+                            </div>
+                            {collection.notes && (
+                              <div className="mt-3 text-sm text-gray-600 bg-gray-50 rounded p-3">
+                                <strong>ملاحظات:</strong> {collection.notes}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Reports Tab */}
+              {activeTab === 'reports' && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-800">التقارير المالية الشاملة</h2>
+                  
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📈</div>
+                    <h3 className="text-xl font-bold text-gray-700 mb-2">قسم التقارير</h3>
+                    <p className="text-gray-600">التقارير المالية الشاملة قيد التطوير</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Default fallback for other tabs */}
+              {!['dashboard', 'invoices', 'debts', 'collections', 'reports'].includes(activeTab) && (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🚧</div>
                   <h3 className="text-xl font-bold text-gray-700 mb-2">قيد التطوير</h3>
