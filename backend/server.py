@@ -68,6 +68,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(user_router)
+app.include_router(enhanced_user_router)
 app.include_router(enhanced_lines_areas_router)
 app.include_router(excel_router)
 app.include_router(products_router)
