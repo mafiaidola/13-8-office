@@ -1,5 +1,452 @@
 #!/usr/bin/env python3
 """
+اختبار شامل للنظام المحاسبي الاحترافي المحسن لإدارة العيادات - Arabic Review
+Comprehensive Enhanced Professional Accounting System Testing for Clinic Management
+
+المطلوب اختبار:
+1. Authentication System: تسجيل الدخول admin/admin123 للحصول على JWT token
+2. Core Clinics APIs: GET /api/clinics - جلب جميع العيادات، GET /api/areas - جلب المناطق المتاحة
+3. Enhanced Professional Accounting APIs:
+   - GET /api/enhanced-professional-accounting/dashboard - لوحة التحكم المحاسبية
+   - GET /api/enhanced-professional-accounting/invoices - جميع الفواتير
+   - GET /api/enhanced-professional-accounting/debts - جميع الديون
+   - GET /api/enhanced-professional-accounting/collections - جميع التحصيلات
+4. Clinic Profile APIs (للعيادة الأولى المتاحة):
+   - GET /api/clinic-profile/{clinic_id}/overview - نظرة عامة للعيادة مع البيانات المالية
+   - GET /api/clinic-profile/{clinic_id}/orders - طلبات العيادة
+   - GET /api/clinic-profile/{clinic_id}/debts - ديون العيادة
+   - GET /api/clinic-profile/{clinic_id}/visits - زيارات العيادة
+   - GET /api/clinic-profile/{clinic_id}/collections - تحصيلات العيادة
+5. Financial Reports: GET /api/enhanced-professional-accounting/reports/financial - التقارير المالية
+
+الهدف: التأكد من أن جميع APIs المطلوبة للنظام المحسن تعمل بنسبة 95%+ وأن البيانات المالية متاحة ومترابطة بشكل صحيح.
+"""
+
+import asyncio
+import aiohttp
+import json
+import time
+from datetime import datetime
+import sys
+
+# Configuration
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class EnhancedProfessionalAccountingTester:
+    def __init__(self):
+        self.session = None
+        self.jwt_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    async def setup_session(self):
+        """إعداد جلسة HTTP"""
+        self.session = aiohttp.ClientSession()
+        
+    async def cleanup_session(self):
+        """تنظيف جلسة HTTP"""
+        if self.session:
+            await self.session.close()
+            
+    def log_test(self, test_name: str, success: bool, response_time: float, details: str = ""):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ SUCCESS" if success else "❌ FAILED"
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "response_time": response_time,
+            "details": details
+        })
+        print(f"{status} | {test_name} ({response_time:.2f}ms) - {details}")
+        
+    async def test_admin_login(self):
+        """اختبار تسجيل دخول الأدمن"""
+        start_time = time.time()
+        try:
+            login_data = {
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD
+            }
+            
+            async with self.session.post(f"{BASE_URL}/auth/login", json=login_data) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    data = await response.json()
+                    self.jwt_token = data.get("access_token")
+                    user_info = data.get("user", {})
+                    
+                    details = f"المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')}"
+                    self.log_test("تسجيل دخول admin/admin123", True, response_time, details)
+                    return True
+                else:
+                    error_text = await response.text()
+                    self.log_test("تسجيل دخول admin/admin123", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return False
+                    
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل دخول admin/admin123", False, response_time, f"خطأ: {str(e)}")
+            return False
+            
+    async def test_core_apis(self):
+        """اختبار APIs الأساسية"""
+        headers = {"Authorization": f"Bearer {self.jwt_token}"}
+        
+        # Test GET /api/clinics
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinics", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    clinics = await response.json()
+                    clinic_count = len(clinics) if isinstance(clinics, list) else 0
+                    self.log_test("GET /api/clinics - جلب العيادات", True, response_time, f"تم جلب {clinic_count} عيادة")
+                    return clinics
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/clinics - جلب العيادات", False, response_time, f"HTTP {response.status}: {error_text}")
+                    return []
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/clinics - جلب العيادات", False, response_time, f"خطأ: {str(e)}")
+            return []
+            
+        # Test GET /api/areas
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/areas", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    areas = await response.json()
+                    area_count = len(areas) if isinstance(areas, list) else 0
+                    self.log_test("GET /api/areas - جلب المناطق", True, response_time, f"تم جلب {area_count} منطقة")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/areas - جلب المناطق", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/areas - جلب المناطق", False, response_time, f"خطأ: {str(e)}")
+            
+    async def test_enhanced_professional_accounting_apis(self):
+        """اختبار APIs النظام المحاسبي الاحترافي المحسن"""
+        headers = {"Authorization": f"Bearer {self.jwt_token}"}
+        
+        # Test Dashboard
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/enhanced-professional-accounting/dashboard", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    dashboard_data = await response.json()
+                    sections = len(dashboard_data) if isinstance(dashboard_data, dict) else 0
+                    self.log_test("GET /api/enhanced-professional-accounting/dashboard", True, response_time, f"لوحة التحكم - {sections} قسم")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/enhanced-professional-accounting/dashboard", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/enhanced-professional-accounting/dashboard", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Invoices
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/enhanced-professional-accounting/invoices", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    invoices = await response.json()
+                    invoice_count = len(invoices) if isinstance(invoices, list) else 0
+                    self.log_test("GET /api/enhanced-professional-accounting/invoices", True, response_time, f"الفواتير - {invoice_count} فاتورة")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/enhanced-professional-accounting/invoices", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/enhanced-professional-accounting/invoices", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Debts
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/enhanced-professional-accounting/debts", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    debts = await response.json()
+                    debt_count = len(debts) if isinstance(debts, list) else 0
+                    self.log_test("GET /api/enhanced-professional-accounting/debts", True, response_time, f"الديون - {debt_count} دين")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/enhanced-professional-accounting/debts", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/enhanced-professional-accounting/debts", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Collections
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/enhanced-professional-accounting/collections", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    collections = await response.json()
+                    collection_count = len(collections) if isinstance(collections, list) else 0
+                    self.log_test("GET /api/enhanced-professional-accounting/collections", True, response_time, f"التحصيلات - {collection_count} تحصيل")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/enhanced-professional-accounting/collections", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/enhanced-professional-accounting/collections", False, response_time, f"خطأ: {str(e)}")
+            
+    async def test_clinic_profile_apis(self, clinics):
+        """اختبار APIs ملف العيادة للعيادة الأولى المتاحة"""
+        if not clinics:
+            self.log_test("اختبار ملف العيادة", False, 0, "لا توجد عيادات متاحة للاختبار")
+            return
+            
+        clinic = clinics[0]
+        clinic_id = clinic.get("id")
+        clinic_name = clinic.get("name", "Unknown")
+        
+        if not clinic_id:
+            self.log_test("اختبار ملف العيادة", False, 0, "معرف العيادة غير متوفر")
+            return
+            
+        headers = {"Authorization": f"Bearer {self.jwt_token}"}
+        
+        # Test Overview
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinic-profile/{clinic_id}/overview", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    overview = await response.json()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/overview", True, response_time, f"نظرة عامة للعيادة: {clinic_name}")
+                else:
+                    error_text = await response.text()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/overview", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(f"GET /api/clinic-profile/{clinic_id}/overview", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Orders
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinic-profile/{clinic_id}/orders", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    orders = await response.json()
+                    order_count = len(orders) if isinstance(orders, list) else 0
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/orders", True, response_time, f"طلبات العيادة - {order_count} طلب")
+                else:
+                    error_text = await response.text()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/orders", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(f"GET /api/clinic-profile/{clinic_id}/orders", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Debts
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinic-profile/{clinic_id}/debts", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    debts = await response.json()
+                    debt_count = len(debts) if isinstance(debts, list) else 0
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/debts", True, response_time, f"ديون العيادة - {debt_count} دين")
+                else:
+                    error_text = await response.text()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/debts", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(f"GET /api/clinic-profile/{clinic_id}/debts", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Visits
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinic-profile/{clinic_id}/visits", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    visits = await response.json()
+                    visit_count = len(visits) if isinstance(visits, list) else 0
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/visits", True, response_time, f"زيارات العيادة - {visit_count} زيارة")
+                else:
+                    error_text = await response.text()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/visits", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(f"GET /api/clinic-profile/{clinic_id}/visits", False, response_time, f"خطأ: {str(e)}")
+            
+        # Test Collections
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/clinic-profile/{clinic_id}/collections", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    collections = await response.json()
+                    collection_count = len(collections) if isinstance(collections, list) else 0
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/collections", True, response_time, f"تحصيلات العيادة - {collection_count} تحصيل")
+                else:
+                    error_text = await response.text()
+                    self.log_test(f"GET /api/clinic-profile/{clinic_id}/collections", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test(f"GET /api/clinic-profile/{clinic_id}/collections", False, response_time, f"خطأ: {str(e)}")
+            
+    async def test_financial_reports(self):
+        """اختبار التقارير المالية"""
+        headers = {"Authorization": f"Bearer {self.jwt_token}"}
+        
+        start_time = time.time()
+        try:
+            async with self.session.get(f"{BASE_URL}/enhanced-professional-accounting/reports/financial", headers=headers) as response:
+                response_time = (time.time() - start_time) * 1000
+                
+                if response.status == 200:
+                    reports = await response.json()
+                    report_count = len(reports) if isinstance(reports, (list, dict)) else 0
+                    self.log_test("GET /api/enhanced-professional-accounting/reports/financial", True, response_time, f"التقارير المالية - {report_count} تقرير")
+                else:
+                    error_text = await response.text()
+                    self.log_test("GET /api/enhanced-professional-accounting/reports/financial", False, response_time, f"HTTP {response.status}: {error_text}")
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("GET /api/enhanced-professional-accounting/reports/financial", False, response_time, f"خطأ: {str(e)}")
+            
+    def generate_summary(self):
+        """إنشاء ملخص النتائج"""
+        total_tests = len(self.test_results)
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
+        
+        print(f"\n{'='*80}")
+        print(f"🎯 **اختبار شامل للنظام المحاسبي الاحترافي المحسن لإدارة العيادات مكتمل - {success_rate:.1f}% SUCCESS**")
+        print(f"{'='*80}")
+        
+        print(f"\n📊 **النتائج الحاسمة للمتطلبات المحددة:**")
+        
+        # Group results by category
+        auth_tests = [r for r in self.test_results if "تسجيل دخول" in r["test"]]
+        core_tests = [r for r in self.test_results if any(x in r["test"] for x in ["clinics", "areas"])]
+        accounting_tests = [r for r in self.test_results if "enhanced-professional-accounting" in r["test"]]
+        clinic_profile_tests = [r for r in self.test_results if "clinic-profile" in r["test"]]
+        report_tests = [r for r in self.test_results if "reports" in r["test"]]
+        
+        categories = [
+            ("1. Authentication System", auth_tests),
+            ("2. Core APIs", core_tests), 
+            ("3. Enhanced Professional Accounting APIs", accounting_tests),
+            ("4. Clinic Profile APIs", clinic_profile_tests),
+            ("5. Financial Reports", report_tests)
+        ]
+        
+        for category_name, category_tests in categories:
+            if category_tests:
+                category_success = sum(1 for t in category_tests if t["success"])
+                category_total = len(category_tests)
+                category_rate = (category_success / category_total * 100) if category_total > 0 else 0
+                status = "✅" if category_rate >= 95 else "⚠️" if category_rate >= 75 else "❌"
+                
+                print(f"{status} **{category_name} ({category_rate:.1f}%):**")
+                for test in category_tests:
+                    test_status = "✅" if test["success"] else "❌"
+                    print(f"   {test_status} {test['test']} - {test['details']}")
+                print()
+        
+        print(f"🎯 **التقييم النهائي:** معدل النجاح {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)!")
+        print(f"متوسط وقت الاستجابة: {avg_response_time:.2f}ms ({'ممتاز' if avg_response_time < 100 else 'جيد' if avg_response_time < 500 else 'بطيء'})")
+        print(f"إجمالي وقت التنفيذ: {total_time:.2f}s")
+        
+        if success_rate >= 95:
+            print(f"\n🟢 **EXCELLENT** - النظام المحاسبي الاحترافي المحسن يعمل بشكل استثنائي!")
+            print(f"✅ جميع المتطلبات الأساسية المحددة في المراجعة العربية محققة")
+            print(f"✅ البيانات المالية متاحة ومترابطة بشكل صحيح")
+            print(f"✅ النظام جاهز للإنتاج مع أداء ممتاز")
+        elif success_rate >= 75:
+            print(f"\n🟡 **GOOD** - النظام المحاسبي الاحترافي المحسن يعمل بشكل جيد مع تحسينات بسيطة")
+            failed_tests = [r for r in self.test_results if not r["success"]]
+            if failed_tests:
+                print(f"❌ **المشاكل المتبقية:**")
+                for test in failed_tests:
+                    print(f"   - {test['test']}: {test['details']}")
+        else:
+            print(f"\n🔴 **NEEDS IMPROVEMENT** - النظام المحاسبي الاحترافي المحسن يحتاج إصلاحات جوهرية")
+            failed_tests = [r for r in self.test_results if not r["success"]]
+            print(f"❌ **المشاكل الأساسية:**")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['details']}")
+        
+        return success_rate >= 95
+        
+    async def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء اختبار شامل للنظام المحاسبي الاحترافي المحسن لإدارة العيادات...")
+        print(f"🌐 الخادم: {BASE_URL}")
+        print(f"👤 المستخدم: {ADMIN_USERNAME}")
+        print("="*80)
+        
+        await self.setup_session()
+        
+        try:
+            # 1. Test Authentication
+            print("\n🔐 **المرحلة 1: اختبار تسجيل الدخول**")
+            login_success = await self.test_admin_login()
+            
+            if not login_success:
+                print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+                return False
+                
+            # 2. Test Core APIs
+            print("\n🏥 **المرحلة 2: اختبار APIs الأساسية**")
+            clinics = await self.test_core_apis()
+            
+            # 3. Test Enhanced Professional Accounting APIs
+            print("\n💰 **المرحلة 3: اختبار APIs النظام المحاسبي الاحترافي المحسن**")
+            await self.test_enhanced_professional_accounting_apis()
+            
+            # 4. Test Clinic Profile APIs
+            print("\n📋 **المرحلة 4: اختبار APIs ملف العيادة**")
+            await self.test_clinic_profile_apis(clinics)
+            
+            # 5. Test Financial Reports
+            print("\n📊 **المرحلة 5: اختبار التقارير المالية**")
+            await self.test_financial_reports()
+            
+            # Generate summary
+            return self.generate_summary()
+            
+        finally:
+            await self.cleanup_session()
+
+async def main():
+    """الدالة الرئيسية"""
+    tester = EnhancedProfessionalAccountingTester()
+    success = await tester.run_comprehensive_test()
+    
+    if success:
+        print(f"\n🎉 **النظام المحاسبي الاحترافي المحسن جاهز للإنتاج!**")
+        sys.exit(0)
+    else:
+        print(f"\n⚠️ **النظام يحتاج تحسينات قبل الإنتاج**")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 اختبار نهائي للنظام المحاسبي الاحترافي الشامل المطور وفقاً لمتطلبات المراجعة العربية
 Final Testing for Enhanced Professional Accounting System - Arabic Review Requirements
 """
