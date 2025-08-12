@@ -152,6 +152,23 @@ const AdvancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => 
       if (response.ok) {
         const newVisit = await response.json();
         const visitData = newVisit.visit || newVisit;
+        
+        // تسجيل نشاط إنشاء الزيارة
+        try {
+          const clinic = clinics.find(c => c.id === formData.clinic_id);
+          await comprehensiveActivityService.recordVisitCreation({
+            id: visitData.id,
+            clinic_name: clinic?.name || 'عيادة غير محددة',
+            visit_type: formData.visit_type,
+            visit_date: formData.visit_date,
+            priority: formData.priority,
+            notes: formData.notes
+          });
+          console.log('✅ تم تسجيل نشاط إنشاء الزيارة');
+        } catch (activityError) {
+          console.warn('⚠️ خطأ في تسجيل نشاط إنشاء الزيارة:', activityError.message);
+        }
+        
         setVisits([...visits, visitData]);
         setShowCreateModal(false);
         resetForm();
