@@ -238,7 +238,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
       }
 
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_URL}/api/professional-accounting/invoices`, {
+      const response = await fetch(`${API_URL}/api/enhanced-professional-accounting/invoices`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
