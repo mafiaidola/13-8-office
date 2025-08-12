@@ -252,7 +252,7 @@ async def create_clinic_order(clinic_id: str, order_data: OrderModel, current_us
                 "total_amount": order_data.total_amount,
                 "products_count": len(order_data.products)
             },
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.utcnow().isoformat(),
             "success": True
         }
         await db.activities.insert_one(activity)
