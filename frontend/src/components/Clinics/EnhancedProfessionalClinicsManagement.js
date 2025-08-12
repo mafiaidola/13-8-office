@@ -9,15 +9,24 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
   // State Management
   const [clinics, setClinics] = useState([]);
   const [areas, setAreas] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClassification, setFilterClassification] = useState('all');
   const [filterArea, setFilterArea] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCreditStatus, setFilterCreditStatus] = useState('all');
+  
+  // Selected clinic and modal states
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
   const [showCreateDebtModal, setShowCreateDebtModal] = useState(false);
+  const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [showClinicProfileModal, setShowClinicProfileModal] = useState(false);
+  const [showDebtsReviewModal, setShowDebtsReviewModal] = useState(false);
+  const [showCollectionsReviewModal, setShowCollectionsReviewModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
   // Financial Data States
@@ -30,6 +39,58 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
     total_revenue: 0,
     outstanding_amount: 0,
     collection_rate: 0
+  });
+
+  // Form States for Invoice Creation
+  const [invoiceForm, setInvoiceForm] = useState({
+    clinic_id: '',
+    rep_id: user?.id || '',
+    items: [],
+    subtotal: 0,
+    discount_type: 'percentage',
+    discount_value: 0,
+    discount_amount: 0,
+    total_amount: 0,
+    payment_terms: 'cash',
+    due_date: '',
+    notes: '',
+    created_by_name: user?.full_name || ''
+  });
+
+  // Form States for Debt Creation
+  const [debtForm, setDebtForm] = useState({
+    clinic_id: '',
+    rep_id: user?.id || '',
+    description: '',
+    items: [],
+    subtotal: 0,
+    discount_percentage: 0,
+    discount_amount: 0,
+    total_amount: 0,
+    due_date: '',
+    priority: 'medium',
+    category: 'purchase'
+  });
+
+  // Form States for Collection Creation
+  const [collectionForm, setCollectionForm] = useState({
+    invoice_id: '',
+    debt_id: '',
+    payment_type: 'full',
+    amount: 0,
+    selected_items: [],
+    payment_method: 'cash',
+    receipt_number: '',
+    notes: ''
+  });
+
+  // Clinic Profile Data
+  const [clinicProfileData, setClinicProfileData] = useState({
+    overview: {},
+    orders: [],
+    debts: [],
+    visits: [],
+    collections: []
   });
 
   const API_URL = process.env.REACT_APP_BACKEND_URL;
