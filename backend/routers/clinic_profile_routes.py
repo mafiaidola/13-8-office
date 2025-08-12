@@ -238,6 +238,9 @@ async def create_clinic_order(clinic_id: str, order_data: OrderModel, current_us
         
         result = await db.orders.insert_one(order)
         
+        if not result.inserted_id:
+            raise HTTPException(status_code=500, detail="فشل في حفظ الطلب")
+        
         # تسجيل النشاط
         activity = {
             "id": str(uuid.uuid4()),
@@ -257,10 +260,20 @@ async def create_clinic_order(clinic_id: str, order_data: OrderModel, current_us
         }
         await db.activities.insert_one(activity)
         
+        # Return clean order data without ObjectId
+        clean_order = {
+            "id": order["id"],
+            "clinic_id": order["clinic_id"],
+            "total_amount": order["total_amount"],
+            "order_type": order["order_type"],
+            "status": order["status"],
+            "created_at": order["created_at"]
+        }
+        
         return {
             "success": True,
             "message": "تم إنشاء الطلب بنجاح",
-            "order": order
+            "order": clean_order
         }
         
     except HTTPException:
