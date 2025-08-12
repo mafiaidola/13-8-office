@@ -40,6 +40,7 @@ const COMPONENT_REGISTRY = {
   'EnhancedClinicRegistrationAdvanced': EnhancedClinicRegistrationAdvanced,
   'ProfessionalClinicProfile': ProfessionalClinicProfile,
   'ClinicsManagement': ClinicsManagement,
+  'EnhancedProfessionalClinicsManagement': EnhancedProfessionalClinicsManagement,
   
   // Visits Management
   'EnhancedVisitsManagement': EnhancedVisitsManagement,
