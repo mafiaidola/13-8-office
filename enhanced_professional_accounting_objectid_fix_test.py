@@ -333,6 +333,7 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
                 debt_id = data.get("debt_id") or data.get("id")
                 if debt_id:
                     self.test_data_ids.append(("debt", debt_id))
+                    print(f"🔍 Debug: تم حفظ معرف الدين: {debt_id}")
                 
                 amount = debt_data["original_amount"]
                 details = f"تم إنشاء الدين بنجاح - المبلغ: {amount:.2f} ج.م"
