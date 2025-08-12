@@ -357,19 +357,21 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
         
         # البحث عن فاتورة أو دين للتحصيل منه
         invoice_id = None
+        debt_id = None
         for data_type, data_id in self.test_data_ids:
             if data_type == "invoice":
                 invoice_id = data_id
-                break
+            elif data_type == "debt":
+                debt_id = data_id
 
-        if not invoice_id:
+        # استخدام الدين إذا لم تكن هناك فاتورة
+        if not invoice_id and not debt_id:
             self.log_test("إنشاء تحصيل", False, 0, 
-                        error_msg="لا توجد فاتورة متاحة للتحصيل")
+                        error_msg="لا توجد فاتورة أو دين متاح للتحصيل")
             return False
 
         # إعداد بيانات التحصيل
         collection_data = {
-            "invoice_id": invoice_id,
             "clinic_id": self.clinic_data.get("id") if self.clinic_data else "",
             "clinic_name": self.clinic_data.get("name", self.clinic_data.get("clinic_name")) if self.clinic_data else "",
             "amount": 300.0,
@@ -379,6 +381,12 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             "collected_by": self.representative_data.get("id") if self.representative_data else "",
             "status": "pending_approval"
         }
+        
+        # إضافة معرف الفاتورة أو الدين
+        if invoice_id:
+            collection_data["invoice_id"] = invoice_id
+        elif debt_id:
+            collection_data["debt_id"] = debt_id
 
         start_time = time.time()
         try:
@@ -393,7 +401,8 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
                     self.test_data_ids.append(("collection", collection_id))
                 
                 amount = collection_data["amount"]
-                details = f"تم إنشاء التحصيل بنجاح - المبلغ: {amount:.2f} ج.م"
+                source = "فاتورة" if invoice_id else "دين"
+                details = f"تم إنشاء التحصيل بنجاح - المبلغ: {amount:.2f} ج.م من {source}"
                 if collection_id:
                     details += f" - ID: {collection_id}"
                 
