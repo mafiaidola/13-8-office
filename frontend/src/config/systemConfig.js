@@ -64,17 +64,6 @@ export const SYSTEM_TABS = {
     priority: 4
   },
 
-  clinic_profile: {
-    id: 'clinic_profile',
-    path: '/clinic-profile',
-    icon: '🏥',
-    name: { ar: 'ملف العيادة التفصيلي', en: 'Detailed Clinic Profile' },
-    component: 'ProfessionalClinicProfile',
-    description: { ar: 'ملف تفصيلي شامل للعيادة مع الطلبات والديون والزيارات والتحصيل', en: 'Comprehensive detailed clinic profile with orders, debts, visits and collections' },
-    permissions: ['admin', 'gm', 'line_manager', 'area_manager', 'medical_rep', 'accounting'],
-    priority: 5.5
-  },
-
   clinics_management: {
     id: 'clinics_management',
     path: '/clinics-management',
