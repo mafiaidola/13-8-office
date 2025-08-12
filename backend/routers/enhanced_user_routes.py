@@ -133,7 +133,7 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
                 # إحصائيات النشاط
                 "activities_count": activities_count,
                 "activities_today": activities_today,
-                "last_activity": last_activity["timestamp"].isoformat() if last_activity else None,
+                "last_activity": last_activity.get("timestamp") if last_activity else None,
                 
                 # معلومات إضافية
                 "line_name": line_info["name"] if line_info else None,
