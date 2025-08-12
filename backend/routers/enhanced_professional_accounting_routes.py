@@ -226,6 +226,10 @@ async def create_comprehensive_invoice(invoice_data: InvoiceModel, current_user:
         
         # حفظ في قاعدة البيانات
         result = await db.invoices.insert_one(invoice)
+        invoice["_id"] = str(result.inserted_id)  # تحويل ObjectId إلى string
+        
+        # تنظيف البيانات لإرجاعها
+        clean_invoice = serialize_doc(dict(invoice))
         
         # تسجيل النشاط
         activity = {
