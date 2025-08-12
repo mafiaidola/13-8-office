@@ -256,12 +256,12 @@ async def get_invoices(current_user: dict = Depends(get_current_user)):
     """الحصول على جميع الفواتير"""
     try:
         invoices = []
-        cursor = db.invoices.find({}).sort("created_at", -1)
+        cursor = db.invoices.find({}, {"_id": 0}).sort([("created_at", -1)])
         
         async for invoice in cursor:
             # إضافة معلومات العيادة والمندوب
-            clinic = await db.clinics.find_one({"id": invoice.get("clinic_id")})
-            rep = await db.users.find_one({"id": invoice.get("rep_id")})
+            clinic = await db.clinics.find_one({"id": invoice.get("clinic_id")}, {"_id": 0})
+            rep = await db.users.find_one({"id": invoice.get("rep_id")}, {"_id": 0})
             
             if clinic:
                 invoice["clinic_info"] = {
