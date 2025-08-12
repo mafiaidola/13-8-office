@@ -336,11 +336,11 @@ async def create_comprehensive_debt(debt_data: DebtModel, current_user: dict = D
             raise HTTPException(status_code=403, detail="غير مسموح - هذه الوظيفة متاحة للادمن والمحاسب فقط")
         
         # التحقق من وجود العيادة والمندوب
-        clinic = await db.clinics.find_one({"id": debt_data.clinic_id})
+        clinic = await db.clinics.find_one({"id": debt_data.clinic_id}, {"_id": 0})
         if not clinic:
             raise HTTPException(status_code=404, detail="العيادة غير موجودة")
         
-        rep = await db.users.find_one({"id": debt_data.rep_id})
+        rep = await db.users.find_one({"id": debt_data.rep_id}, {"_id": 0})
         if not rep:
             raise HTTPException(status_code=404, detail="المندوب غير موجود")
         
