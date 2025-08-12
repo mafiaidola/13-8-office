@@ -217,7 +217,14 @@ async def get_user_detailed_statistics(user_id: str, current_user: dict = Depend
         recent_activities = []
         cursor = db.activities.find({"user_id": user_id}).sort("timestamp", -1).limit(20)
         async for activity in cursor:
-            activity["timestamp"] = activity["timestamp"].isoformat()
+            # Handle timestamp conversion safely
+            timestamp = activity.get("timestamp")
+            if hasattr(timestamp, 'isoformat'):
+                activity["timestamp"] = timestamp.isoformat()
+            elif isinstance(timestamp, str):
+                activity["timestamp"] = timestamp
+            else:
+                activity["timestamp"] = str(timestamp) if timestamp else None
             recent_activities.append(activity)
         
         return {
