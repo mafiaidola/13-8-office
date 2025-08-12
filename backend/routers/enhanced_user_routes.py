@@ -43,14 +43,12 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
     """الحصول على جميع المستخدمين مع إحصائياتهم الحقيقية"""
     try:
         users = []
-        cursor = db.users.find({}, {"password": 0}).sort("full_name", 1)
+        cursor = db.users.find({}, {"password": 0, "_id": 0}).sort("full_name", 1)
         
         async for user in cursor:
             user_id = user.get("id")
-            
-            # Convert ObjectId to string if present
-            if "_id" in user:
-                del user["_id"]
+            if not user_id:
+                continue
             
             # إحصائيات الزيارات
             visits_count = await db.visits.count_documents({"rep_id": user_id})
@@ -109,17 +107,26 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
             line_info = None
             area_info = None
             if user.get("line_id"):
-                line_info = await db.lines.find_one({"id": user["line_id"]})
+                line_info = await db.lines.find_one({"id": user["line_id"]}, {"_id": 0})
             if user.get("area_id"):
-                area_info = await db.areas.find_one({"id": user["area_id"]})
+                area_info = await db.areas.find_one({"id": user["area_id"]}, {"_id": 0})
             
             # معلومات المدير
             manager_info = None
             if user.get("manager_id"):
-                manager_info = await db.users.find_one({"id": user["manager_id"]})
+                manager_info = await db.users.find_one({"id": user["manager_id"]}, {"_id": 0})
             
             # إضافة الإحصائيات للمستخدم
-            user.update({
+            user_stats = {
+                # Basic user info
+                "id": user.get("id"),
+                "username": user.get("username"),
+                "full_name": user.get("full_name"),
+                "role": user.get("role"),
+                "email": user.get("email"),
+                "phone": user.get("phone"),
+                "is_active": user.get("is_active", True),
+                
                 # إحصائيات الزيارات
                 "visits_count": visits_count,
                 "visits_this_month": visits_this_month,
@@ -142,9 +149,9 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
                 "last_activity": last_activity.get("timestamp") if last_activity else None,
                 
                 # معلومات إضافية
-                "line_name": line_info["name"] if line_info else None,
-                "area_name": area_info["name"] if area_info else None,
-                "manager_name": manager_info["full_name"] if manager_info else None,
+                "line_name": line_info.get("name") if line_info else None,
+                "area_name": area_info.get("name") if area_info else None,
+                "manager_name": manager_info.get("full_name") if manager_info else None,
                 
                 # تنسيق التواريخ
                 "created_at": user.get("created_at"),
@@ -152,9 +159,9 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
                 
                 # حالة النشاط
                 "status": "active" if user.get("is_active", True) else "inactive"
-            })
+            }
             
-            users.append(user)
+            users.append(user_stats)
         
         return {
             "success": True,
@@ -165,6 +172,7 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
         }
         
     except Exception as e:
+        print(f"❌ خطأ في تحميل المستخدمين مع الإحصائيات: {str(e)}")
         raise HTTPException(status_code=500, detail=f"خطأ في تحميل المستخدمين: {str(e)}")
 
 @router.get("/{user_id}/detailed-statistics")
