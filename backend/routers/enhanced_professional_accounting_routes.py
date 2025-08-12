@@ -414,12 +414,12 @@ async def get_debts(current_user: dict = Depends(get_current_user)):
     """الحصول على جميع الديون"""
     try:
         debts = []
-        cursor = db.debts.find({}).sort("created_at", -1)
+        cursor = db.debts.find({}, {"_id": 0}).sort([("created_at", -1)])
         
         async for debt in cursor:
             # إضافة معلومات العيادة والمندوب
-            clinic = await db.clinics.find_one({"id": debt.get("clinic_id")})
-            rep = await db.users.find_one({"id": debt.get("rep_id")})
+            clinic = await db.clinics.find_one({"id": debt.get("clinic_id")}, {"_id": 0})
+            rep = await db.users.find_one({"id": debt.get("rep_id")}, {"_id": 0})
             
             if clinic:
                 debt["clinic_info"] = {
