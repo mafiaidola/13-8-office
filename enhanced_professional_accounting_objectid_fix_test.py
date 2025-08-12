@@ -365,6 +365,9 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
                 invoice_id = data_id
             elif data_type == "debt":
                 debt_id = data_id
+        
+        print(f"🔍 Debug: البيانات المتاحة للتحصيل - فواتير: {invoice_id}, ديون: {debt_id}")
+        print(f"🔍 Debug: جميع البيانات المحفوظة: {self.test_data_ids}")
 
         # استخدام الدين إذا لم تكن هناك فاتورة
         if not invoice_id and not debt_id:
