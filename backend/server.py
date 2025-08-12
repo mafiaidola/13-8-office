@@ -25,7 +25,7 @@ from routers.lines_areas_routes import router as lines_areas_router
 from routers.excel_routes import router as excel_router
 from routers.products_routes import router as products_router
 from routers.visits_routes import router as visits_router
-from routers.enhanced_activity_routes import router as enhanced_activity_router
+from routers.professional_accounting_routes import router as professional_accounting_router
 from routers.invoice_management_routes import router as invoice_router
 from routers.debt_management_routes import router as debt_router
 
@@ -70,7 +70,7 @@ app.include_router(lines_areas_router)
 app.include_router(excel_router)
 app.include_router(products_router)
 app.include_router(visits_router)
-app.include_router(enhanced_activity_router)
+app.include_router(professional_accounting_router)
 app.include_router(invoice_router)
 app.include_router(debt_router)
 
