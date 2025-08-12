@@ -438,6 +438,26 @@ const EnhancedClinicRegistrationAdvanced = ({ language = 'en', theme = 'dark', u
       const response = await axios.post(`${API_URL}/api/clinics`, submitData, { headers });
       
       if (response.status === 201 || response.status === 200) {
+        const clinicData = response.data?.clinic || response.data;
+        
+        // تسجيل نشاط إضافة العيادة
+        try {
+          await comprehensiveActivityService.recordClinicCreation({
+            id: clinicData.id || 'new_clinic_' + Date.now(),
+            name: formData.clinic_name,
+            doctor_name: formData.doctor_name,
+            location: {
+              latitude: locationData.clinic_latitude,
+              longitude: locationData.clinic_longitude,
+              address: locationData.formatted_address || formData.clinic_address
+            },
+            clinic_type: formData.classification
+          });
+          console.log('✅ تم تسجيل نشاط إضافة العيادة');
+        } catch (activityError) {
+          console.warn('⚠️ خطأ في تسجيل نشاط إضافة العيادة:', activityError.message);
+        }
+        
         alert(language === 'ar' ? '✅ تم تسجيل العيادة بنجاح!' : '✅ Clinic registered successfully!');
         
         // Reset form
