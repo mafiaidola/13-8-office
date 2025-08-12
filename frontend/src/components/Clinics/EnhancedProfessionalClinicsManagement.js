@@ -550,6 +550,45 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
     });
   };
 
+  // Handler functions
+  const handleCreateInvoiceForClinic = (clinic) => {
+    setSelectedClinic(clinic);
+    setInvoiceForm({ ...invoiceForm, clinic_id: clinic.id });
+    setShowCreateInvoiceModal(true);
+  };
+
+  const handleCreateDebtForClinic = (clinic) => {
+    setSelectedClinic(clinic);
+    setDebtForm({ ...debtForm, clinic_id: clinic.id });
+    setShowCreateDebtModal(true);
+  };
+
+  const handleViewFinancialDetails = (clinic) => {
+    setSelectedClinic(clinic);
+    setShowFinancialModal(true);
+  };
+
+  const handleViewClinicProfile = async (clinic) => {
+    setSelectedClinic(clinic);
+    await loadClinicProfile(clinic);
+    setShowClinicProfileModal(true);
+  };
+
+  const handleViewDebtsReview = (clinic) => {
+    setSelectedClinic(clinic);
+    setShowDebtsReviewModal(true);
+  };
+
+  const handleViewCollectionsReview = (clinic) => {
+    setSelectedClinic(clinic);
+    setShowCollectionsReviewModal(true);
+  };
+
+  const handleCreateCollectionForClinic = (clinic) => {
+    setSelectedClinic(clinic);
+    setShowCollectionModal(true);
+  };
+
   // Filter clinics
   const filteredClinics = clinics.filter(clinic => {
     const matchesSearch = clinic.clinic_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
