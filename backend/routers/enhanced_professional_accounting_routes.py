@@ -460,10 +460,10 @@ async def create_comprehensive_collection(collection_data: CollectionModel, curr
         source_type = None
         
         if collection_data.invoice_id:
-            source_document = await db.invoices.find_one({"id": collection_data.invoice_id})
+            source_document = await db.invoices.find_one({"id": collection_data.invoice_id}, {"_id": 0})
             source_type = "invoice"
         elif collection_data.debt_id:
-            source_document = await db.debts.find_one({"id": collection_data.debt_id})
+            source_document = await db.debts.find_one({"id": collection_data.debt_id}, {"_id": 0})
             source_type = "debt"
         else:
             raise HTTPException(status_code=400, detail="يجب تحديد فاتورة أو دين للتحصيل")
