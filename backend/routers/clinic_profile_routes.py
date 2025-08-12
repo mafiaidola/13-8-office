@@ -539,7 +539,7 @@ async def approve_collection(collection_id: str, current_user: dict = Depends(ge
             "entity_type": "collection",
             "entity_id": collection_id,
             "clinic_id": collection.get("clinic_id"),
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.utcnow().isoformat(),
             "success": True
         }
         await db.activities.insert_one(activity)
