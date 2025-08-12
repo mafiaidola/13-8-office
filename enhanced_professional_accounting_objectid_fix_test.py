@@ -333,10 +333,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
-                debt_id = data.get("debt_id") or data.get("id")
+                print(f"🔍 Debug: استجابة إنشاء الدين: {data}")
+                debt_id = data.get("debt_id") or data.get("id") or data.get("_id")
                 if debt_id:
                     self.test_data_ids.append(("debt", debt_id))
                     print(f"🔍 Debug: تم حفظ معرف الدين: {debt_id}")
+                else:
+                    print(f"🔍 Debug: لم يتم العثور على معرف الدين في الاستجابة")
                 
                 amount = debt_data["original_amount"]
                 details = f"تم إنشاء الدين بنجاح - المبلغ: {amount:.2f} ج.م"
