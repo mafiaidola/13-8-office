@@ -647,28 +647,34 @@ async def get_debt_statistics(
         for aging in stats["by_aging"]:
             aging_counts[aging] = aging_counts.get(aging, 0) + 1
         
-        # Process top collectors (if admin/gm)
+        # Process top collectors (if admin/gm) - simplified version
         top_collectors = []
         if current_user.get("role") in ["admin", "gm"]:
-            collector_stats = {}
-            for rep_data in stats["by_assigned_rep"]:
-                rep_id = rep_data["rep_id"]
-                rep_name = rep_data["rep_name"] 
-                amount = rep_data["amount"]
-                
-                if rep_id not in collector_stats:
-                    collector_stats[rep_id] = {"name": rep_name, "total_assigned": 0, "count": 0}
-                
-                collector_stats[rep_id]["total_assigned"] += amount
-                collector_stats[rep_id]["count"] += 1
+            # Get representative statistics from debts collection directly
+            rep_pipeline = [
+                {"$match": filter_query},
+                {"$group": {
+                    "_id": {"$ifNull": ["$sales_rep_id", "$assigned_to_id"]},
+                    "rep_name": {"$first": {"$ifNull": ["$sales_rep_name", "$assigned_to_name"]}},
+                    "total_assigned": {"$sum": "$remaining_amount"},
+                    "debt_count": {"$sum": 1}
+                }},
+                {"$sort": {"total_assigned": -1}},
+                {"$limit": 10}
+            ]
             
-            # Sort by performance
-            top_collectors = sorted(
-                [{"rep_name": v["name"], "rep_id": k, "total_assigned": v["total_assigned"], "debt_count": v["count"]} 
-                 for k, v in collector_stats.items()],
-                key=lambda x: x["total_assigned"],
-                reverse=True
-            )[:10]
+            rep_cursor = db.debts.aggregate(rep_pipeline)
+            rep_stats = await rep_cursor.to_list(length=10)
+            
+            top_collectors = [
+                {
+                    "rep_name": rep.get("rep_name", "غير محدد"),
+                    "rep_id": rep["_id"],
+                    "total_assigned": rep["total_assigned"],
+                    "debt_count": rep["debt_count"]
+                }
+                for rep in rep_stats if rep["_id"]
+            ]
         
         return {
             "success": True,
