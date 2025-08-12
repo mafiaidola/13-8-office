@@ -597,10 +597,12 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
     const matchesClassification = filterClassification === 'all' || clinic.classification === filterClassification;
     const matchesArea = filterArea === 'all' || clinic.area_id === filterArea;
     const matchesStatus = filterStatus === 'all' || clinic.is_active?.toString() === filterStatus;
+    const matchesCreditStatus = filterCreditStatus === 'all' || clinic.credit_status === filterCreditStatus;
     
-    return matchesSearch && matchesClassification && matchesArea && matchesStatus;
+    return matchesSearch && matchesClassification && matchesArea && matchesStatus && matchesCreditStatus;
   });
 
+  // Helper Functions
   const getClassificationColor = (classification) => {
     switch (classification) {
       case 'A': return 'bg-green-100 text-green-800 border-green-300';
@@ -617,6 +619,17 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
       case 'poor': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getCreditStatusLabel = (status) => {
+    const labels = {
+      'good': 'ممتاز',
+      'average': 'جيد',
+      'poor': 'ضعيف',
+      'excellent': 'ممتاز',
+      'bad': 'سيء'
+    };
+    return labels[status] || status;
   };
 
   if (loading) {
