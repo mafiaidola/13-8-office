@@ -88,15 +88,17 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
       };
 
       // تحميل لوحة التحكم
-      const dashboardResponse = await fetch(`${API_URL}/api/professional-accounting/dashboard`, { headers });
-      if (dashboardResponse.ok) {
-        const dashboardResult = await dashboardResponse.json();
-        setDashboardData(dashboardResult.data || {});
+      if (activeTab === 'dashboard') {
+        const dashboardResponse = await fetch(`${API_URL}/api/enhanced-professional-accounting/dashboard`, { headers });
+        if (dashboardResponse.ok) {
+          const dashboardResult = await dashboardResponse.json();
+          setDashboardData(dashboardResult.dashboard || dashboardResult.data || {});
+        }
       }
 
       // تحميل الفواتير
       if (activeTab === 'invoices' || activeTab === 'dashboard') {
-        const invoicesResponse = await fetch(`${API_URL}/api/professional-accounting/invoices`, { headers });
+        const invoicesResponse = await fetch(`${API_URL}/api/enhanced-professional-accounting/invoices`, { headers });
         if (invoicesResponse.ok) {
           const invoicesResult = await invoicesResponse.json();
           setInvoices(invoicesResult.invoices || []);
@@ -105,7 +107,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
 
       // تحميل الديون
       if (activeTab === 'debts' || activeTab === 'dashboard') {
-        const debtsResponse = await fetch(`${API_URL}/api/professional-accounting/debts`, { headers });
+        const debtsResponse = await fetch(`${API_URL}/api/enhanced-professional-accounting/debts`, { headers });
         if (debtsResponse.ok) {
           const debtsResult = await debtsResponse.json();
           setDebts(debtsResult.debts || []);
@@ -114,7 +116,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
 
       // تحميل التحصيلات
       if (activeTab === 'collections' || activeTab === 'dashboard') {
-        const collectionsResponse = await fetch(`${API_URL}/api/professional-accounting/collections`, { headers });
+        const collectionsResponse = await fetch(`${API_URL}/api/enhanced-professional-accounting/collections`, { headers });
         if (collectionsResponse.ok) {
           const collectionsResult = await collectionsResponse.json();
           setCollections(collectionsResult.collections || []);
