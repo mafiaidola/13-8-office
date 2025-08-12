@@ -501,6 +501,9 @@ async def create_clinic_collection(clinic_id: str, collection_data: CollectionMo
         
         result = await db.collections.insert_one(collection)
         
+        if not result.inserted_id:
+            raise HTTPException(status_code=500, detail="فشل في حفظ التحصيل")
+        
         # تسجيل النشاط
         activity = {
             "id": str(uuid.uuid4()),
@@ -520,10 +523,22 @@ async def create_clinic_collection(clinic_id: str, collection_data: CollectionMo
         }
         await db.activities.insert_one(activity)
         
+        # Return clean collection data without ObjectId
+        clean_collection = {
+            "id": collection["id"],
+            "clinic_id": collection["clinic_id"],
+            "amount": collection["amount"],
+            "description": collection["description"],
+            "payment_method": collection["payment_method"],
+            "receipt_number": collection["receipt_number"],
+            "status": collection["status"],
+            "created_at": collection["created_at"]
+        }
+        
         return {
             "success": True,
             "message": "تم تسجيل التحصيل بنجاح - في انتظار موافقة المدير",
-            "collection": collection
+            "collection": clean_collection
         }
         
     except HTTPException:
