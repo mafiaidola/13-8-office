@@ -14,6 +14,7 @@ import ProductManagement from '../Products/ProductManagement';
 import IntegratedFinancialDashboard from '../Financial/IntegratedFinancialDashboard';
 import ExcelDashboard from '../Excel/ExcelDashboard';
 import LinesAreasManagement from '../Geographic/LinesAreasManagement';
+import EnhancedLinesAreasManagement from '../Geographic/EnhancedLinesAreasManagement';
 import WarehouseManagement from '../Warehouses/WarehouseManagement';
 import EnhancedActivityTracking from '../ActivityTracking/EnhancedActivityTracking';
 import SuperAdminActivityDashboard from '../ActivityTracking/SuperAdminActivityDashboard';
