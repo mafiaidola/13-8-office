@@ -92,7 +92,8 @@ async def get_accounting_dashboard(current_user: dict = Depends(get_current_user
         total_invoices_amount = 0
         pending_invoices = 0
         
-        async for invoice in db.invoices.find({}):
+        invoices_cursor = db.invoices.find({}, {"_id": 0})
+        async for invoice in invoices_cursor:
             total_invoices_amount += invoice.get("total_amount", 0)
             if invoice.get("status") == "pending":
                 pending_invoices += 1
@@ -102,18 +103,23 @@ async def get_accounting_dashboard(current_user: dict = Depends(get_current_user
         total_debts_amount = 0
         overdue_debts = 0
         
-        async for debt in db.debts.find({}):
+        debts_cursor = db.debts.find({}, {"_id": 0})
+        async for debt in debts_cursor:
             total_debts_amount += debt.get("total_amount", 0)
             if debt.get("due_date"):
-                due_date = datetime.fromisoformat(debt["due_date"])
-                if due_date < datetime.now():
-                    overdue_debts += 1
+                try:
+                    due_date = datetime.fromisoformat(debt["due_date"])
+                    if due_date < datetime.now():
+                        overdue_debts += 1
+                except:
+                    pass
         
         # إحصائيات التحصيل
         collections_count = await db.collections.count_documents({})
         total_collections_amount = 0
         
-        async for collection in db.collections.find({}):
+        collections_cursor = db.collections.find({}, {"_id": 0})
+        async for collection in collections_cursor:
             total_collections_amount += collection.get("amount", 0)
         
         # إحصائيات الأنشطة المحاسبية
@@ -123,12 +129,14 @@ async def get_accounting_dashboard(current_user: dict = Depends(get_current_user
         
         # أحدث الفواتير
         recent_invoices = []
-        async for invoice in db.invoices.find({}).sort("created_at", -1).limit(5):
+        recent_invoices_cursor = db.invoices.find({}, {"_id": 0}).sort([("created_at", -1)]).limit(5)
+        async for invoice in recent_invoices_cursor:
             recent_invoices.append(invoice)
         
         # أحدث الديون
         recent_debts = []
-        async for debt in db.debts.find({}).sort("created_at", -1).limit(5):
+        recent_debts_cursor = db.debts.find({}, {"_id": 0}).sort([("created_at", -1)]).limit(5)
+        async for debt in recent_debts_cursor:
             recent_debts.append(debt)
         
         return {
