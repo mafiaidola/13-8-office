@@ -243,10 +243,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
-                invoice_id = data.get("invoice_id") or data.get("id")
+                print(f"🔍 Debug: استجابة إنشاء الفاتورة: {data}")
+                invoice_id = data.get("invoice_id") or data.get("id") or data.get("_id")
                 if invoice_id:
                     self.test_data_ids.append(("invoice", invoice_id))
                     print(f"🔍 Debug: تم حفظ معرف الفاتورة: {invoice_id}")
+                else:
+                    print(f"🔍 Debug: لم يتم العثور على معرف الفاتورة في الاستجابة")
                 
                 total_amount = invoice_data["total_amount"]
                 details = f"تم إنشاء الفاتورة بنجاح - المبلغ الإجمالي: {total_amount:.2f} ج.م"
