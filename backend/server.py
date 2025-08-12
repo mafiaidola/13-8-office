@@ -21,7 +21,7 @@ load_dotenv()
 
 # Import routers
 from routers.user_routes import router as user_router
-from routers.lines_areas_routes import router as lines_areas_router
+from routers.enhanced_lines_areas_routes import router as enhanced_lines_areas_router
 from routers.excel_routes import router as excel_router
 from routers.products_routes import router as products_router
 from routers.visits_routes import router as visits_router
@@ -67,7 +67,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(user_router)
-app.include_router(lines_areas_router)
+app.include_router(enhanced_lines_areas_router)
 app.include_router(excel_router)
 app.include_router(products_router)
 app.include_router(visits_router)
