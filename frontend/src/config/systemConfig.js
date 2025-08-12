@@ -42,6 +42,17 @@ export const SYSTEM_TABS = {
     priority: 2
   },
 
+  professional_accounting: {
+    id: 'professional_accounting',
+    path: '/professional-accounting',
+    icon: '💰',
+    name: { ar: 'النظام المحاسبي الاحترافي', en: 'Professional Accounting System' },
+    component: 'ProfessionalAccountingSystem',
+    description: { ar: 'نظام محاسبي شامل للفواتير والديون والتحصيل مع تكامل كامل لقاعدة البيانات', en: 'Comprehensive accounting system for invoices, debts and collections with full database integration' },
+    permissions: ['admin', 'gm', 'accounting', 'finance'],
+    priority: 3
+  },
+
   clinic_registration: {
     id: 'clinic_registration',
     path: '/clinic-registration',
@@ -50,7 +61,7 @@ export const SYSTEM_TABS = {
     component: 'EnhancedClinicRegistrationAdvanced',
     description: { ar: 'تسجيل العيادات مع خرائط تفاعلية وتصنيفات شاملة', en: 'Register clinics with interactive maps and comprehensive classifications' },
     permissions: ['admin', 'gm', 'medical_rep'],
-    priority: 3
+    priority: 4
   },
 
   clinics_management: {
@@ -61,7 +72,7 @@ export const SYSTEM_TABS = {
     component: 'ClinicsManagement',
     description: { ar: 'إدارة شاملة للعيادات المسجلة والتحكم بها', en: 'Comprehensive management of registered clinics' },
     permissions: ['admin', 'gm', 'line_manager', 'area_manager'],
-    priority: 4
+    priority: 5
   },
 
   visits_management: {
@@ -72,7 +83,7 @@ export const SYSTEM_TABS = {
     component: 'AdvancedVisitsManagement',
     description: { ar: 'نظام متطور لإدارة زيارات المناديب مع التنظيم الهرمي الذكي والتخطيط المتقدم', en: 'Advanced system for managing representative visits with smart hierarchical organization and advanced planning' },
     permissions: ['admin', 'gm', 'line_manager', 'area_manager', 'medical_rep'],
-    priority: 5
+    priority: 6
   },
 
   products: {
@@ -83,29 +94,7 @@ export const SYSTEM_TABS = {
     component: 'ProductManagement',
     description: { ar: 'إدارة قاعدة بيانات المنتجات والأدوية', en: 'Manage products and medicines database' },
     permissions: ['admin', 'gm', 'line_manager'],
-    priority: 6
-  },
-
-  integrated_financial: {
-    id: 'integrated_financial',
-    path: '/integrated-financial',
-    icon: '💰',
-    name: { ar: 'النظام المالي المتكامل', en: 'Integrated Financial System' },
-    component: 'IntegratedFinancialDashboard',
-    description: { ar: 'إدارة شاملة للأمور المالية والفواتير والديون', en: 'Comprehensive financial management including invoices and debts' },
-    permissions: ['admin', 'gm', 'accounting', 'finance'],
     priority: 7
-  },
-
-  excel_management: {
-    id: 'excel_management',
-    path: '/excel-management',
-    icon: '📊',
-    name: { ar: 'إدارة ملفات Excel', en: 'Excel Management' },
-    component: 'ExcelDashboard',
-    description: { ar: 'استيراد وتصدير البيانات من وإلى ملفات Excel', en: 'Import and export data from/to Excel files' },
-    permissions: ['admin', 'gm'],
-    priority: 8
   },
 
   lines_areas: {
@@ -115,6 +104,17 @@ export const SYSTEM_TABS = {
     name: { ar: 'إدارة الخطوط والمناطق', en: 'Lines & Areas Management' },
     component: 'LinesAreasManagement',
     description: { ar: 'إدارة التقسيم الجغرافي للخطوط والمناطق', en: 'Manage geographical division of lines and areas' },
+    permissions: ['admin', 'gm'],
+    priority: 8
+  },
+
+  excel_management: {
+    id: 'excel_management',
+    path: '/excel-management',
+    icon: '📊',
+    name: { ar: 'إدارة ملفات Excel', en: 'Excel Management' },
+    component: 'ExcelDashboard',
+    description: { ar: 'استيراد وتصدير البيانات من وإلى ملفات Excel', en: 'Import and export data from/to Excel files' },
     permissions: ['admin', 'gm'],
     priority: 9
   },
