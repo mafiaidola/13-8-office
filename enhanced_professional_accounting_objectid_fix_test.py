@@ -419,7 +419,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
-                collection_id = data.get("collection_id") or data.get("id")
+                # Extract ID from nested collection object
+                collection_id = None
+                if 'collection' in data and isinstance(data['collection'], dict):
+                    collection_id = data['collection'].get('id')
+                else:
+                    collection_id = data.get("collection_id") or data.get("id") or data.get("_id")
+                
                 if collection_id:
                     self.test_data_ids.append(("collection", collection_id))
                 
