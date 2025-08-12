@@ -94,9 +94,10 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
             
             # إحصائيات الأنشطة
             activities_count = await db.activities.count_documents({"user_id": user_id})
+            today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
             activities_today = await db.activities.count_documents({
                 "user_id": user_id,
-                "timestamp": {"$gte": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)}
+                "timestamp": {"$gte": today_start}
             })
             
             # معلومات الخط والمنطقة
