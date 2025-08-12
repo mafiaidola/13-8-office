@@ -37,6 +37,35 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API}/enhanced-users/with-statistics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+        console.log('✅ تم تحميل المستخدمين مع الإحصائيات الحقيقية:', data);
+      } else {
+        console.error('Failed to load users with statistics');
+        // فشل في التحميل، سنستخدم API العادي
+        await loadUsersBasic();
+      }
+    } catch (error) {
+      console.error('Error loading users with statistics:', error);
+      // في حالة الخطأ، سنستخدم API العادي
+      await loadUsersBasic();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // تحميل المستخدمين بالطريقة العادية كنسخة احتياطية
+  const loadUsersBasic = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
       const response = await fetch(`${API}/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -47,13 +76,10 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
-      } else {
-        console.error('Failed to load users');
+        console.log('⚠️ تم تحميل المستخدمين بالطريقة العادية (بدون إحصائيات)');
       }
     } catch (error) {
-      console.error('Error loading users:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error loading basic users:', error);
     }
   };
 
