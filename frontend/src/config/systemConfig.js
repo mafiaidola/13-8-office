@@ -101,9 +101,9 @@ export const SYSTEM_TABS = {
     id: 'lines_areas',
     path: '/lines-areas',
     icon: '🗺️',
-    name: { ar: 'إدارة الخطوط والمناطق', en: 'Lines & Areas Management' },
-    component: 'LinesAreasManagement',
-    description: { ar: 'إدارة التقسيم الجغرافي للخطوط والمناطق', en: 'Manage geographical division of lines and areas' },
+    name: { ar: 'إدارة الخطوط والمناطق المحسنة', en: 'Enhanced Lines & Areas Management' },
+    component: 'EnhancedLinesAreasManagement',
+    description: { ar: 'نظام متطور لإدارة التقسيم الجغرافي مع التحديث الفوري والإحصائيات الشاملة', en: 'Advanced system for geographical division management with real-time updates and comprehensive statistics' },
     permissions: ['admin', 'gm'],
     priority: 8
   },
