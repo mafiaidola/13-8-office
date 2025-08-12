@@ -50,16 +50,17 @@ async def get_users_with_statistics(current_user: dict = Depends(get_current_use
             
             # إحصائيات الزيارات
             visits_count = await db.visits.count_documents({"rep_id": user_id})
+            month_start = datetime.now().replace(day=1).isoformat()
             visits_this_month = await db.visits.count_documents({
                 "rep_id": user_id,
-                "visit_date": {"$gte": datetime.now().replace(day=1).isoformat()}
+                "visit_date": {"$gte": month_start}
             })
             
             # إحصائيات العيادات المضافة
             clinics_count = await db.clinics.count_documents({"rep_id": user_id})
             clinics_this_month = await db.clinics.count_documents({
                 "rep_id": user_id,
-                "created_at": {"$gte": datetime.now().replace(day=1).isoformat()}
+                "created_at": {"$gte": month_start}
             })
             
             # إحصائيات الفواتير والمبيعات
