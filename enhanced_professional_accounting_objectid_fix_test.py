@@ -244,7 +244,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             if response.status_code == 200 or response.status_code == 201:
                 data = response.json()
                 print(f"🔍 Debug: استجابة إنشاء الفاتورة: {data}")
-                invoice_id = data.get("invoice_id") or data.get("id") or data.get("_id")
+                # Extract ID from nested invoice object
+                invoice_id = None
+                if 'invoice' in data and isinstance(data['invoice'], dict):
+                    invoice_id = data['invoice'].get('id')
+                else:
+                    invoice_id = data.get("invoice_id") or data.get("id") or data.get("_id")
+                
                 if invoice_id:
                     self.test_data_ids.append(("invoice", invoice_id))
                     print(f"🔍 Debug: تم حفظ معرف الفاتورة: {invoice_id}")
