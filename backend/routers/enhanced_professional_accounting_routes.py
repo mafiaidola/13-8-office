@@ -273,22 +273,18 @@ async def get_invoices(current_user: dict = Depends(get_current_user)):
         cursor = db.invoices.find({}, {"_id": 0}).sort([("created_at", -1)])
         
         async for invoice in cursor:
+            # تنظيف البيانات
+            invoice = serialize_doc(invoice)
+            
             # إضافة معلومات العيادة والمندوب
             clinic = await db.clinics.find_one({"id": invoice.get("clinic_id")}, {"_id": 0})
             rep = await db.users.find_one({"id": invoice.get("rep_id")}, {"_id": 0})
             
             if clinic:
-                invoice["clinic_info"] = {
-                    "name": clinic.get('clinic_name', clinic.get('name', '')),
-                    "doctor_name": clinic.get('doctor_name', ''),
-                    "phone": clinic.get('clinic_phone', clinic.get('phone', ''))
-                }
+                invoice["clinic_info"] = serialize_doc(clinic)
             
             if rep:
-                invoice["rep_info"] = {
-                    "name": rep.get('full_name', rep.get('name', '')),
-                    "role": rep.get('role', '')
-                }
+                invoice["rep_info"] = serialize_doc(rep)
             
             invoices.append(invoice)
         
