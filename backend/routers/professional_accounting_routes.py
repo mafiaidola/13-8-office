@@ -9,6 +9,12 @@ import os
 from decimal import Decimal, ROUND_HALF_UP
 import uuid
 
+# Import get_current_user from main server
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from server import get_current_user
+
 # إعداد قاعدة البيانات والأمان
 security = HTTPBearer()
 client = MongoClient(os.getenv('MONGO_URL', 'mongodb://localhost:27017'))
