@@ -6,6 +6,7 @@ import Dashboard from '../Dashboard/Dashboard';
 import UserManagement from '../Users/UserManagement';
 import ProfessionalUserManagement from '../Users/ProfessionalUserManagement';
 import ProfessionalAccountingSystem from '../Accounting/ProfessionalAccountingSystem';
+import EnhancedProfessionalAccountingSystem from '../Accounting/EnhancedProfessionalAccountingSystem';
 import EnhancedClinicRegistrationAdvanced from '../Clinics/EnhancedClinicRegistrationAdvanced';
 import ProfessionalClinicProfile from '../Clinics/ProfessionalClinicProfile';
 import ClinicsManagement from '../Clinics/ClinicsManagement';
