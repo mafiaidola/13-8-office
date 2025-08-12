@@ -47,7 +47,7 @@ class DebtModel(BaseModel):
     clinic_id: str
     rep_id: str
     description: str
-    items: List[InvoiceItemModel]
+    items: List[InvoiceItemModel] = []
     subtotal: float
     discount_percentage: float = 0
     discount_amount: float = 0
