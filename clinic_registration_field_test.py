@@ -13,7 +13,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 
 def test_admin_login():
     """اختبار تسجيل دخول الأدمن"""

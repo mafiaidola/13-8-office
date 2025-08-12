@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com"
 BASE_URL = f"{BACKEND_URL}/api"
 
 def print_section(title):

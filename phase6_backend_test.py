@@ -20,7 +20,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class Phase6BackendTester:

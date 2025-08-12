@@ -80,7 +80,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 

@@ -15,7 +15,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 
 class PriceHidingTester:
     def __init__(self):

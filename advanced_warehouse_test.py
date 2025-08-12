@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional
 
 class AdvancedWarehouseProductTest:
     def __init__(self):
-        self.base_url = "https://epgroup-health.preview.emergentagent.com/api"
+        self.base_url = "https://medmanage-pro-1.preview.emergentagent.com/api"
         self.session = None
         self.jwt_token = None
         self.test_results = []

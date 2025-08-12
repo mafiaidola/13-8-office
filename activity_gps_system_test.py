@@ -23,7 +23,7 @@ from typing import Dict, List, Any
 class ActivityTrackingGPSSystemTester:
     def __init__(self):
         # Get backend URL from environment
-        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://epgroup-health.preview.emergentagent.com')
+        self.base_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://medmanage-pro-1.preview.emergentagent.com')
         if not self.base_url.endswith('/api'):
             self.base_url += '/api'
         

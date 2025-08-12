@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -593,7 +593,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "admin",
     "password": "admin123"
@@ -918,7 +918,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 TEST_USERNAME = "admin"
 TEST_PASSWORD = "admin123"
 
@@ -1590,7 +1590,7 @@ from datetime import datetime
 import uuid
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "admin",
     "password": "admin123"
@@ -2047,7 +2047,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 WRONG_PASSWORD = "wrongpassword"

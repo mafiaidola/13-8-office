@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://epgroup-health.preview.emergentagent.com"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class ComprehensiveSystemReviewTester:

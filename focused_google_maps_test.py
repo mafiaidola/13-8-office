@@ -18,7 +18,7 @@ import time
 import math
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class FocusedGoogleMapsTest:

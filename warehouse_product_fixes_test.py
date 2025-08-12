@@ -29,7 +29,7 @@ from typing import Dict, List, Any, Optional
 class WarehouseProductFixesTest:
     def __init__(self):
         # استخدام الـ URL الصحيح من frontend/.env
-        self.base_url = "https://epgroup-health.preview.emergentagent.com/api"
+        self.base_url = "https://medmanage-pro-1.preview.emergentagent.com/api"
         self.session = None
         self.jwt_token = None
         self.test_results = []

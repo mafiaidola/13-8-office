@@ -16,7 +16,7 @@ from typing import Dict, List, Any
 
 class EnhancedClinicRegistrationFixer:
     def __init__(self):
-        self.base_url = "https://epgroup-health.preview.emergentagent.com/api"
+        self.base_url = "https://medmanage-pro-1.preview.emergentagent.com/api"
         self.token = None
         self.session = requests.Session()
         self.test_results = []

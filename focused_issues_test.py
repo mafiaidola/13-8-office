@@ -8,7 +8,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 
 def test_medical_rep_permissions_detailed():
     """اختبار مفصل لصلاحيات المندوب الطبي"""

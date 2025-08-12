@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class LocationActivityTrackingTester:

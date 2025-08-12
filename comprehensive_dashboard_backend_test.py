@@ -25,7 +25,7 @@ import sys
 import os
 
 # إعدادات الاختبار - استخدام URL الصحيح من frontend/.env
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 TEST_CREDENTIALS = {
     "username": "admin",

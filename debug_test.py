@@ -6,7 +6,7 @@ Debug Enhanced User Management APIs
 import requests
 import json
 
-BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BASE_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 
 def test_debug():
     # Login as admin

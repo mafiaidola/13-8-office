@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://epgroup-health.preview.emergentagent.com/api"
+BACKEND_URL = "https://medmanage-pro-1.preview.emergentagent.com/api"
 
 class FinalArabicReviewTester:
     def __init__(self):
