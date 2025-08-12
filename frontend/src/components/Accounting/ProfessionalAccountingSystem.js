@@ -16,6 +16,10 @@ const ProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark', user })
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [clinics, setClinics] = useState([]);
   const [showDebtModal, setShowDebtModal] = useState(false);
   const [showCollectionModal, setShowCollectionModal] = useState(false);
   const [printMode, setPrintMode] = useState(false);
