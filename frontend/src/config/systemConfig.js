@@ -46,9 +46,9 @@ export const SYSTEM_TABS = {
     id: 'professional_accounting',
     path: '/professional-accounting',
     icon: '💰',
-    name: { ar: 'النظام المحاسبي الاحترافي المحسن', en: 'Enhanced Professional Accounting System' },
+    name: { ar: 'النظام المحاسبي الاحترافي الشامل', en: 'Comprehensive Professional Accounting System' },
     component: 'EnhancedProfessionalAccountingSystem',
-    description: { ar: 'نظام محاسبي شامل للفواتير والديون والتحصيل مع فورم إنشاء فاتورة احترافي ومتكامل', en: 'Comprehensive accounting system for invoices, debts and collections with professional invoice creation form' },
+    description: { ar: 'نظام محاسبي شامل بفورم إنشاء فاتورة احترافي مع إدارة الديون والتحصيل الجزئي والكلي', en: 'Comprehensive accounting system with professional invoice creation form, debt management and partial/full collection' },
     permissions: ['admin', 'gm', 'accounting', 'finance'],
     priority: 3
   },
