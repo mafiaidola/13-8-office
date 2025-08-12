@@ -486,7 +486,7 @@ async def create_clinic_collection(clinic_id: str, collection_data: CollectionMo
                 "amount": collection_data.amount,
                 "payment_method": collection_data.payment_method
             },
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.utcnow().isoformat(),
             "success": True
         }
         await db.activities.insert_one(activity)
