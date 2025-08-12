@@ -203,11 +203,26 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
         'Content-Type': 'application/json'
       };
 
-      // Load areas
-      const areasResponse = await fetch(`${API_URL}/api/areas`, { headers });
+      // Load areas, products, users
+      const [areasResponse, productsResponse, usersResponse] = await Promise.all([
+        fetch(`${API_URL}/api/areas`, { headers }),
+        fetch(`${API_URL}/api/products`, { headers }),
+        fetch(`${API_URL}/api/users`, { headers })
+      ]);
+
       if (areasResponse.ok) {
         const areasData = await areasResponse.json();
         setAreas(Array.isArray(areasData) ? areasData : areasData.areas || []);
+      }
+
+      if (productsResponse.ok) {
+        const productsData = await productsResponse.json();
+        setProducts(Array.isArray(productsData) ? productsData : productsData.products || []);
+      }
+
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        setUsers(Array.isArray(usersData) ? usersData : usersData.users || []);
       }
 
     } catch (error) {
@@ -245,19 +260,294 @@ const EnhancedProfessionalClinicsManagement = ({ language = 'ar', theme = 'dark'
     }
   };
 
-  const handleCreateInvoiceForClinic = (clinic) => {
-    setSelectedClinic(clinic);
-    setShowCreateInvoiceModal(true);
+  const loadClinicProfile = async (clinic) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const [overviewRes, ordersRes, debtsRes, visitsRes, collectionsRes] = await Promise.all([
+        fetch(`${API_URL}/api/clinic-profile/${clinic.id}/overview`, { headers }),
+        fetch(`${API_URL}/api/clinic-profile/${clinic.id}/orders`, { headers }),
+        fetch(`${API_URL}/api/clinic-profile/${clinic.id}/debts`, { headers }),
+        fetch(`${API_URL}/api/clinic-profile/${clinic.id}/visits`, { headers }),
+        fetch(`${API_URL}/api/clinic-profile/${clinic.id}/collections`, { headers })
+      ]);
+
+      const overview = overviewRes.ok ? await overviewRes.json() : {};
+      const orders = ordersRes.ok ? await ordersRes.json() : { orders: [] };
+      const debts = debtsRes.ok ? await debtsRes.json() : { debts: [] };
+      const visits = visitsRes.ok ? await visitsRes.json() : { visits: [] };
+      const collections = collectionsRes.ok ? await collectionsRes.json() : { collections: [] };
+
+      setClinicProfileData({
+        overview: overview,
+        orders: orders.orders || [],
+        debts: debts.debts || [],
+        visits: visits.visits || [],
+        collections: collections.collections || []
+      });
+
+    } catch (error) {
+      console.error('Error loading clinic profile:', error);
+    }
   };
 
-  const handleCreateDebtForClinic = (clinic) => {
-    setSelectedClinic(clinic);
-    setShowCreateDebtModal(true);
+  // Invoice Functions
+  const addItemToInvoice = () => {
+    const newItem = {
+      id: Date.now(),
+      product_id: '',
+      product_name: '',
+      quantity: 1,
+      unit_price: 0,
+      total_price: 0
+    };
+    setInvoiceForm({
+      ...invoiceForm,
+      items: [...invoiceForm.items, newItem]
+    });
   };
 
-  const handleViewFinancialDetails = (clinic) => {
-    setSelectedClinic(clinic);
-    setShowFinancialModal(true);
+  const updateInvoiceItem = (itemIndex, field, value) => {
+    const updatedItems = [...invoiceForm.items];
+    updatedItems[itemIndex][field] = value;
+
+    if (field === 'product_id') {
+      const product = products.find(p => p.id === value);
+      if (product) {
+        updatedItems[itemIndex].product_name = product.name;
+        updatedItems[itemIndex].unit_price = product.price || 0;
+      }
+    }
+
+    if (field === 'quantity' || field === 'unit_price') {
+      updatedItems[itemIndex].total_price = 
+        updatedItems[itemIndex].quantity * updatedItems[itemIndex].unit_price;
+    }
+
+    setInvoiceForm({ ...invoiceForm, items: updatedItems });
+    calculateInvoiceTotal({ ...invoiceForm, items: updatedItems });
+  };
+
+  const removeInvoiceItem = (itemIndex) => {
+    const updatedItems = invoiceForm.items.filter((_, index) => index !== itemIndex);
+    setInvoiceForm({ ...invoiceForm, items: updatedItems });
+    calculateInvoiceTotal({ ...invoiceForm, items: updatedItems });
+  };
+
+  const calculateInvoiceTotal = (formData) => {
+    const subtotal = formData.items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    let discount_amount = 0;
+    
+    if (formData.discount_type === 'percentage') {
+      discount_amount = (subtotal * formData.discount_value) / 100;
+    } else {
+      discount_amount = formData.discount_value;
+    }
+
+    const total_amount = subtotal - discount_amount;
+
+    setInvoiceForm({
+      ...formData,
+      subtotal,
+      discount_amount,
+      total_amount
+    });
+  };
+
+  const resetInvoiceForm = () => {
+    setInvoiceForm({
+      clinic_id: '',
+      rep_id: user?.id || '',
+      items: [],
+      subtotal: 0,
+      discount_type: 'percentage',
+      discount_value: 0,
+      discount_amount: 0,
+      total_amount: 0,
+      payment_terms: 'cash',
+      due_date: '',
+      notes: '',
+      created_by_name: user?.full_name || ''
+    });
+  };
+
+  const handleCreateInvoice = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const response = await fetch(`${API_URL}/api/enhanced-professional-accounting/invoices`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(invoiceForm)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('تم إنشاء الفاتورة بنجاح');
+        setShowCreateInvoiceModal(false);
+        resetInvoiceForm();
+        loadClinicsData();
+      } else {
+        const error = await response.text();
+        alert(`خطأ في إنشاء الفاتورة: ${error}`);
+      }
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      alert('حدث خطأ أثناء إنشاء الفاتورة');
+    }
+  };
+
+  // Debt Functions
+  const addItemToDebt = () => {
+    const newItem = {
+      id: Date.now(),
+      product_id: '',
+      product_name: '',
+      quantity: 1,
+      unit_price: 0,
+      total_price: 0
+    };
+    setDebtForm({
+      ...debtForm,
+      items: [...debtForm.items, newItem]
+    });
+  };
+
+  const updateDebtItem = (itemIndex, field, value) => {
+    const updatedItems = [...debtForm.items];
+    updatedItems[itemIndex][field] = value;
+
+    if (field === 'product_id') {
+      const product = products.find(p => p.id === value);
+      if (product) {
+        updatedItems[itemIndex].product_name = product.name;
+        updatedItems[itemIndex].unit_price = product.price || 0;
+      }
+    }
+
+    if (field === 'quantity' || field === 'unit_price') {
+      updatedItems[itemIndex].total_price = 
+        updatedItems[itemIndex].quantity * updatedItems[itemIndex].unit_price;
+    }
+
+    setDebtForm({ ...debtForm, items: updatedItems });
+    calculateDebtTotal({ ...debtForm, items: updatedItems });
+  };
+
+  const removeDebtItem = (itemIndex) => {
+    const updatedItems = debtForm.items.filter((_, index) => index !== itemIndex);
+    setDebtForm({ ...debtForm, items: updatedItems });
+    calculateDebtTotal({ ...debtForm, items: updatedItems });
+  };
+
+  const calculateDebtTotal = (formData) => {
+    const subtotal = formData.items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const discount_amount = (subtotal * formData.discount_percentage) / 100;
+    const total_amount = subtotal - discount_amount;
+
+    setDebtForm({
+      ...formData,
+      subtotal,
+      discount_amount,
+      total_amount
+    });
+  };
+
+  const handleCreateDebt = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const response = await fetch(`${API_URL}/api/enhanced-professional-accounting/debts`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(debtForm)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('تم إنشاء الدين بنجاح');
+        setShowCreateDebtModal(false);
+        resetDebtForm();
+        loadClinicsData();
+      } else {
+        const error = await response.text();
+        alert(`خطأ في إنشاء الدين: ${error}`);
+      }
+    } catch (error) {
+      console.error('Error creating debt:', error);
+      alert('حدث خطأ أثناء إنشاء الدين');
+    }
+  };
+
+  const resetDebtForm = () => {
+    setDebtForm({
+      clinic_id: '',
+      rep_id: user?.id || '',
+      description: '',
+      items: [],
+      subtotal: 0,
+      discount_percentage: 0,
+      discount_amount: 0,
+      total_amount: 0,
+      due_date: '',
+      priority: 'medium',
+      category: 'purchase'
+    });
+  };
+
+  const handleCreateCollection = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const headers = { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const response = await fetch(`${API_URL}/api/enhanced-professional-accounting/collections`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(collectionForm)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('تم تسجيل التحصيل بنجاح - في انتظار موافقة المدير');
+        setShowCollectionModal(false);
+        resetCollectionForm();
+        loadClinicsData();
+      } else {
+        const error = await response.text();
+        alert(`خطأ في تسجيل التحصيل: ${error}`);
+      }
+    } catch (error) {
+      console.error('Error creating collection:', error);
+      alert('حدث خطأ أثناء تسجيل التحصيل');
+    }
+  };
+
+  const resetCollectionForm = () => {
+    setCollectionForm({
+      invoice_id: '',
+      debt_id: '',
+      payment_type: 'full',
+      amount: 0,
+      selected_items: [],
+      payment_method: 'cash',
+      receipt_number: '',
+      notes: ''
+    });
   };
 
   // Filter clinics
