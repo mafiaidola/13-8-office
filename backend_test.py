@@ -1,5 +1,587 @@
 #!/usr/bin/env python3
 """
+اختبار نهائي للنظام المحاسبي الاحترافي الشامل المطور وفقاً لمتطلبات المراجعة العربية
+Final Testing for Enhanced Professional Accounting System - Arabic Review Requirements
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import uuid
+
+# Configuration
+BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+class EnhancedProfessionalAccountingTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.token = None
+        self.test_results = []
+        self.test_data_ids = []  # لتتبع البيانات التجريبية للتنظيف
+        
+    def log_test(self, test_name, success, response_time, details="", error_msg=""):
+        """تسجيل نتيجة الاختبار"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "response_time": f"{response_time:.2f}ms",
+            "details": details,
+            "error": error_msg,
+            "timestamp": datetime.now().isoformat()
+        }
+        self.test_results.append(result)
+        
+        status = "✅" if success else "❌"
+        print(f"{status} {test_name}: {details}")
+        if error_msg:
+            print(f"   خطأ: {error_msg}")
+        print(f"   وقت الاستجابة: {response_time:.2f}ms")
+        print()
+
+    def test_admin_login(self):
+        """اختبار تسجيل الدخول admin/admin123"""
+        print("🔐 اختبار تسجيل الدخول admin/admin123...")
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(f"{BASE_URL}/auth/login", json={
+                "username": ADMIN_USERNAME,
+                "password": ADMIN_PASSWORD,
+                "geolocation": {
+                    "latitude": 30.0444,
+                    "longitude": 31.2357,
+                    "city": "القاهرة",
+                    "country": "مصر"
+                },
+                "device_info": "Chrome على Windows - اختبار النظام المحاسبي",
+                "ip_address": "156.160.45.123"
+            })
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+                
+                user_info = data.get("user", {})
+                details = f"المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')}"
+                self.log_test("تسجيل دخول admin/admin123", True, response_time, details)
+                return True
+            else:
+                self.log_test("تسجيل دخول admin/admin123", False, response_time, 
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل دخول admin/admin123", False, response_time, 
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def test_enhanced_accounting_dashboard(self):
+        """اختبار لوحة التحكم المحاسبية الشاملة"""
+        print("📊 اختبار لوحة التحكم المحاسبية الشاملة...")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BASE_URL}/enhanced-professional-accounting/dashboard")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                sections_count = len(data) if isinstance(data, (list, dict)) else 0
+                details = f"لوحة التحكم تعمل بنجاح - {sections_count} قسم متاح"
+                self.log_test("لوحة التحكم المحاسبية الشاملة", True, response_time, details)
+                return True
+            else:
+                self.log_test("لوحة التحكم المحاسبية الشاملة", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("لوحة التحكم المحاسبية الشاملة", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def get_supporting_data(self):
+        """جمع البيانات الداعمة (عيادات، مناديب، منتجات)"""
+        print("📋 جمع البيانات الداعمة...")
+        
+        supporting_data = {
+            "clinics": [],
+            "representatives": [],
+            "products": []
+        }
+        
+        # جلب العيادات
+        try:
+            response = self.session.get(f"{BASE_URL}/clinics")
+            if response.status_code == 200:
+                supporting_data["clinics"] = response.json()
+                print(f"   ✅ تم جلب {len(supporting_data['clinics'])} عيادة")
+        except Exception as e:
+            print(f"   ❌ خطأ في جلب العيادات: {e}")
+        
+        # جلب المناديب
+        try:
+            response = self.session.get(f"{BASE_URL}/users")
+            if response.status_code == 200:
+                users = response.json()
+                supporting_data["representatives"] = [
+                    user for user in users 
+                    if user.get("role") in ["medical_rep", "sales_rep"]
+                ]
+                print(f"   ✅ تم جلب {len(supporting_data['representatives'])} مندوب")
+        except Exception as e:
+            print(f"   ❌ خطأ في جلب المناديب: {e}")
+        
+        # جلب المنتجات
+        try:
+            response = self.session.get(f"{BASE_URL}/products")
+            if response.status_code == 200:
+                supporting_data["products"] = response.json()
+                print(f"   ✅ تم جلب {len(supporting_data['products'])} منتج")
+        except Exception as e:
+            print(f"   ❌ خطأ في جلب المنتجات: {e}")
+        
+        return supporting_data
+
+    def test_comprehensive_invoice_creation(self, supporting_data):
+        """اختبار إنشاء فاتورة شاملة احترافية"""
+        print("🧾 اختبار إنشاء فاتورة شاملة احترافية...")
+        
+        # التحقق من توفر البيانات الداعمة
+        if not supporting_data["clinics"] or not supporting_data["representatives"] or not supporting_data["products"]:
+            self.log_test("إنشاء فاتورة شاملة احترافية", False, 0,
+                        error_msg="البيانات الداعمة غير متوفرة (عيادات، مناديب، منتجات)")
+            return None
+        
+        # اختيار البيانات للفاتورة
+        clinic = supporting_data["clinics"][0]
+        representative = supporting_data["representatives"][0]
+        products = supporting_data["products"][:3]  # أول 3 منتجات
+        
+        # إنشاء فاتورة شاملة
+        invoice_data = {
+            "clinic_id": clinic.get("id"),
+            "clinic_name": clinic.get("name", clinic.get("clinic_name")),
+            "rep_id": representative.get("id"),
+            "representative_name": representative.get("full_name", representative.get("name")),
+            "items": [
+                {
+                    "product_id": products[0].get("id"),
+                    "product_name": products[0].get("name"),
+                    "quantity": 5,
+                    "unit_price": 25.50,
+                    "total_price": 127.50
+                },
+                {
+                    "product_id": products[1].get("id") if len(products) > 1 else products[0].get("id"),
+                    "product_name": products[1].get("name") if len(products) > 1 else products[0].get("name"),
+                    "quantity": 3,
+                    "unit_price": 45.00,
+                    "total_price": 135.00
+                }
+            ],
+            "subtotal": 262.50,
+            "discount_percentage": 10,
+            "discount_amount": 26.25,
+            "total_amount": 236.25,
+            "payment_method": "credit",
+            "payment_terms": "30 days",
+            "notes": "فاتورة اختبار شاملة للنظام المحاسبي الاحترافي",
+            "created_by": "admin",
+            "invoice_date": datetime.now().isoformat(),
+            "due_date": datetime.now().isoformat()
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(f"{BASE_URL}/enhanced-professional-accounting/invoices", 
+                                       json=invoice_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                invoice_id = data.get("invoice_id") or data.get("id")
+                if invoice_id:
+                    self.test_data_ids.append(("invoice", invoice_id))
+                
+                details = f"تم إنشاء فاتورة شاملة - المبلغ: {invoice_data['total_amount']} ج.م، العيادة: {clinic.get('name', 'Unknown')}"
+                self.log_test("إنشاء فاتورة شاملة احترافية", True, response_time, details)
+                return invoice_id
+            else:
+                error_details = response.text
+                try:
+                    error_json = response.json()
+                    if "detail" in error_json:
+                        error_details = error_json["detail"]
+                except:
+                    pass
+                
+                self.log_test("إنشاء فاتورة شاملة احترافية", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {error_details}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("إنشاء فاتورة شاملة احترافية", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return None
+
+    def test_professional_debt_creation(self, supporting_data):
+        """اختبار إنشاء دين احترافي"""
+        print("💳 اختبار إنشاء دين احترافي...")
+        
+        if not supporting_data["clinics"]:
+            self.log_test("إنشاء دين احترافي", False, 0,
+                        error_msg="لا توجد عيادات متاحة")
+            return None
+        
+        clinic = supporting_data["clinics"][0]
+        
+        debt_data = {
+            "clinic_id": clinic.get("id"),
+            "clinic_name": clinic.get("name", clinic.get("clinic_name")),
+            "subtotal": 500.00,
+            "discount_amount": 25.00,
+            "total_amount": 475.00,
+            "debt_type": "invoice",
+            "priority": "high",
+            "due_date": datetime.now().isoformat(),
+            "notes": "دين اختبار للنظام المحاسبي الاحترافي",
+            "created_by": "admin"
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(f"{BASE_URL}/enhanced-professional-accounting/debts", 
+                                       json=debt_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                debt_id = data.get("debt_id") or data.get("id")
+                if debt_id:
+                    self.test_data_ids.append(("debt", debt_id))
+                
+                details = f"تم إنشاء دين احترافي - المبلغ: {debt_data['total_amount']} ج.م، العيادة: {clinic.get('name', 'Unknown')}"
+                self.log_test("إنشاء دين احترافي", True, response_time, details)
+                return debt_id
+            else:
+                self.log_test("إنشاء دين احترافي", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("إنشاء دين احترافي", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return None
+
+    def test_partial_collection_creation(self, invoice_id):
+        """اختبار إنشاء تحصيل جزئي"""
+        print("💰 اختبار إنشاء تحصيل جزئي...")
+        
+        if not invoice_id:
+            self.log_test("إنشاء تحصيل جزئي", False, 0,
+                        error_msg="لا يوجد معرف فاتورة متاح")
+            return None
+        
+        collection_data = {
+            "invoice_id": invoice_id,
+            "collection_amount": 150.00,
+            "collection_method": "cash",
+            "collection_date": datetime.now().isoformat(),
+            "notes": "تحصيل جزئي اختبار",
+            "collected_by": "admin"
+        }
+        
+        start_time = time.time()
+        try:
+            response = self.session.post(f"{BASE_URL}/enhanced-professional-accounting/collections", 
+                                       json=collection_data)
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                collection_id = data.get("collection_id") or data.get("id")
+                if collection_id:
+                    self.test_data_ids.append(("collection", collection_id))
+                
+                details = f"تم إنشاء تحصيل جزئي - المبلغ: {collection_data['collection_amount']} ج.م"
+                self.log_test("إنشاء تحصيل جزئي", True, response_time, details)
+                return collection_id
+            else:
+                self.log_test("إنشاء تحصيل جزئي", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("إنشاء تحصيل جزئي", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return None
+
+    def test_manager_collection_approval(self, collection_id):
+        """اختبار موافقة المدير على التحصيل"""
+        print("✅ اختبار موافقة المدير على التحصيل...")
+        
+        if not collection_id:
+            self.log_test("موافقة المدير على التحصيل", False, 0,
+                        error_msg="لا يوجد معرف تحصيل متاح")
+            return False
+        
+        start_time = time.time()
+        try:
+            response = self.session.put(f"{BASE_URL}/enhanced-professional-accounting/collections/{collection_id}/approve")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                details = f"تم اعتماد التحصيل بنجاح - ID: {collection_id}"
+                self.log_test("موافقة المدير على التحصيل", True, response_time, details)
+                return True
+            else:
+                self.log_test("موافقة المدير على التحصيل", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("موافقة المدير على التحصيل", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def test_financial_reports(self):
+        """اختبار التقارير المالية"""
+        print("📈 اختبار التقارير المالية...")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BASE_URL}/enhanced-professional-accounting/reports/financial")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                data = response.json()
+                reports_count = len(data) if isinstance(data, (list, dict)) else 0
+                details = f"التقارير المالية متاحة - {reports_count} تقرير"
+                self.log_test("التقارير المالية", True, response_time, details)
+                return True
+            else:
+                self.log_test("التقارير المالية", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("التقارير المالية", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def test_fetch_all_accounting_data(self):
+        """اختبار جلب جميع البيانات المحاسبية"""
+        print("📊 اختبار جلب جميع البيانات المحاسبية...")
+        
+        endpoints = [
+            ("الفواتير", "/enhanced-professional-accounting/invoices"),
+            ("الديون", "/enhanced-professional-accounting/debts"),
+            ("التحصيلات", "/enhanced-professional-accounting/collections")
+        ]
+        
+        all_success = True
+        total_response_time = 0
+        
+        for name, endpoint in endpoints:
+            start_time = time.time()
+            try:
+                response = self.session.get(f"{BASE_URL}{endpoint}")
+                response_time = (time.time() - start_time) * 1000
+                total_response_time += response_time
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    count = len(data) if isinstance(data, list) else 1
+                    details = f"تم جلب {name} بنجاح - {count} عنصر"
+                    self.log_test(f"جلب {name}", True, response_time, details)
+                else:
+                    self.log_test(f"جلب {name}", False, response_time,
+                                error_msg=f"HTTP {response.status_code}: {response.text}")
+                    all_success = False
+                    
+            except Exception as e:
+                response_time = (time.time() - start_time) * 1000
+                total_response_time += response_time
+                self.log_test(f"جلب {name}", False, response_time,
+                            error_msg=f"خطأ في الاتصال: {str(e)}")
+                all_success = False
+        
+        return all_success
+
+    def test_activity_logging(self):
+        """اختبار تسجيل الأنشطة المحاسبية"""
+        print("📝 اختبار تسجيل الأنشطة المحاسبية...")
+        
+        start_time = time.time()
+        try:
+            response = self.session.get(f"{BASE_URL}/activities")
+            response_time = (time.time() - start_time) * 1000
+            
+            if response.status_code == 200:
+                activities = response.json()
+                total_activities = len(activities) if isinstance(activities, list) else 0
+                
+                # البحث عن الأنشطة المحاسبية
+                accounting_activities = 0
+                if isinstance(activities, list):
+                    accounting_activities = len([
+                        activity for activity in activities 
+                        if activity.get("activity_type", "").lower() in [
+                            "invoice_created", "debt_created", "collection_created", 
+                            "collection_approved", "payment_processed"
+                        ]
+                    ])
+                
+                details = f"إجمالي الأنشطة: {total_activities}، الأنشطة المحاسبية: {accounting_activities}"
+                self.log_test("تسجيل الأنشطة المحاسبية", True, response_time, details)
+                return True
+            else:
+                self.log_test("تسجيل الأنشطة المحاسبية", False, response_time,
+                            error_msg=f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            self.log_test("تسجيل الأنشطة المحاسبية", False, response_time,
+                        error_msg=f"خطأ في الاتصال: {str(e)}")
+            return False
+
+    def cleanup_test_data(self):
+        """تنظيف البيانات التجريبية"""
+        print("🧹 تنظيف البيانات التجريبية...")
+        
+        cleaned_count = 0
+        for data_type, data_id in self.test_data_ids:
+            try:
+                if data_type == "invoice":
+                    response = self.session.delete(f"{BASE_URL}/enhanced-professional-accounting/invoices/{data_id}")
+                elif data_type == "debt":
+                    response = self.session.delete(f"{BASE_URL}/enhanced-professional-accounting/debts/{data_id}")
+                elif data_type == "collection":
+                    response = self.session.delete(f"{BASE_URL}/enhanced-professional-accounting/collections/{data_id}")
+                
+                if response.status_code in [200, 204]:
+                    cleaned_count += 1
+                    print(f"   ✅ تم حذف {data_type}: {data_id}")
+                else:
+                    print(f"   ⚠️ لم يتم حذف {data_type}: {data_id} (HTTP {response.status_code})")
+                    
+            except Exception as e:
+                print(f"   ❌ خطأ في حذف {data_type}: {data_id} - {str(e)}")
+        
+        details = f"تم تنظيف {cleaned_count}/{len(self.test_data_ids)} عنصر"
+        self.log_test("تنظيف البيانات التجريبية", cleaned_count > 0, 0, details)
+
+    def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل للنظام المحاسبي الاحترافي"""
+        print("🚀 بدء الاختبار الشامل للنظام المحاسبي الاحترافي الشامل")
+        print("=" * 80)
+        
+        start_time = time.time()
+        
+        # 1. تسجيل الدخول
+        if not self.test_admin_login():
+            print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+            return
+        
+        # 2. اختبار لوحة التحكم المحاسبية
+        self.test_enhanced_accounting_dashboard()
+        
+        # 3. جمع البيانات الداعمة
+        supporting_data = self.get_supporting_data()
+        
+        # 4. اختبار إنشاء فاتورة شاملة
+        invoice_id = self.test_comprehensive_invoice_creation(supporting_data)
+        
+        # 5. اختبار إنشاء دين احترافي
+        debt_id = self.test_professional_debt_creation(supporting_data)
+        
+        # 6. اختبار إنشاء تحصيل جزئي
+        collection_id = self.test_partial_collection_creation(invoice_id)
+        
+        # 7. اختبار موافقة المدير على التحصيل
+        self.test_manager_collection_approval(collection_id)
+        
+        # 8. اختبار التقارير المالية
+        self.test_financial_reports()
+        
+        # 9. اختبار جلب جميع البيانات
+        self.test_fetch_all_accounting_data()
+        
+        # 10. اختبار تسجيل الأنشطة
+        self.test_activity_logging()
+        
+        # 11. تنظيف البيانات التجريبية
+        self.cleanup_test_data()
+        
+        # تلخيص النتائج
+        self.print_final_summary(start_time)
+
+    def print_final_summary(self, start_time):
+        """طباعة ملخص النتائج النهائي"""
+        total_time = time.time() - start_time
+        successful_tests = len([r for r in self.test_results if r["success"]])
+        total_tests = len(self.test_results)
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        
+        print("\n" + "=" * 80)
+        print("📊 ملخص نتائج الاختبار الشامل للنظام المحاسبي الاحترافي الشامل")
+        print("=" * 80)
+        
+        print(f"🎯 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests} اختبار نجح)")
+        print(f"⏱️ إجمالي وقت التنفيذ: {total_time:.2f}s")
+        
+        # حساب متوسط وقت الاستجابة
+        response_times = []
+        for result in self.test_results:
+            if result["response_time"] != "0.00ms":
+                try:
+                    time_ms = float(result["response_time"].replace("ms", ""))
+                    response_times.append(time_ms)
+                except:
+                    pass
+        
+        if response_times:
+            avg_response_time = sum(response_times) / len(response_times)
+            print(f"📈 متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        
+        print("\n🔍 تفاصيل النتائج:")
+        for result in self.test_results:
+            status = "✅" if result["success"] else "❌"
+            print(f"{status} {result['test']}: {result['details']}")
+            if result["error"]:
+                print(f"   خطأ: {result['error']}")
+        
+        # تقييم الأداء
+        print(f"\n🏆 التقييم النهائي:")
+        if success_rate >= 90:
+            print("🟢 EXCELLENT - النظام المحاسبي الاحترافي يعمل بشكل استثنائي!")
+        elif success_rate >= 75:
+            print("🟡 GOOD - النظام المحاسبي الاحترافي يعمل بشكل جيد مع تحسينات بسيطة")
+        elif success_rate >= 50:
+            print("🟠 NEEDS IMPROVEMENT - النظام المحاسبي الاحترافي يحتاج تحسينات")
+        else:
+            print("🔴 CRITICAL - النظام المحاسبي الاحترافي يحتاج إصلاحات جوهرية")
+        
+        print("=" * 80)
+
+if __name__ == "__main__":
+    tester = EnhancedProfessionalAccountingTester()
+    tester.run_comprehensive_test()
+"""
 اختبار سريع للنظام المحاسبي الاحترافي الشامل بعد إصلاح أخطاء ObjectId
 Quick test for Enhanced Professional Accounting System after ObjectId fixes
 """
