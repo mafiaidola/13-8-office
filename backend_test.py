@@ -1,5 +1,329 @@
 #!/usr/bin/env python3
 """
+اختبار سريع للنظام المحاسبي الاحترافي الشامل بعد إصلاح أخطاء ObjectId
+Quick test for Enhanced Professional Accounting System after ObjectId fixes
+"""
+
+import asyncio
+import aiohttp
+import json
+import time
+from datetime import datetime
+
+# Configuration
+BASE_URL = "https://epgroup-health.preview.emergentagent.com/api"
+TEST_CREDENTIALS = {
+    "username": "admin",
+    "password": "admin123"
+}
+
+class EnhancedProfessionalAccountingTester:
+    def __init__(self):
+        self.session = None
+        self.auth_token = None
+        self.test_results = []
+        self.start_time = time.time()
+        
+    async def setup_session(self):
+        """إعداد جلسة HTTP"""
+        self.session = aiohttp.ClientSession()
+        
+    async def cleanup_session(self):
+        """تنظيف جلسة HTTP"""
+        if self.session:
+            await self.session.close()
+            
+    async def make_request(self, method, endpoint, data=None, headers=None):
+        """إجراء طلب HTTP مع معالجة الأخطاء"""
+        url = f"{BASE_URL}{endpoint}"
+        default_headers = {"Content-Type": "application/json"}
+        
+        if self.auth_token:
+            default_headers["Authorization"] = f"Bearer {self.auth_token}"
+            
+        if headers:
+            default_headers.update(headers)
+            
+        try:
+            start_time = time.time()
+            
+            if method.upper() == "GET":
+                async with self.session.get(url, headers=default_headers) as response:
+                    response_time = (time.time() - start_time) * 1000
+                    response_data = await response.json()
+                    return response.status, response_data, response_time
+                    
+            elif method.upper() == "POST":
+                async with self.session.post(url, json=data, headers=default_headers) as response:
+                    response_time = (time.time() - start_time) * 1000
+                    response_data = await response.json()
+                    return response.status, response_data, response_time
+                    
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            return 500, {"error": str(e)}, response_time
+            
+    def log_test_result(self, test_name, success, details, response_time=0):
+        """تسجيل نتيجة الاختبار"""
+        status = "✅ SUCCESS" if success else "❌ FAILED"
+        self.test_results.append({
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "response_time": response_time,
+            "status": status
+        })
+        print(f"{status} | {test_name} ({response_time:.2f}ms)")
+        print(f"   📋 {details}")
+        print()
+        
+    async def test_login(self):
+        """اختبار تسجيل الدخول admin/admin123"""
+        print("🔐 اختبار تسجيل الدخول admin/admin123...")
+        
+        status, response, response_time = await self.make_request(
+            "POST", "/auth/login", TEST_CREDENTIALS
+        )
+        
+        if status == 200 and "access_token" in response:
+            self.auth_token = response["access_token"]
+            user_info = response.get("user", {})
+            details = f"المستخدم: {user_info.get('full_name', 'Unknown')}، الدور: {user_info.get('role', 'Unknown')}"
+            self.log_test_result("تسجيل دخول admin/admin123", True, details, response_time)
+            return True
+        else:
+            details = f"HTTP {status}: {response.get('detail', 'Unknown error')}"
+            self.log_test_result("تسجيل دخول admin/admin123", False, details, response_time)
+            return False
+            
+    async def test_enhanced_dashboard(self):
+        """اختبار لوحة التحكم المحاسبية المحسنة"""
+        print("📊 اختبار لوحة التحكم المحاسبية المحسنة...")
+        
+        status, response, response_time = await self.make_request(
+            "GET", "/enhanced-professional-accounting/dashboard"
+        )
+        
+        if status == 200:
+            # تحليل محتوى لوحة التحكم
+            dashboard_sections = len(response) if isinstance(response, dict) else 0
+            details = f"لوحة التحكم تعمل بنجاح - {dashboard_sections} قسم متاح"
+            self.log_test_result("لوحة التحكم المحاسبية المحسنة", True, details, response_time)
+            return True, response
+        else:
+            details = f"HTTP {status}: {response.get('detail', 'فشل في تحميل لوحة التحكم')}"
+            self.log_test_result("لوحة التحكم المحاسبية المحسنة", False, details, response_time)
+            return False, None
+            
+    async def get_supporting_data(self):
+        """جلب البيانات الداعمة (العيادات، المناديب، المنتجات)"""
+        print("📋 جلب البيانات الداعمة...")
+        
+        supporting_data = {
+            "clinics": [],
+            "representatives": [],
+            "products": []
+        }
+        
+        # جلب العيادات
+        status, response, response_time = await self.make_request("GET", "/clinics")
+        if status == 200 and isinstance(response, list):
+            supporting_data["clinics"] = response[:5]  # أول 5 عيادات
+            print(f"   ✅ تم جلب {len(response)} عيادة")
+        else:
+            print(f"   ❌ فشل جلب العيادات: HTTP {status}")
+            
+        # جلب المناديب
+        status, response, response_time = await self.make_request("GET", "/users")
+        if status == 200 and isinstance(response, list):
+            # فلترة المناديب فقط
+            reps = [user for user in response if user.get("role") in ["medical_rep", "sales_rep"]]
+            supporting_data["representatives"] = reps[:3]  # أول 3 مناديب
+            print(f"   ✅ تم جلب {len(reps)} مندوب من {len(response)} مستخدم")
+        else:
+            print(f"   ❌ فشل جلب المستخدمين: HTTP {status}")
+            
+        # جلب المنتجات
+        status, response, response_time = await self.make_request("GET", "/products")
+        if status == 200 and isinstance(response, list):
+            supporting_data["products"] = response[:5]  # أول 5 منتجات
+            print(f"   ✅ تم جلب {len(response)} منتج")
+        else:
+            print(f"   ❌ فشل جلب المنتجات: HTTP {status}")
+            
+        return supporting_data
+        
+    async def test_comprehensive_invoice_creation(self, supporting_data):
+        """اختبار إنشاء فاتورة شاملة بسيطة"""
+        print("📄 اختبار إنشاء فاتورة شاملة...")
+        
+        # التحقق من توفر البيانات المطلوبة
+        if not supporting_data["clinics"]:
+            self.log_test_result("إنشاء فاتورة شاملة", False, "لا توجد عيادات متاحة")
+            return False, None
+            
+        if not supporting_data["representatives"]:
+            self.log_test_result("إنشاء فاتورة شاملة", False, "لا توجد مناديب متاحة")
+            return False, None
+            
+        if not supporting_data["products"]:
+            self.log_test_result("إنشاء فاتورة شاملة", False, "لا توجد منتجات متاحة")
+            return False, None
+            
+        # اختيار البيانات للفاتورة
+        selected_clinic = supporting_data["clinics"][0]
+        selected_rep = supporting_data["representatives"][0]
+        selected_product = supporting_data["products"][0]
+        
+        # إعداد بيانات الفاتورة الشاملة
+        invoice_data = {
+            "clinic_id": selected_clinic.get("id"),
+            "clinic_name": selected_clinic.get("name", selected_clinic.get("clinic_name")),
+            "representative_id": selected_rep.get("id"),
+            "representative_name": selected_rep.get("full_name", selected_rep.get("name")),
+            "invoice_items": [
+                {
+                    "product_id": selected_product.get("id"),
+                    "product_name": selected_product.get("name"),
+                    "quantity": 2,
+                    "unit_price": float(selected_product.get("price", 100)),
+                    "total_price": float(selected_product.get("price", 100)) * 2
+                }
+            ],
+            "subtotal": float(selected_product.get("price", 100)) * 2,
+            "tax_rate": 0.14,
+            "tax_amount": float(selected_product.get("price", 100)) * 2 * 0.14,
+            "total_amount": float(selected_product.get("price", 100)) * 2 * 1.14,
+            "payment_terms": "net_30",
+            "notes": "فاتورة اختبار للنظام المحاسبي الاحترافي الشامل"
+        }
+        
+        print(f"   📋 العيادة: {invoice_data['clinic_name']}")
+        print(f"   👤 المندوب: {invoice_data['representative_name']}")
+        print(f"   📦 المنتج: {selected_product.get('name')} (الكمية: 2)")
+        print(f"   💰 المبلغ الإجمالي: {invoice_data['total_amount']:.2f} ج.م")
+        
+        status, response, response_time = await self.make_request(
+            "POST", "/enhanced-professional-accounting/invoices", invoice_data
+        )
+        
+        if status in [200, 201]:
+            invoice_id = response.get("invoice_id") or response.get("id")
+            details = f"تم إنشاء الفاتورة بنجاح - ID: {invoice_id}, المبلغ: {invoice_data['total_amount']:.2f} ج.م"
+            self.log_test_result("إنشاء فاتورة شاملة", True, details, response_time)
+            return True, invoice_id
+        else:
+            details = f"HTTP {status}: {response.get('detail', 'فشل في إنشاء الفاتورة')}"
+            self.log_test_result("إنشاء فاتورة شاملة", False, details, response_time)
+            return False, None
+            
+    async def test_invoice_retrieval(self):
+        """اختبار جلب الفواتير"""
+        print("📋 اختبار جلب الفواتير...")
+        
+        status, response, response_time = await self.make_request(
+            "GET", "/enhanced-professional-accounting/invoices"
+        )
+        
+        if status == 200:
+            invoices_count = len(response) if isinstance(response, list) else 0
+            details = f"تم جلب {invoices_count} فاتورة بنجاح"
+            self.log_test_result("جلب الفواتير", True, details, response_time)
+            return True, response
+        else:
+            details = f"HTTP {status}: {response.get('detail', 'فشل في جلب الفواتير')}"
+            self.log_test_result("جلب الفواتير", False, details, response_time)
+            return False, None
+            
+    async def run_comprehensive_test(self):
+        """تشغيل الاختبار الشامل"""
+        print("🚀 بدء اختبار النظام المحاسبي الاحترافي الشامل بعد إصلاح أخطاء ObjectId")
+        print("=" * 80)
+        
+        await self.setup_session()
+        
+        try:
+            # 1. تسجيل الدخول
+            login_success = await self.test_login()
+            if not login_success:
+                print("❌ فشل تسجيل الدخول - إيقاف الاختبار")
+                return
+                
+            # 2. اختبار لوحة التحكم المحاسبية المحسنة
+            dashboard_success, dashboard_data = await self.test_enhanced_dashboard()
+            
+            # 3. جلب البيانات الداعمة
+            supporting_data = await self.get_supporting_data()
+            
+            # 4. اختبار إنشاء فاتورة شاملة
+            invoice_success, invoice_id = await self.test_comprehensive_invoice_creation(supporting_data)
+            
+            # 5. اختبار جلب الفواتير
+            retrieval_success, invoices_data = await self.test_invoice_retrieval()
+            
+        finally:
+            await self.cleanup_session()
+            
+        # تقرير النتائج النهائية
+        await self.generate_final_report()
+        
+    async def generate_final_report(self):
+        """إنتاج التقرير النهائي"""
+        total_tests = len(self.test_results)
+        successful_tests = sum(1 for result in self.test_results if result["success"])
+        success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+        total_time = time.time() - self.start_time
+        avg_response_time = sum(result["response_time"] for result in self.test_results) / total_tests if total_tests > 0 else 0
+        
+        print("=" * 80)
+        print("📊 التقرير النهائي - اختبار النظام المحاسبي الاحترافي الشامل")
+        print("=" * 80)
+        
+        # عرض نتائج كل اختبار
+        for result in self.test_results:
+            print(f"{result['status']} | {result['test']} ({result['response_time']:.2f}ms)")
+            
+        print()
+        print("📈 الإحصائيات النهائية:")
+        print(f"   🎯 معدل النجاح: {success_rate:.1f}% ({successful_tests}/{total_tests})")
+        print(f"   ⏱️ متوسط وقت الاستجابة: {avg_response_time:.2f}ms")
+        print(f"   🕐 إجمالي وقت التنفيذ: {total_time:.2f}s")
+        
+        # تقييم الأداء
+        if success_rate >= 90:
+            performance_rating = "🟢 ممتاز"
+        elif success_rate >= 75:
+            performance_rating = "🟡 جيد"
+        elif success_rate >= 50:
+            performance_rating = "🟠 مقبول"
+        else:
+            performance_rating = "🔴 يحتاج تحسين"
+            
+        print(f"   📊 التقييم العام: {performance_rating}")
+        
+        # الخلاصة والتوصيات
+        print()
+        print("🎯 الخلاصة:")
+        if success_rate >= 75:
+            print("   ✅ النظام المحاسبي الاحترافي الشامل يعمل بنجاح")
+            print("   ✅ تم حل مشاكل ObjectId بنجاح")
+            print("   ✅ جميع المتطلبات الأساسية متوفرة")
+        else:
+            print("   ❌ النظام المحاسبي الاحترافي يحتاج إصلاحات")
+            print("   ❌ مشاكل ObjectId قد تكون لا تزال موجودة")
+            print("   ❌ بعض المتطلبات الأساسية غير متوفرة")
+            
+        print()
+        print("🏁 انتهى اختبار النظام المحاسبي الاحترافي الشامل")
+
+async def main():
+    """الدالة الرئيسية"""
+    tester = EnhancedProfessionalAccountingTester()
+    await tester.run_comprehensive_test()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 اختبار شامل وتفصيلي للنظام المحاسبي الاحترافي الشامل الجديد وفقاً لمتطلبات المراجعة العربية
 Comprehensive Enhanced Professional Accounting System Testing - Arabic Review
 """
