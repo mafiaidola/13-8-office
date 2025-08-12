@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGlobalTranslation } from '../../localization/completeTranslations';
 import axios from 'axios';
+import comprehensiveActivityService from '../../services/ComprehensiveActivityService';
 
 const EnhancedClinicRegistrationAdvanced = ({ language = 'en', theme = 'dark', user }) => {
   const { t, tc, tm } = useGlobalTranslation(language);
