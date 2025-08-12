@@ -351,6 +351,9 @@ async def create_clinic_debt(clinic_id: str, debt_data: DebtModel, current_user:
         
         result = await db.debts.insert_one(debt)
         
+        if not result.inserted_id:
+            raise HTTPException(status_code=500, detail="فشل في حفظ الدين")
+        
         # تسجيل النشاط
         activity = {
             "id": str(uuid.uuid4()),
@@ -370,10 +373,23 @@ async def create_clinic_debt(clinic_id: str, debt_data: DebtModel, current_user:
         }
         await db.activities.insert_one(activity)
         
+        # Return clean debt data without ObjectId
+        clean_debt = {
+            "id": debt["id"],
+            "clinic_id": debt["clinic_id"],
+            "amount": debt["amount"],
+            "description": debt["description"],
+            "due_date": debt["due_date"],
+            "priority": debt["priority"],
+            "category": debt["category"],
+            "status": debt["status"],
+            "created_at": debt["created_at"]
+        }
+        
         return {
             "success": True,
             "message": "تم إضافة الدين بنجاح",
-            "debt": debt
+            "debt": clean_debt
         }
         
     except HTTPException:
