@@ -137,72 +137,73 @@ async def get_accounting_dashboard(current_user: dict = Depends(verify_token)):
         raise HTTPException(status_code=500, detail=f"خطأ في تحميل لوحة التحكم: {str(e)}")
 
 @router.post("/invoices")
-async def create_invoice(invoice_data: dict, current_user: dict = Depends(verify_token)):
-    """إنشاء فاتورة جديدة"""
+async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_current_user)):
+    """إنشاء فاتورة جديدة شاملة"""
     try:
         # التحقق من البيانات المطلوبة
-        required_fields = ["clinic_id", "items", "total_amount"]
+        required_fields = ['clinic_id', 'rep_id', 'items']
         for field in required_fields:
-            if field not in invoice_data:
+            if field not in invoice_data or not invoice_data[field]:
                 raise HTTPException(status_code=400, detail=f"الحقل {field} مطلوب")
         
-        # التحقق من وجود العيادة
-        clinic = clinics_collection.find_one({"id": invoice_data["clinic_id"]})
+        if not invoice_data['items'] or len(invoice_data['items']) == 0:
+            raise HTTPException(status_code=400, detail="يجب إضافة منتج واحد على الأقل")
+        
+        # التحقق من وجود العيادة والمندوب
+        clinic = clinics_collection.find_one({"id": invoice_data['clinic_id']})
         if not clinic:
             raise HTTPException(status_code=404, detail="العيادة غير موجودة")
         
-        # إنشاء رقم الفاتورة
-        invoice_count = invoices_collection.count_documents({}) + 1
-        invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{invoice_count:04d}"
-        
-        # حساب المبالغ
-        subtotal = sum(item["quantity"] * item["unit_price"] for item in invoice_data["items"])
-        discount_amount = invoice_data.get("discount_amount", 0)
-        tax_amount = invoice_data.get("tax_amount", 0)
-        total_amount = subtotal - discount_amount + tax_amount
+        rep = users_collection.find_one({"id": invoice_data['rep_id']})
+        if not rep:
+            raise HTTPException(status_code=404, detail="المندوب غير موجود")
         
         # إنشاء الفاتورة
         invoice = {
             "id": str(uuid.uuid4()),
-            "invoice_number": invoice_number,
-            "clinic_id": invoice_data["clinic_id"],
-            "clinic_name": clinic["name"],
-            "rep_id": current_user["user_id"],
-            "rep_name": current_user.get("name", "مستخدم"),
-            "items": invoice_data["items"],
-            "subtotal": float(subtotal),
-            "discount_amount": float(discount_amount),
-            "discount_percentage": invoice_data.get("discount_percentage", 0),
-            "tax_amount": float(tax_amount),
-            "tax_percentage": invoice_data.get("tax_percentage", 0),
-            "total_amount": float(total_amount),
+            "invoice_number": f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}",
+            "clinic_id": invoice_data['clinic_id'],
+            "clinic_name": clinic.get('clinic_name', clinic.get('name', '')),
+            "doctor_name": clinic.get('doctor_name', ''),
+            "rep_id": invoice_data['rep_id'],
+            "rep_name": rep.get('full_name', rep.get('name', '')),
+            "items": invoice_data['items'],
+            "subtotal": invoice_data.get('subtotal', 0),
+            "discount_type": invoice_data.get('discount_type', 'percentage'),
+            "discount_value": invoice_data.get('discount_value', 0),
+            "discount_amount": invoice_data.get('discount_amount', 0),
+            "total_amount": invoice_data.get('total_amount', 0),
+            "payment_terms": invoice_data.get('payment_terms', 'cash'),
+            "due_date": invoice_data.get('due_date'),
+            "notes": invoice_data.get('notes', ''),
             "status": "pending",
-            "issue_date": datetime.now(),
-            "due_date": datetime.now() + timedelta(days=invoice_data.get("payment_terms", 30)),
-            "notes": invoice_data.get("notes", ""),
-            "created_by": current_user["user_id"],
-            "created_at": datetime.now(),
-            "updated_at": datetime.now()
+            "created_at": datetime.utcnow().isoformat(),
+            "created_by": current_user.get("user_id"),
+            "created_by_name": invoice_data.get('created_by_name', current_user.get("full_name", "مستخدم غير معروف")),
+            "updated_at": datetime.utcnow().isoformat()
         }
         
-        # حفظ الفاتورة
+        # حفظ في قاعدة البيانات
         result = invoices_collection.insert_one(invoice)
         
         # تسجيل النشاط
         activity = {
             "id": str(uuid.uuid4()),
-            "user_id": current_user["user_id"],
-            "user_name": current_user.get("name", "مستخدم"),
+            "user_id": current_user.get("user_id"),
+            "user_name": current_user.get("full_name", "مستخدم"),
             "action": "invoice_create",
-            "description": f"إنشاء فاتورة جديدة: {invoice_number} للعيادة: {clinic['name']}",
+            "description": f"إنشاء فاتورة #{invoice['invoice_number']} بقيمة {invoice['total_amount']} ج.م للعيادة: {clinic.get('clinic_name', clinic.get('name', 'غير محدد'))}",
             "entity_type": "invoice",
             "entity_id": invoice["id"],
-            "timestamp": datetime.now(),
-            "details": {
-                "invoice_number": invoice_number,
-                "clinic_name": clinic["name"],
-                "total_amount": total_amount
-            }
+            "clinic_id": invoice_data['clinic_id'],
+            "additional_data": {
+                "invoice_number": invoice['invoice_number'],
+                "total_amount": invoice['total_amount'],
+                "items_count": len(invoice['items']),
+                "discount_amount": invoice['discount_amount']
+            },
+            "timestamp": datetime.utcnow(),
+            "success": True
         }
         activities_collection.insert_one(activity)
         
@@ -212,6 +213,8 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(verify
             "invoice": invoice
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في إنشاء الفاتورة: {str(e)}")
 
