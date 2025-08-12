@@ -17,6 +17,7 @@ import IntegratedFinancialDashboard from '../Financial/IntegratedFinancialDashbo
 import ExcelDashboard from '../Excel/ExcelDashboard';
 import LinesAreasManagement from '../Geographic/LinesAreasManagement';
 import EnhancedLinesAreasManagement from '../Geographic/EnhancedLinesAreasManagement';
+import EnhancedProfessionalClinicsManagement from '../Clinics/EnhancedProfessionalClinicsManagement.js';
 import WarehouseManagement from '../Warehouses/WarehouseManagement';
 import EnhancedActivityTracking from '../ActivityTracking/EnhancedActivityTracking';
 import SuperAdminActivityDashboard from '../ActivityTracking/SuperAdminActivityDashboard';
