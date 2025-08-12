@@ -388,6 +388,10 @@ async def create_comprehensive_debt(debt_data: DebtModel, current_user: dict = D
         
         # حفظ في قاعدة البيانات
         result = await db.debts.insert_one(debt)
+        debt["_id"] = str(result.inserted_id)  # تحويل ObjectId إلى string
+        
+        # تنظيف البيانات لإرجاعها
+        clean_debt = serialize_doc(dict(debt))
         
         # تسجيل النشاط
         activity = {
