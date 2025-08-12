@@ -257,7 +257,7 @@ async def create_comprehensive_invoice(invoice_data: InvoiceModel, current_user:
         return {
             "success": True,
             "message": "تم إنشاء الفاتورة الاحترافية بنجاح",
-            "invoice": invoice
+            "invoice": clean_invoice
         }
         
     except HTTPException:
