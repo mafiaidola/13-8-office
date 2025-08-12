@@ -136,22 +136,23 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
         'Content-Type': 'application/json'
       };
 
-      // تحميل العيادات
-      const clinicsResponse = await fetch(`${API_URL}/api/clinics`, { headers });
+      // تحميل البيانات الداعمة
+      const [clinicsResponse, productsResponse, usersResponse] = await Promise.all([
+        fetch(`${API_URL}/api/clinics`, { headers }),
+        fetch(`${API_URL}/api/products`, { headers }),
+        fetch(`${API_URL}/api/users`, { headers })
+      ]);
+
       if (clinicsResponse.ok) {
         const clinicsData = await clinicsResponse.json();
         setClinics(Array.isArray(clinicsData) ? clinicsData : clinicsData.clinics || []);
       }
 
-      // تحميل المنتجات
-      const productsResponse = await fetch(`${API_URL}/api/products`, { headers });
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
         setProducts(Array.isArray(productsData) ? productsData : productsData.products || []);
       }
 
-      // تحميل المستخدمين
-      const usersResponse = await fetch(`${API_URL}/api/users`, { headers });
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
         setUsers(Array.isArray(usersData) ? usersData : usersData.users || []);
