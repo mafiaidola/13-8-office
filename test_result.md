@@ -4570,39 +4570,17 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 4
+  test_sequence: 5
   run_ui: false
 
 test_plan:
   current_focus: 
-    - "Comprehensive Testing for Applied Fixes - Arabic Review"
-  stuck_tasks:
-    - "POST /api/debts - Debt Creation Field Validation"
+    - "Comprehensive Enhanced Professional Accounting System Testing for Arabic Review"
+  stuck_tasks: []
   completed_tasks:
-    - "Clinic Creation API Testing - حل خطأ إرسال الطلب"
-    - "Comprehensive Accounting System - Overview API"
-    - "Enhanced Invoice and Product System with Price Tiers"
-    - "Monthly Planning System Integration"
-    - "Comprehensive Admin Settings API"
-    - "Enhanced User Management System Testing"
-    - "Comprehensive System Cleanup and Production Readiness Testing"
-    - "Comprehensive Debt and Collection Management System Testing"
-    - "Comprehensive Technical Review and Deep System Testing"
-    - "Enhanced Lines and Areas Management System - Update Issue Resolution"
-    - "Backend Infrastructure Testing"
-    - "Authentication and Authorization Testing"
-    - "Price Hiding Security Fix - Duplicate Endpoint Removal"
+    - "Comprehensive Enhanced Professional Accounting System Testing for Arabic Review"
   test_all: false
   test_priority: "critical_first"
-    - "Comprehensive Accounting System - Invoices API"
-    - "Comprehensive Accounting System - Expenses API"
-    - "Comprehensive Accounting System - Profit & Loss Report API"
-    - "Comprehensive Accounting System - Customers API"
-    - "Comprehensive Accounting System - Dashboard Stats API"
-    - "Comprehensive Accounting System - Role-Based Access Control"
-    - "Areas and Warehouses System Initialization"
-  test_all: false
-  test_priority: "stuck_first"
 
   - task: "Comprehensive Professional User Management System Testing - Arabic Review"
     implemented: true
