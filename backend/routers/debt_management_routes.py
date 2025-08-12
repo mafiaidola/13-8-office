@@ -613,12 +613,7 @@ async def get_debt_statistics(
                 "fully_collected_count": {"$sum": {"$cond": [{"$eq": ["$status", "fully_collected"]}, 1, 0]}},
                 "average_days_overdue": {"$avg": "$days_overdue"},
                 "by_status": {"$push": "$status"},
-                "by_aging": {"$push": "$aging_category"},
-                "by_assigned_rep": {"$push": {
-                    "rep_id": {"$ifNull": ["$sales_rep_id", "$assigned_to_id"]}, 
-                    "rep_name": {"$ifNull": ["$sales_rep_name", "$assigned_to_name"]}, 
-                    "amount": "$remaining_amount"
-                }}
+                "by_aging": {"$push": "$aging_category"}
             }}
         ]
         
