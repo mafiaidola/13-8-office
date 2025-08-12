@@ -51,6 +51,7 @@ const COMPONENT_REGISTRY = {
   
   // Geographic Management
   'LinesAreasManagement': LinesAreasManagement,
+  'EnhancedLinesAreasManagement': EnhancedLinesAreasManagement,
   
   // Warehouse Management
   'WarehouseManagement': WarehouseManagement,
