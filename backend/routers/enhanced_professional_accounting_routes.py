@@ -141,13 +141,13 @@ async def get_accounting_dashboard(current_user: dict = Depends(get_current_user
         recent_invoices = []
         recent_invoices_cursor = db.invoices.find({}, {"_id": 0}).sort([("created_at", -1)]).limit(5)
         async for invoice in recent_invoices_cursor:
-            recent_invoices.append(invoice)
+            recent_invoices.append(serialize_doc(invoice))
         
         # أحدث الديون
         recent_debts = []
         recent_debts_cursor = db.debts.find({}, {"_id": 0}).sort([("created_at", -1)]).limit(5)
         async for debt in recent_debts_cursor:
-            recent_debts.append(debt)
+            recent_debts.append(serialize_doc(debt))
         
         return {
             "success": True,
