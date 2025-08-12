@@ -519,7 +519,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-blue-100 text-sm mb-1">إجمالي الفواتير</p>
-                          <p className="text-3xl font-bold">{invoices.length}</p>
+                          <p className="text-3xl font-bold">{dashboardData.invoices?.total_count || invoices.length}</p>
                         </div>
                         <div className="text-4xl">📄</div>
                       </div>
@@ -530,7 +530,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
                         <div>
                           <p className="text-green-100 text-sm mb-1">إجمالي المبيعات</p>
                           <p className="text-3xl font-bold">
-                            {invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0).toLocaleString()} ج.م
+                            {(dashboardData.invoices?.total_amount || invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0)).toLocaleString()} ج.م
                           </p>
                         </div>
                         <div className="text-4xl">💵</div>
@@ -542,7 +542,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
                         <div>
                           <p className="text-red-100 text-sm mb-1">إجمالي الديون</p>
                           <p className="text-3xl font-bold">
-                            {debts.reduce((sum, debt) => sum + (debt.total_amount || 0), 0).toLocaleString()} ج.م
+                            {(dashboardData.debts?.total_amount || debts.reduce((sum, debt) => sum + (debt.total_amount || 0), 0)).toLocaleString()} ج.م
                           </p>
                         </div>
                         <div className="text-4xl">💳</div>
@@ -554,7 +554,7 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
                         <div>
                           <p className="text-purple-100 text-sm mb-1">إجمالي التحصيل</p>
                           <p className="text-3xl font-bold">
-                            {collections.reduce((sum, col) => sum + (col.amount || 0), 0).toLocaleString()} ج.م
+                            {(dashboardData.collections?.total_amount || collections.reduce((sum, col) => sum + (col.amount || 0), 0)).toLocaleString()} ج.م
                           </p>
                         </div>
                         <div className="text-4xl">💰</div>
