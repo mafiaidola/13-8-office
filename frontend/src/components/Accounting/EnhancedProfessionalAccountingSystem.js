@@ -278,6 +278,30 @@ const EnhancedProfessionalAccountingSystem = ({ language = 'ar', theme = 'dark',
     }
   };
 
+  const handleApproveCollection = async (collectionId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_URL}/api/enhanced-professional-accounting/collections/${collectionId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        alert('تم الموافقة على التحصيل بنجاح!');
+        loadAccountingData();
+      } else {
+        const error = await response.json();
+        alert(`خطأ في الموافقة: ${error.detail || 'خطأ غير معروف'}`);
+      }
+    } catch (error) {
+      console.error('Error approving collection:', error);
+      alert('حدث خطأ في الموافقة على التحصيل');
+    }
+  };
+
   const resetInvoiceForm = () => {
     setInvoiceForm({
       clinic_id: '',
