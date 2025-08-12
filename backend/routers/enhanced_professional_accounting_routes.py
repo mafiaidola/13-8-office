@@ -419,7 +419,7 @@ async def create_comprehensive_debt(debt_data: DebtModel, current_user: dict = D
         return {
             "success": True,
             "message": "تم إنشاء الدين الاحترافي بنجاح",
-            "debt": debt
+            "debt": clean_debt
         }
         
     except HTTPException:
