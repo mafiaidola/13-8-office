@@ -68,9 +68,9 @@ export const SYSTEM_TABS = {
     id: 'clinics_management',
     path: '/clinics-management',
     icon: '🏢',
-    name: { ar: 'إدارة العيادات', en: 'Clinics Management' },
-    component: 'ClinicsManagement',
-    description: { ar: 'إدارة شاملة للعيادات المسجلة والتحكم بها', en: 'Comprehensive management of registered clinics' },
+    name: { ar: 'إدارة العيادات الاحترافية المحسنة', en: 'Enhanced Professional Clinics Management' },
+    component: 'EnhancedProfessionalClinicsManagement',
+    description: { ar: 'نظام شامل لإدارة العيادات مع التكامل المحاسبي الكامل والبيانات المالية التفصيلية', en: 'Comprehensive clinics management with full accounting integration and detailed financial data' },
     permissions: ['admin', 'gm', 'line_manager', 'area_manager'],
     priority: 5
   },
