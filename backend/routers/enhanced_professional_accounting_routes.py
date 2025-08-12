@@ -549,7 +549,7 @@ async def create_comprehensive_collection(collection_data: CollectionModel, curr
         return {
             "success": True,
             "message": "تم تسجيل التحصيل بنجاح - في انتظار موافقة المدير",
-            "collection": collection
+            "collection": clean_collection
         }
         
     except HTTPException:
