@@ -1,6 +1,7 @@
 // Advanced Visits Management - إدارة الزيارات المتطورة والاحترافية
 import React, { useState, useEffect } from 'react';
 import { useGlobalTranslation } from '../../localization/completeTranslations';
+import comprehensiveActivityService from '../../services/ComprehensiveActivityService';
 
 const AdvancedVisitsManagement = ({ language = 'ar', theme = 'dark', user }) => {
   const { t, tc, tm } = useGlobalTranslation(language);
