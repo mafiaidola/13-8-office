@@ -177,11 +177,11 @@ async def create_comprehensive_invoice(invoice_data: InvoiceModel, current_user:
     """إنشاء فاتورة شاملة احترافية"""
     try:
         # التحقق من وجود العيادة والمندوب
-        clinic = await db.clinics.find_one({"id": invoice_data.clinic_id})
+        clinic = await db.clinics.find_one({"id": invoice_data.clinic_id}, {"_id": 0})
         if not clinic:
             raise HTTPException(status_code=404, detail="العيادة غير موجودة")
         
-        rep = await db.users.find_one({"id": invoice_data.rep_id})
+        rep = await db.users.find_one({"id": invoice_data.rep_id}, {"_id": 0})
         if not rep:
             raise HTTPException(status_code=404, detail="المندوب غير موجود")
         
