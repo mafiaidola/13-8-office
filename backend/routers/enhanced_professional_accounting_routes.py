@@ -57,14 +57,14 @@ class DebtModel(BaseModel):
     clinic_id: str
     rep_id: str
     description: str
-    items: List[InvoiceItemModel] = []
-    subtotal: float
-    discount_percentage: float = 0
-    discount_amount: float = 0
+    items: Optional[List[InvoiceItemModel]] = []
+    subtotal: Optional[float] = 0
+    discount_percentage: Optional[float] = 0
+    discount_amount: Optional[float] = 0
     total_amount: float
     due_date: str
-    priority: str = "medium"
-    category: str = "purchase"
+    priority: Optional[str] = "medium"
+    category: Optional[str] = "purchase"
 
 class CollectionModel(BaseModel):
     invoice_id: Optional[str] = None
