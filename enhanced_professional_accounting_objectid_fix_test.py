@@ -246,6 +246,7 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
                 invoice_id = data.get("invoice_id") or data.get("id")
                 if invoice_id:
                     self.test_data_ids.append(("invoice", invoice_id))
+                    print(f"🔍 Debug: تم حفظ معرف الفاتورة: {invoice_id}")
                 
                 total_amount = invoice_data["total_amount"]
                 details = f"تم إنشاء الفاتورة بنجاح - المبلغ الإجمالي: {total_amount:.2f} ج.م"
