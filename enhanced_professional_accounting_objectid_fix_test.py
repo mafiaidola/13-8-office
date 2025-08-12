@@ -203,6 +203,13 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
             return False
 
         # إعداد بيانات الفاتورة الشاملة
+        unit_price = float(self.product_data.get("price", 50.0))
+        quantity = 5
+        item_total = quantity * unit_price
+        subtotal = item_total
+        tax_amount = subtotal * 0.14
+        total_amount = subtotal + tax_amount
+        
         invoice_data = {
             "clinic_id": self.clinic_data.get("id"),
             "clinic_name": self.clinic_data.get("name", self.clinic_data.get("clinic_name")),
@@ -214,15 +221,15 @@ class EnhancedProfessionalAccountingObjectIdFixTester:
                 {
                     "product_id": self.product_data.get("id"),
                     "product_name": self.product_data.get("name"),
-                    "quantity": 5,
-                    "unit_price": float(self.product_data.get("price", 50.0)),
-                    "total": 5 * float(self.product_data.get("price", 50.0))
+                    "quantity": quantity,
+                    "unit_price": unit_price,
+                    "total_price": item_total  # Changed from 'total' to 'total_price'
                 }
             ],
-            "subtotal": 5 * float(self.product_data.get("price", 50.0)),
+            "subtotal": subtotal,
             "tax_rate": 0.14,
-            "tax_amount": 5 * float(self.product_data.get("price", 50.0)) * 0.14,
-            "total_amount": 5 * float(self.product_data.get("price", 50.0)) * 1.14,
+            "tax_amount": tax_amount,
+            "total_amount": total_amount,
             "notes": "فاتورة اختبار شاملة للنظام المحاسبي الاحترافي",
             "payment_terms": "30 يوم",
             "status": "draft"
