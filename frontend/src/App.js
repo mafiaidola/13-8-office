@@ -410,6 +410,28 @@ const AuthProvider = ({ children }) => {
       return { success: false, error: 'Invalid response format' };
     } catch (error) {
       console.error('❌ Login error:', error);
+      
+      // تسجيل محاولة تسجيل الدخول الفاشلة
+      try {
+        await comprehensiveActivityService.recordComprehensiveActivity({
+          action: 'login_failed',
+          user_name: credentials.username || 'Unknown',
+          user_role: 'unknown',
+          description: `محاولة تسجيل دخول فاشلة للمستخدم: ${credentials.username}`,
+          category: 'authentication',
+          success: false,
+          details: {
+            login_method: 'credentials',
+            error_message: error.response?.data?.detail || error.message,
+            attempted_username: credentials.username,
+            timestamp: new Date().toISOString()
+          }
+        });
+        console.log('✅ تم تسجيل محاولة تسجيل الدخول الفاشلة');
+      } catch (activityError) {
+        console.warn('⚠️ خطأ في تسجيل محاولة تسجيل الدخول الفاشلة:', activityError.message);
+      }
+      
       return { 
         success: false, 
         error: error.response?.data?.detail || error.message || 'Login failed' 
