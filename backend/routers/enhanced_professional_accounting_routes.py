@@ -540,11 +540,11 @@ async def get_collections(current_user: dict = Depends(get_current_user)):
     """الحصول على جميع التحصيلات"""
     try:
         collections = []
-        cursor = db.collections.find({}).sort("created_at", -1)
+        cursor = db.collections.find({}, {"_id": 0}).sort([("created_at", -1)])
         
         async for collection in cursor:
             # إضافة معلومات من جمع التحصيل
-            collector = await db.users.find_one({"id": collection.get("collected_by")})
+            collector = await db.users.find_one({"id": collection.get("collected_by")}, {"_id": 0})
             if collector:
                 collection["collector_info"] = {
                     "name": collector.get('full_name', collector.get('name', '')),
@@ -553,7 +553,7 @@ async def get_collections(current_user: dict = Depends(get_current_user)):
             
             # إضافة معلومات من وافق على التحصيل
             if collection.get("approved_by"):
-                approver = await db.users.find_one({"id": collection["approved_by"]})
+                approver = await db.users.find_one({"id": collection["approved_by"]}, {"_id": 0})
                 if approver:
                     collection["approver_info"] = {
                         "name": approver.get('full_name', approver.get('name', '')),
