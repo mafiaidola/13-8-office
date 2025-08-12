@@ -195,14 +195,21 @@ const ProfessionalUserManagement = ({ language = 'ar', theme = 'dark', user }) =
     return lastActivity.toLocaleDateString('ar-EG');
   };
 
-  // إحصائيات المستخدمين
+  // إحصائيات المستخدمين المحسنة
   const userStats = {
     total: users.length,
     active: users.filter(u => u.is_active).length,
     inactive: users.filter(u => !u.is_active).length,
     admins: users.filter(u => u.role === 'admin').length,
     reps: users.filter(u => u.role === 'medical_rep').length,
-    managers: users.filter(u => u.role.includes('manager')).length
+    managers: users.filter(u => u.role.includes('manager')).length,
+    // إحصائيات الأداء
+    totalVisits: users.reduce((sum, u) => sum + (u.visits_count || 0), 0),
+    totalSales: users.reduce((sum, u) => sum + (u.total_sales || 0), 0),
+    totalCollections: users.reduce((sum, u) => sum + (u.total_collections || 0), 0),
+    totalClinics: users.reduce((sum, u) => sum + (u.clinics_count || 0), 0),
+    // المستخدمون النشطون اليوم
+    activeToday: users.filter(u => u.activities_today > 0).length
   };
 
   return (
