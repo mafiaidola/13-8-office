@@ -8,6 +8,7 @@ import os
 import uuid
 from pydantic import BaseModel
 import jwt
+from bson import ObjectId
 
 # إعداد قاعدة البيانات والأمان
 security = HTTPBearer()
@@ -20,6 +21,15 @@ JWT_SECRET_KEY = "your-secret-key-change-in-production"
 JWT_ALGORITHM = "HS256"
 
 router = APIRouter(prefix="/api/enhanced-professional-accounting", tags=["Enhanced Professional Accounting"])
+
+# Helper function to handle ObjectId serialization
+def serialize_doc(doc):
+    """تحويل MongoDB document إلى JSON serializable"""
+    if doc is None:
+        return None
+    if "_id" in doc:
+        del doc["_id"]
+    return doc
 
 # Models
 class InvoiceItemModel(BaseModel):
