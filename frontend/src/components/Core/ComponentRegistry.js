@@ -33,6 +33,7 @@ const COMPONENT_REGISTRY = {
   
   // Accounting System
   'ProfessionalAccountingSystem': ProfessionalAccountingSystem,
+  'EnhancedProfessionalAccountingSystem': EnhancedProfessionalAccountingSystem,
   
   // Clinic Management
   'EnhancedClinicRegistrationAdvanced': EnhancedClinicRegistrationAdvanced,
