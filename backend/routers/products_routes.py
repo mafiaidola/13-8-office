@@ -258,6 +258,10 @@ async def get_products(
         if is_active is not None:
             query["is_active"] = is_active
         
+        # Check if user can see prices based on role
+        user_role = current_user.get("role", "")
+        can_see_prices = user_role in ["admin", "gm", "accounting", "finance", "manager", "line_manager"]
+        
         # Get products from database
         products = []
         async for product in db.products.find(query, {"_id": 0}).skip(skip).limit(limit):
@@ -268,8 +272,6 @@ async def get_products(
                 "code": product.get("code", product.get("id", "")[:8]),  # Use first 8 chars of ID if no code
                 "brand": product.get("brand", product.get("category", "Unknown")),  # Map category to brand
                 "description": product.get("description", ""),
-                "price": product.get("price", 0),
-                "cost": product.get("cost", 0),
                 "unit": product.get("unit", "قطعة"),
                 "stock_quantity": product.get("stock_quantity", product.get("current_stock", 0)),  # Map current_stock
                 "minimum_stock": product.get("minimum_stock", 10),
@@ -285,6 +287,15 @@ async def get_products(
                 "medical_category": product.get("medical_category"),
                 "requires_prescription": product.get("requires_prescription", False)
             }
+            
+            # Add price information only if user has permission to see prices
+            if can_see_prices:
+                normalized_product["price"] = product.get("price", 0)
+                normalized_product["cost"] = product.get("cost", 0)
+            else:
+                # For medical reps and other restricted roles, prices are hidden
+                normalized_product["price"] = None
+                normalized_product["cost"] = None
             
             # Add stock status
             normalized_product["stock_status"] = get_stock_status(
@@ -380,6 +391,15 @@ async def get_product_by_id(
         product = await db.products.find_one({"id": product_id}, {"_id": 0})
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
+        
+        # Check if user can see prices based on role
+        user_role = current_user.get("role", "")
+        can_see_prices = user_role in ["admin", "gm", "accounting", "finance", "manager", "line_manager"]
+        
+        # Hide price information for unauthorized roles (like medical_rep)
+        if not can_see_prices:
+            product["price"] = None
+            product["cost"] = None
         
         # Add stock status
         product["stock_status"] = get_stock_status(
