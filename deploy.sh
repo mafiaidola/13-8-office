@@ -72,7 +72,7 @@ print_status "Using compose file: $COMPOSE_FILE"
 case $ACTION in
     "build")
         print_status "Building images..."
-        docker-compose -f $COMPOSE_FILE build --no-cache
+        docker compose -f $COMPOSE_FILE build --no-cache
         print_success "Build completed!"
         ;;
     "up")
@@ -100,7 +100,7 @@ case $ACTION in
         ;;
     "status")
         print_status "Service status:"
-        docker-compose -f $COMPOSE_FILE ps
+        docker compose -f $COMPOSE_FILE ps
         ;;
     "cleanup")
         print_warning "This will remove all containers, volumes, and images!"
