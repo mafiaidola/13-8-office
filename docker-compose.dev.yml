@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: medmanage_mongodb_dev
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${DB_NAME:-medical_management_system}
+    volumes:
+      - mongodb_data_dev:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - medmanage_network
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medmanage_backend_dev
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb:27017/${DB_NAME:-medical_management_system}?authSource=admin
+      DB_NAME: ${DB_NAME:-medical_management_system}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-AIzaSyDzxZjDxPdcrnGKb66mT5BIvQzQWcnLp70}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongodb
+    networks:
+      - medmanage_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend Web Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medmanage_frontend_dev
+    restart: unless-stopped
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8001
+      REACT_APP_GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-AIzaSyDzxZjDxPdcrnGKb66mT5BIvQzQWcnLp70}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - medmanage_network
+
+volumes:
+  mongodb_data_dev:
+    driver: local
+
+networks:
+  medmanage_network:
+    driver: bridge
